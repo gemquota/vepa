@@ -119,7 +119,7 @@ function renderWorldSliders(engine) {
     const container = document.getElementById('world-sliders');
     if (!container) return;
     const items = [
-        { name: 'Particle Count', key: 'count', min: 100, max: 50000, step: 100, val: 5000 },
+        { name: 'Particle Count', key: 'count', min: 10, max: 50000, step: 10, val: 5000 },
         { name: 'Entropy (Grid-Chaos)', key: 'entropy', min: 0, max: 1, step: 0.01, val: 0.5 },
         { name: 'Spawn Rate', key: 'spawnRate', min: 0, max: 5, step: 0.01, val: 0.0 },
         { name: 'Shape (Cube-Sphere)', key: 'shape', min: 0, max: 1, step: 0.01, val: 0.0 },
@@ -147,9 +147,9 @@ function renderPhysicsSliders(engine) {
         { name: 'Global G', key: 'G', min: 0, max: 2, step: 0.01, val: 0.15 },
         { name: 'Sim Speed', key: 'dt', min: 0, max: 5, step: 0.1, val: 1.0 },
         { name: 'Base Size', key: 'baseSize', min: 0.01, max: 0.5, step: 0.01, val: 0.05 },
-        { name: 'Map Width (X)', key: 'dimX', min: 2000, max: 50000, step: 500, val: 10000 },
-        { name: 'Map Height (Y)', key: 'dimY', min: 2000, max: 50000, step: 500, val: 10000 },
-        { name: 'Map Depth (Z)', key: 'dimZ', min: 2000, max: 50000, step: 500, val: 10000 }
+        { name: 'Map Width (X)', key: 'dimX', min: 100, max: 50000, step: 100, val: 10000 },
+        { name: 'Map Height (Y)', key: 'dimY', min: 100, max: 50000, step: 100, val: 10000 },
+        { name: 'Map Depth (Z)', key: 'dimZ', min: 100, max: 50000, step: 100, val: 10000 }
     ];
     container.innerHTML = '<h3>Simulation Scale</h3>';
     items.forEach(it => {
