@@ -1,7 +1,7 @@
 ---
 id: vepa-b3-02
 title: "Expanded Communication System (v1.2)"
-status: Todo
+status: Done
 priority: Medium
 order: 30
 created: 2026-03-03

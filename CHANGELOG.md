@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-04-17
+### Added
+- **Nuclear Rewrite (Architectural Overhaul):** Complete transition to an ES Module architecture (`src/`), decoupling logic from the entry point.
+- **Worker-Threaded Physics Engine:** Offloaded all N-body calculations to a dedicated Web Worker (`physics.worker.js`) using high-performance Typed Arrays (`Stride 18`).
+- **PixiJS Rendering Pipeline:** Integrated PixiJS v8 for hardware-accelerated particle rendering, significantly increasing the supported particle count.
+- **4-Channel Neural Communication:** Particles now feature a sophisticated communication system with independent Signal Strength, Decay, Propagation Speed, and 4-Channel Tuning.
+- **DNA-Based Neighborhoods:** Interaction range is now controlled via a species-level `Neighborhood Radius` DNA parameter.
+- **Advanced Fusion Logic:** Introduced `Fusion Momentum` and `Fusion Time` constraints to simulate complex accretion dynamics.
+- **Dynamic Species Management:** Added the ability to add and remove species in real-time.
+- **Modern Tabbed UI:** Completely redesigned the control interface with persistent tabs (WORLD, PHYS, SPEC) and dynamic slider generation.
+- **External Stylesheets:** Moved all UI presentation logic to `style.css`.
+- **Global Field Constants:** Added explicit control over Gravity (G), Sim Speed (dt), and Drag Coefficient.
+
 ## [1.1.0] - 2026-03-03
 ### Added
 - **Visual & Render Layer (Batch 2):** Introduced the [Render] category in the DNA interface.

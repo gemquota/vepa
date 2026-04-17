@@ -1,7 +1,7 @@
 ---
 id: vepa-b3-01
 title: "Implement Neighborhood Radius (v1.2)"
-status: Todo
+status: Done
 priority: Medium
 order: 20
 created: 2026-03-03
