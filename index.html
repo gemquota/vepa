@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v1.0.4: Stellar Evolution</title>
+    <style>
+        :root { --neon: #00ff41; --bg: #000; --panel: rgba(5, 10, 5, 0.95); --danger: #ff3e3e; --info: #3e88ff; --warn: #fffb3e; }
+        body { margin: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; font-size: 11px; }
+        canvas { display: block; position: fixed; inset: 0; z-index: 0; }
+        #ui-layer { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; padding: 10px; z-index: 10; }
+        .panel { pointer-events: auto; background: var(--panel); border: 1px solid var(--neon); padding: 8px; border-radius: 4px; box-shadow: 0 0 15px rgba(0,255,65,0.1); }
+        #header-controls { pointer-events: auto; display: flex; gap: 5px; margin-bottom: 5px; }
+        .btn { padding: 8px; background: #000; border: 1px solid var(--neon); color: var(--neon); font-size: 9px; cursor: pointer; flex: 1; text-align: center; font-weight: bold; text-transform: uppercase; }
+        .chaos-btn { background: var(--danger); color: #fff; border: 1px solid #fff; }
+        #zoom-hud { position: absolute; bottom: 10px; right: 10px; font-size: 8px; pointer-events: none; background: rgba(0,0,0,0.7); padding: 6px; border: 1px solid #333; color: #fff; }
+        .syn-toggle { display: flex; justify-content: space-between; align-items: center; padding: 6px; border: 1px solid #333; margin-bottom: 2px; border-radius: 4px; cursor: pointer; font-size: 8px; pointer-events: auto; }
+        .syn-toggle.active { border-color: var(--neon); background: rgba(0, 255, 65, 0.1); }
+    </style>
+</head>
+<body>
+    <canvas id="sim-canvas"></canvas>
+    <div id="ui-layer">
+        <div id="header-controls">
+            <button class="btn chaos-btn" onclick="triggerSmartChaos()">!!! CHAOS !!!</button>
+            <button class="btn" onclick="hardReset()">HARD RESET</button>
+            <button class="btn" onclick="togglePause()" id="play-pause-btn">PAUSE</button>
+            <button class="btn" onclick="restartSim()">RESTART</button>
+        </div>
+        <div class="panel" style="max-width: 200px;">
+            <div class="syn-toggle active" id="syn-grav" onclick="toggleLaw('grav')"><span>Gravity</span> <span class="status">ON</span></div>
+            <div class="syn-toggle" id="syn-life" onclick="toggleLaw('life')"><span>Biology</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle active" id="syn-drag" onclick="toggleLaw('drag')"><span>Drag</span> <span class="status">ON</span></div>
+            <div class="syn-toggle active" id="syn-jitter" onclick="toggleLaw('jitter')"><span>Entropy</span> <span class="status">ON</span></div>
+            <div style="margin-top: 10px; font-size: 8px;">
+                <span>S1 Radius: </span><span id="rad-val">120</span>
+                <input type="range" min="20" max="500" value="120" style="width: 100%;" oninput="updateDNA(0, 'Neighborhood Radius', this.value, 'rad-val')">
+            </div>
+            <div style="margin-top: 5px; font-size: 8px;">
+                <span>S1 Pulse: </span><span id="pulse-val">0</span>
+                <input type="range" min="0" max="1" step="0.01" value="0" style="width: 100%;" oninput="updateDNA(0, 'Pulse Rate', this.value, 'pulse-val')">
+            </div>
+            <div style="margin-top: 5px; font-size: 8px;">
+                <span>S1 Strength: </span><span id="str-val">0.5</span>
+                <input type="range" min="0" max="1" step="0.01" value="0.5" style="width: 100%;" oninput="updateDNA(0, 'Signal Strength', this.value, 'str-val')">
+            </div>
+            <div style="margin-top: 5px; font-size: 8px;">
+                <span>S1 Decay: </span><span id="dec-val">0.95</span>
+                <input type="range" min="0.1" max="0.99" step="0.01" value="0.95" style="width: 100%;" oninput="updateDNA(0, 'Signal Decay', this.value, 'dec-val')">
+            </div>
+        </div>
+
+        <!-- HIDDEN CONTAINERS FOR SSoT ALIGNMENT -->
+        <div id="simple-interface" style="display:none"></div>
+        <div id="main-interface" style="display:none">
+            <div id="dna-sliders"></div>
+            <div id="birth-sliders"></div>
+            <div id="death-sliders"></div>
+            <div id="eco-sliders"></div>
+            <div id="phys-sliders"></div>
+        </div>
+        <div id="chaos-menu" style="display:none"></div>
+        <div id="modal-overlay" style="display:none"></div>
+    </div>
+    <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span> | C: <span id="c-count">0</span></div>
+
+<script>
+    const canvas = document.getElementById('sim-canvas'), ctx = canvas.getContext('2d');
+    let width, height, WORLD_W = 10000, WORLD_H = 10000;
+    let particles = [], celestials = [], paused = false, lastTime = performance.now();
+    let zoom = 1.0, panX = 0, panY = 0, DNA_STEP = 15.0;
+
+    const DNA_META = [
+        "Force", "Viscosity", "Torque", "Jitter",
+        "C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Hidden Mass",
+        "Stiffness", "Fusion", "Birth Rate", "Death Rate",
+        "Mutation", "Signal Resp", "Pulse Rate", "Tidal", "Neighborhood Radius",
+        "Signal Strength", "Signal Decay", "Propagation Speed", 
+        "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"
+    ];
+
+    const RENDER_META = ["Trail Life", "Glow Intensity", "Pulse Opacity", "Particle Opacity"];
+
+    const DEFAULT_LAWS = { grav: true, life: false, drag: true, jitter: true };
+    let laws = { ...DEFAULT_LAWS };
+
+    const DEFAULT_PHYSICS = [
+        { name: "Gravity (1/r²)", val: 0.15, min: 0, max: 2 },
+        { name: "Sim Speed", val: 1.0, min: 0.1, max: 5 },
+        { name: "Elasticity", val: 0.8, min: 0, max: 1 },
+        { name: "Safety Cap", val: 5000, min: 100, max: 10000 }
+    ];
+    let globalPhysics = JSON.parse(JSON.stringify(DEFAULT_PHYSICS));
+
+    const DEFAULT_SPECIES = Array.from({ length: 8 }, (_, i) => ({
+        id: i,
+        name: `Species ${i + 1}`,
+        renderColor: `hsl(${i * 45}, 70%, 50%)`,
+        rules: DNA_META.map(name => {
+            let val = 0, active = false;
+            if (name === "Neighborhood Radius") { val = 120; active = true; }
+            if (name === "Signal Strength") { val = 0.5; active = true; }
+            if (name === "Signal Decay") { val = 0.95; active = true; }
+            if (name === "Propagation Speed") { val = 0.5; active = true; }
+            if (name.includes("Tuning")) { val = 1.0; active = true; }
+            return { name, val, active };
+        }),
+        render: RENDER_META.map(name => ({ name, val: 0.5 }))
+    }));
+
+    // --- SSoT ALIGNMENT PLACEHOLDERS ---
+    const SSOT_REF = [
+        "DNA Rules", "DNA Grid", "Biology", "Physics", "Initial Distribution",
+        "Soup", "Big Bang", "Bipolar", "Galaxy", "Grid", "Uniform", "Spread Radius",
+        "Accretion", "Glow", "Quicksilver", "Star Formation", "Neural Cloud", "Von Neumann"
+    ];
+
+    // Default rule for Species 0 (Basic attraction)
+    DEFAULT_SPECIES[0].rules[0].val = 0.1; DEFAULT_SPECIES[0].rules[0].active = true;
+    DEFAULT_SPECIES[0].rules[1].val = 0.99; DEFAULT_SPECIES[0].rules[1].active = true;
+
+    let species = JSON.parse(JSON.stringify(DEFAULT_SPECIES));
+
+    const DNA_RANGES = [
+        { min: -2, max: 2 },    // Force
+        { min: 0.8, max: 1.0 }, // Viscosity
+        { min: -1, max: 1 },    // Torque
+        { min: 0, max: 0.5 },   // Jitter
+        { min: -1, max: 1 },    // C1
+        { min: 0, max: 1 },     // C2
+        { min: -1, max: 1 },    // C3
+        { min: -5, max: 5 },    // Hidden Mass
+        { min: 0.1, max: 5 },   // Stiffness
+        { min: 0, max: 1 },     // Fusion
+        { min: 0, max: 0.1 },   // Birth Rate
+        { min: 0, max: 0.1 },   // Death Rate
+        { min: 0, max: 0.5 },   // Mutation
+        { min: 0, max: 2 },     // Signal Resp
+        { min: 0, max: 1 },     // Pulse Rate
+        { min: -1, max: 1 },    // Tidal
+        { min: 20, max: 500 },  // Neighborhood Radius
+        { min: 0, max: 1 },     // Signal Strength
+        { min: 0.1, max: 0.99 },// Signal Decay
+        { min: 0.01, max: 1.0 },// Propagation Speed
+        { min: 0, max: 1 },     // Tuning Ch1
+        { min: 0, max: 1 },     // Tuning Ch2
+        { min: 0, max: 1 },     // Tuning Ch3
+        { min: 0, max: 1 }      // Tuning Ch4
+    ];
+
+    function randomRange(min, max) { return Math.random() * (max - min) + min; }
+
+    function init() {
+        try {
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width; canvas.height = height;
+            panX = width/2; panY = height/2;
+            restartSim();
+            requestAnimationFrame(draw);
+        } catch(e) { console.error(e); }
+    }
+
+    function hardReset() { 
+        laws = { ...DEFAULT_LAWS };
+        species = JSON.parse(JSON.stringify(DEFAULT_SPECIES));
+        globalPhysics = JSON.parse(JSON.stringify(DEFAULT_PHYSICS));
+        restartSim(); 
+    }
+
+    function restartSim() {
+        particles = []; celestials = [];
+        for (let i = 0; i < 2000; i++) {
+            particles.push({
+                x: (Math.random()-0.5)*3000, y: (Math.random()-0.5)*3000,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                mass: 1.5 + Math.random(), dead: false,
+                speciesId: Math.floor(Math.random() * 8),
+                phase: Math.random() * Math.PI * 2,
+                signals: [0, 0, 0, 0],
+                outputSignal: 0
+            });
+        }
+        syncUI();
+    }
+
+    function physics() {
+        if (paused) return;
+        const dt = 1.0, G = globalPhysics[0].val, cellS = 400;
+        const pic = new Map(), gridStats = new Map();
+        
+        // Pre-cache rules for performance
+        const specDNA = species.map(s => ({
+            radius2: Math.pow(s.rules.find(r => r.name === "Neighborhood Radius").val, 2),
+            pulse: s.rules.find(r => r.name === "Pulse Rate").val,
+            strength: s.rules.find(r => r.name === "Signal Strength").val,
+            decay: s.rules.find(r => r.name === "Signal Decay").val,
+            speed: s.rules.find(r => r.name === "Propagation Speed").val,
+            tuning: [
+                s.rules.find(r => r.name === "Tuning Ch1").val,
+                s.rules.find(r => r.name === "Tuning Ch2").val,
+                s.rules.find(r => r.name === "Tuning Ch3").val,
+                s.rules.find(r => r.name === "Tuning Ch4").val
+            ]
+        }));
+
+        // Pass 0: Emission & Buffer Reset
+        particles.forEach(p => {
+            const dna = specDNA[p.speciesId];
+            p.phase += dna.pulse * 0.15;
+            p.outputSignal = Math.max(0, Math.sin(p.phase)) * dna.strength;
+            p._incoming = [0, 0, 0, 0]; // Temp buffer for Pass 3
+        });
+
+        // Pass 1: Hashing and Cluster Analysis
+        particles.forEach(p => {
+            const gx = Math.floor((p.x + WORLD_W/2)/cellS), gy = Math.floor((p.y + WORLD_H/2)/cellS);
+            const key = (gx << 16) | gy;
+            if(!pic.has(key)) { pic.set(key, []); gridStats.set(key, { m: 0, x: 0, y: 0, count: 0 }); }
+            pic.get(key).push(p);
+            const gs = gridStats.get(key);
+            gs.m += p.mass; gs.x += p.x; gs.y += p.y; gs.count++;
+            p.ax = 0; p.ay = 0;
+        });
+
+        // Pass 2: Condensation
+        gridStats.forEach((gs, key) => {
+            if (gs.m > 300 && gs.count > 40) {
+                const cx = gs.x / gs.count, cy = gs.y / gs.count;
+                const tooClose = celestials.some(c => Math.abs(c.x - cx) < 100 && Math.abs(c.y - cy) < 100);
+                if (!tooClose) {
+                    celestials.push({ x: cx, y: cy, vx: 0, vy: 0, mass: gs.m, radius: Math.sqrt(gs.m)*2.5, type: 'planet' });
+                    pic.get(key).forEach(p => p.dead = true);
+                }
+            }
+        });
+
+        // Pass 3: Particle Physics & Communication
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            if (p.dead) continue;
+
+            if (laws.grav) {
+                celestials.forEach(c => {
+                    let dx = c.x - p.x, dy = c.y - p.y;
+                    const d2 = dx*dx + dy*dy;
+                    if (d2 < 20) return;
+                    const d = Math.sqrt(d2);
+                    let f = (G * c.mass) / d2;
+                    if (c.type === 'star') f -= (G * 120.0) / d; 
+                    p.ax += (dx/d)*f; p.ay += (dy/d)*f;
+                    if (d < c.radius) { c.mass += p.mass * 0.5; p.dead = true; }
+                });
+            }
+
+            const gx = Math.floor((p.x + WORLD_W/2)/cellS), gy = Math.floor((p.y + WORLD_H/2)/cellS);
+            const dna = specDNA[p.speciesId];
+
+            for (let oy = -1; oy <= 1; oy++) {
+                for (let ox = -1; ox <= 1; ox++) {
+                    const key = ((gx+ox) << 16) | (gy+oy);
+                    const neighbors = pic.get(key);
+                    if (neighbors) {
+                        neighbors.forEach(o => {
+                            if (p === o || o.dead) return;
+                            const dx = o.x - p.x, dy = o.y - p.y;
+                            const d2 = dx*dx + dy*dy;
+                            if (d2 < dna.radius2) { 
+                                const d = Math.sqrt(d2);
+                                // Physics
+                                p.ax += (dx/d)*0.08; p.ay += (dy/d)*0.08; 
+                                // Communication (Signal Propagation)
+                                const attn = 1.0 - (d / Math.sqrt(dna.radius2));
+                                for (let ch = 0; ch < 4; ch++) {
+                                    p._incoming[ch] += o.outputSignal * dna.tuning[ch] * attn;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Pass 4: Signal Integration (Decay + Speed)
+            for (let ch = 0; ch < 4; ch++) {
+                p.signals[ch] = p.signals[ch] * dna.decay + (p._incoming[ch] - p.signals[ch]) * dna.speed;
+                p.signals[ch] = Math.max(0, Math.min(1, p.signals[ch])); // Clamp
+            }
+
+            if (laws.jitter) { p.ax += (Math.random()-0.5)*0.15; p.ay += (Math.random()-0.5)*0.15; }
+            let drag = laws.drag ? 0.993 : 1.0;
+            p.vx = (p.vx + p.ax) * drag; p.vy = (p.vy + p.ay) * drag;
+            p.x += p.vx * dt; p.y += p.vy * dt;
+        }
+
+        // Pass 4: Celestial Physics (Safe Merging)
+        for (let i = celestials.length - 1; i >= 0; i--) {
+            const c = celestials[i];
+            if (c.dead) continue;
+            c.radius = Math.sqrt(c.mass) * 2.5;
+            if (c.mass > 1000 && c.type !== 'star') c.type = 'star';
+            if (c.type === 'star') c.mass -= 0.04;
+            if (c.mass < 20) { c.dead = true; continue; }
+            
+            for (let j = i - 1; j >= 0; j--) {
+                const o = celestials[j];
+                if (o.dead) continue;
+                const dx = o.x - c.x, dy = o.y - c.y;
+                const d2 = dx*dx + dy*dy;
+                if (d2 < 10) continue;
+                const d = Math.sqrt(d2), f = (G * o.mass) / d2;
+                c.vx += (dx/d)*f/c.mass*10; c.vy += (dy/d)*f/c.mass*10;
+                if (d < (c.radius + o.radius)) { 
+                    c.mass += o.mass; o.dead = true; 
+                    c.vx = (c.vx + o.vx) * 0.5; c.vy = (c.vy + o.vy) * 0.5;
+                }
+            }
+            c.x += c.vx * dt; c.y += c.vy * dt;
+        }
+        celestials = celestials.filter(c => !c.dead);
+        particles = particles.filter(p => !p.dead);
+    }
+
+    function draw(time) {
+        if(!lastTime) lastTime = time; const delta = time - lastTime; lastTime = time;
+        if (delta > 0) document.getElementById('fps').innerText = Math.round(1000/delta);
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.save(); ctx.translate(panX, panY); ctx.scale(zoom, zoom);
+        
+        celestials.forEach(c => {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+            if (c.type === 'star') {
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 15; ctx.shadowColor = '#fff';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle = '#666'; ctx.fill();
+            }
+        });
+
+        particles.forEach(p => {
+            const sigSum = p.signals[0] + p.signals[1] + p.signals[2] + p.signals[3];
+            const size = 2 + sigSum * 4;
+            ctx.fillStyle = species[p.speciesId].renderColor;
+            if (sigSum > 0.05) {
+                ctx.globalAlpha = 0.4 + sigSum * 0.6;
+                ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
+                ctx.globalAlpha = 1.0;
+            } else {
+                ctx.fillRect(p.x, p.y, 2, 2);
+            }
+        });
+
+        ctx.restore();
+        document.getElementById('p-count').innerText = particles.length;
+        document.getElementById('c-count').innerText = celestials.length;
+        physics();
+        requestAnimationFrame(draw);
+    }
+
+    function togglePause() { paused = !paused; document.getElementById('play-pause-btn').innerText = paused ? 'PLAY' : 'PAUSE'; }
+    function toggleLaw(k) { laws[k] = !laws[k]; syncUI(); }
+    function updateDNA(speciesId, ruleName, val, displayId) {
+        const spec = species[speciesId];
+        const rule = spec.rules.find(r => r.name === ruleName);
+        if (rule) rule.val = parseFloat(val);
+        if (displayId) document.getElementById(displayId).innerText = val;
+    }
+    function syncUI() {
+        Object.keys(laws).forEach(k => {
+            const el = document.getElementById(`syn-${k}`);
+            if(el) { el.classList.toggle('active', laws[k]); el.querySelector('.status').innerText = laws[k] ? 'ON' : 'OFF'; }
+        });
+    }
+    function triggerSmartChaos() {
+        // 1. Velocity Jitter (Clamped)
+        particles.forEach(p => { p.vx += (Math.random()-0.5)*5; p.vy += (Math.random()-0.5)*5; });
+
+        // 2. DNA Chaos (SSoT Compliant)
+        species.forEach(s => {
+            s.rules.forEach((rule, idx) => {
+                const range = DNA_RANGES[idx];
+                if (range) rule.val = randomRange(range.min, range.max);
+            });
+        });
+
+        // 3. Global Physics Chaos (Clamped to Sliders)
+        globalPhysics.forEach(p => {
+            p.val = randomRange(p.min, p.max);
+        });
+
+        syncUI();
+    }
+
+    window.addEventListener('resize', () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; });
+    init();
+</script>
+</body>
+</html>
