@@ -119,9 +119,9 @@ function renderWorldSliders(engine) {
     const container = document.getElementById('world-sliders');
     if (!container) return;
     const items = [
-        { name: 'Particle Count', key: 'count', min: 100, max: 10000, step: 100, val: 5000 },
+        { name: 'Particle Count', key: 'count', min: 100, max: 50000, step: 100, val: 5000 },
         { name: 'Entropy (Grid-Chaos)', key: 'entropy', min: 0, max: 1, step: 0.01, val: 0.5 },
-        { name: 'Spawn Rate', key: 'spawnRate', min: 0, max: 1, step: 0.01, val: 0.0 },
+        { name: 'Spawn Rate', key: 'spawnRate', min: 0, max: 5, step: 0.01, val: 0.0 },
         { name: 'Shape (Cube-Sphere)', key: 'shape', min: 0, max: 1, step: 0.01, val: 0.0 },
         { name: 'Spread X', key: 'spreadX', min: 0.1, max: 1.0, step: 0.01, val: 0.5 },
         { name: 'Spread Y', key: 'spreadY', min: 0.1, max: 1.0, step: 0.01, val: 0.5 },
@@ -147,9 +147,9 @@ function renderPhysicsSliders(engine) {
         { name: 'Global G', key: 'G', min: 0, max: 2, step: 0.01, val: 0.15 },
         { name: 'Sim Speed', key: 'dt', min: 0, max: 5, step: 0.1, val: 1.0 },
         { name: 'Base Size', key: 'baseSize', min: 0.01, max: 0.5, step: 0.01, val: 0.05 },
-        { name: 'Map Width (X)', key: 'dimX', min: 2000, max: 20000, step: 500, val: 10000 },
-        { name: 'Map Height (Y)', key: 'dimY', min: 2000, max: 20000, step: 500, val: 10000 },
-        { name: 'Map Depth (Z)', key: 'dimZ', min: 2000, max: 20000, step: 500, val: 10000 }
+        { name: 'Map Width (X)', key: 'dimX', min: 2000, max: 50000, step: 500, val: 10000 },
+        { name: 'Map Height (Y)', key: 'dimY', min: 2000, max: 50000, step: 500, val: 10000 },
+        { name: 'Map Depth (Z)', key: 'dimZ', min: 2000, max: 50000, step: 500, val: 10000 }
     ];
     container.innerHTML = '<h3>Simulation Scale</h3>';
     items.forEach(it => {
@@ -170,8 +170,8 @@ function renderSpeciesList(engine) {
     list.innerHTML = '';
     engine.species.forEach((s, idx) => {
         const div = document.createElement('div');
-        div.className = \`species-card \${idx === currentSpeciesIdx ? 'active' : ''}\`;
-        div.innerHTML = \`<span>\${s.name}</span> <div style="width:10px; height:10px; background:\${s.color}"></div>\`;
+        div.className = `species-card \${idx === currentSpeciesIdx ? 'active' : ''}`;
+        div.innerHTML = `<span>\${s.name}</span> <div style="width:10px; height:10px; background:\${s.color}"></div>`;
         div.onclick = () => window.selectSpecies(idx);
         list.appendChild(div);
     });
@@ -181,7 +181,7 @@ function renderDNASliders(engine) {
     const container = document.getElementById('dna-sliders');
     if (!container) return;
     const spec = engine.species[currentSpeciesIdx];
-    container.innerHTML = \`<h3>\${spec.name} DNA</h3>\`;
+    container.innerHTML = `<h3>\${spec.name} DNA</h3>`;
     DNA_META.forEach((name, idx) => {
         const val = spec.dna[idx];
         const row = document.createElement('div');
@@ -217,13 +217,11 @@ function renderEncyclopaedia() {
     const container = document.getElementById('encyclopaedia');
     if (!container) return;
     container.innerHTML = '<h3>Encyclopaedia</h3>';
-    Object.entries(HELP_DB).forEach(([key, data]) => {
+    Object.keys(HELP_DB).forEach(key => {
+        const data = HELP_DB[key];
         const div = document.createElement('div');
         div.className = 'encyclopaedia-entry';
-        div.innerHTML = `
-            <h4>${key}</h4>
-            <p>${data.layers.explanation}</p>
-        `;
+        div.innerHTML = '<h4>' + key + '</h4><p>' + data.layers.explanation + '</p>';
         div.onclick = () => window.openHelp(key);
         container.appendChild(div);
     });

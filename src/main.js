@@ -81,20 +81,47 @@ class VepaEngine {
     }
 
     setupInteraction() {
-        let activePointers = new Map(), lastPos = null;
+        let activePointers = new Map(), lastPos = null, initialDistance = 0;
         this.app.canvas.addEventListener('wheel', (e) => { this.zoom *= Math.pow(0.999, e.deltaY); }, { passive: true });
-        this.app.canvas.addEventListener('pointerdown', e => { activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (activePointers.size === 1) lastPos = { x: e.clientX, y: e.clientY }; });
-        window.addEventListener('pointerup', e => { activePointers.delete(e.pointerId); if (activePointers.size === 0) lastPos = null; });
+        this.app.canvas.addEventListener('pointerdown', e => { 
+            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); 
+            if (activePointers.size === 1) lastPos = { x: e.clientX, y: e.clientY };
+            if (activePointers.size === 2) {
+                const pts = Array.from(activePointers.values());
+                initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            }
+        });
+        window.addEventListener('pointerup', e => { 
+            activePointers.delete(e.pointerId); 
+            if (activePointers.size === 0) lastPos = null;
+            if (activePointers.size < 2) initialDistance = 0;
+        });
         window.addEventListener('pointermove', e => {
             if (!activePointers.has(e.pointerId)) return;
             const current = { x: e.clientX, y: e.clientY };
+            
             if (activePointers.size === 1 && lastPos) {
-                this.pan.x += (current.x - lastPos.x) / this.zoom; this.pan.y += (current.y - lastPos.y) / this.zoom;
+                this.pan.x += (current.x - lastPos.x) / this.zoom; 
+                this.pan.y += (current.y - lastPos.y) / this.zoom;
+            } else if (activePointers.size === 2 && lastPos) {
+                const pts = Array.from(activePointers.values());
+                // Pinch to zoom
+                const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                if (initialDistance > 0) {
+                    const ratio = dist / initialDistance;
+                    this.zoom *= ratio;
+                    initialDistance = dist;
+                }
+                // Two finger Z pan
+                this.pan.z += (current.y - lastPos.y) * 40;
+                this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
             } else if (activePointers.size === 3 && lastPos) {
-                this.pan.z += (current.y - lastPos.y) * 20;
+                this.pan.z += (current.y - lastPos.y) * 40;
                 this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
             }
-            lastPos = current; activePointers.set(e.pointerId, current);
+            
+            lastPos = current; 
+            activePointers.set(e.pointerId, current);
         });
     }
 
