@@ -1,70 +1,61 @@
 import { DNA_META, DNA_RANGES, HELP_DB } from './constants';
 
 let currentSpeciesIdx = 0;
+const narrativeHistory = [];
 
 class HelpPanel {
     constructor() {
         this.el = document.getElementById('help-panel');
-        this.state = {
-            activeKey: null,
-            level: 2
-        };
+        this.state = { activeKey: null, level: 2 };
     }
-
     open(key, level = 2) {
         this.state.activeKey = key;
         this.state.level = level;
         this.render();
         this.el.classList.remove('hidden');
     }
-
-    close() {
-        this.el.classList.add('hidden');
-    }
-
+    close() { this.el.classList.add('hidden'); }
     render() {
         const data = HELP_DB[this.state.activeKey];
         if (!data) return;
-
         const layers = [
-            { id: 'hint', title: 'HINT', content: data.layers.hint },
-            { id: 'explanation', title: 'EXPLANATION', content: data.layers.explanation },
-            { id: 'system', title: 'SYSTEM', content: data.layers.system },
-            { id: 'advanced', title: 'ADVANCED', content: data.layers.advanced }
+            { title: 'HINT', content: data.layers.hint },
+            { title: 'EXPLANATION', content: data.layers.explanation },
+            { title: 'SYSTEM', content: data.layers.system },
+            { title: 'ADVANCED', content: data.layers.advanced }
         ];
-
-        let html = `
-            <div class="help-header">
-                <span style="color:var(--warn); font-weight:bold;">${this.state.activeKey}</span>
-                <span class="help-close" onclick="window.closeHelp()">[X]</span>
-            </div>
-        `;
-
+        let html = `<div class="help-header"><span style="color:var(--warn); font-weight:bold;">${this.state.activeKey}</span><span class="help-close" onclick="window.closeHelp()">[X]</span></div>`;
         layers.slice(0, this.state.level).forEach(layer => {
-            html += `
-                <div class="help-layer">
-                    <div class="help-layer-title">${layer.title}</div>
-                    <div class="help-layer-content">${layer.content}</div>
-                </div>
-            `;
+            html += `<div class="help-layer"><div class="help-layer-title">${layer.title}</div><div class="help-layer-content">${layer.content}</div></div>`;
         });
-
         if (this.state.level >= 3) {
-            html += `
-                <div class="help-thresholds">
-                    <div class="help-layer-title">THRESHOLDS</div>
-                    <div>Low: ${data.thresholds.low}</div>
-                    <div>High: ${data.thresholds.high}</div>
-                    <div>Extreme: ${data.thresholds.extreme}</div>
-                </div>
-            `;
+            html += `<div class="help-thresholds"><div class="help-layer-title">THRESHOLDS</div><div>Low: ${data.thresholds.low}</div><div>High: ${data.thresholds.high}</div><div>Extreme: ${data.thresholds.extreme}</div></div>`;
         }
-
         this.el.innerHTML = html;
     }
 }
 
+class Tooltip {
+    constructor() {
+        this.el = document.getElementById('tooltip');
+    }
+    show(key, x, y) {
+        const data = HELP_DB[key];
+        if (!data) return;
+        this.el.innerHTML = `
+            <div><strong>${key}</strong></div>
+            <div style="font-size: 8px; margin-top: 3px;">${data.layers.hint}</div>
+            <button class="tooltip-btn" onclick="window.openHelp('${key}'); window.hideTooltip();">ENCYCLOPEDIA</button>
+        `;
+        this.el.style.left = Math.min(window.innerWidth - 160, x) + 'px';
+        this.el.style.top = (y - 60) + 'px';
+        this.el.classList.remove('hidden');
+    }
+    hide() { this.el.classList.add('hidden'); }
+}
+
 const helpPanel = new HelpPanel();
+const tooltip = new Tooltip();
 
 export function setupUI(engine) {
     window.triggerSmartChaos = () => engine.triggerSmartChaos();
@@ -78,41 +69,24 @@ export function setupUI(engine) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        if (event) event.currentTarget.classList.add('active');
         if (tabId === 'tab-help') renderEncyclopaedia();
+        if (tabId === 'tab-log') renderNarrativeLog();
     };
     window.addSpecies = () => { engine.addSpecies(); renderSpeciesList(engine); };
     window.selectSpecies = (idx) => { currentSpeciesIdx = idx; renderSpeciesList(engine); renderDNASliders(engine); };
     
     window.openHelp = (key) => helpPanel.open(key, 2);
-    window.openHelpDeep = (key) => helpPanel.open(key, 4);
     window.closeHelp = () => helpPanel.close();
+    window.showTooltip = (key, e) => { e.stopPropagation(); tooltip.show(key, e.clientX, e.clientY); };
+    window.hideTooltip = () => tooltip.hide();
+
+    document.addEventListener('click', () => window.hideTooltip());
 
     renderWorldSliders(engine);
     renderPhysicsSliders(engine);
     renderSpeciesList(engine);
     renderDNASliders(engine);
-}
-
-function attachLongPress(el, key) {
-    let timer;
-    const start = () => {
-        timer = setTimeout(() => {
-            window.openHelpDeep(key);
-            timer = null;
-        }, 600);
-    };
-    const end = () => {
-        if (timer) {
-            clearTimeout(timer);
-            timer = null;
-        }
-    };
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchend', end, { passive: true });
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', end);
-    el.addEventListener('mouseleave', end);
 }
 
 function renderWorldSliders(engine) {
@@ -132,7 +106,7 @@ function renderWorldSliders(engine) {
         const row = document.createElement('div');
         row.className = 'slider-row';
         row.innerHTML = `
-            <span class="slider-label">${it.name}: </span><span id="world-val-${it.key}">${it.val}</span>
+            <span class="slider-label" onclick="window.showTooltip('${it.name}', event)">${it.name}: </span><span id="world-val-${it.key}">${it.val}</span>
             <input type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.val}" 
                    style="width: 100%;" oninput="window.updateWorld('${it.key}', this.value, 'world-val-${it.key}')">
         `;
@@ -157,7 +131,7 @@ function renderPhysicsSliders(engine) {
         row.className = 'slider-row';
         const updateFn = it.type === 'phys' ? 'updatePhysics' : 'updateWorld';
         row.innerHTML = `
-            <span class="slider-label">${it.name}: </span><span id="phys-val-${it.key}">${it.val}</span>
+            <span class="slider-label" onclick="window.showTooltip('${it.name}', event)">${it.name}: </span><span id="phys-val-${it.key}">${it.val}</span>
             <input type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.val}" 
                    style="width: 100%;" oninput="window.${updateFn}('${it.key}', this.value, 'phys-val-${it.key}')">
         `;
@@ -171,8 +145,8 @@ function renderSpeciesList(engine) {
     list.innerHTML = '';
     engine.species.forEach((s, idx) => {
         const div = document.createElement('div');
-        div.className = `species-card \${idx === currentSpeciesIdx ? 'active' : ''}`;
-        div.innerHTML = `<span>\${s.name}</span> <div style="width:10px; height:10px; background:\${s.color}"></div>`;
+        div.className = `species-card ${idx === currentSpeciesIdx ? 'active' : ''}`;
+        div.innerHTML = `<span>${s.name}</span> <div style="width:10px; height:10px; background:${s.color}"></div>`;
         div.onclick = () => window.selectSpecies(idx);
         list.appendChild(div);
     });
@@ -182,7 +156,7 @@ function renderDNASliders(engine) {
     const container = document.getElementById('dna-sliders');
     if (!container) return;
     const spec = engine.species[currentSpeciesIdx];
-    container.innerHTML = `<h3>\${spec.name} DNA</h3>`;
+    container.innerHTML = `<h3>${spec.name} DNA</h3>`;
     DNA_META.forEach((name, idx) => {
         const val = spec.dna[idx];
         const row = document.createElement('div');
@@ -190,11 +164,9 @@ function renderDNASliders(engine) {
         const label = document.createElement('span');
         label.className = 'slider-label';
         label.innerText = `${name}: `;
-        label.onclick = () => window.openHelp(name);
-        attachLongPress(label, name);
+        label.onclick = (e) => window.showTooltip(name, e);
         
         row.appendChild(label);
-        
         const valSpan = document.createElement('span');
         valSpan.id = `dna-val-${idx}`;
         valSpan.innerText = val.toFixed(2);
@@ -212,7 +184,6 @@ function renderDNASliders(engine) {
             window.updateDNA(currentSpeciesIdx, idx, rounded, `dna-val-${idx}`);
         };
         row.appendChild(input);
-        
         container.appendChild(row);
     });
 }
@@ -227,6 +198,18 @@ function renderEncyclopaedia() {
         div.className = 'encyclopaedia-entry';
         div.innerHTML = '<h4>' + key + '</h4><p>' + data.layers.explanation + '</p>';
         div.onclick = () => window.openHelp(key);
+        container.appendChild(div);
+    });
+}
+
+function renderNarrativeLog() {
+    const container = document.getElementById('narrative-log');
+    if (!container) return;
+    container.innerHTML = '<h3>System Log</h3>';
+    narrativeHistory.slice().reverse().forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `<span class="log-time">[${entry.time}]</span> <span>${entry.text}</span>`;
         container.appendChild(div);
     });
 }
@@ -279,7 +262,6 @@ window.applySuggestion = (action) => {
             });
         }
     }
-    // Re-render UI to show new values
     window.selectSpecies(currentSpeciesIdx); 
 };
 
@@ -288,6 +270,13 @@ export function renderNarrative(text) {
     if (!el) return;
     el.innerText = text;
     el.classList.remove('fading');
+    
+    const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (narrativeHistory.length === 0 || narrativeHistory[narrativeHistory.length-1].text !== text) {
+        narrativeHistory.push({ time, text });
+        if (narrativeHistory.length > 100) narrativeHistory.shift();
+    }
+
     if (window._narrativeTimer) clearTimeout(window._narrativeTimer);
     window._narrativeTimer = setTimeout(() => el.classList.add('fading'), 4000);
 }
@@ -306,17 +295,14 @@ window.onTimelineScrub = (e) => {
     const val = parseInt(e.target.value);
     const max = parseInt(e.target.max);
     const label = document.getElementById('timeline-label');
-    
     if (val === max) {
         label.innerText = 'LIVE';
-        // Simulation continues normally
     } else {
         label.innerText = 'REPLAY: ' + val;
         window.engine.timelineEngine.restore(val);
     }
 };
 
-// Initial attachment
 setTimeout(() => {
     const slider = document.getElementById('timeline-slider');
     if (slider) slider.oninput = window.onTimelineScrub;
@@ -326,7 +312,6 @@ export function notifyNewProposal(name) {
     const el = document.getElementById('proposal-panel');
     const p = window.engine.emergentEngine.pending[0];
     if (!p) return;
-
     el.innerHTML = `
         <h3>NEW LAW DETECTED</h3>
         <p><strong>${p.name}</strong></p>
@@ -364,14 +349,13 @@ export function renderEmergentSliders() {
         container.className = 'emergent-section';
         specTab.appendChild(container);
     }
-    
     container.innerHTML = '<h4>Emergent Laws</h4>';
     Object.entries(window.engine.emergentEngine.metaParams).forEach(([key, val]) => {
         const row = document.createElement('div');
         row.className = 'slider-row';
         const displayName = key.replace(/_/g, ' ');
         row.innerHTML = `
-            <span class="slider-label" onclick="window.openHelp('${displayName}')">${displayName}: </span>
+            <span class="slider-label" onclick="window.showTooltip('${displayName}', event)">${displayName}: </span>
             <span id="meta-val-${key}">${val.toFixed(2)}</span>
             <input type="range" min="0" max="1" step="0.01" value="${val}" 
                    style="width: 100%;" oninput="window.updateMetaParam('${key}', this.value)">

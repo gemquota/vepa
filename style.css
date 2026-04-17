@@ -281,3 +281,40 @@ canvas { display: block; position: fixed; inset: 0; z-index: 0; }
     border-top: 1px solid #333;
     padding-top: 10px;
 }
+
+/* Tooltip System */
+.tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    z-index: 1500;
+    max-width: 150px;
+    pointer-events: auto;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+.tooltip.hidden { display: none; }
+
+.tooltip-btn {
+    margin-top: 5px;
+    width: 100%;
+    padding: 3px;
+    font-size: 8px;
+    background: var(--neon);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.log-entry {
+    border-bottom: 1px solid #222;
+    padding: 4px 0;
+    margin-bottom: 4px;
+}
+
+.log-time { color: #666; margin-right: 5px; }
