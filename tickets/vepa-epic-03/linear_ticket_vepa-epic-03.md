@@ -1,7 +1,7 @@
 ---
 id: vepa-epic-03
 title: "[Epic] Help & Insights: The Cognitive Layer (v3.0.0)"
-status: In Progress
+status: Done
 priority: High
 order: 3
 created: 2026-04-17

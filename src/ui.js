@@ -280,3 +280,12 @@ window.applySuggestion = (action) => {
     // Re-render UI to show new values
     window.selectSpecies(currentSpeciesIdx); 
 };
+
+export function renderNarrative(text) {
+    const el = document.getElementById('narrative-panel');
+    if (!el) return;
+    el.innerText = text;
+    el.classList.remove('fading');
+    if (window._narrativeTimer) clearTimeout(window._narrativeTimer);
+    window._narrativeTimer = setTimeout(() => el.classList.add('fading'), 4000);
+}

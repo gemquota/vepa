@@ -1,7 +1,8 @@
 import * as PIXI from 'pixi.js';
 import { DNA_META, DNA_RANGES } from './constants';
-import { setupUI, updateHUD, syncUI, renderInsights } from './ui';
+import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative } from './ui';
 import { InsightEngine } from './insightEngine';
+import { NarrativeEngine } from './narrativeEngine';
 
 // STRIDE 18: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer
 const STRIDE = 18;
@@ -26,6 +27,7 @@ class VepaEngine {
 
         this.species = [this.createSpecies(0)];
         this.insightEngine = new InsightEngine(this);
+        this.narrativeEngine = new NarrativeEngine();
 
         this.initPixi().then(() => {
             this.setupInteraction();
@@ -149,6 +151,9 @@ class VepaEngine {
             const { insights, suggestions } = this.insightEngine.evaluate();
             renderInsights(insights);
             renderSuggestions(suggestions);
+            
+            const narrative = this.narrativeEngine.update(insights);
+            if (narrative) renderNarrative(narrative);
         }
 
         updateHUD(Math.round(this.app.ticker.FPS), aliveCount);
