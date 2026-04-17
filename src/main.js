@@ -81,58 +81,33 @@ class VepaEngine {
     }
 
     setupInteraction() {
-        let activePointers = new Map(), initialDistance = 0, initialZoom = 1.0;
+        let activePointers = new Map();
         
         this.app.canvas.addEventListener('wheel', (e) => { 
             this.zoom *= Math.pow(0.999, e.deltaY); 
         }, { passive: true });
 
         this.app.canvas.addEventListener('pointerdown', e => { 
-            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY, lastX: e.clientX, lastY: e.clientY }); 
-            if (activePointers.size === 2) {
-                const pts = Array.from(activePointers.values());
-                initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-                initialZoom = this.zoom;
-            }
+            activePointers.set(e.pointerId, { lastY: e.clientY }); 
         });
 
         window.addEventListener('pointerup', e => { 
             activePointers.delete(e.pointerId); 
-            if (activePointers.size < 2) initialDistance = 0;
         });
 
         window.addEventListener('pointermove', e => {
             const p = activePointers.get(e.pointerId);
             if (!p) return;
 
-            const currentX = e.clientX, currentY = e.clientY;
-            const dx = currentX - p.lastX, dy = currentY - p.lastY;
+            const dy = e.clientY - p.lastY;
 
             if (activePointers.size === 1) {
-                // Single finger: XY Panning
-                this.pan.x += dx / this.zoom; 
-                this.pan.y += dy / this.zoom;
-            } else if (activePointers.size === 2) {
-                // Two fingers: Pinch Zoom + Z Panning
-                const pts = Array.from(activePointers.values());
-                // Update this pointer's current position in the values array for distance calc
-                p.x = currentX; p.y = currentY; 
-                
-                const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-                if (initialDistance > 0) {
-                    this.zoom = initialZoom * (dist / initialDistance);
-                }
-                
-                // Z-Panning based on average vertical movement of both fingers
-                this.pan.z += dy * 20; 
-                this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
-            } else if (activePointers.size === 3) {
-                // Three fingers: Alternative Z-Pan
-                this.pan.z += dy * 20;
+                // One finger drag: Zoom (Z-Pan)
+                this.pan.z += dy * 30; 
                 this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
             }
 
-            p.lastX = currentX; p.lastY = currentY;
+            p.lastY = e.clientY;
         });
     }
 

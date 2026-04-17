@@ -111,5 +111,13 @@ function step(laws, specDNA, world) {
         const drag = laws.drag ? laws.dragCoeff : 1.0;
         particles[ptr+3] = (particles[ptr+3]+ax)*drag; particles[ptr+4] = (particles[ptr+4]+ay)*drag; particles[ptr+5] = (particles[ptr+5]+az)*drag;
         particles[ptr] += particles[ptr+3]*dt; particles[ptr+1] += particles[ptr+4]*dt; particles[ptr+2] += particles[ptr+5]*dt;
+
+        // Boundary checks
+        if (particles[ptr] < -W/2) { particles[ptr] = -W/2; particles[ptr+3] *= -0.5; }
+        if (particles[ptr] > W/2) { particles[ptr] = W/2; particles[ptr+3] *= -0.5; }
+        if (particles[ptr+1] < -H/2) { particles[ptr+1] = -H/2; particles[ptr+4] *= -0.5; }
+        if (particles[ptr+1] > H/2) { particles[ptr+1] = H/2; particles[ptr+4] *= -0.5; }
+        if (particles[ptr+2] < -D/2) { particles[ptr+2] = -D/2; particles[ptr+5] *= -0.5; }
+        if (particles[ptr+2] > D/2) { particles[ptr+2] = D/2; particles[ptr+5] *= -0.5; }
     }
 }
