@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v2.0: Nuclear Rewrite</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="ui-layer">
+        <div id="header-controls">
+            <button class="btn chaos-btn" onclick="triggerSmartChaos()">!!! CHAOS !!!</button>
+            <button class="btn" onclick="hardReset()">HARD RESET</button>
+            <button class="btn" onclick="togglePause()" id="play-pause-btn">PAUSE</button>
+            <button class="btn" onclick="restartSim()">RESTART</button>
+        </div>
+        <div class="panel" style="max-width: 200px;">
+            <div class="syn-toggle" id="syn-grav" onclick="toggleLaw('grav')"><span>Gravity</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-life" onclick="toggleLaw('life')"><span>Biology</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-drag" onclick="toggleLaw('drag')"><span>Drag</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-jitter" onclick="toggleLaw('jitter')"><span>Entropy</span> <span class="status">OFF</span></div>
+            <div style="margin-top: 10px; font-size: 8px;">
+                <span>S1 Radius: </span><span id="rad-val">120</span>
+                <input type="range" min="20" max="500" value="120" style="width: 100%;" oninput="updateDNA(0, 'Neighborhood Radius', this.value, 'rad-val')">
+            </div>
+            <!-- Additional sliders will be auto-generated in Phase 2 -->
+        </div>
+    </div>
+    <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span> | C: <span id="c-count">0</span></div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
