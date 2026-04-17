@@ -200,3 +200,84 @@ canvas { display: block; position: fixed; inset: 0; z-index: 0; }
 .narrative-panel.fading {
     opacity: 0;
 }
+
+/* Timeline System */
+.timeline-container {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 600;
+}
+
+.timeline-slider {
+    width: 100%;
+    accent-color: var(--neon);
+    cursor: pointer;
+}
+
+.timeline-label {
+    font-size: 8px;
+    color: var(--neon);
+    margin-top: 4px;
+    font-weight: bold;
+}
+
+/* Proposal Panel */
+.proposal-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--warn);
+    padding: 20px;
+    z-index: 2000;
+    width: 300px;
+    box-shadow: 0 0 50px rgba(255, 251, 62, 0.2);
+    text-align: center;
+}
+
+.proposal-panel.hidden { display: none; }
+
+.proposal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.proposal-actions button {
+    flex: 1;
+    padding: 8px;
+    font-size: 10px;
+    background: #000;
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    cursor: pointer;
+}
+
+.proposal-actions button.accept {
+    border-color: var(--neon);
+    color: var(--neon);
+    background: rgba(0, 255, 65, 0.1);
+}
+
+.proposal-actions button.reject {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+/* Emergent Tab Section */
+.emergent-section {
+    margin-top: 20px;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+}

@@ -170,8 +170,8 @@ function renderSpeciesList(engine) {
     list.innerHTML = '';
     engine.species.forEach((s, idx) => {
         const div = document.createElement('div');
-        div.className = `species-card ${idx === currentSpeciesIdx ? 'active' : ''}`;
-        div.innerHTML = `<span>Species ${idx + 1}</span> <div style="width:10px; height:10px; background:${s.color}"></div>`;
+        div.className = \`species-card \${idx === currentSpeciesIdx ? 'active' : ''}\`;
+        div.innerHTML = \`<span>\${s.name}</span> <div style="width:10px; height:10px; background:\${s.color}"></div>\`;
         div.onclick = () => window.selectSpecies(idx);
         list.appendChild(div);
     });
@@ -180,8 +180,8 @@ function renderSpeciesList(engine) {
 function renderDNASliders(engine) {
     const container = document.getElementById('dna-sliders');
     if (!container) return;
-    container.innerHTML = `<h3>Species ${currentSpeciesIdx + 1} DNA</h3>`;
     const spec = engine.species[currentSpeciesIdx];
+    container.innerHTML = \`<h3>\${spec.name} DNA</h3>\`;
     DNA_META.forEach((name, idx) => {
         const val = spec.dna[idx];
         const row = document.createElement('div');
@@ -289,3 +289,96 @@ export function renderNarrative(text) {
     if (window._narrativeTimer) clearTimeout(window._narrativeTimer);
     window._narrativeTimer = setTimeout(() => el.classList.add('fading'), 4000);
 }
+
+export function updateTimelineUI(max) {
+    const slider = document.getElementById('timeline-slider');
+    if (!slider) return;
+    slider.max = max;
+    if (slider.value == max - 1 || max == 1) {
+        slider.value = max;
+        document.getElementById('timeline-label').innerText = 'LIVE';
+    }
+}
+
+window.onTimelineScrub = (e) => {
+    const val = parseInt(e.target.value);
+    const max = parseInt(e.target.max);
+    const label = document.getElementById('timeline-label');
+    
+    if (val === max) {
+        label.innerText = 'LIVE';
+        // Simulation continues normally
+    } else {
+        label.innerText = 'REPLAY: ' + val;
+        window.engine.timelineEngine.restore(val);
+    }
+};
+
+// Initial attachment
+setTimeout(() => {
+    const slider = document.getElementById('timeline-slider');
+    if (slider) slider.oninput = window.onTimelineScrub;
+}, 100);
+
+export function notifyNewProposal(name) {
+    const el = document.getElementById('proposal-panel');
+    const p = window.engine.emergentEngine.pending[0];
+    if (!p) return;
+
+    el.innerHTML = `
+        <h3>NEW LAW DETECTED</h3>
+        <p><strong>${p.name}</strong></p>
+        <p style="font-size: 8px;">${p.def.description}</p>
+        <div class="proposal-actions">
+            <button class="accept" onclick="window.acceptParam('${p.key}')">ACCEPT</button>
+            <button class="reject" onclick="window.rejectParam('${p.key}')">REJECT</button>
+        </div>
+    `;
+    el.classList.remove('hidden');
+}
+
+window.acceptParam = (key) => {
+    const p = window.engine.emergentEngine.pending.find(x => x.key === key);
+    if (p) {
+        window.engine.emergentEngine.spawnAcceptedParam(p);
+        window.engine.emergentEngine.pending = window.engine.emergentEngine.pending.filter(x => x.key !== key);
+        renderNarrative('New law accepted: ' + p.name);
+    }
+    document.getElementById('proposal-panel').classList.add('hidden');
+};
+
+window.rejectParam = (key) => {
+    window.engine.emergentEngine.rejected.add(key);
+    window.engine.emergentEngine.pending = window.engine.emergentEngine.pending.filter(x => x.key !== key);
+    document.getElementById('proposal-panel').classList.add('hidden');
+};
+
+export function renderEmergentSliders() {
+    const specTab = document.getElementById('tab-spec');
+    let container = document.getElementById('emergent-sliders');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'emergent-sliders';
+        container.className = 'emergent-section';
+        specTab.appendChild(container);
+    }
+    
+    container.innerHTML = '<h4>Emergent Laws</h4>';
+    Object.entries(window.engine.emergentEngine.metaParams).forEach(([key, val]) => {
+        const row = document.createElement('div');
+        row.className = 'slider-row';
+        const displayName = key.replace(/_/g, ' ');
+        row.innerHTML = `
+            <span class="slider-label" onclick="window.openHelp('${displayName}')">${displayName}: </span>
+            <span id="meta-val-${key}">${val.toFixed(2)}</span>
+            <input type="range" min="0" max="1" step="0.01" value="${val}" 
+                   style="width: 100%;" oninput="window.updateMetaParam('${key}', this.value)">
+        `;
+        container.appendChild(row);
+    });
+}
+
+window.updateMetaParam = (key, val) => {
+    window.engine.emergentEngine.metaParams[key] = parseFloat(val);
+    document.getElementById(`meta-val-${key}`).innerText = val;
+};

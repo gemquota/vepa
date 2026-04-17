@@ -1,8 +1,12 @@
 import * as PIXI from 'pixi.js';
 import { DNA_META, DNA_RANGES } from './constants';
-import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative } from './ui';
+import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative, updateTimelineUI, notifyNewProposal } from './ui';
 import { InsightEngine } from './insightEngine';
 import { NarrativeEngine } from './narrativeEngine';
+import { TimelineEngine } from './timelineEngine';
+import { LineageTracker } from './lineageTracker';
+import { EmergentParamEngine } from './emergentParamEngine';
+import { PersistenceEngine } from './persistenceEngine';
 
 // STRIDE 18: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer
 const STRIDE = 18;
@@ -25,9 +29,14 @@ class VepaEngine {
         this.workerBusy = false;
         this._lastInsightCheck = 0;
 
-        this.species = [this.createSpecies(0)];
+        this.lineageTracker = new LineageTracker();
+        this.species = [this.createSpecies(null)];
         this.insightEngine = new InsightEngine(this);
         this.narrativeEngine = new NarrativeEngine();
+        this.timelineEngine = new TimelineEngine(this, this.insightEngine);
+        this.emergentEngine = new EmergentParamEngine(this);
+        this.persistence = new PersistenceEngine();
+        this.persistence.load(this);
 
         this.initPixi().then(() => {
             this.setupInteraction();
@@ -39,11 +48,19 @@ class VepaEngine {
         });
     }
 
-    createSpecies(id) {
-        const h = id * 45;
-        return { id: id, color: `hsl(${h}, 70%, 50%)`, rgb: this.hslToRgb(h / 360, 0.7, 0.5), dna: DNA_RANGES.map(r => r.default) };
+    createSpecies(parentId = null) {
+        const dna = DNA_RANGES.map(r => r.default);
+        const record = this.lineageTracker.createSpecies(dna, parentId);
+        const h = record.id * 45;
+        return { 
+            id: record.id, 
+            name: record.name,
+            color: `hsl(${h}, 70%, 50%)`, 
+            rgb: this.hslToRgb(h / 360, 0.7, 0.5), 
+            dna: dna 
+        };
     }
-    addSpecies() { if (this.species.length < 8) this.species.push(this.createSpecies(this.species.length)); }
+    addSpecies() { if (this.species.length < 8) this.species.push(this.createSpecies(null)); }
     hslToRgb(h, s, l) {
         let r, g, b; const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < 1/2) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
         const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
@@ -154,13 +171,20 @@ class VepaEngine {
             
             const narrative = this.narrativeEngine.update(insights);
             if (narrative) renderNarrative(narrative);
+
+            this.emergentEngine.ingest(insights);
+
+            this.timelineEngine.capture();
+            updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
         }
 
         updateHUD(Math.round(this.app.ticker.FPS), aliveCount);
     }
 
     getFlattenedDNA(s) {
-        const d = s.dna;
+        const dnaCopy = [...s.dna];
+        this.emergentEngine.applyMetaParams(dnaCopy);
+        const d = dnaCopy;
         return { fusionMomentum: d[16], fusionTime: d[17], radius2: Math.pow(d[18], 2), pulse: d[14], strength: d[19], decay: d[20], speed: d[21], tuning: [d[22], d[23], d[24], d[25]] };
     }
 

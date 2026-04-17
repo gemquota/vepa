@@ -1,7 +1,7 @@
 ---
 id: vepa-epic-04
 title: "[Epic] Emergence & Persistence: The Living Universe (v4.0.0)"
-status: Todo
+status: Done
 priority: High
 order: 4
 created: 2026-04-17
