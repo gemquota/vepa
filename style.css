@@ -318,3 +318,43 @@ canvas { display: block; position: fixed; inset: 0; z-index: 0; }
 }
 
 .log-time { color: #666; margin-right: 5px; }
+
+/* Help Toggle */
+.help-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--neon);
+    color: #000;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 2000;
+    box-shadow: 0 0 10px var(--neon);
+}
+
+.help-toggle.active {
+    background: var(--warn);
+    box-shadow: 0 0 10px var(--warn);
+}
+
+.slider-row { position: relative; }
+
+.slider-label {
+    display: inline-block;
+    padding: 2px 5px;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.help-mode-active .slider-label {
+    background: rgba(255, 251, 62, 0.1);
+    border-color: var(--warn);
+    font-size: 7px;
+    width: 100%;
+    margin-bottom: 2px;
+}

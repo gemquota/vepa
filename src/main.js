@@ -81,34 +81,72 @@ class VepaEngine {
     }
 
     setupInteraction() {
-        let activePointers = new Map();
+        let activePointers = new Map(), initialDistance = 0, initialZoom = 1.0;
         
         this.app.canvas.addEventListener('wheel', (e) => { 
             this.zoom *= Math.pow(0.999, e.deltaY); 
+            this.applyLimits();
         }, { passive: true });
 
         this.app.canvas.addEventListener('pointerdown', e => { 
-            activePointers.set(e.pointerId, { lastY: e.clientY }); 
+            activePointers.set(e.pointerId, { lastX: e.clientX, lastY: e.clientY }); 
+            if (activePointers.size === 2) {
+                const pts = Array.from(activePointers.values());
+                initialDistance = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
+                initialZoom = this.zoom;
+            }
         });
 
         window.addEventListener('pointerup', e => { 
             activePointers.delete(e.pointerId); 
+            if (activePointers.size < 2) initialDistance = 0;
         });
 
         window.addEventListener('pointermove', e => {
             const p = activePointers.get(e.pointerId);
             if (!p) return;
 
-            const dy = e.clientY - p.lastY;
+            const dx = e.clientX - p.lastX, dy = e.clientY - p.lastY;
 
             if (activePointers.size === 1) {
-                // One finger drag: Zoom (Z-Pan)
-                this.pan.z += dy * 30; 
-                this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
+                // Single finger: XY Panning
+                this.pan.x += dx / this.zoom; 
+                this.pan.y += dy / this.zoom;
+            } else if (activePointers.size === 2) {
+                // Two fingers: Pinch Zoom
+                p.lastX = e.clientX; p.lastY = e.clientY;
+                const pts = Array.from(activePointers.values());
+                const dist = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
+                if (initialDistance > 0) {
+                    this.zoom = initialZoom * (dist / initialDistance);
+                }
             }
 
-            p.lastY = e.clientY;
+            this.applyLimits();
+            p.lastX = e.clientX; p.lastY = e.clientY;
         });
+    }
+
+    applyLimits() {
+        // Z Limit: Zoom out so that most distant particle is 1px
+        // Distant Z = dimZ * 0.5 (particles are centered around 0)
+        // pScale = focalLength / (focalLength + distantZ)
+        // size = (sqrt(mass) * baseSize) * pScale * zoom
+        // We want size >= 1.0
+        // minZoom = 1.0 / ((sqrt(mass) * baseSize) * pScale)
+        // Using average mass of 1.5 as per restartSim logic (1.0 + Math.random())
+        const distantZ = this.worldConfig.dimZ * 0.5;
+        const pScaleMax = this.focalLength / (this.focalLength + distantZ);
+        const minSizeCoeff = Math.sqrt(1.5) * this.worldConfig.baseSize;
+        const minZoom = 1.0 / (minSizeCoeff * pScaleMax);
+        
+        this.zoom = Math.max(minZoom, Math.min(100, this.zoom));
+
+        // XY Limits: Pan cannot leave the map
+        const limitX = this.worldConfig.dimX * 0.5;
+        const limitY = this.worldConfig.dimY * 0.5;
+        this.pan.x = Math.max(-limitX, Math.min(limitX, this.pan.x));
+        this.pan.y = Math.max(-limitY, Math.min(limitY, this.pan.y));
     }
 
     restartSim() {
