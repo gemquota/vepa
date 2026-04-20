@@ -1,11 +1,11 @@
 ---
 id: vepa-epic-01
 title: "[Epic] VEPA Evolution: Batches 3-6"
-status: Backlog
+status: Done
 priority: High
 order: 10
 created: 2026-03-03
-updated: 2026-03-03
+updated: 2026-04-20
 links:
   - url: ../../PICKLE_JAR.md
     title: Pickle Jar Roadmap

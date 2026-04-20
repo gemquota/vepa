@@ -1,11 +1,11 @@
 ---
 id: vepa-b3-01
-title: "Implement Neighborhood Radius (v1.2)"
+title: "Implement Neighborhood Radius Sampling & Dynamic Hash (v1.2)"
 status: Done
-priority: Medium
+priority: High
 order: 20
 created: 2026-03-03
-updated: 2026-03-03
+updated: 2026-04-20
 links:
   - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
     title: Parent Ticket
@@ -14,12 +14,15 @@ links:
 # Description
 
 ## Problem to solve
-Currently, the physics engine uses a hard-coded grid for spatial hashing. We need a per-species "Neighborhood Radius" to control the range of influence for forces and signals.
+The physics engine currently uses a fixed 3x3x3 grid sampling (radius 1) for spatial hashing. While `cellS` is 500 and the maximum `Neighborhood Radius` is 500, a particle at the edge of a cell might need to check more neighbors if the radius is large. Furthermore, `Neighborhood Radius` should be the master control for ALL proximity-based interactions (Gravity, Collisions, Signals).
 
 ## Solution
-Implement a species-level `neighborhoodRadius` parameter and update the physics loop to use this value when sampling the spatial hash.
+1. Update `physics.worker.js` to dynamically calculate the number of neighbor cells to sample based on `dna.radius` / `cellS`.
+2. Ensure `Neighborhood Radius` (passed as `radius2`) correctly limits all interactions in the proximity loop.
+3. Optimize the spatial hash if necessary (though 500px cells are large for 4000px world).
 
 ## Implementation Details
-- Add `neighborhoodRadius` to species DNA metadata.
-- Update spatial hashing sampling to respect per-species radius.
-- UI: Add a master range slider for the radius.
+- In `physics.worker.js`, calculate `range = Math.ceil(sqrt(dna.radius2) / cellS)`.
+- Loop from `-range` to `range` for `ox, oy, oz`.
+- Verify `d2 < dna.radius2` for Gravity, Signal Propagation, and Attraction/Repulsion.
+- UI: Ensure "Neighborhood Radius" slider is visible in the DNA tab under the "Physics" category (minLevel 1).

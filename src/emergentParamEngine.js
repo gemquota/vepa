@@ -1,4 +1,4 @@
-import { HELP_DB } from './constants';
+import { HELP_DB } from './constants.js';
 
 export class EmergentParamEngine {
     constructor(engine) {
@@ -26,6 +26,7 @@ export class EmergentParamEngine {
     }
 
     evaluateEmergence() {
+        if ((this.engine.complexityLevel || 0) < 2) return;
         const freq = {};
         this.patternBuffer.forEach(frame => {
             frame.signals.forEach(s => {

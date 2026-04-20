@@ -93,3 +93,24 @@ The "CHAOS" button now features a granular control menu to determine which syste
 *   **Star Formation:** High-G accretion.
 *   **Neural Cloud:** Signal propagation network.
 *   **Von Neumann:** Self-assembling structural machines.
+
+---
+
+## 6. IDENTITY & GOAL EMERGENCE (The Sentient Engine)
+New in v2.1.0. This layer interprets simulation behavior and develops internal direction.
+
+### [Goal Seeking System]
+*   **Stability:** Preferred when species populations remain steady and structure is preserved. Increases global drag and decreases simulation speed.
+*   **Complexity:** Preferred when new structures (proto-stars, synchronized swarms) emerge. Biases global gravity and mutation.
+*   **Entropy:** Preferred when chaotic fluctuations dominate. Increases global noise and simulation speed.
+
+### [Personality Core]
+*   **Curiosity:** Bias toward noticing and weighting new or diverse insights.
+*   **Stability Preference:** Bias toward downplaying chaos in narrative interpretation.
+*   **Chaos Tolerance:** Bias toward amplifying instability in narrative interpretation.
+*   **Narrative Certainty:** Controls the decisiveness of the system's internal monologue.
+
+### [Narrative Consciousness]
+*   **Multi-Voice Identity:** The system speaks through four distinct internal narrators (Stabilizer, Diverger, Observer, Dissolver).
+*   **Interpretive Tone:** The system's "mood," shaped by long-term history (Measured, Fluid, Pattern-Seeking).
+*   **Perspective Modes:** Shifts between neutral observer ("The system...") and agentic first-person ("I...").

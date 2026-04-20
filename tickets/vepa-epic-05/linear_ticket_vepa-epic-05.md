@@ -1,11 +1,11 @@
 ---
 id: vepa-epic-05
 title: "[Epic] Identity & Goal Emergence: The Sentient Engine (v5.0.0)"
-status: Backlog
+status: Completed
 priority: High
 order: 50
 created: 2026-04-18
-updated: 2026-04-18
+updated: 2026-04-20
 links:
   - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
     title: Parent Ticket

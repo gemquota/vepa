@@ -11,8 +11,8 @@ import { GoalSystem } from './goalEngine.js';
 import { NarrativeConsciousness } from './narrativeConsciousness.js';
 import { PersonalityCore } from './personalityEngine.js';
 
-// STRIDE 21: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer, 18:wx, 19:wy, 20:wz
-const STRIDE = 21;
+// STRIDE 24: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer, 18:wx, 19:wy, 20:wz, 21:charge, 22:energy, 23:age
+const STRIDE = 24;
 
 class VepaEngine {
     constructor() {
@@ -193,6 +193,9 @@ class VepaEngine {
             this.particles[ptr+11] = 1.0 + Math.random();
             this.particles[ptr+12] = spec.id; this.particles[ptr+13] = 0;
             this.particles[ptr+18] = this.particles[ptr+19] = this.particles[ptr+20] = 0; // Rotation
+            this.particles[ptr+21] = spec.dna[4]; // Charge (Polarity)
+            this.particles[ptr+22] = 100.0; // Energy
+            this.particles[ptr+23] = 0; // Age
 
             // Polarity-based default coloration
             let rgb = spec.rgb;
@@ -296,13 +299,19 @@ class VepaEngine {
             renderInsights(insights); 
             renderSuggestions(suggestions);
             
-            this.goalSystem.evaluate(insights);
+            // Goal & Personality Evolution
+            this.goalSystem.evaluate(insights, this.personality);
+            this.goalSystem.applyBias(this.personality.traits);
             this.goalSystem.applyGoalInfluence();
+
             this.personality.updateFromEvent(insights, this.goalSystem);
             this.personality.decayAndDrift();
             
+            // Narrative System
+            this.narrativeConsciousness.setTone(this.personality.generateTone());
             this.narrativeConsciousness.ingest(insights, this.goalSystem);
-            const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem);
+
+            const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
             if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
 
             this.emergentEngine.ingest(insights); 
@@ -431,7 +440,13 @@ class VepaEngine {
 
     getFlattenedDNA(s) {
         const dnaCopy = [...s.dna]; this.emergentEngine.applyMetaParams(dnaCopy); const d = dnaCopy;
-        return { fusionMomentum: d[16], fusionTime: d[17], radius2: Math.pow(d[18], 2), pulse: d[14], strength: d[19], decay: d[20], speed: d[21], tuning: [d[22], d[23], d[24], d[25]] };
+        return { 
+            force: d[0], viscosity: d[1], torque: d[2], jitter: d[3], polarity: d[4], alpha: d[5], symmetry: d[6], mass: d[7], stiffness: d[8], fusion: d[9], birth: d[10], death: d[11], mutation: d[12],
+            resp: d[13], pulse: d[14], tidal: d[15], fusionMomentum: d[16], fusionTime: d[17], radius2: Math.pow(d[18], 2), strength: d[19], decay: d[20], speed: d[21], 
+            tuning: [d[22], d[23], d[24], d[25]],
+            inertia: d[26], friction: d[27], maxVel: d[28], baseRadius: d[29], elasticity: d[30], bondAngle: d[31], conductivity: d[32], magnetic: d[33],
+            efficiency: d[34], sex: d[35], predation: d[36], rxnThresh: d[37], catalysis: d[38], heat: d[39], memoryDecay: d[40]
+        };
     }
 
     setPlaybackMode(mode) {

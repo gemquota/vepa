@@ -8,7 +8,9 @@ export class PersistenceEngine {
             metaParams: engine.emergentEngine.metaParams,
             definitions: this.serializeDefinitions(engine.emergentEngine.definitions),
             rejected: Array.from(engine.emergentEngine.rejected),
-            version: 2
+            complexityLevel: engine.complexityLevel,
+            simAge: engine.simAge,
+            version: 3
         };
         localStorage.setItem(this.key, JSON.stringify(state));
     }
@@ -21,6 +23,8 @@ export class PersistenceEngine {
             const saved = JSON.parse(raw);
             engine.emergentEngine.metaParams = saved.metaParams || {};
             engine.emergentEngine.rejected = new Set(saved.rejected || []);
+            engine.complexityLevel = saved.complexityLevel || 0;
+            engine.simAge = saved.simAge || 0;
             
             // Re-hydrate definitions (effects are functions, need re-mapping)
             Object.keys(saved.definitions || {}).forEach(key => {
@@ -29,7 +33,7 @@ export class PersistenceEngine {
                 if (def) {
                     engine.emergentEngine.definitions[key] = def;
                     // Re-inject into HelpDB
-                    window.engine.emergentEngine.spawnAcceptedParam({ key, def, name });
+                    engine.emergentEngine.spawnAcceptedParam({ key, def, name });
                 }
             });
             return true;

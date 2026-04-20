@@ -8,12 +8,13 @@ export class TimelineEngine {
 
     capture() {
         const state = this.snapshot();
-        const { insights } = this.insightEngine.evaluate();
-
+        if (!state) return;
+        // Skip insight evaluation during capture if it's too frequent, 
+        // but here we just need the state. Insights are already evaluated in main.js
+        
         this.frames.push({
             t: performance.now(),
-            state,
-            insights
+            state
         });
 
         if (this.frames.length > this.maxFrames) {
@@ -22,11 +23,15 @@ export class TimelineEngine {
     }
 
     snapshot() {
+        if (!this.engine.particles) return null;
         return {
+            particles: new Float32Array(this.engine.particles),
             species: this.engine.species.map(s => ({
                 dna: [...s.dna],
                 color: s.color,
-                id: s.id
+                rgb: s.rgb,
+                id: s.id,
+                name: s.name
             })),
             laws: { ...this.engine.laws },
             world: { ...this.engine.worldConfig }
@@ -42,13 +47,17 @@ export class TimelineEngine {
         if (!frame) return;
 
         this.engine.species = frame.state.species.map(s => ({
-            ...s,
-            rgb: this.engine.hslToRgb(parseInt(s.color.match(/\d+/)[0]) / 360, 0.7, 0.5)
+            ...s
         }));
         this.engine.laws = { ...frame.state.laws };
         this.engine.worldConfig = { ...frame.state.world };
+        this.engine.particles = new Float32Array(frame.state.particles);
         
-        // Signal worker or UI about the change if needed
-        this.engine.restartSim();
+        // Sync worker with restored particles
+        this.engine.worker.postMessage({ 
+            type: 'init', 
+            data: { particles: this.engine.particles }, 
+            version: this.engine.simVersion 
+        });
     }
 }

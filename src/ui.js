@@ -12,10 +12,12 @@ const WORLD_CATEGORIES = {
 
 const DNA_CATEGORIES = {
     "BASIC": { keys: ["Force", "Viscosity", "Birth Rate", "Death Rate"], minLevel: 0 },
-    "MOTION": { keys: ["Torque", "Jitter", "Tidal", "Stiffness", "Hidden Mass"], minLevel: 1 },
-    "SIGNALING": { keys: ["Signal Resp", "Pulse Rate", "Neighborhood Radius", "Signal Strength", "Signal Decay", "Propagation Speed"], minLevel: 2 },
-    "ADVANCED": { keys: ["Mutation", "Fusion", "Fusion Momentum", "Fusion Time"], minLevel: 2 },
-    "CORE TRAITS": { keys: ["C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"], minLevel: 3 }
+    "MOTION": { keys: ["Torque", "Jitter", "Tidal", "Stiffness", "Hidden Mass", "Inertia", "Friction", "Max Velocity"], minLevel: 1 },
+    "SIGNALING": { keys: ["Signal Resp", "Pulse Rate", "Neighborhood Radius", "Signal Strength", "Signal Decay", "Propagation Speed", "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"], minLevel: 2 },
+    "ADVANCED": { keys: ["Mutation", "Fusion", "Fusion Momentum", "Fusion Time", "Base Radius", "Elasticity", "Bond Angle"], minLevel: 2 },
+    "CORE TRAITS": { keys: ["C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Conductivity", "Magnetic Moment"], minLevel: 3 },
+    "BIOLOGY": { keys: ["Energy Efficiency", "Sex Chance", "Predation Bias"], minLevel: 4 },
+    "CHEMISTRY": { keys: ["Reaction Threshold", "Catalysis", "Heat Output", "Memory Decay"], minLevel: 5 }
 };
 
 class HelpPanel {
