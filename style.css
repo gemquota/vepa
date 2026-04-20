@@ -134,7 +134,7 @@ canvas { display: block; position: fixed; inset: 0; z-index: 0; }
 
 .toggle-grid.condensed { gap: 4px; margin-bottom: 10px; display: grid; grid-template-columns: repeat(8, 1fr); flex-shrink: 0; }
 
-.zero-val { opacity: 0.3 !important; filter: grayscale(1); pointer-events: none; }
+.zero-val { opacity: 0.3 !important; filter: grayscale(1); }
 .zero-val .slider-label { color: #444 !important; }
 .zero-val input[type=range] { accent-color: #333 !important; }
 .toggle-grid.condensed .sq-toggle { 
