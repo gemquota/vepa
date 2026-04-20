@@ -34,11 +34,14 @@ function step(laws, specDNA, world) {
             particles[ptr+22] -= cost * dt;
             particles[ptr+23] += dt; // Age
 
-            // Death if no energy
-            if (particles[ptr+22] <= 0) particles[ptr+13] = 1;
+            // Death if no energy or spontaneous death rate
+            if (particles[ptr+22] <= 0 || Math.random() < (dna.death || 0) * 0.01) particles[ptr+13] = 1;
 
             // Mitosis (splitting)
             if (particles[ptr+22] > 180 && Math.random() < dna.birth * 0.5) {
+                const gx = Math.floor((particles[ptr] + W/2)/cellS), gy = Math.floor((particles[ptr+1] + H/2)/cellS), gz = Math.floor((particles[ptr+2] + D/2)/cellS);
+                const key = (gx << 20) | (gy << 10) | gz;
+
                 // Find a dead slot
                 for (let j = 0; j < count; j++) {
                     const oPtr = j * STRIDE;
@@ -50,10 +53,21 @@ function step(laws, specDNA, world) {
                         particles[oPtr+3] = -particles[ptr+3]; particles[oPtr+4] = -particles[ptr+4]; particles[oPtr+5] = -particles[ptr+5];
                         particles[oPtr+11] = particles[ptr+11] * 0.5;
                         particles[ptr+11] *= 0.5;
-                        particles[oPtr+12] = particles[ptr+12];
+                        
+                        // HGT (Sex Chance)
+                        if (Math.random() < (dna.sex || 0)) {
+                            const neighbors = pic.get(key);
+                            particles[oPtr+12] = (neighbors && neighbors.length > 1) ? particles[neighbors[Math.floor(Math.random() * neighbors.length)] * STRIDE + 12] : particles[ptr+12];
+                        } else {
+                            particles[oPtr+12] = particles[ptr+12];
+                        }
+                        
                         particles[oPtr+22] = particles[ptr+22] = 80;
                         particles[oPtr+21] = particles[ptr+21]; // Charge inheritance
-                        // Sex Chance (HGT) - Skip for now for simplicity
+                        
+                        if (dna.mutation > 0 && Math.random() < dna.mutation * 0.1) {
+                            particles[oPtr+12] = (particles[oPtr+12] + 1) % Object.keys(specDNA).length;
+                        }
                         break;
                     }
                 }
@@ -66,7 +80,8 @@ function step(laws, specDNA, world) {
         
         // GLOW & SIGNAL UPDATE
         if (laws.glow) {
-            particles[ptr + 6] += dna.pulse * 0.15 * dt;
+            const speed = dna.speed || 1.0;
+            particles[ptr + 6] += dna.pulse * 0.15 * dt * speed;
             const osc = Math.max(0, Math.sin(particles[ptr + 6]));
             particles[ptr + 7] = osc * dna.strength * dna.tuning[0];
             particles[ptr + 8] = osc * dna.strength * dna.tuning[1];
@@ -74,10 +89,12 @@ function step(laws, specDNA, world) {
             particles[ptr + 10] = osc * dna.strength * dna.tuning[3];
         } else {
             const mD = dna.memoryDecay || 0.99;
-            particles[ptr + 7] *= mD;
-            particles[ptr + 8] *= mD;
-            particles[ptr + 9] *= mD;
-            particles[ptr + 10] *= mD;
+            const sD = dna.decay || 0.95; // Signal Decay (Index 20)
+            const decay = mD * sD;
+            particles[ptr + 7] *= decay;
+            particles[ptr + 8] *= decay;
+            particles[ptr + 9] *= decay;
+            particles[ptr + 10] *= decay;
         }
 
         const gx = Math.floor((particles[ptr] + W/2)/cellS), gy = Math.floor((particles[ptr+1] + H/2)/cellS), gz = Math.floor((particles[ptr+2] + D/2)/cellS);
