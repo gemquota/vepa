@@ -112,7 +112,7 @@ function step(laws, specDNA, world) {
         
         // COLL & ACCR check
         if (laws.coll || laws.accr) {
-            const r1 = dna.baseRadius + Math.sqrt(particles[ptr+11]);
+            const r1 = (dna.baseRadius || 1.0) + Math.sqrt(particles[ptr+11]);
             const range = Math.ceil((r1 + 50) / cellS); // 50 covers most large bodies
             for (let oz = -range; oz <= range; oz++) {
                 for (let oy = -range; oy <= range; oy++) {
@@ -126,7 +126,7 @@ function step(laws, specDNA, world) {
                             if (particles[oPtr + 13] > 0) return;
                             const oSpId = particles[oPtr + 12], oDna = specDNA[oSpId] || specDNA[0];
                             const dx = particles[oPtr]-particles[ptr], dy = particles[oPtr+1]-particles[ptr+1], dz = particles[oPtr+2]-particles[ptr+2];
-                            const d2 = dx*dx + dy*dy + dz*dz, r2 = oDna.baseRadius + Math.sqrt(particles[oPtr+11]);
+                            const d2 = dx*dx + dy*dy + dz*dz, r2 = (oDna.baseRadius || 1.0) + Math.sqrt(particles[oPtr+11]);
                             if (d2 < (r1 + r2) * (r1 + r2)) {
                                 inContact = true;
                                 let fused = false;
@@ -136,19 +136,24 @@ function step(laws, specDNA, world) {
                                     if (relMom >= dna.fusionMomentum) {
                                         particles[ptr+17] += 1;
                                         if (particles[ptr+17] >= dna.fusionTime) {
-                                            const m1 = particles[ptr+11], m2 = particles[oPtr+11], newM = m1 + m2;
+                                            const m1 = particles[ptr+11], m2 = particles[oPtr+11], newM = m1 + m2 * (dna.fusion || 0.5);
                                             const v1x = particles[ptr+3], v1y = particles[ptr+4], v1z = particles[ptr+5], v2x = particles[oPtr+3], v2y = particles[oPtr+4], v2z = particles[oPtr+5];
-                                            particles[ptr+3] = (v1x*m1 + v2x*m2) / newM; particles[ptr+4] = (v1y*m1 + v2y*m2) / newM; particles[ptr+5] = (v1z*m1 + v2z*m2) / newM;
                                             const rx = dx, ry = dy, rz = dz, p2x = v2x*m2, p2y = v2y*m2, p2z = v2z*m2;
                                             const Lx = ry*p2z - rz*p2y, Ly = rz*p2x - rx*p2z, Lz = rx*p2y - ry*p2x;
                                             const I1 = (0.4)*m1*m1, I2 = (0.4)*m2*m2, newI = (0.4)*newM*newM;
-                                            particles[ptr+18] = (particles[ptr+18]*I1 + particles[oPtr+18]*I2 + Lx) / newI;
-                                            particles[ptr+19] = (particles[ptr+19]*I1 + particles[oPtr+19]*I2 + Ly) / newI;
-                                            particles[ptr+20] = (particles[ptr+20]*I1 + particles[oPtr+20]*I2 + Lz) / newI;
+                                            const tMult = (dna.torque || 1.0);
+                                            particles[ptr+18] = (particles[ptr+18]*I1 + particles[oPtr+18]*I2 + Lx * tMult) / newI;
+                                            particles[ptr+19] = (particles[ptr+19]*I1 + particles[oPtr+19]*I2 + Ly * tMult) / newI;
+                                            particles[ptr+20] = (particles[ptr+20]*I1 + particles[oPtr+20]*I2 + Lz * tMult) / newI;
                                             particles[ptr+14] = (particles[ptr+14]*m1 + particles[oPtr+14]*m2) / newM;
                                             particles[ptr+15] = (particles[ptr+15]*m1 + particles[oPtr+15]*m2) / newM;
                                             particles[ptr+16] = (particles[ptr+16]*m1 + particles[oPtr+16]*m2) / newM;
                                             particles[ptr+11] = newM; particles[oPtr+13] = 1; particles[ptr+17] = 0;
+                                            particles[ptr+22] += 50; // Energy boost
+                                            // Heat Output
+                                            particles[ptr+3] += (Math.random()-0.5) * dna.heat;
+                                            particles[ptr+4] += (Math.random()-0.5) * dna.heat;
+                                            particles[ptr+5] += (Math.random()-0.5) * dna.heat;
                                             fused = true;
                                         }
                                     }
@@ -188,6 +193,16 @@ function step(laws, specDNA, world) {
                                             const avgQ = (particles[ptr+21] + particles[oPtr+21]) * 0.5;
                                             particles[ptr+21] += (avgQ - particles[ptr+21]) * cond;
                                             particles[oPtr+21] += (avgQ - particles[oPtr+21]) * cond;
+                                        }
+
+                                        // Bond Angle Torque (Alignment)
+                                        if (dna.bondAngle > 0) {
+                                            const tS = (dna.torque || 1.0) * 0.1;
+                                            const bA = dna.bondAngle * Math.PI / 180;
+                                            // Simplified alignment torque
+                                            particles[ptr+18] += (ny - nz) * Math.sin(bA) * tS;
+                                            particles[ptr+19] += (nz - nx) * Math.sin(bA) * tS;
+                                            particles[ptr+20] += (nx - ny) * Math.sin(bA) * tS;
                                         }
 
                                         const relV = (particles[ptr+3]-particles[oPtr+3])*nx + (particles[ptr+4]-particles[oPtr+4])*ny + (particles[ptr+5]-particles[oPtr+5])*nz;
