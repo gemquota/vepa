@@ -6,65 +6,110 @@
     <title>VEPA v2.1: Particle God</title>
     <link rel="stylesheet" href="./style.css">
 </head>
-<body>
+<body class="theme-sanguine">
+    <div class="bg-lines"></div>
+
     <div id="ui-layer">
-        <button id="help-toggle" class="help-toggle" onclick="window.toggleHelpMode()">?</button>
+        <!-- TOP MENU BAR -->
+        <div id="top-bar-anchor" class="top-bar-anchor">
+            <div id="top-bar" class="playback-bar-container menu-chunk chunk-type-3">
+                <div class="bolt t-l"></div><div class="bolt t-r"></div><div class="bolt b-l"></div><div class="bolt b-r"></div>
+                <div class="chunk-inner playback-bar-inner">
+                    <div class="playback-group time-controls">
+                        <button class="play-btn sq-btn" onclick="window.setPlaybackMode('rewind')" title="Rewind">⏪</button>
+                        <button class="play-btn sq-btn" onclick="window.setPlaybackMode('reverse')" title="Reverse">◀</button>
+                        <button class="play-btn sq-btn" onclick="window.togglePause()" id="play-pause-btn" title="Play/Pause">⏸</button>
+                        <button class="play-btn sq-btn" onclick="window.setPlaybackMode('forward')" title="Play">▶</button>
+                        <button class="play-btn sq-btn" onclick="window.setPlaybackMode('fastforward')" title="Fast Forward">⏩</button>
+                    </div>
+
+                    <div class="bar-divider"></div>
+
+                    <div class="playback-group util-controls">
+                        <button class="play-btn sq-btn chaos-btn" onclick="window.triggerSmartChaos()" title="Smart Chaos">☢️</button>
+                        <button class="play-btn sq-btn refresh-btn" onclick="window.restartSim()" title="Restart Sim">🔄</button>
+                        <button class="play-btn sq-btn reset-btn" onclick="window.hardReset()" title="Hard Reset">🗑️</button>
+                        <button id="help-toggle" class="sq-btn help-btn" onclick="window.toggleHelpMode()" title="Help">?</button>
+                    </div>
+                </div>
+            </div>
+            <button class="rect-min-btn squashed-top-bar" onclick="window.toggleTopBar()">
+                <span class="squash-v">V</span>
+            </button>
+        </div>
+
+        <!-- MAIN PARAMETER DRAWER -->
+        <div id="drawer-container" class="drawer-container">
+            <div id="main-panel" class="panel menu-chunk chunk-type-drawer">
+                <div class="chunk-inner drawer-inner">
+                    <div class="bolt t-l"></div><div class="bolt t-r"></div><div class="bolt b-l"></div><div class="bolt b-r"></div>
+                    
+                    <div class="tabs">
+                        <div class="tab-link active" onclick="window.openTab(event, 'tab-world')">WORLD</div>
+                        <div class="tab-link" onclick="window.openTab(event, 'tab-spec')">SPECIES</div>
+                        <div class="tab-link" onclick="window.openTab(event, 'tab-log')">LOG</div>
+                        <div class="tab-link" onclick="window.openTab(event, 'tab-settings')">SETTINGS</div>
+                    </div>
+
+                    <div id="tab-world" class="tab-content active">
+                        <div class="toggle-grid condensed">
+                            <div class="sq-toggle" id="syn-grav" onclick="window.handleLawClick('grav', 'GRAV', event)">GRAV</div>
+                            <div class="sq-toggle" id="syn-life" onclick="window.handleLawClick('life', 'BIOL', event)">BIOL</div>
+                            <div class="sq-toggle" id="syn-drag" onclick="window.handleLawClick('drag', 'DRAG', event)">DRAG</div>
+                            <div class="sq-toggle" id="syn-jitter" onclick="window.handleLawClick('jitter', 'ENTR', event)">ENTR</div>
+                            <div class="sq-toggle" id="syn-glow" onclick="window.handleLawClick('glow', 'GLOW', event)">GLOW</div>
+                            <div class="sq-toggle" id="syn-wrap" onclick="window.handleLawClick('wrap', 'WRAP', event)">WRAP</div>
+                            <div class="sq-toggle" id="syn-coll" onclick="window.handleLawClick('coll', 'COLL', event)">COLL</div>
+                            <div class="sq-toggle" id="syn-accr" onclick="window.handleLawClick('accr', 'ACCR', event)">ACCR</div>
+                        </div>
+                        <button id="info-module-toggle" class="info-module-toggle" onclick="window.toggleInfoModule()">
+                            <span>PARAMETER INTEL</span> <span id="info-module-arrow">▼</span>
+                        </button>
+                        <div id="info-module" class="info-module-container hidden"></div>
+                        <div id="world-accordion" class="main-accordion"></div>
+                    </div>
+
+                    <div id="tab-spec" class="tab-content">
+                        <div id="species-list" class="condensed-list"></div>
+                        <button class="btn tiny-btn" onclick="window.addSpecies()">+ SPECIES</button>
+                        <div id="dna-accordion" class="main-accordion"></div>
+                    </div>
+
+                    <div id="tab-log" class="tab-content">
+                        <div id="narrative-log" class="condensed-log"></div>
+                    </div>
+
+                    <div id="tab-settings" class="tab-content">
+                        <div class="settings-group">
+                            <button class="btn" style="width:100%" onclick="window.hardReset()">FACTORY_RESET</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="drawer-resize-handle" class="resize-handle"></div>
+            </div>
+            
+            <!-- Persistent Drawer Minimize Button -->
+            <button class="rect-min-btn squashed-drawer" onclick="window.toggleMainPanel()">
+                <span class="squash-v">V</span>
+            </button>
+        </div>
+
+        <div id="insight-panel" class="insight-panel"></div>
+        <div id="suggestions-panel" class="suggestions-panel"></div>
         <div id="proposal-panel" class="proposal-panel hidden"></div>
         <div id="narrative-panel" class="narrative-panel"></div>
+
         <div id="timeline-container" class="timeline-container">
             <input type="range" id="timeline-slider" min="0" max="0" value="0" class="timeline-slider">
             <div id="timeline-label" class="timeline-label">LIVE</div>
         </div>
-        <div id="insight-panel" class="insight-panel"></div>
-        <div id="suggestions-panel" class="suggestions-panel"></div>
-        <div id="header-controls">
-            <button class="btn chaos-btn" onclick="window.triggerSmartChaos()">CHAOS</button>
-            <button class="btn" onclick="window.restartSim()">RESTART</button>
-            <button class="btn" onclick="window.togglePause()" id="play-pause-btn">PAUSE</button>
-        </div>
-        
-        <div class="panel" style="max-width: 250px;">
-            <div class="toggle-grid">
-                <div class="sq-toggle" id="syn-grav" onclick="window.toggleLaw('grav')">GRAV</div>
-                <div class="sq-toggle" id="syn-life" onclick="window.toggleLaw('life')">BIOL</div>
-                <div class="sq-toggle" id="syn-drag" onclick="window.toggleLaw('drag')">DRAG</div>
-                <div class="sq-toggle" id="syn-jitter" onclick="window.toggleLaw('jitter')">ENTR</div>
-            </div>
-
-            <div class="tabs">
-                <div class="tab-link active" onclick="window.openTab(event, 'tab-world')">WORLD</div>
-                <div class="tab-link" onclick="window.openTab(event, 'tab-phys')">PHYS</div>
-                <div class="tab-link" onclick="window.openTab(event, 'tab-spec')">SPEC</div>
-                <div class="tab-link" onclick="window.openTab(event, 'tab-help')">HELP</div>
-                <div class="tab-link" onclick="window.openTab(event, 'tab-log')">LOG</div>
-            </div>
-            
-            <div id="tab-world" class="tab-content active">
-                <div id="world-sliders"></div>
-            </div>
-            
-            <div id="tab-phys" class="tab-content">
-                <div id="phys-sliders"></div>
-            </div>
-            
-            <div id="tab-spec" class="tab-content">
-                <div id="species-list" style="margin-bottom: 10px;"></div>
-                <button class="btn" onclick="window.addSpecies()" style="width: 100%; margin-bottom: 5px;">+ SPECIES</button>
-                <div id="dna-sliders"></div>
-            </div>
-
-            <div id="tab-help" class="tab-content">
-                <div id="encyclopaedia"></div>
-            </div>
-
-            <div id="tab-log" class="tab-content">
-                <div id="narrative-log" style="font-size: 8px; line-height: 1.4;"></div>
-            </div>
-        </div>
     </div>
-    <div id="help-panel" class="help-panel hidden"></div>
+
     <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span></div>
-    <div id="tooltip"></div>
+    <div id="tooltip" class="hidden">
+        <div id="help-panel" class="help-panel hidden"></div>
+    </div>
+    
     <script type="module" src="./src/main.js"></script>
 </body>
 </html>
