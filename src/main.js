@@ -128,6 +128,10 @@ class VepaEngine {
         this.world = new PIXI.Container();
         this.app.stage.addChild(this.world);
 
+        // Environment graphics for walls and grid
+        this.envGraphics = new PIXI.Graphics();
+        this.world.addChild(this.envGraphics);
+
         // Higher resolution base texture to reduce initial pixellation
         const g = new PIXI.Graphics();
         g.circle(0, 0, 32).fill({ color: 0xffffff });
@@ -239,6 +243,9 @@ class VepaEngine {
                 this.workerBusy = false;
             }
         }
+
+        this.renderEnvironment();
+
         this.minimap.clear().rect(0, 0, 100, 100).fill({ color: 0x000, alpha: 0.5 }).stroke({ color: 0x00ff41, width: 1 });
         let aliveCount = 0; const cX = window.innerWidth/2, cY = window.innerHeight/2;
         for (let i = 0; i < this.particleSprites.length; i++) {
@@ -303,6 +310,86 @@ class VepaEngine {
             updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
         }
         updateHUD(Math.round(this.app.ticker.fps), aliveCount);
+    }
+
+    renderEnvironment() {
+        const g = this.envGraphics;
+        g.clear();
+
+        const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
+        const cX = window.innerWidth / 2, cY = window.innerHeight / 2;
+
+        const project = (px, py, pz) => {
+            const x = px + this.pan.x, y = py + this.pan.y, z = pz + this.pan.z;
+            const pScale = this.focalLength / (this.focalLength + z);
+            return {
+                x: cX + x * pScale * this.zoom,
+                y: cY + y * pScale * this.zoom,
+                visible: (this.focalLength + z) > 0
+            };
+        };
+
+        const corners = [];
+        for (let i = 0; i < 8; i++) {
+            const px = (i & 1 ? 1 : -1) * W / 2;
+            const py = (i & 2 ? 1 : -1) * H / 2;
+            const pz = (i & 4 ? 1 : -1) * D / 2;
+            corners.push(project(px, py, pz));
+        }
+
+        const edges = [
+            [0, 1], [2, 3], [4, 5], [6, 7], // X-axis
+            [0, 2], [1, 3], [4, 6], [5, 7], // Y-axis
+            [0, 4], [1, 5], [2, 6], [3, 7]  // Z-axis
+        ];
+
+        // Draw Walls (Planes) - Back plane (4, 5, 7, 6)
+        if (corners[4].visible && corners[5].visible && corners[7].visible && corners[6].visible) {
+            g.poly([corners[4], corners[5], corners[7], corners[6]])
+             .fill({ color: 0x111111, alpha: 0.2 })
+             .stroke({ color: 0x333333, width: 1, alpha: 0.5 });
+        }
+
+        // Left plane (0, 4, 6, 2)
+        if (corners[0].visible && corners[4].visible && corners[6].visible && corners[2].visible) {
+            g.poly([corners[0], corners[4], corners[6], corners[2]])
+             .fill({ color: 0x080808, alpha: 0.1 })
+             .stroke({ color: 0x222222, width: 1, alpha: 0.3 });
+        }
+        
+        // Bottom plane (2, 3, 7, 6)
+        if (corners[2].visible && corners[3].visible && corners[7].visible && corners[6].visible) {
+            g.poly([corners[2], corners[3], corners[7], corners[6]])
+             .fill({ color: 0x0a0a0a, alpha: 0.15 })
+             .stroke({ color: 0x222222, width: 1, alpha: 0.3 });
+        }
+
+        // Draw 3D Grid on the back plane
+        const gridSteps = 10;
+        for (let i = 0; i <= gridSteps; i++) {
+            // Vertical lines on back plane
+            const x = -W / 2 + (W / gridSteps) * i;
+            const p1 = project(x, -H / 2, D / 2);
+            const p2 = project(x, H / 2, D / 2);
+            if (p1.visible && p2.visible) {
+                g.moveTo(p1.x, p1.y).lineTo(p2.x, p2.y).stroke({ color: 0x00ff41, width: 0.5, alpha: 0.1 });
+            }
+
+            // Horizontal lines on back plane
+            const y = -H / 2 + (H / gridSteps) * i;
+            const p3 = project(-W / 2, y, D / 2);
+            const p4 = project(W / 2, y, D / 2);
+            if (p3.visible && p4.visible) {
+                g.moveTo(p3.x, p3.y).lineTo(p4.x, p4.y).stroke({ color: 0x00ff41, width: 0.5, alpha: 0.1 });
+            }
+        }
+
+        // Draw wireframe for the rest
+        edges.forEach(([a, b]) => {
+            if (corners[a].visible && corners[b].visible) {
+                g.moveTo(corners[a].x, corners[a].y).lineTo(corners[b].x, corners[b].y).stroke({ color: 0x444444, width: 1, alpha: 0.2 });
+            }
+        });
     }
 
     promoteToPlanet(idx) {
