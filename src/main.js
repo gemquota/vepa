@@ -250,6 +250,38 @@ class VepaEngine {
             }
         }
 
+        if (!this.paused) {
+            if (performance.now() - this._lastInsightCheck > 1000) {
+                this._lastInsightCheck = performance.now(); 
+                const { insights, suggestions } = this.insightEngine.evaluate();
+                renderInsights(insights); 
+                renderSuggestions(suggestions);
+                
+                // Goal & Personality Evolution
+                this.goalSystem.evaluate(insights, this.personality);
+                this.goalSystem.applyBias(this.personality.traits);
+                this.goalSystem.applyGoalInfluence();
+
+                this.personality.updateFromEvent(insights, this.goalSystem);
+                this.personality.decayAndDrift();
+                
+                // Narrative System
+                this.narrativeConsciousness.setTone(this.personality.generateTone());
+                this.narrativeConsciousness.ingest(insights, this.goalSystem);
+
+                const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
+                if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
+
+                this.emergentEngine.ingest(insights); 
+                this.timelineEngine.capture(); 
+                updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
+            }
+        }
+
+        this.draw();
+    }
+
+    draw() {
         this.renderEnvironment();
 
         this.minimap.clear().rect(0, 0, 100, 100).fill({ color: 0x000, alpha: 0.5 }).stroke({ color: 0x00ff41, width: 1 });
@@ -278,9 +310,6 @@ class VepaEngine {
             s.scale.x = (baseSize / 32) * (1.0 + squishAmount);
             s.scale.y = (baseSize / 32) * (1.0 - squishAmount);
             
-            // Texture scale correction (since base texture is 64px wide, radius 32)
-            // Already handled by /32
-
             if (w2 > 0.0001) {
                 s.rotation = Math.atan2(wy, wx) + (this.simAge * wz * 0.01); 
             }
@@ -296,36 +325,9 @@ class VepaEngine {
             
             if (i % 20 === 0) this.minimap.rect(50 + x/(this.worldConfig.dimX/100), 50 + y/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
         }
-
-        if (!this.paused) {
-            if (performance.now() - this._lastInsightCheck > 1000) {
-                this._lastInsightCheck = performance.now(); 
-                const { insights, suggestions } = this.insightEngine.evaluate();
-                renderInsights(insights); 
-                renderSuggestions(suggestions);
-                
-                // Goal & Personality Evolution
-                this.goalSystem.evaluate(insights, this.personality);
-                this.goalSystem.applyBias(this.personality.traits);
-                this.goalSystem.applyGoalInfluence();
-
-                this.personality.updateFromEvent(insights, this.goalSystem);
-                this.personality.decayAndDrift();
-                
-                // Narrative System
-                this.narrativeConsciousness.setTone(this.personality.generateTone());
-                this.narrativeConsciousness.ingest(insights, this.goalSystem);
-
-                const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
-                if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
-
-                this.emergentEngine.ingest(insights); 
-                this.timelineEngine.capture(); 
-                updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
-            }
-        }
         updateHUD(Math.round(this.app.ticker.fps), aliveCount);
     }
+
 
 
     renderEnvironment() {
