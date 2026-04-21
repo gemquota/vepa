@@ -222,28 +222,31 @@ class VepaEngine {
     }
 
     update() {
-        if (this.paused || !this.particles) return;
-        if (this.playbackMode === 'reverse' || this.playbackMode === 'rewind') {
-            const step = this.playbackMode === 'rewind' ? 5 : 1, slider = document.getElementById('timeline-slider');
-            if (slider) {
-                const newVal = Math.max(0, parseInt(slider.value) - step); slider.value = newVal;
-                this.timelineEngine.restore(newVal); document.getElementById('timeline-label').innerText = 'REPLAY: ' + newVal;
-                if (newVal === 0) {
-                    this.paused = true;
-                    updatePlaybackUI(this.playbackMode, this.paused);
+        if (!this.particles) return;
+
+        if (!this.paused) {
+            if (this.playbackMode === 'reverse' || this.playbackMode === 'rewind') {
+                const step = this.playbackMode === 'rewind' ? 5 : 1, slider = document.getElementById('timeline-slider');
+                if (slider) {
+                    const newVal = Math.max(0, parseInt(slider.value) - step); slider.value = newVal;
+                    this.timelineEngine.restore(newVal); document.getElementById('timeline-label').innerText = 'REPLAY: ' + newVal;
+                    if (newVal === 0) {
+                        this.paused = true;
+                        updatePlaybackUI(this.playbackMode, this.paused);
+                    }
                 }
-            }
-        } else {
-            this.simAge++;
-            this.checkComplexityUnlock();
-            if (!this.workerBusy) {
-                this.workerBusy = true;
-                this.worker.postMessage({ type: 'step', version: this.simVersion, config: { laws: this.laws, world: this.worldConfig, specDNA: this.species.map(s => this.getFlattenedDNA(s)) } });
-                this._workerLastSent = performance.now();
-            } else if (performance.now() - this._workerLastSent > 5000) {
-                // Emergency reset if worker is silent for 5 seconds
-                console.warn("Worker timeout - resetting busy state");
-                this.workerBusy = false;
+            } else {
+                this.simAge++;
+                this.checkComplexityUnlock();
+                if (!this.workerBusy) {
+                    this.workerBusy = true;
+                    this.worker.postMessage({ type: 'step', version: this.simVersion, config: { laws: this.laws, world: this.worldConfig, specDNA: this.species.map(s => this.getFlattenedDNA(s)) } });
+                    this._workerLastSent = performance.now();
+                } else if (performance.now() - this._workerLastSent > 5000) {
+                    // Emergency reset if worker is silent for 5 seconds
+                    console.warn("Worker timeout - resetting busy state");
+                    this.workerBusy = false;
+                }
             }
         }
 
@@ -293,33 +296,37 @@ class VepaEngine {
             
             if (i % 20 === 0) this.minimap.rect(50 + x/(this.worldConfig.dimX/100), 50 + y/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
         }
-        if (performance.now() - this._lastInsightCheck > 1000) {
-            this._lastInsightCheck = performance.now(); 
-            const { insights, suggestions } = this.insightEngine.evaluate();
-            renderInsights(insights); 
-            renderSuggestions(suggestions);
-            
-            // Goal & Personality Evolution
-            this.goalSystem.evaluate(insights, this.personality);
-            this.goalSystem.applyBias(this.personality.traits);
-            this.goalSystem.applyGoalInfluence();
 
-            this.personality.updateFromEvent(insights, this.goalSystem);
-            this.personality.decayAndDrift();
-            
-            // Narrative System
-            this.narrativeConsciousness.setTone(this.personality.generateTone());
-            this.narrativeConsciousness.ingest(insights, this.goalSystem);
+        if (!this.paused) {
+            if (performance.now() - this._lastInsightCheck > 1000) {
+                this._lastInsightCheck = performance.now(); 
+                const { insights, suggestions } = this.insightEngine.evaluate();
+                renderInsights(insights); 
+                renderSuggestions(suggestions);
+                
+                // Goal & Personality Evolution
+                this.goalSystem.evaluate(insights, this.personality);
+                this.goalSystem.applyBias(this.personality.traits);
+                this.goalSystem.applyGoalInfluence();
 
-            const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
-            if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
+                this.personality.updateFromEvent(insights, this.goalSystem);
+                this.personality.decayAndDrift();
+                
+                // Narrative System
+                this.narrativeConsciousness.setTone(this.personality.generateTone());
+                this.narrativeConsciousness.ingest(insights, this.goalSystem);
 
-            this.emergentEngine.ingest(insights); 
-            this.timelineEngine.capture(); 
-            updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
+                const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
+                if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
+
+                this.emergentEngine.ingest(insights); 
+                this.timelineEngine.capture(); 
+                updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
+            }
         }
         updateHUD(Math.round(this.app.ticker.fps), aliveCount);
     }
+
 
     renderEnvironment() {
         const g = this.envGraphics;
