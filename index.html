@@ -70,8 +70,17 @@
                     </div>
 
                     <div id="tab-spec" class="tab-content">
+                        <div class="species-controls-header">
+                            <button class="btn tiny-btn" onclick="window.addSpecies()">+ SPECIES</button>
+                            <div class="selection-tools">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="selection-mode-toggle" onchange="window.toggleSelectionMode(this.checked)">
+                                    <span class="checkmark"></span> SEL_MODE
+                                </label>
+                                <button class="btn tiny-btn" onclick="window.selectAllSpecies()">ALL</button>
+                            </div>
+                        </div>
                         <div id="species-list" class="condensed-list"></div>
-                        <button class="btn tiny-btn" onclick="window.addSpecies()">+ SPECIES</button>
                         <div id="dna-accordion" class="main-accordion"></div>
                     </div>
 

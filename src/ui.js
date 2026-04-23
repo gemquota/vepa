@@ -1,6 +1,8 @@
 import { DNA_META, DNA_RANGES, HELP_DB } from './constants.js';
 
 let currentSpeciesIdx = 0;
+let selectedSpeciesIndices = new Set([0]);
+let selectionMode = false;
 const narrativeHistory = [];
 
 const WORLD_CATEGORIES = {
@@ -62,15 +64,62 @@ export function setupUI(engine) {
             window.toggleLaw(lawKey);
         }
     };
+
+    window.toggleSelectionMode = (enabled) => {
+        selectionMode = enabled;
+        if (!enabled) {
+            selectedSpeciesIndices.clear();
+            selectedSpeciesIndices.add(currentSpeciesIdx);
+        }
+        renderSpeciesList(window.engine);
+        renderDNAAccordion(window.engine);
+    };
+
+    window.selectAllSpecies = () => {
+        const toggle = document.getElementById('selection-mode-toggle');
+        if (toggle) {
+            toggle.checked = true;
+            selectionMode = true;
+        }
+        window.engine.species.forEach((_, idx) => selectedSpeciesIndices.add(idx));
+        renderSpeciesList(window.engine);
+        renderDNAAccordion(window.engine);
+    };
+
+    window.toggleSpeciesSelection = (idx, event) => {
+        if (event) event.stopPropagation();
+        if (selectedSpeciesIndices.has(idx)) {
+            if (selectedSpeciesIndices.size > 1) selectedSpeciesIndices.delete(idx);
+        } else {
+            selectedSpeciesIndices.add(idx);
+        }
+        if (selectedSpeciesIndices.has(idx)) currentSpeciesIdx = idx;
+        else if (selectedSpeciesIndices.size > 0) currentSpeciesIdx = Array.from(selectedSpeciesIndices)[0];
+        
+        renderSpeciesList(window.engine);
+        renderDNAAccordion(window.engine);
+    };
+
     window.updateDNA = (sIdx, rIdx, val, dId) => {
-        emit('cmd:updateDNA', { sIdx, rIdx, val });
+        const value = parseFloat(val);
+        if (selectionMode && selectedSpeciesIndices.has(sIdx)) {
+            selectedSpeciesIndices.forEach(idx => {
+                emit('cmd:updateDNA', { sIdx: idx, rIdx, val: value });
+                window.engine.species[idx].dna[rIdx] = value;
+            });
+        } else {
+            emit('cmd:updateDNA', { sIdx, rIdx, val: value });
+            if (window.engine.species[sIdx]) window.engine.species[sIdx].dna[rIdx] = value;
+        }
+        
         if (dId) {
             const el = document.getElementById(dId);
-            if (el) el.innerText = val;
+            if (el) el.innerText = value.toFixed(2);
             const row = el.closest('.slider-row');
-            if (row) row.classList.toggle('zero-val', parseFloat(val) === 0);
+            if (row) row.classList.toggle('zero-val', value === 0);
         }
     };
+
     window.updateWorld = (key, val, dId) => {
         emit('cmd:updateWorld', { key, val });
         if (dId) {
@@ -277,14 +326,15 @@ export function setupUI(engine) {
         const minLog = Math.log(min), maxLog = Math.log(max);
         let rawVal = Math.exp(minLog + (maxLog - minLog) * (percent / 100));
         let snapped = false;
-        for (const snap of snaps) { if (rawVal > snap * 0.85 && rawVal < snap * 1.15) { rawVal = snap; snapped = true; el.value = ((Math.log(snap) - minLog) / (maxLog - minLog)) * 100; break; } }
-        const finalVal = snapped ? rawVal : Math.round(rawVal);
+        for (const snap of snaps) { if (rawVal > snap * 0.92 && rawVal < snap * 1.08) { rawVal = snap; snapped = true; el.value = ((Math.log(snap) - minLog) / (maxLog - minLog)) * 100; break; } }
+        const finalVal = rawVal < 1 ? rawVal.toFixed(3) : (rawVal < 10 ? rawVal.toFixed(2) : Math.round(rawVal));
         if (updateFn === 'updatePhysics') emit('cmd:updatePhysics', { key, val: finalVal });
         else emit('cmd:updateWorld', { key, val: finalVal });
-        const dId = `world-val-${key}`; const valEl = document.getElementById(dId); if (valEl) {
+        const dId = (updateFn === 'updatePhysics' && (key === 'G' || key === 'dt')) ? `world-val-${key}` : `world-val-${key}`;
+        const valEl = document.getElementById(dId); if (valEl) {
             valEl.innerText = finalVal;
             const row = valEl.closest('.slider-row');
-            if (row) row.classList.toggle('zero-val', finalVal === 0);
+            if (row) row.classList.toggle('zero-val', parseFloat(finalVal) === 0);
         }
     };
 
@@ -299,13 +349,13 @@ export function renderWorldAccordion(engine) {
     const allWorldParams = [
         { name: 'Particle Count', key: 'count', min: 10, max: 50000, val: engine.worldConfig.count, type: 'world', log: true, snaps: [10, 100, 500, 1000, 5000, 10000, 50000] },
         { name: 'Entropy', key: 'entropy', min: 0, max: 1, step: 0.05, val: engine.worldConfig.entropy, type: 'world' },
-        { name: 'Spawn Rate', key: 'spawnRate', min: 0, max: 5, step: 0.05, val: engine.worldConfig.spawnRate, type: 'world' },
+        { name: 'Spawn Rate', key: 'spawnRate', min: 1, max: 1000, val: 10, type: 'world', log: true, snaps: [1, 10, 50, 100, 500, 1000] },
         { name: 'Shape', key: 'shape', min: 0, max: 1, step: 0.05, val: engine.worldConfig.shape, type: 'world' },
         { name: 'Spread X', key: 'spreadX', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadX, type: 'world' },
         { name: 'Spread Y', key: 'spreadY', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadY, type: 'world' },
         { name: 'Spread Z', key: 'spreadZ', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadZ, type: 'world' },
-        { name: 'Global G', key: 'G', min: 0, max: 2, step: 0.05, val: engine.laws.G, type: 'phys' },
-        { name: 'Sim Speed', key: 'dt', min: 0, max: 5, step: 0.1, val: engine.laws.dt, type: 'phys' },
+        { name: 'Global G', key: 'G', min: 0.001, max: 100, val: engine.laws.G, type: 'phys', log: true, snaps: [0.01, 0.1, 1, 10, 50, 100] },
+        { name: 'Sim Speed', key: 'dt', min: 0.1, max: 1000, val: engine.laws.dt, type: 'phys', log: true, snaps: [1, 10, 100, 500, 1000] },
         { name: 'Base Size', key: 'baseSize', min: 0.1, max: 10, step: 0.1, val: engine.worldConfig.baseSize, type: 'world' },
         { name: 'Map Width (X)', key: 'dimX', min: 100, max: 50000, val: engine.worldConfig.dimX, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Height (Y)', key: 'dimY', min: 100, max: 50000, val: engine.worldConfig.dimY, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
@@ -339,8 +389,17 @@ export function renderWorldAccordion(engine) {
 export function renderSpeciesList(engine) {
     const list = document.getElementById('species-list'); if (!list) return; list.innerHTML = '';
     engine.species.forEach((s, idx) => {
-        const div = document.createElement('div'); div.className = `species-card ${idx === currentSpeciesIdx ? 'active' : ''}`;
-        div.innerHTML = `<span>${s.name}</span> <div style="width:10px; height:10px; background:${s.color}"></div>`;
+        const div = document.createElement('div'); 
+        const isActive = (idx === currentSpeciesIdx);
+        const isSelected = selectedSpeciesIndices.has(idx);
+        div.className = `species-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`;
+        
+        let checkboxHtml = '';
+        if (selectionMode) {
+            checkboxHtml = `<input type="checkbox" class="species-card-checkbox" ${isSelected ? 'checked' : ''} onclick="window.toggleSpeciesSelection(${idx}, event)">`;
+        }
+
+        div.innerHTML = `${checkboxHtml}<span>${s.name}</span> <div style="width:10px; height:10px; background:${s.color}"></div>`;
         div.onclick = () => window.selectSpecies(idx); list.appendChild(div);
     });
 }
@@ -369,10 +428,16 @@ export function renderDNAAccordion(engine) {
 
 window.addSpecies = () => emit('cmd:addSpecies');
 window.selectSpecies = (idx) => { 
-    currentSpeciesIdx = idx; 
-    renderSpeciesList(window.engine); 
-    renderDNAAccordion(window.engine); 
-    emit('ui:resized');
+    if (selectionMode) {
+        window.toggleSpeciesSelection(idx);
+    } else {
+        currentSpeciesIdx = idx; 
+        selectedSpeciesIndices.clear();
+        selectedSpeciesIndices.add(idx);
+        renderSpeciesList(window.engine); 
+        renderDNAAccordion(window.engine); 
+        emit('ui:resized');
+    }
 };
 
 let lastLogRenderedCount = 0;

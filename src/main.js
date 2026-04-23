@@ -17,8 +17,8 @@ class VepaEngine {
     constructor() {
         this.app = new PIXI.Application();
         this.paused = false;
-        this.laws = { grav: true, drag: true, jitter: true, coll: true, accr: true, life: false, glow: false, G: 0.15, dt: 1.0 };
-        this.worldConfig = { count: 800, dimX: 500, dimY: 500, dimZ: 500, spreadX: 0.8, spreadY: 0.8, spreadZ: 0.5, baseSize: 2.0 };
+        this.laws = { grav: true, drag: true, jitter: true, coll: true, accr: true, life: true, glow: false, G: 0.15, dt: 1.0 };
+        this.worldConfig = { count: 2000, dimX: 2000, dimY: 2000, dimZ: 2000, spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, baseSize: 1.0 };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
         this.particles = null;
         this.simVersion = 0;
@@ -70,15 +70,39 @@ class VepaEngine {
     }
 
     createDefaultSpecies() {
-        const pairs = [{ pos: [1, 0, 0], neg: [0, 1, 1], name: 'RED/CYAN' }, { pos: [0, 1, 0], neg: [1, 0, 1], name: 'GREEN/MAGENTA' }, { pos: [0, 0, 1], neg: [1, 1, 0], name: 'BLUE/YELLOW' }];
-        const spec = [];
-        pairs.forEach((p) => {
-            const s1 = this.createSpecies(); s1.name = p.name + "_POS"; s1.dna[4] = 1.0; s1.rgb = p.pos;
-            s1.color = `rgb(${p.pos[0]*255},${p.pos[1]*255},${p.pos[2]*255})`; spec.push(s1);
-            const s2 = this.createSpecies(); s2.name = p.name + "_NEG"; s2.dna[4] = -1.0; s2.rgb = p.neg;
-            s2.color = `rgb(${p.neg[0]*255},${p.neg[1]*255},${p.neg[2]*255})`; spec.push(s2);
-        });
-        return spec;
+        const specs = [];
+        
+        // Species 1: Sol (Yellow) - High attraction, High fusion, stable
+        const s1 = this.createSpecies();
+        s1.name = "Sol";
+        s1.dna[0] = 0.5;   // Force (attraction)
+        s1.dna[9] = 0.8;   // Fusion
+        s1.dna[10] = 0.05; // Birth Rate
+        s1.rgb = [1, 1, 0];
+        s1.color = "rgb(255, 255, 0)";
+        specs.push(s1);
+
+        // Species 2: Aether (Blue) - Fluid, cloud-like, responsive
+        const s2 = this.createSpecies();
+        s2.name = "Aether";
+        s2.dna[1] = 0.99;  // Viscosity (slick)
+        s2.dna[3] = 0.2;   // Jitter
+        s2.dna[13] = 1.5;  // Signal Resp
+        s2.rgb = [0, 0.5, 1];
+        s2.color = "rgb(0, 127, 255)";
+        specs.push(s2);
+
+        // Species 3: Void (Red) - Repulsive, chaotic, high turnover
+        const s3 = this.createSpecies();
+        s3.name = "Void";
+        s3.dna[0] = -0.5;  // Force (repulsion)
+        s3.dna[12] = 0.2;  // Mutation
+        s3.dna[11] = 0.08; // Death Rate
+        s3.rgb = [1, 0, 0];
+        s3.color = "rgb(255, 0, 0)";
+        specs.push(s3);
+
+        return specs;
     }
 
     createSpecies(parentId = null) {

@@ -671,7 +671,7 @@ export const HELP_DB = {
 };
 
 export const DNA_RANGES = [
-    { min: -2, max: 2, default: 0.1 },
+    { min: -100, max: 100, default: 0.1 },
     { min: 0.8, max: 1.0, default: 0.98 },
     { min: -1, max: 1, default: 0 },
     { min: 0, max: 0.5, default: 0.05 },
@@ -681,9 +681,9 @@ export const DNA_RANGES = [
     { min: -5, max: 5, default: 0 },
     { min: 0.1, max: 5, default: 1.0 },
     { min: 0, max: 1, default: 0.5 },
-    { min: 0, max: 0.1, default: 0.01 },
-    { min: 0, max: 0.1, default: 0.01 },
-    { min: 0, max: 0.5, default: 0.05 },
+    { min: 0, max: 10, default: 0.5 }, // Birth Rate
+    { min: 0, max: 10, default: 0.1 }, // Death Rate
+    { min: 0, max: 10, default: 0.5 }, // Mutation
     { min: 0, max: 2, default: 1.0 },
     { min: 0, max: 1, default: 0.2 },
     { min: -1, max: 1, default: 0 },
@@ -707,9 +707,9 @@ export const DNA_RANGES = [
     { min: 0, max: 1, default: 0.1 }, // Conductivity
     { min: 0, max: 1, default: 0.1 }, // Magnetic Moment
     // Batch 5 (indices 34-40)
-    { min: 0, max: 1, default: 0.8 }, // Energy Efficiency
-    { min: 0, max: 1, default: 0.05 }, // Sex Chance
-    { min: 0, max: 2, default: 0 }, // Predation Bias
+    { min: 0, max: 10, default: 0.8 }, // Energy Efficiency
+    { min: 0, max: 10, default: 0.05 }, // Sex Chance
+    { min: 0, max: 20, default: 0 }, // Predation Bias
     { min: 10, max: 1000, default: 500 }, // Reaction Threshold
     { min: 1, max: 10, default: 1.0 }, // Catalysis
     { min: 0, max: 1, default: 0.1 }, // Heat Output
