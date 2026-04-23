@@ -40,6 +40,7 @@ export const DNA_META = [
     "Catalysis",
     "Heat Output",
     "Memory Decay",
+    "Species Affinity",
 ];
 
 export const HELP_DB = {
@@ -667,7 +668,16 @@ export const HELP_DB = {
             advanced: "The mechanism for growing 'planets' or 'stars' from dust."
         },
         category: "Laws"
-    }
+    },
+    "Species Affinity": {
+        layers: {
+            hint: "Controls attraction bias toward same or different species.",
+            explanation: "Positive values increase attraction to same species. Negative values increase attraction to different species.",
+            system: "Acts as a multiplier on gravity based on species identity.",
+            advanced: "High positive affinity leads to segregation and monocultures. Negative affinity creates stable diverse mixtures or predator-prey-like clustering."
+        },
+        category: "Biology"
+    },
 };
 
 export const DNA_RANGES = [
@@ -714,4 +724,5 @@ export const DNA_RANGES = [
     { min: 1, max: 10, default: 1.0 }, // Catalysis
     { min: 0, max: 1, default: 0.1 }, // Heat Output
     { min: 0.9, max: 1.0, default: 0.99 }, // Memory Decay
+    { min: -1.0, max: 1.0, default: 0.0 }, // Species Affinity
 ];

@@ -18,7 +18,7 @@ const DNA_CATEGORIES = {
     "SIGNALING": { keys: ["Signal Resp", "Pulse Rate", "Neighborhood Radius", "Signal Strength", "Signal Decay", "Propagation Speed", "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"], minLevel: 0 },
     "ADVANCED": { keys: ["Mutation", "Fusion", "Fusion Momentum", "Fusion Time", "Base Radius", "Elasticity", "Bond Angle"], minLevel: 0 },
     "CORE TRAITS": { keys: ["C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Conductivity", "Magnetic Moment"], minLevel: 0 },
-    "BIOLOGY": { keys: ["Energy Efficiency", "Sex Chance", "Predation Bias"], minLevel: 0 },
+    "BIOLOGY": { keys: ["Energy Efficiency", "Sex Chance", "Predation Bias", "Species Affinity"], minLevel: 0 },
     "CHEMISTRY": { keys: ["Reaction Threshold", "Catalysis", "Heat Output", "Memory Decay"], minLevel: 0 }
 };
 
@@ -120,6 +120,31 @@ export function setupUI(engine) {
         }
     };
 
+    window.handleDNAForceLog = (el, dnaIdx, dId) => {
+        const pct = parseFloat(el.value);
+        const minLog = Math.log(0.001), maxLog = Math.log(100);
+        let val = 0;
+        if (pct > 50.5) {
+            const rangePct = (pct - 50) / 50;
+            val = Math.exp(minLog + (maxLog - minLog) * rangePct);
+        } else if (pct < 49.5) {
+            const rangePct = (50 - pct) / 50;
+            val = -Math.exp(minLog + (maxLog - minLog) * rangePct);
+        } else {
+            val = 0;
+        }
+        
+        // Snapping
+        const snaps = [0, 0.1, 0.5, 1, 10, 50, 100, -0.1, -0.5, -1, -10, -50, -100];
+        for (const snap of snaps) {
+            if (Math.abs(val - snap) < Math.abs(snap) * 0.15 || (snap === 0 && Math.abs(val) < 0.01)) {
+                val = snap; break;
+            }
+        }
+
+        window.updateDNA(currentSpeciesIdx, dnaIdx, val, dId);
+    };
+
     window.updateWorld = (key, val, dId) => {
         emit('cmd:updateWorld', { key, val });
         if (dId) {
@@ -208,6 +233,7 @@ export function setupUI(engine) {
         document.getElementById(tabId).classList.add('active');
         if (event) event.currentTarget.classList.add('active');
         if (tabId === 'tab-log') renderNarrativeLog();
+        if (tabId === 'tab-dna') renderDNAAnalytics(window.engine);
         emit('ui:resized');
     };
 
@@ -419,7 +445,21 @@ export function renderDNAAccordion(engine) {
             const dnaIdx = DNA_META.indexOf(name); if (dnaIdx === -1) return;
             const val = spec.dna[dnaIdx]; const row = document.createElement('div'); row.className = 'slider-row';
             if (val === 0) row.classList.add('zero-val');
-            row.innerHTML = `<span class="slider-label" onclick="window.showTooltip('${name}', event)">${name}: </span><span id="dna-val-${dnaIdx}">${val.toFixed(2)}</span><input type="range" min="${DNA_RANGES[dnaIdx].min}" max="${DNA_RANGES[dnaIdx].max}" step="0.05" value="${val}" style="width: 100%;" oninput="window.updateDNA(${currentSpeciesIdx}, ${dnaIdx}, this.value, 'dna-val-${dnaIdx}')">`;
+            
+            if (name === 'Force') {
+                // Special case for Force log slider
+                const absVal = Math.abs(val) || 0.001;
+                const sign = val >= 0 ? 1 : -1;
+                const minLog = Math.log(0.001), maxLog = Math.log(100);
+                const percent = ((Math.log(absVal) - minLog) / (maxLog - minLog)) * 50;
+                const totalPercent = val >= 0 ? 50 + percent : 50 - percent;
+                
+                row.innerHTML = `<span class="slider-label" onclick="window.showTooltip('${name}', event)">${name}: </span><span id="dna-val-${dnaIdx}">${val.toFixed(2)}</span>
+                    <input type="range" min="0" max="100" step="0.1" value="${totalPercent}" style="width: 100%;" 
+                    oninput="window.handleDNAForceLog(this, ${dnaIdx}, 'dna-val-${dnaIdx}')">`;
+            } else {
+                row.innerHTML = `<span class="slider-label" onclick="window.showTooltip('${name}', event)">${name}: </span><span id="dna-val-${dnaIdx}">${val.toFixed(2)}</span><input type="range" min="${DNA_RANGES[dnaIdx].min}" max="${DNA_RANGES[dnaIdx].max}" step="0.05" value="${val}" style="width: 100%;" oninput="window.updateDNA(${currentSpeciesIdx}, ${dnaIdx}, this.value, 'dna-val-${dnaIdx}')">`;
+            }
             content.appendChild(row);
         });
         wrapper.appendChild(content); container.appendChild(wrapper);
@@ -459,6 +499,17 @@ export function updateHUD(fps, pCount, simStep = 0) {
     if (pCountEl) pCountEl.innerText = pCount; 
     if (stepEl) stepEl.innerText = simStep;
 }
+
+export function updateParticleHUD(data) {
+    const s = document.getElementById('p-info-species'), m = document.getElementById('p-info-mass'), a = document.getElementById('p-info-age'), e = document.getElementById('p-info-energy'), v = document.getElementById('p-info-vel'), p = document.getElementById('p-info-pos');
+    if (s) s.innerText = data.species;
+    if (m) m.innerText = data.mass;
+    if (a) a.innerText = data.age;
+    if (e) e.innerText = data.energy;
+    if (v) v.innerText = data.vel;
+    if (p) p.innerText = `${data.pos.x}, ${data.pos.y}, ${data.pos.z}`;
+}
+
 export function syncUI(laws) { 
     // Sync all 8 law switches
     const keys = ['grav', 'life', 'drag', 'jitter', 'glow', 'wrap', 'coll', 'accr'];
@@ -558,4 +609,40 @@ export function updatePlaybackUI(mode, paused) {
     const btn = document.getElementById('play-pause-btn'); if (btn) btn.innerText = paused ? '▶' : '⏸';
     document.querySelectorAll('.play-btn').forEach(b => b.classList.remove('active'));
     const btns = document.querySelectorAll('.play-btn'); btns.forEach(b => { if (b.title.toLowerCase().includes(mode)) b.classList.add('active'); if (mode === 'forward' && b.title === 'Play') b.classList.add('active'); });
+}
+
+export function renderDNAAnalytics(engine) {
+    const container = document.getElementById('dna-analytics-container');
+    if (!container) return;
+    
+    const counts = new Array(engine.species.length).fill(0);
+    if (engine.particles) {
+        const STRIDE = 24; // Constant for mapping
+        for (let i = 0; i < engine.worldConfig.count; i++) {
+            const ptr = i * STRIDE;
+            if (engine.particles[ptr+13] === 0) {
+                const sIdx = Math.floor(engine.particles[ptr+12]);
+                if (counts[sIdx] !== undefined) counts[sIdx]++;
+            }
+        }
+    }
+
+    let html = `<h3>GENETIC_DRIFT</h3>`;
+    engine.species.forEach((s, idx) => {
+        const totalAlive = counts.reduce((a,b) => a+b, 0) || 1;
+        const pct = ((counts[idx] / totalAlive) * 100).toFixed(1);
+        html += `
+            <div class="dna-stat-row">
+                <div class="dna-stat-label">
+                    <span style="color:${s.color}">■</span> ${s.name}
+                </div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${pct}%; background:${s.color}"></div>
+                </div>
+                <div class="dna-stat-val">${counts[idx]} (${pct}%)</div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
 }

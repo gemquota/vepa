@@ -40,6 +40,7 @@ class VepaEngine {
         this.personality = new PersonalityCore();
         this.persistence = new PersistenceEngine();
         this.persistence.load(this);
+        this.selectedParticleIndex = -1;
 
         this.initPixi().then(() => {
             this.setupInteraction();
@@ -135,21 +136,29 @@ class VepaEngine {
             this.zoom *= Math.pow(0.999, e.deltaY); 
             this.applyLimits(); 
         }, { passive: false });
+this.app.canvas.addEventListener('pointerdown', e => { 
+    e.preventDefault();
+    activePointers.set(e.pointerId, { lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY, startTime: Date.now() }); 
+    if (activePointers.size === 2) {
+        const pts = Array.from(activePointers.values());
+        initialDistance = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
+        initialZoom = this.zoom;
+    }
+});
 
-        this.app.canvas.addEventListener('pointerdown', e => { 
-            e.preventDefault();
-            activePointers.set(e.pointerId, { lastX: e.clientX, lastY: e.clientY }); 
-            if (activePointers.size === 2) {
-                const pts = Array.from(activePointers.values());
-                initialDistance = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
-                initialZoom = this.zoom;
-            }
-        });
-
-        window.addEventListener('pointerup', e => { 
-            activePointers.delete(e.pointerId); 
-            if (activePointers.size < 2) initialDistance = 0; 
-        });
+window.addEventListener('pointerup', e => { 
+    const data = activePointers.get(e.pointerId);
+    if (data && activePointers.size === 1) {
+        const dx = e.clientX - data.startX;
+        const dy = e.clientY - data.startY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const duration = Date.now() - data.startTime;
+        if (dist < 5 && duration < 200) {
+            this.selectParticleAt(e.clientX, e.clientY);
+        }
+    }
+    activePointers.delete(e.pointerId); 
+});
 
         window.addEventListener('pointermove', e => {
             const p = activePointers.get(e.pointerId); if (!p) return;
@@ -235,6 +244,53 @@ class VepaEngine {
         this.draw();
     }
 
+    selectParticleAt(screenX, screenY) {
+        if (!this.particles) return;
+        const cX = window.innerWidth / 2, cY = window.innerHeight / 2;
+        let nearestIdx = -1, minDist = 40; // 40px click radius
+
+        for (let i = 0; i < this.worldConfig.count; i++) {
+            const ptr = i * STRIDE;
+            if (this.particles[ptr+13] > 0) continue; 
+
+            let x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
+            const depth = this.focalLength + z;
+            if (depth <= 10) continue;
+            
+            const pScale = this.focalLength / depth;
+            const px = cX + x * pScale * this.zoom;
+            const py = cY + y * pScale * this.zoom;
+
+            const dist = Math.hypot(screenX - px, screenY - py);
+            if (dist < minDist) {
+                minDist = dist;
+                nearestIdx = i;
+            }
+        }
+
+        this.selectedParticleIndex = nearestIdx;
+        const panel = document.getElementById('particle-info-panel');
+        if (panel) {
+            if (nearestIdx === -1) panel.classList.add('hidden');
+            else panel.classList.remove('hidden');
+        }
+    }
+
+    getParticleData(idx) {
+        const ptr = idx * STRIDE;
+        const speciesIdx = Math.floor(this.particles[ptr+12]);
+        const spec = this.species[speciesIdx] || { name: 'Unknown' };
+        return {
+            id: idx,
+            species: spec.name,
+            mass: this.particles[ptr+11].toFixed(2),
+            energy: this.particles[ptr+22].toFixed(1),
+            age: Math.floor(this.particles[ptr+23]),
+            vel: Math.hypot(this.particles[ptr+3], this.particles[ptr+4], this.particles[ptr+5]).toFixed(2),
+            pos: { x: Math.round(this.particles[ptr]), y: Math.round(this.particles[ptr+1]), z: Math.round(this.particles[ptr+2]) }
+        };
+    }
+
     draw() {
         this.renderEnvironment();
         const cX = window.innerWidth/2, cY = window.innerHeight/2;
@@ -245,7 +301,6 @@ class VepaEngine {
             const ptr = i * STRIDE, s = this.particleSprites[i];
             if (this.particles[ptr+13] > 0) { s.visible = false; continue; }
             
-            // Camera-style pan application (add pan BEFORE projection)
             let x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
             
             if (isNaN(x)) { x=y=z=0; }
@@ -257,10 +312,25 @@ class VepaEngine {
             const mass = this.particles[ptr+11];
             const size = Math.sqrt(mass) * 2 * this.worldConfig.baseSize * pScale * this.zoom;
             s.scale.set(size / 32);
+            
+            // Highlight selected particle
+            if (i === this.selectedParticleIndex) {
+                s.alpha = 1.0;
+                s.scale.set(size / 32 * 1.5);
+                // Draw a small ring or something? (Simple: larger size)
+            } else {
+                s.alpha = 0.8;
+            }
+
             const r = Math.floor(this.particles[ptr+14]*255), g = Math.floor(this.particles[ptr+15]*255), b = Math.floor(this.particles[ptr+16]*255);
             s.tint = (r << 16) | (g << 8) | b;
             if (i % 20 === 0) this.minimap.rect(50 + this.particles[ptr]/(this.worldConfig.dimX/100), 50 + this.particles[ptr+1]/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
         }
+        
+        if (this.selectedParticleIndex !== -1) {
+            import('./ui.js').then(ui => ui.updateParticleHUD(this.getParticleData(this.selectedParticleIndex)));
+        }
+
         updateHUD(Math.round(this.app.ticker.fps), this.worldConfig.count, this.simStep);
     }
 
@@ -301,7 +371,8 @@ class VepaEngine {
             fusionTime: s.dna[17],
             baseRadius: s.dna[29] || 2.0,
             elasticity: s.dna[30] || 0.5,
-            efficiency: s.dna[34] || 0.8
+            efficiency: s.dna[34] || 0.8,
+            affinity: s.dna[41] || 0.0
         }; 
     }
     setPlaybackMode(mode) { this.playbackMode = mode; this.paused = false; updatePlaybackUI(this.playbackMode, this.paused); }

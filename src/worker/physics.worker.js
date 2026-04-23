@@ -100,11 +100,14 @@ self.onmessage = (e) => {
                 const dx = particles[oPtr] - particles[ptr];
                 const dy = particles[oPtr+1] - particles[ptr+1];
                 const dz = particles[oPtr+2] - particles[ptr+2];
-                const d2 = dx*dx + dy*dy + dz*dz + 0.1;
+                const d2 = dx*dx + dy*dy + dz*dz + 2.0;
                 const d = Math.sqrt(d2);
 
                 if (laws.grav) {
-                    const f = (G * particles[oPtr+11] * (dna.force || 0.1)) / d2;
+                    const affinity = dna.affinity || 0;
+                    const sameSpecies = (particles[ptr+12] === particles[oPtr+12]);
+                    const multiplier = sameSpecies ? (1.0 + affinity) : (1.0 - affinity);
+                    const f = (G * particles[oPtr+11] * (dna.force || 0.1) * multiplier) / d2;
                     ax += (dx/d)*f; ay += (dy/d)*f; az += (dz/d)*f;
                 }
 

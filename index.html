@@ -43,10 +43,10 @@
             <div id="main-panel" class="panel menu-chunk chunk-type-drawer">
                 <div class="chunk-inner drawer-inner">
                     <div class="bolt t-l"></div><div class="bolt t-r"></div><div class="bolt b-l"></div><div class="bolt b-r"></div>
-                    
                     <div class="tabs">
                         <div class="tab-link active" onclick="window.openTab(event, 'tab-world')">WORLD</div>
                         <div class="tab-link" onclick="window.openTab(event, 'tab-spec')">SPECIES</div>
+                        <div class="tab-link" onclick="window.openTab(event, 'tab-dna')">DNA</div>
                         <div class="tab-link" onclick="window.openTab(event, 'tab-log')">LOG</div>
                         <div class="tab-link" onclick="window.openTab(event, 'tab-settings')">SETTINGS</div>
                     </div>
@@ -84,6 +84,12 @@
                         <div id="dna-accordion" class="main-accordion"></div>
                     </div>
 
+                    <div id="tab-dna" class="tab-content">
+                        <div id="dna-analytics-container" class="dna-analytics-container">
+                            <!-- DNA Stats will be rendered here -->
+                        </div>
+                    </div>
+
                     <div id="tab-log" class="tab-content">
                         <div id="narrative-log" class="condensed-log"></div>
                     </div>
@@ -111,6 +117,24 @@
         <div id="timeline-container" class="timeline-container">
             <input type="range" id="timeline-slider" min="0" max="0" value="0" class="timeline-slider">
             <div id="timeline-label" class="timeline-label">LIVE</div>
+        </div>
+
+        <!-- PARTICLE INFO PANEL -->
+        <div id="particle-info-panel" class="particle-info-panel menu-chunk hidden">
+            <div class="bolt t-l"></div><div class="bolt t-r"></div><div class="bolt b-l"></div><div class="bolt b-r"></div>
+            <div class="chunk-inner">
+                <div class="particle-info-header">
+                    <span id="p-info-species">SPECIES</span>
+                    <span class="p-info-close" onclick="window.engine.selectedParticleIndex = -1; document.getElementById('particle-info-panel').classList.add('hidden');">[X]</span>
+                </div>
+                <div class="particle-info-grid">
+                    <div class="p-info-item"><label>MASS</label><span id="p-info-mass">0</span></div>
+                    <div class="p-info-item"><label>AGE</label><span id="p-info-age">0</span></div>
+                    <div class="p-info-item"><label>NRG</label><span id="p-info-energy">0</span></div>
+                    <div class="p-info-item"><label>VEL</label><span id="p-info-vel">0</span></div>
+                </div>
+                <div class="p-info-pos">POS: <span id="p-info-pos">0, 0, 0</span></div>
+            </div>
         </div>
     </div>
 
