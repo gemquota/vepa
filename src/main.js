@@ -195,16 +195,30 @@ window.addEventListener('pointerup', e => {
         this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
         const sX = this.worldConfig.spreadX, sY = this.worldConfig.spreadY, sZ = this.worldConfig.spreadZ;
+        
+        const side = Math.ceil(Math.pow(count, 1/3));
+        const spacingX = (W * sX) / side;
+        const spacingY = (H * sY) / side;
+        const spacingZ = (D * sZ) / side;
+
         for (let i = 0; i < count; i++) {
             const ptr = i * STRIDE, sprite = new PIXI.Sprite(this.texture);
             sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
             const spec = this.species[i % this.species.length];
-            this.particles[ptr] = (Math.random()-0.5)*W*sX; this.particles[ptr+1] = (Math.random()-0.5)*H*sY; this.particles[ptr+2] = (Math.random()-0.5)*D*sZ;
-            this.particles[ptr+11] = 1.0 + Math.random();
+            
+            const gx = i % side;
+            const gy = Math.floor(i / side) % side;
+            const gz = Math.floor(i / (side * side));
+            
+            this.particles[ptr] = (gx - side/2) * spacingX;
+            this.particles[ptr+1] = (gy - side/2) * spacingY;
+            this.particles[ptr+2] = (gz - side/2) * spacingZ;
+            
+            this.particles[ptr+11] = 1.0; 
             this.particles[ptr+12] = spec.id; this.particles[ptr+13] = 0;
-            this.particles[ptr+21] = spec.dna[4] || 0; // Polarity
-            this.particles[ptr+22] = 100.0; // Energy
-            this.particles[ptr+23] = 0; // Age
+            this.particles[ptr+21] = spec.dna[4] || 0; 
+            this.particles[ptr+22] = 100.0; 
+            this.particles[ptr+23] = 0; 
             const rgb = spec.rgb || [0.5, 0.5, 0.5];
             this.particles[ptr+14] = rgb[0]; this.particles[ptr+15] = rgb[1]; this.particles[ptr+16] = rgb[2];
         }
