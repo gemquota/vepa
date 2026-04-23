@@ -198,33 +198,117 @@ export function setupUI(engine) {
         emit('ui:resized');
     };
 
+const LAW_ICONS = {
+    grav: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3" fill="var(--red-bright)"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" opacity="0.5"/><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" stroke-dasharray="2 2"/></svg>`,
+    drag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h14M2 8h10M2 16h18M18 8l4 4-4 4"/></svg>`,
+    jitter: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l3-4 4 8 3-8 4 8 3-8 3 4"/></svg>`,
+    wrap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z" stroke-dasharray="4 2"/><path d="M20 12h3M1 12h3M12 1v3M12 20v3" stroke-linecap="round"/></svg>`,
+    coll: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/><path d="M12 8v8" stroke-dasharray="2 2"/></svg>`,
+    accr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="2"/><path d="M12 6v-4M12 22v-4M6 12h-4M22 12h-4" opacity="0.4"/><path d="M12 12L18 6M6 18L12 12" opacity="0.4"/><path d="M12 12L18 18M6 6L12 12" opacity="0.4"/><circle cx="12" cy="12" r="6" stroke-dasharray="3 3"/></svg>`,
+    life: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9 4.03 9 9 9z"/><path d="M12 12c2 0 3-1 3-3s-1-3-3-3-3 1-3 3 1 3 3 3z"/><path d="M19 12c0 3.866-3.134 7-7 7s-7-3.134-7-7" opacity="0.5"/></svg>`,
+    glow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4" fill="var(--red-bright)" fill-opacity="0.3"/><circle cx="12" cy="12" r="8" stroke-dasharray="4 4"/></svg>`,
+    affinity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="var(--red-bright)" fill-opacity="0.2"/></svg>`,
+    reproduction: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="4"/><circle cx="15" cy="15" r="4"/></svg>`,
+    tracking: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M12 8a4 4 0 100 8 4 4 0 000-8z" stroke-dasharray="2 1"/></svg>`,
+    senescence: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20" opacity="0.2"/><path d="M12 12l7 7M5 5l7 7" stroke-dasharray="4 4"/><circle cx="12" cy="12" r="8" opacity="0.5"/></svg>`,
+    genotype: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3c0 4.418 3.582 8 8 8s8-3.582 8-8"/><path d="M0 21c0-4.418 3.582-8 8-8s8 3.582 8 8"/></svg>`,
+    phenotype: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="4"/></svg>`,
+    void: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-dasharray="4 4"/><path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" fill="currentColor"/></svg>`,
+    bond: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 7l10 10M7 17L17 7"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="7" r="3"/></svg>`,
+    ener: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="var(--red-bright)" fill-opacity="0.3"/></svg>`,
+    rad: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3" opacity="0.6"/></svg>`
+};
+
+let activeInfoTab = 'physics';
+window.switchInfoTab = (tab) => { activeInfoTab = tab; renderInfoModule(); };
+
     const renderInfoModule = () => {
         const container = document.getElementById('info-module');
         if (!container) return;
-        const lawMap = [
+        
+        const tabs = [
+            { id: 'physics', label: 'PHYSICS' },
+            { id: 'biology', label: 'BIOLOGY' },
+            { id: 'energetics', label: 'ENERGY' }
+        ];
+
+        const pureMap = [
             { key: 'grav', help: 'GRAV', name: 'GLOBAL GRAVITY' },
-            { key: 'life', help: 'BIOL', name: 'BIOLOGICAL LIFECYCLE' },
             { key: 'drag', help: 'DRAG', name: 'MOTION DAMPING' },
             { key: 'jitter', help: 'ENTR', name: 'ENTROPY (JITTER)' },
-            { key: 'glow', help: 'GLOW', name: 'SIGNALING PULSES' },
             { key: 'wrap', help: 'WRAP', name: 'SCREEN WRAPPING' },
             { key: 'coll', help: 'COLL', name: 'PHYSICAL COLLISIONS' },
-            { key: 'accr', help: 'ACCR', name: 'MASS ACCRETION' }
+            { key: 'accr', help: 'ACCR', name: 'MASS ACCRETION' },
+            { key: 'void', help: 'VOID', name: 'VACUUM PRESSURE' },
+            { key: 'bond', help: 'BOND', name: 'MOLECULAR BOND' }
         ];
         
-        container.innerHTML = lawMap.map(l => {
-            const data = HELP_DB[l.help];
-            const isActive = window.engine.laws[l.key];
-            return `
-                <div class="info-item">
-                    <div class="info-item-header">
-                        <span class="info-item-name">${l.name}</span>
-                        <div id="info-sw-${l.key}" class="info-item-switch ${isActive ? 'active' : ''}" onclick="window.toggleLaw('${l.key}')"></div>
+        const biolMap = [
+            { key: 'life', help: 'BIOL', name: 'BIOLOGICAL LIFECYCLE' },
+            { key: 'glow', help: 'GLOW', name: 'SIGNALING PULSES' },
+            { key: 'affinity', help: 'Species Affinity', name: 'SPECIES AFFINITY' },
+            { key: 'reproduction', help: 'Birth Rate', name: 'REPRODUCTION' },
+            { key: 'tracking', help: 'Signal Resp', name: 'TRACKING' },
+            { key: 'senescence', help: 'Death Rate', name: 'SENESCENCE' },
+            { key: 'genotype', help: 'Mutation', name: 'GENOTYPE' },
+            { key: 'phenotype', help: 'C2 (Alpha)', name: 'PHENOTYPE' }
+        ];
+
+        const energeticsMap = [
+            { key: 'ener', help: 'ENER', name: 'ENERGY CONSERVATION' },
+            { key: 'rad', help: 'RAD', name: 'RADIATION EMISSION' }
+        ];
+
+        const currentMap = activeInfoTab === 'physics' ? pureMap : (activeInfoTab === 'biology' ? biolMap : energeticsMap);
+        const currentGroup = activeInfoTab === 'physics' ? 'pure' : 'biol';
+
+        const renderGroup = (map, groupKey) => {
+            return map.map(l => {
+                const data = HELP_DB[l.help];
+                const isActive = window.engine.laws[groupKey][l.key];
+                const icon = LAW_ICONS[l.key] || '';
+                const detail = data ? `
+                    <div class="info-item-detail">
+                        <p class="detail-exp">${data.layers.explanation}</p>
+                        <p class="detail-sys">${data.layers.system || ''}</p>
+                        <p class="detail-adv">${data.layers.advanced || ''}</p>
                     </div>
-                    <div class="info-item-desc">${data ? data.layers.explanation : ''}</div>
+                ` : '';
+
+                return `
+                    <div class="info-item">
+                        <div class="info-item-header">
+                            <div class="info-item-identity">
+                                <div class="law-icon">${icon}</div>
+                                <span class="info-item-name">${l.name}</span>
+                            </div>
+                            <div id="info-sw-${l.key}" class="info-item-switch ${isActive ? 'active' : ''}" onclick="window.toggleLaw('${l.key}')"></div>
+                        </div>
+                        <div class="info-item-desc">${detail}</div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const tabHtml = `
+            <div class="info-tabs">
+                ${tabs.map(t => `<div class="info-tab ${activeInfoTab === t.id ? 'active' : ''}" onclick="window.switchInfoTab('${t.id}')">${t.label}</div>`).join('')}
+            </div>
+        `;
+
+        const introHtml = `
+            <div class="info-intro">
+                <div class="intro-graphic">
+                    <svg viewBox="0 0 100 20" preserveAspectRatio="none" fill="var(--red-bright)" fill-opacity="0.1">
+                        <path d="M0 10 Q 25 0, 50 10 T 100 10 L 100 20 L 0 20 Z" />
+                    </svg>
                 </div>
-            `;
-        }).join('');
+                <h3>LAW_CODEX_v4.2</h3>
+                <p>System-wide parameterization of emergent constraints. Use tabs to navigate specialized law layers.</p>
+            </div>
+        `;
+
+        container.innerHTML = introHtml + tabHtml + `<div class="info-scroll-area">${renderGroup(currentMap, currentGroup)}</div>`;
     };
 
     window.openTab = (event, tabId) => {
@@ -511,15 +595,19 @@ export function updateParticleHUD(data) {
 }
 
 export function syncUI(laws) { 
-    // Sync all 8 law switches
-    const keys = ['grav', 'life', 'drag', 'jitter', 'glow', 'wrap', 'coll', 'accr'];
-    keys.forEach(k => { 
-        const el = document.getElementById(`syn-${k}`); 
-        if(el) el.classList.toggle('active', !!laws[k]); 
+    // Sync all law switches in both groups
+    const groups = ['pure', 'biol'];
+    groups.forEach(g => {
+        if (!laws[g]) return;
+        Object.keys(laws[g]).forEach(k => {
+            const val = laws[g][k];
+            const el = document.getElementById(`syn-${k}`); 
+            if(el) el.classList.toggle('active', !!val); 
 
-        const infoSw = document.getElementById(`info-sw-${k}`);
-        if(infoSw) infoSw.classList.toggle('active', !!laws[k]);
-    }); 
+            const infoSw = document.getElementById(`info-sw-${k}`);
+            if(infoSw) infoSw.classList.toggle('active', !!val);
+        });
+    });
 }
 
 let lastInsightsHash = "";

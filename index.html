@@ -52,18 +52,31 @@
                     </div>
 
                     <div id="tab-world" class="tab-content active">
+                        <div class="toggle-grid-header">PURE PHYSICS</div>
                         <div class="toggle-grid condensed">
                             <div class="sq-toggle" id="syn-grav" onclick="window.handleLawClick('grav', 'GRAV', event)">GRAV</div>
-                            <div class="sq-toggle" id="syn-life" onclick="window.handleLawClick('life', 'BIOL', event)">BIOL</div>
                             <div class="sq-toggle" id="syn-drag" onclick="window.handleLawClick('drag', 'DRAG', event)">DRAG</div>
                             <div class="sq-toggle" id="syn-jitter" onclick="window.handleLawClick('jitter', 'ENTR', event)">ENTR</div>
-                            <div class="sq-toggle" id="syn-glow" onclick="window.handleLawClick('glow', 'GLOW', event)">GLOW</div>
                             <div class="sq-toggle" id="syn-wrap" onclick="window.handleLawClick('wrap', 'WRAP', event)">WRAP</div>
                             <div class="sq-toggle" id="syn-coll" onclick="window.handleLawClick('coll', 'COLL', event)">COLL</div>
                             <div class="sq-toggle" id="syn-accr" onclick="window.handleLawClick('accr', 'ACCR', event)">ACCR</div>
+                            <div class="sq-toggle" id="syn-void" onclick="window.handleLawClick('void', 'VOID', event)">VOID</div>
+                            <div class="sq-toggle" id="syn-bond" onclick="window.handleLawClick('bond', 'BOND', event)">BOND</div>
+                        </div>
+
+                        <div class="toggle-grid-header">BIOLOGICAL TRIGGERS</div>
+                        <div class="toggle-grid condensed">
+                            <div class="sq-toggle" id="syn-life" onclick="window.handleLawClick('life', 'BIOL', event)">LIFE</div>
+                            <div class="sq-toggle" id="syn-glow" onclick="window.handleLawClick('glow', 'GLOW', event)">GLOW</div>
+                            <div class="sq-toggle" id="syn-affinity" onclick="window.handleLawClick('affinity', 'Species Affinity', event)">AFFIN</div>
+                            <div class="sq-toggle" id="syn-reproduction" onclick="window.handleLawClick('reproduction', 'Birth Rate', event)">REPRO</div>
+                            <div class="sq-toggle" id="syn-tracking" onclick="window.handleLawClick('tracking', 'Signal Resp', event)">TRACK</div>
+                            <div class="sq-toggle" id="syn-senescence" onclick="window.handleLawClick('senescence', 'Death Rate', event)">SENES</div>
+                            <div class="sq-toggle" id="syn-ener" onclick="window.handleLawClick('ener', 'ENER', event)">ENER</div>
+                            <div class="sq-toggle" id="syn-rad" onclick="window.handleLawClick('rad', 'RAD', event)">RAD</div>
                         </div>
                         <button id="info-module-toggle" class="info-module-toggle" onclick="window.toggleInfoModule()">
-                            <span>PARAMETER INTEL</span> <span id="info-module-arrow">▼</span>
+                            <span>LAW INFO</span> <span id="info-module-arrow">▼</span>
                         </button>
                         <div id="info-module" class="info-module-container hidden"></div>
                         <div id="world-accordion" class="main-accordion"></div>

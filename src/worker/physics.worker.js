@@ -11,8 +11,10 @@ self.onmessage = (e) => {
         
         const count = particles.length / STRIDE;
         const { laws, world, specDNA } = config;
-        const totalDt = laws.dt || 1.0;
-        const G = laws.G || 0.15;
+        const pure = laws.pure || {};
+        const biol = laws.biol || {};
+        const totalDt = pure.dt || 1.0;
+        const G = pure.G || 0.15;
         const W = world.dimX, H = world.dimY, D = world.dimZ;
 
         // Sub-stepping logic
@@ -30,7 +32,7 @@ self.onmessage = (e) => {
                     continue;
                 }
                 const dna = specDNA[particles[ptr+12]] || specDNA[0] || { force: 0.1 };
-                if (laws.life) {
+                if (biol.life) {
                     const cost = (0.01 + particles[ptr+11] * 0.001) / (dna.efficiency || 0.8);
                     particles[ptr+22] -= cost * dt;
                     particles[ptr+23] += dt;
@@ -48,7 +50,7 @@ self.onmessage = (e) => {
                 let ax = 0, ay = 0, az = 0;
                 const dna = specDNA[particles[ptr+12]] || specDNA[0] || { force: 0.1 };
 
-                if (laws.jitter) {
+                if (pure.jitter) {
                     const j = 0.2;
                     ax += (Math.random()-0.5)*j; ay += (Math.random()-0.5)*j; az += (Math.random()-0.5)*j;
                 }
@@ -62,23 +64,23 @@ self.onmessage = (e) => {
                     const d2 = dx*dx + dy*dy + dz*dz + 2.0;
                     const d = Math.sqrt(d2);
 
-                    if (laws.grav) {
+                    if (pure.grav) {
                         const multiplier = (particles[ptr+12] === particles[oPtr+12]) ? (1.0 + (dna.affinity||0)) : (1.0 - (dna.affinity||0));
                         const f = (G * particles[oPtr+11] * (dna.force || 0.1) * multiplier) / d2;
                         ax += (dx/d)*f; ay += (dy/d)*f; az += (dz/d)*f;
                     }
 
-                    if (laws.coll || laws.accr) {
+                    if (pure.coll || pure.accr) {
                         const r1 = 2.0 + Math.sqrt(particles[ptr+11]), r2 = 2.0 + Math.sqrt(particles[oPtr+11]);
                         if (d < r1 + r2) {
-                            if (laws.accr) {
+                            if (pure.accr) {
                                 const m1 = particles[ptr+11], m2 = particles[oPtr+11], totalM = m1 + m2;
                                 particles[ptr+14] = (particles[ptr+14]*m1 + particles[oPtr+14]*m2)/totalM;
                                 particles[ptr+15] = (particles[ptr+15]*m1 + particles[oPtr+15]*m2)/totalM;
                                 particles[ptr+16] = (particles[ptr+16]*m1 + particles[oPtr+16]*m2)/totalM;
                                 particles[ptr+11] = m1 + m2 * (dna.fusion||0.5);
                                 particles[oPtr+13] = 1;
-                            } else if (laws.coll) {
+                            } else if (pure.coll) {
                                 const nx=dx/d, ny=dy/d, nz=dz/d;
                                 const relV = (particles[ptr+3]-particles[oPtr+3])*nx + (particles[ptr+4]-particles[oPtr+4])*ny + (particles[ptr+5]-particles[oPtr+5])*nz;
                                 if (relV < 0) {
@@ -91,7 +93,7 @@ self.onmessage = (e) => {
                     }
                 }
 
-                const drag = laws.drag ? 0.98 : 1.0;
+                const drag = pure.drag ? 0.98 : 1.0;
                 particles[ptr+3] = (particles[ptr+3] + ax) * drag;
                 particles[ptr+4] = (particles[ptr+4] + ay) * drag;
                 particles[ptr+5] = (particles[ptr+5] + az) * drag;

@@ -678,6 +678,42 @@ export const HELP_DB = {
         },
         category: "Biology"
     },
+    "ENER": {
+        layers: {
+            hint: "Toggles global energy conservation.",
+            explanation: "When active, particles must manage internal energy reserves for all actions.",
+            system: "Implements a closed-loop metabolic system.",
+            advanced: "Triggers competition for 'energy-dense' regions of the simulation."
+        },
+        category: "Energetics"
+    },
+    "RAD": {
+        layers: {
+            hint: "Toggles radiation emissions.",
+            explanation: "High-energy particles emit fields that can mutate or damage neighbors.",
+            system: "Adds a proximity-based mutation/damage vector.",
+            advanced: "Creates 'hot' zones where evolution accelerates but stability drops."
+        },
+        category: "Energetics"
+    },
+    "VOID": {
+        layers: {
+            hint: "Toggles vacuum pressure.",
+            explanation: "Particles in low-density areas experience expansion forces.",
+            system: "Simulates cosmic inflation in sparse regions.",
+            advanced: "Prevents total isolation by pushing lone particles back toward clusters."
+        },
+        category: "Physics"
+    },
+    "BOND": {
+        layers: {
+            hint: "Toggles molecular bonding.",
+            explanation: "Particles can form semi-rigid structural links.",
+            system: "Enables multi-particle 'bodies' with shared momentum.",
+            advanced: "The foundation for multicellularity and complex rigid machines."
+        },
+        category: "Matter"
+    }
 };
 
 export const DNA_RANGES = [

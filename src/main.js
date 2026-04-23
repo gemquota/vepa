@@ -17,7 +17,10 @@ class VepaEngine {
     constructor() {
         this.app = new PIXI.Application();
         this.paused = false;
-        this.laws = { grav: true, drag: true, jitter: true, coll: true, accr: true, life: true, glow: false, G: 0.15, dt: 1.0 };
+        this.laws = { 
+            pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, G: 0.15, dt: 1.0 },
+            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false }
+        };
         this.worldConfig = { count: 2000, dimX: 2000, dimY: 2000, dimZ: 2000, spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, baseSize: 1.0 };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
         this.particles = null;
@@ -392,9 +395,17 @@ window.addEventListener('pointerup', e => {
     setPlaybackMode(mode) { this.playbackMode = mode; this.paused = false; updatePlaybackUI(this.playbackMode, this.paused); }
     updateDNA(sIdx, rIdx, val) { if(this.species[sIdx]) this.species[sIdx].dna[rIdx] = parseFloat(val); }
     updateWorld(key, val) { this.worldConfig[key] = parseFloat(val); }
-    updatePhysics(key, val) { this.laws[key] = parseFloat(val); }
+    updatePhysics(key, val) { 
+        if (this.laws.pure[key] !== undefined) this.laws.pure[key] = parseFloat(val);
+        else if (this.laws.biol[key] !== undefined) this.laws.biol[key] = parseFloat(val);
+        else this.laws.pure[key] = parseFloat(val);
+    }
     triggerSmartChaos() { this.species.forEach(s => { s.dna = s.dna.map((v, i) => Math.random() * (DNA_RANGES[i].max - DNA_RANGES[i].min) + DNA_RANGES[i].min); }); this.restartSim(); }
-    toggleLaw(k) { this.laws[k] = !this.laws[k]; syncUI(this.laws); }
+    toggleLaw(k) { 
+        if (this.laws.pure[k] !== undefined) this.laws.pure[k] = !this.laws.pure[k];
+        else if (this.laws.biol[k] !== undefined) this.laws.biol[k] = !this.laws.biol[k];
+        syncUI(this.laws); 
+    }
     togglePause() { this.paused = !this.paused; updatePlaybackUI(this.playbackMode, this.paused); }
     hardReset() { if(confirm("Hard reset?")) { localStorage.clear(); location.reload(); } }
     recenter() {
