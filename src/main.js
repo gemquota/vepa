@@ -11,38 +11,24 @@ import { GoalSystem } from './goalEngine.js';
 import { NarrativeConsciousness } from './narrativeConsciousness.js';
 import { PersonalityCore } from './personalityEngine.js';
 
-// STRIDE 24: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer, 18:wx, 19:wy, 20:wz, 21:charge, 22:energy, 23:age
 const STRIDE = 24;
 
 class VepaEngine {
     constructor() {
         this.app = new PIXI.Application();
         this.paused = false;
-        // Expanded Laws (8 Total)
-        this.laws = { 
-            grav: true, life: false, drag: true, jitter: true,
-            glow: true, wrap: false, coll: true, accr: true,
-            G: 0.15, dt: 1.0, dragCoeff: 0.993 
-        };
-        this.worldConfig = { 
-            count: 2000, entropy: 0.1, spawnRate: 0.05, 
-            dimX: 4000, dimY: 4000, dimZ: 2000, 
-            spreadX: 0.8, spreadY: 0.8, spreadZ: 0.5,
-            baseSize: 0.05, shape: 0.1
-        };
+        this.laws = { grav: true, drag: true, jitter: true, coll: true, accr: true, life: false, glow: false, G: 0.15, dt: 1.0 };
+        this.worldConfig = { count: 800, dimX: 500, dimY: 500, dimZ: 500, spreadX: 0.8, spreadY: 0.8, spreadZ: 0.5, baseSize: 2.0 };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
         this.particles = null;
         this.simVersion = 0;
+        this.simStep = 0;
         this.focalLength = 3000;
         this.workerBusy = false;
-        this._lastInsightCheck = 0;
-        this.playbackMode = 'forward';
-        this.complexityLevel = 0;
         this.simAge = 0;
+        this.complexityLevel = 10; 
 
         this.lineageTracker = new LineageTracker();
-        
-        // Initialize with 3 sets of primary/opposite color species
         this.species = this.createDefaultSpecies();
 
         this.insightEngine = new InsightEngine(this);
@@ -61,6 +47,7 @@ class VepaEngine {
             this.worker.onmessage = (e) => this.handleWorkerMessage(e);
             this.restartSim();
             setupUI(this); syncUI(this.laws);
+            updatePlaybackUI(this.playbackMode || 'forward', this.paused);
             this.app.ticker.add(() => this.update());
         });
 
@@ -83,60 +70,34 @@ class VepaEngine {
     }
 
     createDefaultSpecies() {
-        const pairs = [
-            { pos: [1, 0, 0], neg: [0, 1, 1], name: 'RED/CYAN' },
-            { pos: [0, 1, 0], neg: [1, 0, 1], name: 'GREEN/MAGENTA' },
-            { pos: [0, 0, 1], neg: [1, 1, 0], name: 'BLUE/YELLOW' }
-        ];
+        const pairs = [{ pos: [1, 0, 0], neg: [0, 1, 1], name: 'RED/CYAN' }, { pos: [0, 1, 0], neg: [1, 0, 1], name: 'GREEN/MAGENTA' }, { pos: [0, 0, 1], neg: [1, 1, 0], name: 'BLUE/YELLOW' }];
         const spec = [];
-        pairs.forEach((p, i) => {
-            const s1 = this.createSpecies();
-            s1.name = p.name + "_POS"; s1.dna[4] = 1.0; s1.rgb = p.pos;
-            s1.color = `rgb(${p.pos[0]*255},${p.pos[1]*255},${p.pos[2]*255})`;
-            spec.push(s1);
-
-            const s2 = this.createSpecies();
-            s2.name = p.name + "_NEG"; s2.dna[4] = -1.0; s2.rgb = p.neg;
-            s2.color = `rgb(${p.neg[0]*255},${p.neg[1]*255},${p.neg[2]*255})`;
-            spec.push(s2);
+        pairs.forEach((p) => {
+            const s1 = this.createSpecies(); s1.name = p.name + "_POS"; s1.dna[4] = 1.0; s1.rgb = p.pos;
+            s1.color = `rgb(${p.pos[0]*255},${p.pos[1]*255},${p.pos[2]*255})`; spec.push(s1);
+            const s2 = this.createSpecies(); s2.name = p.name + "_NEG"; s2.dna[4] = -1.0; s2.rgb = p.neg;
+            s2.color = `rgb(${p.neg[0]*255},${p.neg[1]*255},${p.neg[2]*255})`; spec.push(s2);
         });
         return spec;
     }
 
     createSpecies(parentId = null) {
         const dna = DNA_RANGES.map(r => r.default);
-        // By design, some parameters like pulse rate should be zero if they do nothing
-        dna[14] = 0; // Pulse Rate default 0
-        dna[13] = 0; // Signal Resp default 0
-        
         const record = this.lineageTracker.createSpecies(dna, parentId);
-        return { 
-            id: record.id, name: record.name, dna, color: null, rgb: null 
-        };
+        return { id: record.id, name: record.name, dna, color: null, rgb: null };
     }
 
-    addSpecies() { 
-        if (this.species.length < 12) {
-            this.species.push(this.createSpecies(null)); 
-            renderSpeciesList(this);
-        }
-    }
+    addSpecies() { if (this.species.length < 12) { this.species.push(this.createSpecies(null)); renderSpeciesList(this); } }
 
     async initPixi() {
         await this.app.init({ background: '#000', resizeTo: window });
         document.body.appendChild(this.app.canvas);
         this.world = new PIXI.Container();
         this.app.stage.addChild(this.world);
-
-        // Environment graphics for walls and grid
         this.envGraphics = new PIXI.Graphics();
         this.world.addChild(this.envGraphics);
-
-        // Higher resolution base texture to reduce initial pixellation
-        const g = new PIXI.Graphics();
-        g.circle(0, 0, 32).fill({ color: 0xffffff });
+        const g = new PIXI.Graphics(); g.circle(0, 0, 32).fill({ color: 0xffffff });
         this.texture = this.app.renderer.generateTexture(g);
-
         this.particleSprites = [];
         this.minimap = new PIXI.Graphics();
         this.minimap.x = 20; this.minimap.y = window.innerHeight - 120;
@@ -145,8 +106,14 @@ class VepaEngine {
 
     setupInteraction() {
         let activePointers = new Map(), initialDistance = 0, initialZoom = 1.0;
-        this.app.canvas.addEventListener('wheel', (e) => { this.zoom *= Math.pow(0.999, e.deltaY); this.applyLimits(); }, { passive: true });
+        this.app.canvas.addEventListener('wheel', (e) => { 
+            e.preventDefault();
+            this.zoom *= Math.pow(0.999, e.deltaY); 
+            this.applyLimits(); 
+        }, { passive: false });
+
         this.app.canvas.addEventListener('pointerdown', e => { 
+            e.preventDefault();
             activePointers.set(e.pointerId, { lastX: e.clientX, lastY: e.clientY }); 
             if (activePointers.size === 2) {
                 const pts = Array.from(activePointers.values());
@@ -154,24 +121,34 @@ class VepaEngine {
                 initialZoom = this.zoom;
             }
         });
-        window.addEventListener('pointerup', e => { activePointers.delete(e.pointerId); if (activePointers.size < 2) initialDistance = 0; });
+
+        window.addEventListener('pointerup', e => { 
+            activePointers.delete(e.pointerId); 
+            if (activePointers.size < 2) initialDistance = 0; 
+        });
+
         window.addEventListener('pointermove', e => {
             const p = activePointers.get(e.pointerId); if (!p) return;
             const dx = e.clientX - p.lastX, dy = e.clientY - p.lastY;
+            
             if (activePointers.size === 1) {
-                const sensitivity = Math.max(0.05, this.zoom);
-                this.pan.x += dx / sensitivity; this.pan.y += dy / sensitivity;
+                // Dragging moves the CAMERA, so the WORLD moves the same way as the drag (standard for many sims)
+                // or dragging moves the world directly (dx/zoom).
+                const sensitivity = 1.0 / this.zoom;
+                this.pan.x += dx * sensitivity;
+                this.pan.y += dy * sensitivity;
             } else if (activePointers.size === 2) {
-                p.lastX = e.clientX; p.lastY = e.clientY;
                 const pts = Array.from(activePointers.values());
                 const dist = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
                 if (initialDistance > 0) this.zoom = initialZoom * (dist / initialDistance);
             }
-            this.applyLimits(); p.lastX = e.clientX; p.lastY = e.clientY;
-        });
+            
+            p.lastX = e.clientX; p.lastY = e.clientY;
+            this.applyLimits(); 
+        }, { passive: false });
     }
 
-    applyLimits() {
+    applyLimits() { 
         const minZoom = 0.005; this.zoom = Math.max(minZoom, Math.min(500, this.zoom));
         const limitX = this.worldConfig.dimX * 1.5; const limitY = this.worldConfig.dimY * 1.5;
         this.pan.x = Math.max(-limitX, Math.min(limitX, this.pan.x));
@@ -179,7 +156,7 @@ class VepaEngine {
     }
 
     restartSim() {
-        this.simVersion++; this.workerBusy = false;
+        this.simVersion++; this.workerBusy = false; this.simStep = 0;
         const count = this.worldConfig.count;
         this.particles = new Float32Array(count * STRIDE);
         this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
@@ -192,19 +169,10 @@ class VepaEngine {
             this.particles[ptr] = (Math.random()-0.5)*W*sX; this.particles[ptr+1] = (Math.random()-0.5)*H*sY; this.particles[ptr+2] = (Math.random()-0.5)*D*sZ;
             this.particles[ptr+11] = 1.0 + Math.random();
             this.particles[ptr+12] = spec.id; this.particles[ptr+13] = 0;
-            this.particles[ptr+18] = this.particles[ptr+19] = this.particles[ptr+20] = 0; // Rotation
-            this.particles[ptr+21] = spec.dna[4]; // Charge (Polarity)
+            this.particles[ptr+21] = spec.dna[4] || 0; // Polarity
             this.particles[ptr+22] = 100.0; // Energy
             this.particles[ptr+23] = 0; // Age
-
-            // Polarity-based default coloration
-            let rgb = spec.rgb;
-            if (!rgb) {
-                const pol = spec.dna[4]; // C1
-                if (pol > 0.05) rgb = [0.1, 1.0, 0.3];
-                else if (pol < -0.05) rgb = [0.8, 0.2, 1.0];
-                else rgb = [0.6, 0.6, 0.6];
-            }
+            const rgb = spec.rgb || [0.5, 0.5, 0.5];
             this.particles[ptr+14] = rgb[0]; this.particles[ptr+15] = rgb[1]; this.particles[ptr+16] = rgb[2];
         }
         this.worker.postMessage({ type: 'init', data: { particles: this.particles }, version: this.simVersion });
@@ -212,70 +180,32 @@ class VepaEngine {
 
     handleWorkerMessage(e) { 
         if (e.data.version !== this.simVersion) return;
-        if (e.data.type === 'update') { 
-            this.particles = e.data.particles; 
-            this.workerBusy = false; 
-        } else if (e.data.type === 'error') {
-            console.error("Worker error:", e.data.error);
-            this.workerBusy = false;
-        }
+        if (e.data.type === 'update') { this.particles = e.data.particles; this.workerBusy = false; this.simStep++; }
     }
 
     update() {
         if (!this.particles) return;
-
         if (!this.paused) {
             if (this.playbackMode === 'reverse' || this.playbackMode === 'rewind') {
-                const step = this.playbackMode === 'rewind' ? 5 : 1, slider = document.getElementById('timeline-slider');
+                const slider = document.getElementById('timeline-slider');
                 if (slider) {
-                    const newVal = Math.max(0, parseInt(slider.value) - step); slider.value = newVal;
-                    this.timelineEngine.restore(newVal); document.getElementById('timeline-label').innerText = 'REPLAY: ' + newVal;
-                    if (newVal === 0) {
-                        this.paused = true;
-                        updatePlaybackUI(this.playbackMode, this.paused);
-                    }
+                    const newVal = Math.max(0, parseInt(slider.value) - (this.playbackMode === 'rewind' ? 5 : 1));
+                    slider.value = newVal; this.timelineEngine.restore(newVal, false);
+                    if (newVal === 0) { this.paused = true; updatePlaybackUI(this.playbackMode, this.paused); }
                 }
             } else {
                 this.simAge++;
-                this.checkComplexityUnlock();
                 if (!this.workerBusy) {
                     this.workerBusy = true;
-                    this.worker.postMessage({ type: 'step', version: this.simVersion, config: { laws: this.laws, world: this.worldConfig, specDNA: this.species.map(s => this.getFlattenedDNA(s)) } });
-                    this._workerLastSent = performance.now();
-                } else if (performance.now() - this._workerLastSent > 5000) {
-                    // Emergency reset if worker is silent for 5 seconds
-                    console.warn("Worker timeout - resetting busy state");
-                    this.workerBusy = false;
-                }
+                    this.worker.postMessage({ type: 'step', version: this.simVersion, config: { laws: this.laws, world: this.worldConfig, specDNA: this.species.map(s => this.getFlattenedDNA(s)) }, particles: this.particles });
+                } else if (this.simAge % 200 === 0) { this.workerBusy = false; }
             }
         }
 
-        if (!this.paused) {
-            if (performance.now() - this._lastInsightCheck > 1000) {
-                this._lastInsightCheck = performance.now(); 
-                const { insights, suggestions } = this.insightEngine.evaluate();
-                renderInsights(insights); 
-                renderSuggestions(suggestions);
-                
-                // Goal & Personality Evolution
-                this.goalSystem.evaluate(insights, this.personality);
-                this.goalSystem.applyBias(this.personality.traits);
-                this.goalSystem.applyGoalInfluence();
-
-                this.personality.updateFromEvent(insights, this.goalSystem);
-                this.personality.decayAndDrift();
-                
-                // Narrative System
-                this.narrativeConsciousness.setTone(this.personality.generateTone());
-                this.narrativeConsciousness.ingest(insights, this.goalSystem);
-
-                const multiVoiceNarrative = this.narrativeConsciousness.generateNarrative(insights, this.goalSystem, this.personality);
-                if (multiVoiceNarrative) renderNarrative(multiVoiceNarrative);
-
-                this.emergentEngine.ingest(insights); 
-                this.timelineEngine.capture(); 
-                updateTimelineUI(this.timelineEngine.getTimeline().length - 1);
-            }
+        if (!this.paused && this.simAge % 60 === 0) {
+            const { insights, suggestions } = this.insightEngine.evaluate();
+            renderInsights(insights); renderSuggestions(suggestions);
+            this.timelineEngine.capture();
         }
 
         this.draw();
@@ -283,126 +213,47 @@ class VepaEngine {
 
     draw() {
         this.renderEnvironment();
-
+        const cX = window.innerWidth/2, cY = window.innerHeight/2;
+        const speciesMap = new Map(); this.species.forEach(s => speciesMap.set(s.id, s));
         this.minimap.clear().rect(0, 0, 100, 100).fill({ color: 0x000, alpha: 0.5 }).stroke({ color: 0x00ff41, width: 1 });
-        let aliveCount = 0; const cX = window.innerWidth/2, cY = window.innerHeight/2;
+        
         for (let i = 0; i < this.particleSprites.length; i++) {
             const ptr = i * STRIDE, s = this.particleSprites[i];
             if (this.particles[ptr+13] > 0) { s.visible = false; continue; }
-            s.visible = true; aliveCount++;
             
-            const x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
-            const pScale = this.focalLength / (this.focalLength + z);
+            // Camera-style pan application (add pan BEFORE projection)
+            let x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
+            
+            if (isNaN(x)) { x=y=z=0; }
+            const depth = this.focalLength + z;
+            if (depth <= 10) { s.visible = false; continue; }
+            s.visible = true;
+            const pScale = this.focalLength / depth;
             s.x = cX + x * pScale * this.zoom; s.y = cY + y * pScale * this.zoom;
-            
             const mass = this.particles[ptr+11];
-            const sigSum = this.particles[ptr+7] + this.particles[ptr+8] + this.particles[ptr+9] + this.particles[ptr+10];
-            const baseSize = (Math.sqrt(mass) * this.worldConfig.baseSize + sigSum * 0.8) * pScale * this.zoom;
-            
-            // CENTRIFUGAL SQUISH
-            const wx = this.particles[ptr+18], wy = this.particles[ptr+19], wz = this.particles[ptr+20];
-            const w2 = wx*wx + wy*wy + wz*wz;
-            const spec = this.species.find(sp => sp.id === this.particles[ptr+12]) || this.species[0];
-            const stiffness = spec.dna[8] || 1.0;
-            const squishAmount = Math.min(0.5, (w2 * 0.0000005) / (stiffness + 0.1));
-            
-            // Scale and rotate to match spin vector (simplified projection)
-            s.scale.x = (baseSize / 32) * (1.0 + squishAmount);
-            s.scale.y = (baseSize / 32) * (1.0 - squishAmount);
-            
-            if (w2 > 0.0001) {
-                s.rotation = Math.atan2(wy, wx) + (this.simAge * wz * 0.01); 
-            }
-
-            s.alpha = Math.max(0.05, pScale * 0.5);
+            const size = Math.sqrt(mass) * 2 * this.worldConfig.baseSize * pScale * this.zoom;
+            s.scale.set(size / 32);
             const r = Math.floor(this.particles[ptr+14]*255), g = Math.floor(this.particles[ptr+15]*255), b = Math.floor(this.particles[ptr+16]*255);
             s.tint = (r << 16) | (g << 8) | b;
-
-            // Promotion to graphics for very large bodies
-            if (mass > 1000 && !s._isPlanet) {
-                this.promoteToPlanet(i);
-            }
-            
-            if (i % 20 === 0) this.minimap.rect(50 + x/(this.worldConfig.dimX/100), 50 + y/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
+            if (i % 20 === 0) this.minimap.rect(50 + this.particles[ptr]/(this.worldConfig.dimX/100), 50 + this.particles[ptr+1]/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
         }
-        updateHUD(Math.round(this.app.ticker.fps), aliveCount);
+        updateHUD(Math.round(this.app.ticker.fps), this.worldConfig.count, this.simStep);
     }
 
-
-
     renderEnvironment() {
-        const g = this.envGraphics;
-        g.clear();
-
+        const g = this.envGraphics; g.clear();
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
         const cX = window.innerWidth / 2, cY = window.innerHeight / 2;
-
         const project = (px, py, pz) => {
             const x = px + this.pan.x, y = py + this.pan.y, z = pz + this.pan.z;
             const pScale = this.focalLength / (this.focalLength + z);
-            return {
-                x: cX + x * pScale * this.zoom,
-                y: cY + y * pScale * this.zoom,
-                visible: (this.focalLength + z) > 0
-            };
+            return { x: cX + x * pScale * this.zoom, y: cY + y * pScale * this.zoom, visible: (this.focalLength + z) > 0 };
         };
-
         const corners = [];
         for (let i = 0; i < 8; i++) {
-            const px = (i & 1 ? 1 : -1) * W / 2;
-            const py = (i & 2 ? 1 : -1) * H / 2;
-            const pz = (i & 4 ? 1 : -1) * D / 2;
-            corners.push(project(px, py, pz));
+            corners.push(project((i & 1 ? 1 : -1) * W / 2, (i & 2 ? 1 : -1) * H / 2, (i & 4 ? 1 : -1) * D / 2));
         }
-
-        const edges = [
-            [0, 1], [2, 3], [4, 5], [6, 7], // X-axis
-            [0, 2], [1, 3], [4, 6], [5, 7], // Y-axis
-            [0, 4], [1, 5], [2, 6], [3, 7]  // Z-axis
-        ];
-
-        // Draw Walls (Planes) - Back plane (4, 5, 7, 6)
-        if (corners[4].visible && corners[5].visible && corners[7].visible && corners[6].visible) {
-            g.poly([corners[4], corners[5], corners[7], corners[6]])
-             .fill({ color: 0x111111, alpha: 0.2 })
-             .stroke({ color: 0x333333, width: 1, alpha: 0.5 });
-        }
-
-        // Left plane (0, 4, 6, 2)
-        if (corners[0].visible && corners[4].visible && corners[6].visible && corners[2].visible) {
-            g.poly([corners[0], corners[4], corners[6], corners[2]])
-             .fill({ color: 0x080808, alpha: 0.1 })
-             .stroke({ color: 0x222222, width: 1, alpha: 0.3 });
-        }
-        
-        // Bottom plane (2, 3, 7, 6)
-        if (corners[2].visible && corners[3].visible && corners[7].visible && corners[6].visible) {
-            g.poly([corners[2], corners[3], corners[7], corners[6]])
-             .fill({ color: 0x0a0a0a, alpha: 0.15 })
-             .stroke({ color: 0x222222, width: 1, alpha: 0.3 });
-        }
-
-        // Draw 3D Grid on the back plane
-        const gridSteps = 10;
-        for (let i = 0; i <= gridSteps; i++) {
-            // Vertical lines on back plane
-            const x = -W / 2 + (W / gridSteps) * i;
-            const p1 = project(x, -H / 2, D / 2);
-            const p2 = project(x, H / 2, D / 2);
-            if (p1.visible && p2.visible) {
-                g.moveTo(p1.x, p1.y).lineTo(p2.x, p2.y).stroke({ color: 0x00ff41, width: 0.5, alpha: 0.1 });
-            }
-
-            // Horizontal lines on back plane
-            const y = -H / 2 + (H / gridSteps) * i;
-            const p3 = project(-W / 2, y, D / 2);
-            const p4 = project(W / 2, y, D / 2);
-            if (p3.visible && p4.visible) {
-                g.moveTo(p3.x, p3.y).lineTo(p4.x, p4.y).stroke({ color: 0x00ff41, width: 0.5, alpha: 0.1 });
-            }
-        }
-
-        // Draw wireframe for the rest
+        const edges = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
         edges.forEach(([a, b]) => {
             if (corners[a].visible && corners[b].visible) {
                 g.moveTo(corners[a].x, corners[a].y).lineTo(corners[b].x, corners[b].y).stroke({ color: 0x444444, width: 1, alpha: 0.2 });
@@ -410,60 +261,26 @@ class VepaEngine {
         });
     }
 
-    promoteToPlanet(idx) {
-        const oldSprite = this.particleSprites[idx];
-        const planet = new PIXI.Graphics();
-        // Draw a shaded sphere-like object with better detail
-        planet.circle(0, 0, 32)
-              .fill({ color: 0xffffff, alpha: 1.0 });
-        
-        // Add a "core" for better depth
-        planet.circle(0, 0, 24).fill({ color: 0xffffff, alpha: 0.1 });
-        
-        // Static highlight for 3D feel
-        const highlight = new PIXI.Graphics();
-        highlight.ellipse(-8, -8, 12, 8).fill({ color: 0xffffff, alpha: 0.4 });
-        planet.addChild(highlight);
-        
-        planet.x = oldSprite.x; planet.y = oldSprite.y;
-        planet.scale.set(oldSprite.scale.x, oldSprite.scale.y);
-        planet.tint = oldSprite.tint;
-        planet._isPlanet = true;
-        
-        this.world.removeChild(oldSprite);
-        this.world.addChild(planet);
-        this.particleSprites[idx] = planet;
-        oldSprite.destroy();
-    }
-
-    checkComplexityUnlock() {
-        const milestones = [500, 1500, 3000];
-        if (this.complexityLevel < milestones.length && this.simAge >= milestones[this.complexityLevel]) {
-            this.complexityLevel++;
-            renderNarrative(`COMPLEXITY LEVEL ${this.complexityLevel} REACHED: New parameters unlocked.`);
-            renderWorldAccordion(this);
-            renderDNAAccordion(this);
-            this.persistence.save(this);
-        }
-    }
-
-    getFlattenedDNA(s) {
-        const dnaCopy = [...s.dna]; this.emergentEngine.applyMetaParams(dnaCopy); const d = dnaCopy;
+    getFlattenedDNA(s) { 
         return { 
-            force: d[0], viscosity: d[1], torque: d[2], jitter: d[3], polarity: d[4], alpha: d[5], symmetry: d[6], mass: d[7], stiffness: d[8], fusion: d[9], birth: d[10], death: d[11], mutation: d[12],
-            resp: d[13], pulse: d[14], tidal: d[15], fusionMomentum: d[16], fusionTime: d[17], radius2: Math.pow(d[18], 2), strength: d[19], decay: d[20], speed: d[21], 
-            tuning: [d[22], d[23], d[24], d[25]],
-            inertia: d[26], friction: d[27], maxVel: d[28], baseRadius: d[29], elasticity: d[30], bondAngle: d[31], conductivity: d[32], magnetic: d[33],
-            efficiency: d[34], sex: d[35], predation: d[36], rxnThresh: d[37], catalysis: d[38], heat: d[39], memoryDecay: d[40]
-        };
+            force: s.dna[0],
+            birth: s.dna[10],
+            death: s.dna[11],
+            resp: s.dna[13],
+            pulse: s.dna[14],
+            strength: s.dna[19],
+            decay: s.dna[20],
+            speed: s.dna[21],
+            tuning: [s.dna[22], s.dna[23], s.dna[24], s.dna[25]],
+            fusion: s.dna[9],
+            fusionMomentum: s.dna[16],
+            fusionTime: s.dna[17],
+            baseRadius: s.dna[29] || 2.0,
+            elasticity: s.dna[30] || 0.5,
+            efficiency: s.dna[34] || 0.8
+        }; 
     }
-
-    setPlaybackMode(mode) {
-        this.playbackMode = mode; this.paused = false;
-        this.laws.dt = (mode === 'fastforward') ? 4.0 : 1.0;
-        updatePlaybackUI(this.playbackMode, this.paused);
-    }
-
+    setPlaybackMode(mode) { this.playbackMode = mode; this.paused = false; updatePlaybackUI(this.playbackMode, this.paused); }
     updateDNA(sIdx, rIdx, val) { if(this.species[sIdx]) this.species[sIdx].dna[rIdx] = parseFloat(val); }
     updateWorld(key, val) { this.worldConfig[key] = parseFloat(val); }
     updatePhysics(key, val) { this.laws[key] = parseFloat(val); }
@@ -471,13 +288,13 @@ class VepaEngine {
     toggleLaw(k) { this.laws[k] = !this.laws[k]; syncUI(this.laws); }
     togglePause() { this.paused = !this.paused; updatePlaybackUI(this.playbackMode, this.paused); }
     hardReset() { if(confirm("Hard reset?")) { localStorage.clear(); location.reload(); } }
-
     recenter() {
         const panel = document.getElementById('main-panel');
         let bottomOffset = 0; 
         if (panel && !panel.classList.contains('hidden')) bottomOffset = panel.offsetHeight;
         const targetCenterY = (window.innerHeight - bottomOffset) / 2;
         this.pan.y = (targetCenterY - (window.innerHeight / 2)) / this.zoom;
+        this.pan.x = 0; this.pan.z = 0;
     }
 }
 const engine = new VepaEngine(); window.engine = engine;

@@ -5,19 +5,19 @@ const narrativeHistory = [];
 
 const WORLD_CATEGORIES = {
     "BASIC": { keys: ["count", "G", "dt", "spawnRate"], minLevel: 0 },
-    "DIMENSIONS": { keys: ["dimX", "dimY", "dimZ", "baseSize"], minLevel: 1 },
-    "DISTRIBUTION": { keys: ["spreadX", "spreadY", "spreadZ", "shape"], minLevel: 2 },
-    "ENTROPY": { keys: ["entropy"], minLevel: 3 }
+    "DIMENSIONS": { keys: ["dimX", "dimY", "dimZ", "baseSize"], minLevel: 0 },
+    "DISTRIBUTION": { keys: ["spreadX", "spreadY", "spreadZ", "shape"], minLevel: 0 },
+    "ENTROPY": { keys: ["entropy"], minLevel: 0 }
 };
 
 const DNA_CATEGORIES = {
     "BASIC": { keys: ["Force", "Viscosity", "Birth Rate", "Death Rate"], minLevel: 0 },
-    "MOTION": { keys: ["Torque", "Jitter", "Tidal", "Stiffness", "Hidden Mass", "Inertia", "Friction", "Max Velocity"], minLevel: 1 },
-    "SIGNALING": { keys: ["Signal Resp", "Pulse Rate", "Neighborhood Radius", "Signal Strength", "Signal Decay", "Propagation Speed", "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"], minLevel: 2 },
-    "ADVANCED": { keys: ["Mutation", "Fusion", "Fusion Momentum", "Fusion Time", "Base Radius", "Elasticity", "Bond Angle"], minLevel: 2 },
-    "CORE TRAITS": { keys: ["C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Conductivity", "Magnetic Moment"], minLevel: 3 },
-    "BIOLOGY": { keys: ["Energy Efficiency", "Sex Chance", "Predation Bias"], minLevel: 4 },
-    "CHEMISTRY": { keys: ["Reaction Threshold", "Catalysis", "Heat Output", "Memory Decay"], minLevel: 5 }
+    "MOTION": { keys: ["Torque", "Jitter", "Tidal", "Stiffness", "Hidden Mass", "Inertia", "Friction", "Max Velocity"], minLevel: 0 },
+    "SIGNALING": { keys: ["Signal Resp", "Pulse Rate", "Neighborhood Radius", "Signal Strength", "Signal Decay", "Propagation Speed", "Tuning Ch1", "Tuning Ch2", "Tuning Ch3", "Tuning Ch4"], minLevel: 0 },
+    "ADVANCED": { keys: ["Mutation", "Fusion", "Fusion Momentum", "Fusion Time", "Base Radius", "Elasticity", "Bond Angle"], minLevel: 0 },
+    "CORE TRAITS": { keys: ["C1 (Polarity)", "C2 (Alpha)", "C3 (Symmetry)", "Conductivity", "Magnetic Moment"], minLevel: 0 },
+    "BIOLOGY": { keys: ["Energy Efficiency", "Sex Chance", "Predation Bias"], minLevel: 0 },
+    "CHEMISTRY": { keys: ["Reaction Threshold", "Catalysis", "Heat Output", "Memory Decay"], minLevel: 0 }
 };
 
 class HelpPanel {
@@ -306,7 +306,7 @@ export function renderWorldAccordion(engine) {
         { name: 'Spread Z', key: 'spreadZ', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadZ, type: 'world' },
         { name: 'Global G', key: 'G', min: 0, max: 2, step: 0.05, val: engine.laws.G, type: 'phys' },
         { name: 'Sim Speed', key: 'dt', min: 0, max: 5, step: 0.1, val: engine.laws.dt, type: 'phys' },
-        { name: 'Base Size', key: 'baseSize', min: 0.01, max: 0.5, step: 0.01, val: engine.worldConfig.baseSize, type: 'world' },
+        { name: 'Base Size', key: 'baseSize', min: 0.1, max: 10, step: 0.1, val: engine.worldConfig.baseSize, type: 'world' },
         { name: 'Map Width (X)', key: 'dimX', min: 100, max: 50000, val: engine.worldConfig.dimX, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Height (Y)', key: 'dimY', min: 100, max: 50000, val: engine.worldConfig.dimY, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Depth (Z)', key: 'dimZ', min: 100, max: 50000, val: engine.worldConfig.dimZ, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] }
@@ -388,7 +388,12 @@ function renderNarrativeLog() {
     lastLogRenderedCount = narrativeHistory.length;
 }
 
-export function updateHUD(fps, pCount) { const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count'); if (fpsEl) fpsEl.innerText = fps; if (pCountEl) pCountEl.innerText = pCount; }
+export function updateHUD(fps, pCount, simStep = 0) { 
+    const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count'), stepEl = document.getElementById('sim-step'); 
+    if (fpsEl) fpsEl.innerText = fps; 
+    if (pCountEl) pCountEl.innerText = pCount; 
+    if (stepEl) stepEl.innerText = simStep;
+}
 export function syncUI(laws) { 
     // Sync all 8 law switches
     const keys = ['grav', 'life', 'drag', 'jitter', 'glow', 'wrap', 'coll', 'accr'];
@@ -433,8 +438,29 @@ export function updateTimelineUI(max) {
     if (slider.value == max - 1 || max == 1) { slider.value = max; document.getElementById('timeline-label').innerText = 'LIVE'; }
 }
 
-window.onTimelineScrub = (e) => { const val = parseInt(e.target.value), max = parseInt(e.target.max), label = document.getElementById('timeline-label'); if (val === max) label.innerText = 'LIVE'; else { label.innerText = 'REPLAY: ' + val; window.engine.timelineEngine.restore(val); } };
-setTimeout(() => { const slider = document.getElementById('timeline-slider'); if (slider) slider.oninput = window.onTimelineScrub; }, 100);
+window.onTimelineScrub = (e) => { 
+    const val = parseInt(e.target.value), max = parseInt(e.target.max), label = document.getElementById('timeline-label'); 
+    if (val === max) label.innerText = 'LIVE'; 
+    else { 
+        label.innerText = 'REPLAY: ' + val; 
+        window.engine.timelineEngine.restore(val, false); 
+    } 
+};
+
+window.onTimelineScrubEnd = (e) => {
+    const val = parseInt(e.target.value), max = parseInt(e.target.max);
+    if (val < max) {
+        window.engine.timelineEngine.restore(val, true); // Sync worker when scrub ends
+    }
+};
+
+setTimeout(() => { 
+    const slider = document.getElementById('timeline-slider'); 
+    if (slider) {
+        slider.oninput = window.onTimelineScrub;
+        slider.onchange = window.onTimelineScrubEnd;
+    }
+}, 100);
 
 export function notifyNewProposal(name) {
     const el = document.getElementById('proposal-panel'); const p = window.engine.emergentEngine.pending[0]; if (!p) return;

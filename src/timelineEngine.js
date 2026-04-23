@@ -42,7 +42,7 @@ export class TimelineEngine {
         return this.frames;
     }
 
-    restore(frameIndex) {
+    restore(frameIndex, syncWorker = true) {
         const frame = this.frames[frameIndex];
         if (!frame) return;
 
@@ -54,10 +54,12 @@ export class TimelineEngine {
         this.engine.particles = new Float32Array(frame.state.particles);
         
         // Sync worker with restored particles
-        this.engine.worker.postMessage({ 
-            type: 'init', 
-            data: { particles: this.engine.particles }, 
-            version: this.engine.simVersion 
-        });
+        if (syncWorker) {
+            this.engine.worker.postMessage({ 
+                type: 'init', 
+                data: { particles: this.engine.particles }, 
+                version: this.engine.simVersion 
+            });
+        }
     }
 }
