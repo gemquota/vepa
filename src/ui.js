@@ -9,7 +9,8 @@ let selectedPresetCategories = new Set();
 const narrativeHistory = [];
 
 const WORLD_CATEGORIES = {
-    "BASIC": { keys: ["count", "G", "dt", "globalViscosity", "spawnRate", "cameraMode", "focalLength"], minLevel: 0 },
+    "BASIC": { keys: ["count", "G", "dt", "globalViscosity", "spawnRate", "cameraMode", "cameraLocked", "focalLength"], minLevel: 0 },
+    "PLANETARY": { keys: ["wind"], minLevel: 0 },
     "DIMENSIONS": { keys: ["dimX", "dimY", "dimZ", "baseSize"], minLevel: 0 },
     "DISTRIBUTION": { keys: ["spreadX", "spreadY", "spreadZ", "shape"], minLevel: 0 },
     "ENTROPY": { keys: ["entropy"], minLevel: 0 }
@@ -246,18 +247,130 @@ const helpPanel = new HelpPanel(); const tooltip = new Tooltip();
 const emit = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
 
 export function setupUI(engine) {
-    window.triggerSmartChaos = () => emit('cmd:chaos');
+    window.triggerSmartChaos = (intensity) => emit('cmd:chaos', { intensity });
+
+    window.openChaosMenu = () => {
+        document.getElementById('chaos-menu-dialog').classList.remove('hidden');
+    };
+    
+    window.closeChaosMenu = () => {
+        document.getElementById('chaos-menu-dialog').classList.add('hidden');
+    };
+    
+    window.confirmChaosMenu = () => {
+        const input = document.getElementById('chaos-sim-count-input');
+        const gridStr = (input.value || '3x5').toLowerCase();
+        window.closeChaosMenu();
+        
+        let cols = 3, rows = 5;
+        if (gridStr.includes('x')) {
+            const parts = gridStr.split('x');
+            cols = parseInt(parts[0]) || 3;
+            rows = parseInt(parts[1]) || 5;
+        } else {
+            cols = parseInt(gridStr) || 3;
+            rows = 1;
+        }
+
+        const count = cols * rows;
+        if (count > 20) {
+            alert('Cannot run more than 20 simulations at once (WebGL context limits).');
+            return;
+        }
+
+        // Save current state as _chaos_base
+        window.engine.persistence.savePreset('_chaos_base', window.engine);
+
+        const overlay = document.getElementById('chaos-grid-overlay');
+        const container = document.getElementById('chaos-grid-container');
+        container.innerHTML = '';
+        container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        for (let i = 0; i < count; i++) {
+            const iframe = document.createElement('iframe');
+            iframe.src = 'index.html?chaos=1&base=_chaos_base';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = '1px solid #333';
+            iframe.style.background = '#000';
+            container.appendChild(iframe);
+        }
+
+        overlay.classList.remove('hidden');
+    };
+
+    window.closeChaosGrid = () => {
+        const overlay = document.getElementById('chaos-grid-overlay');
+        const container = document.getElementById('chaos-grid-container');
+        overlay.classList.add('hidden');
+        container.innerHTML = ''; // Kill iframes
+    };
+
+    const chaosBtn = document.getElementById('chaos-btn');
+    if (chaosBtn) {
+        let chaosPressTimer;
+        let isLongPress = false;
+
+        const startChaosPress = (e) => {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            isLongPress = false;
+            chaosPressTimer = setTimeout(() => {
+                isLongPress = true;
+                chaosPressTimer = null;
+                window.openChaosMenu();
+            }, 500);
+        };
+        
+        const endChaosPress = (e) => {
+            if (chaosPressTimer) {
+                clearTimeout(chaosPressTimer);
+                chaosPressTimer = null;
+                if (!isLongPress) {
+                    window.triggerSmartChaos(); // Default trigger
+                }
+            }
+        };
+
+        chaosBtn.addEventListener('mousedown', startChaosPress);
+        chaosBtn.addEventListener('touchstart', startChaosPress, { passive: true });
+        chaosBtn.addEventListener('mouseup', endChaosPress);
+        chaosBtn.addEventListener('touchend', endChaosPress);
+        chaosBtn.addEventListener('mouseleave', () => { 
+            if (chaosPressTimer) { 
+                clearTimeout(chaosPressTimer); 
+                chaosPressTimer = null; 
+            } 
+        });
+    }
     window.togglePause = () => emit('cmd:pause');
     window.restartSim = () => emit('cmd:restart');
     window.hardReset = () => { if(confirm("Hard reset?")) emit('cmd:hardReset'); };
     window.setPlaybackMode = (mode) => emit('cmd:playback', mode);
     window.toggleLaw = (k) => emit('cmd:toggleLaw', k);
     window.handleLawClick = (lawKey, helpKey, e) => {
+        const descEl = document.getElementById('active-law-desc');
+        const labelEl = document.getElementById('desc-category-label');
+        const data = HELP_DB[helpKey];
+        if (descEl && data) {
+            descEl.innerText = `${helpKey.toUpperCase()}: ${data.layers.hint}`;
+            if (labelEl && data.category) {
+                labelEl.innerText = data.category.toUpperCase() + ':';
+            }
+        }
+
         if (document.body.classList.contains('help-mode-active')) {
             window.showTooltip(helpKey, e);
         } else {
             window.toggleLaw(lawKey);
         }
+    };
+
+    const renderToggleIcons = () => {
+        Object.entries(LAW_ICONS).forEach(([k, icon]) => {
+            const el = document.getElementById(`syn-${k}`);
+            if (el) el.innerHTML = icon;
+        });
     };
 
     window.toggleAllLaws = () => {
@@ -397,15 +510,6 @@ export function setupUI(engine) {
         const panel = document.getElementById('main-panel');
         const hide = (force !== undefined) ? !force : !panel.classList.contains('hidden');
         panel.classList.toggle('hidden', hide);
-        if (hide) {
-            // Closing the menu itself rehides the info module
-            const infoMod = document.getElementById('info-module');
-            const infoBtn = document.getElementById('info-module-toggle');
-            if (infoMod) infoMod.classList.add('hidden');
-            if (infoBtn) infoBtn.classList.remove('active');
-            const arrow = document.getElementById('info-module-arrow');
-            if (arrow) arrow.innerText = '▼';
-        }
         emit('ui:resized');
     };
 
@@ -416,7 +520,7 @@ export function setupUI(engine) {
         const active = mod.classList.toggle('hidden');
         btn.classList.toggle('active', !active);
         if (arrow) arrow.innerText = active ? '▼' : '▲';
-        if (!active) renderInfoModule();
+        if (!active) renderLawCodex();
         emit('ui:resized');
     };
 
@@ -437,6 +541,7 @@ export function setupUI(engine) {
         phenotype: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="4"/></svg>`,
         void: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-dasharray="4 4"/><path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" fill="currentColor"/></svg>`,
         bond: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 7l10 10M7 17L17 7"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="7" r="3"/></svg>`,
+        planetary: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 21a9 9 0 000-18M3 12h18" opacity="0.4"/><circle cx="12" cy="12" r="3"/></svg>`,
         ener: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="var(--red-bright)" fill-opacity="0.3"/></svg>`,
         rad: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3" opacity="0.6"/></svg>`,
         cata: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
@@ -473,10 +578,7 @@ export function setupUI(engine) {
         astr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`
     };
 
-    let activeInfoTab = 'physics';
-    window.switchInfoTab = (tab) => { activeInfoTab = tab; renderInfoModule(); };
-
-    const renderInfoModule = () => {
+    const renderLawCodex = () => {
         const container = document.getElementById('info-module');
         if (!container) return;
         
@@ -495,6 +597,7 @@ export function setupUI(engine) {
             { key: 'wrap', help: 'WRAP', name: 'SCREEN WRAPPING', group: 'pure' },
             { key: 'coll', help: 'COLL', name: 'PHYSICAL COLLISIONS', group: 'pure' },
             { key: 'accr', help: 'ACCR', name: 'MASS ACCRETION', group: 'pure' },
+            { key: 'planetary', help: 'PLANET', name: 'PLANETARY MODE', group: 'pure' },
             { key: 'void', help: 'VOID', name: 'VACUUM PRESSURE', group: 'pure' },
             { key: 'bond', help: 'BOND', name: 'MOLECULAR BOND', group: 'pure' }
         ];
@@ -569,6 +672,7 @@ export function setupUI(engine) {
                         <p class="detail-exp">${data.layers.explanation}</p>
                         <p class="detail-sys">${data.layers.system || ''}</p>
                         <p class="detail-adv">${data.layers.advanced || ''}</p>
+                        <button class="btn tiny-btn codex-deep-link" onclick="window.openCodex('${l.help}')">FULL_DB_ENTRY</button>
                     </div>
                 ` : '';
 
@@ -580,7 +684,7 @@ export function setupUI(engine) {
                                 <span class="info-item-name">${l.name}</span>
                             </div>
                             <div id="info-sw-${l.key}" class="info-item-icon-switch ${isActive ? 'active' : ''}" onclick="window.toggleLaw('${l.key}')" title="Toggle Law">
-                                ${icon}
+                                ${isActive ? 'ACTIVE' : 'OFF'}
                             </div>
                         </div>
                         <div class="info-item-desc">${detail}</div>
@@ -595,20 +699,11 @@ export function setupUI(engine) {
             </div>
         `;
 
-        const introHtml = `
-            <div class="info-intro">
-                <div class="intro-graphic">
-                    <svg viewBox="0 0 100 20" preserveAspectRatio="none" fill="var(--red-bright)" fill-opacity="0.1">
-                        <path d="M0 10 Q 25 0, 50 10 T 100 10 L 100 20 L 0 20 Z" />
-                    </svg>
-                </div>
-                <h3>LAW_CODEX_v4.5</h3>
-                <p>System-wide parameterization of emergent constraints. Specialized law layers active.</p>
-            </div>
-        `;
-
-        container.innerHTML = introHtml + tabHtml + `<div class="info-scroll-area">${renderGroup(currentMap)}</div>`;
+        container.innerHTML = tabHtml + `<div class="info-scroll-area">${renderGroup(currentMap)}</div>`;
     };
+
+    window.switchInfoTab = (tab) => { activeInfoTab = tab; renderLawCodex(); };
+
 
 
     window.openTab = (event, tabId) => {
@@ -897,8 +992,10 @@ export function setupUI(engine) {
 
     setTimeout(() => { window.toggleTopBar(false); window.toggleMainPanel(false); }, 200);
 
-    renderWorldAccordion(engine); renderSpeciesList(engine); renderDNAAccordion(engine);
+    renderWorldAccordion(engine); renderSpeciesList(engine); renderDNAAccordion(engine); renderLawCodex(); renderToggleIcons();
 }
+
+let activeInfoTab = 'physics';
 
 export function renderWorldAccordion(engine) {
     const container = document.getElementById('world-accordion'); if (!container) return; container.innerHTML = '';
@@ -919,15 +1016,24 @@ export function renderWorldAccordion(engine) {
         { name: 'Map Width (X)', key: 'dimX', min: 100, max: 50000, val: engine.worldConfig.dimX, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Height (Y)', key: 'dimY', min: 100, max: 50000, val: engine.worldConfig.dimY, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Depth (Z)', key: 'dimZ', min: 100, max: 50000, val: engine.worldConfig.dimZ, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
-        { name: 'Cam Mode', key: 'cameraMode', type: 'select', options: ['panning', 'orbital'], val: engine.worldConfig.cameraMode }
+        { name: 'Cam Mode', key: 'cameraMode', type: 'select', options: ['panning', 'orbital'], val: engine.worldConfig.cameraMode },
+        { name: 'Cam Lock', key: 'cameraLocked', type: 'toggle', val: engine.worldConfig.cameraLocked },
+        { name: 'Wind', key: 'wind', min: -5.0, max: 5.0, step: 0.1, val: engine.worldConfig.wind, type: 'world' }
     ];
     let sectionIdx = 0;
     Object.entries(WORLD_CATEGORIES).forEach(([catName, config]) => {
         if (level < config.minLevel) return;
         const sectionId = `world-cat-${sectionIdx++}`;
         const wrapper = document.createElement('div'); wrapper.className = 'acc-wrapper' + (sectionIdx === 1 ? ' active' : ''); wrapper.id = sectionId;
-        const header = document.createElement('div'); header.className = 'tier-1-header'; header.innerText = catName; header.onclick = () => window.toggleAccSection(sectionId); 
+        const header = document.createElement('div'); header.className = 'tier-1-header'; header.innerText = catName; 
         header.setAttribute('data-help-key', catName in WORLD_CATEGORIES ? 'WORLD_LAWS' : 'BIOLOGY_LAWS');
+        header.onclick = (e) => {
+            if (document.body.classList.contains('help-mode-active')) {
+                window.showTooltip(header.getAttribute('data-help-key'), e);
+            } else {
+                window.toggleAccSection(sectionId);
+            }
+        };
         wrapper.appendChild(header);
         const content = document.createElement('div'); content.className = 'tier-3-container';
         config.keys.forEach(k => {
@@ -941,6 +1047,13 @@ export function renderWorldAccordion(engine) {
                     <select class="preset-input" onchange="window.updateWorld('${it.key}', this.value)" style="width:100%; font-size: 8px;">
                         ${it.options.map(opt => `<option value="${opt}" ${it.val === opt ? 'selected' : ''}>${opt.toUpperCase()}</option>`).join('')}
                     </select>`;
+            } else if (it.type === 'toggle') {
+                row.innerHTML = `<span class="slider-label">${it.name}: </span>
+                    <div id="world-sw-${it.key}" class="sq-toggle ${it.val ? 'active' : ''}" 
+                        onclick="window.engine.worldConfig['${it.key}'] = !window.engine.worldConfig['${it.key}']; this.classList.toggle('active'); this.innerText = window.engine.worldConfig['${it.key}'] ? 'LOCKED' : 'FREE';" 
+                        style="width: 100%; text-align: center; margin: 5px 0;">
+                        ${it.val ? 'LOCKED' : 'FREE'}
+                    </div>`;
             } else if (it.log) {
                 const minLog = Math.log(it.min), maxLog = Math.log(it.max), valLog = Math.log(it.val), percent = ((valLog - minLog) / (maxLog - minLog)) * 100;
                 let notchesHtml = '<div class="slider-notches">' + it.snaps.map(snap => { const snapPct = ((Math.log(snap) - minLog) / (maxLog - minLog)) * 100; return `<div class="notch" style="left: ${snapPct}%;" data-val="${snap}"></div>`; }).join('') + '</div>';
@@ -981,8 +1094,15 @@ export function renderDNAAccordion(engine) {
         if (level < config.minLevel) return;
         const sectionId = `dna-cat-${sectionIdx++}`;
         const wrapper = document.createElement('div'); wrapper.className = 'acc-wrapper' + (sectionIdx === 1 ? ' active' : ''); wrapper.id = sectionId;
-        const header = document.createElement('div'); header.className = 'tier-1-header'; header.innerText = catName; header.onclick = () => window.toggleAccSection(sectionId); 
+        const header = document.createElement('div'); header.className = 'tier-1-header'; header.innerText = catName; 
         header.setAttribute('data-help-key', catName in WORLD_CATEGORIES ? 'WORLD_LAWS' : 'BIOLOGY_LAWS');
+        header.onclick = (e) => {
+            if (document.body.classList.contains('help-mode-active')) {
+                window.showTooltip(header.getAttribute('data-help-key'), e);
+            } else {
+                window.toggleAccSection(sectionId);
+            }
+        };
         wrapper.appendChild(header);
         const content = document.createElement('div'); content.className = 'tier-3-container';
         config.keys.forEach(name => {
@@ -1052,16 +1172,19 @@ export function updateParticleHUD(data) {
 }
 
 export function syncUI(laws) {
-    // Sync all law switches in both groups
     const groups = ['pure', 'biol', 'chem', 'thermo', 'meta'];
-    groups.forEach(g => {        if (!laws[g]) return;
+    groups.forEach(g => {
+        if (!laws[g]) return;
         Object.keys(laws[g]).forEach(k => {
             const val = laws[g][k];
             const el = document.getElementById(`syn-${k}`); 
             if(el) el.classList.toggle('active', !!val); 
 
             const infoSw = document.getElementById(`info-sw-${k}`);
-            if(infoSw) infoSw.classList.toggle('active', !!val);
+            if(infoSw) {
+                infoSw.classList.toggle('active', !!val);
+                infoSw.innerText = val ? 'ACTIVE' : 'OFF';
+            }
         });
     });
 }

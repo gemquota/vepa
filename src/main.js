@@ -31,8 +31,8 @@ class VepaEngine {
             count: 1000, dimX: 500, dimY: 500, dimZ: 500, 
             spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, 
             baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5,
-            groundHeight: 0.9, cameraMode: 'panning', 
-            globalViscosity: 0.98
+            groundHeight: 0.9, cameraMode: 'panning', cameraLocked: false,
+            globalViscosity: 0.98, wind: 0.0
         };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
         this.rotation = { x: 0, y: 0 };
@@ -69,7 +69,19 @@ class VepaEngine {
             this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
             this.worker.onmessage = (e) => this.handleWorkerMessage(e);
             let frame = 0;
-            this.restartSim();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const isChaos = urlParams.get('chaos');
+            const basePreset = urlParams.get('base');
+
+            if (isChaos && basePreset) {
+                this.persistence.loadPreset(basePreset, this, new Set(['laws', 'world', 'species']));
+                document.getElementById('ui-layer').style.display = 'none';
+                this.triggerSmartChaos();
+            } else {
+                this.restartSim();
+            }
+            
             setupUI(this); syncUI(this.laws);
             import('./ui.js').then(ui => ui.renderQuickPresets(this));
             updatePlaybackUI(this.playbackMode || 'forward', this.paused);
@@ -263,11 +275,16 @@ class VepaEngine {
             const mode = this.worldConfig.cameraMode || 'panning';
 
             if (activePointers.size === 1) {
-                if (mode === 'panning') {
+                if (mode === 'panning' || this.worldConfig.cameraLocked) {
                     // 1-FINGER PAN
                     const sensitivity = 1.0 / this.zoom;
                     this.pan.x += dx * sensitivity;
                     this.pan.y += dy * sensitivity;
+                    
+                    if (this.worldConfig.cameraLocked) {
+                        this.rotation.x = 0;
+                        this.rotation.y = 0;
+                    }
                 } else {
                     // 1-FINGER ROTATE (ORBITAL)
                     this.rotation.y += dx * 0.005;
@@ -282,7 +299,7 @@ class VepaEngine {
                 // ZOOM (Always 2-finger)
                 if (initialDistance > 0) this.zoom = initialZoom * (dist / initialDistance);
 
-                if (mode === 'panning') {
+                if (mode === 'panning' && !this.worldConfig.cameraLocked) {
                     // 2-FINGER ROTATE
                     this.rotation.y += (dx * 0.005) / 2;
                     this.rotation.x -= (dy * 0.005) / 2;
@@ -635,6 +652,25 @@ class VepaEngine {
                 const p2 = project(x, groundY, D/2);
                 if (p1.visible && p2.visible) {
                     g.moveTo(p1.x, p1.y).lineTo(p2.x, p2.y).stroke({ color: 0x224422, width: 1, alpha: 0.3 * p1.scale });
+                }
+            }
+
+            // Draw particle shadows
+            if (this.particles) {
+                for (let i = 0; i < this.worldConfig.count; i++) {
+                    const ptr = i * STRIDE;
+                    if (this.particles[ptr+13] > 0) continue;
+                    const px = this.particles[ptr], py = this.particles[ptr+1], pz = this.particles[ptr+2];
+                    if (py >= groundY) continue; // Below ground
+
+                    const shadow = project(px, groundY, pz);
+                    if (shadow.visible) {
+                        const mass = this.particles[ptr+11];
+                        const distToGround = Math.max(1, groundY - py);
+                        const shadowAlpha = Math.max(0, 0.4 * (1.0 - distToGround / 500));
+                        const shadowSize = Math.sqrt(mass) * 1.5 * this.worldConfig.baseSize * shadow.scale * this.zoom;
+                        g.circle(shadow.x, shadow.y, shadowSize).fill({ color: 0x000, alpha: shadowAlpha });
+                    }
                 }
             }
         }

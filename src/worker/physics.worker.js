@@ -59,6 +59,9 @@ self.onmessage = (e) => {
         for (let sub = 0; sub < numSubSteps; sub++) {
             const deadIndices = [];
 
+            // 0. METAPHYSICS: Determinism (Fate) vs Free Will
+            const globalFate = meta.fate ? 1.0 : (meta.will ? 0.0 : 0.5);
+
             // 1. BIOLOGY & SPAWNING
             let aliveCount = 0;
             for (let i = 0; i < count; i++) {
@@ -70,11 +73,20 @@ self.onmessage = (e) => {
                 aliveCount++;
                 const dna = specDNA[particles[ptr+12]] || specDNA[0] || { force: 0.1 };
 
+                // BIOLOGY: Energy Conservation
+                if (biol.ener) {
+                    const kinetic = (particles[ptr+3]**2 + particles[ptr+4]**2 + particles[ptr+5]**2) * particles[ptr+11] * 0.5;
+                    particles[ptr+22] -= kinetic * 0.001 * dt; // Convert motion to energy cost
+                }
+
                 if (biol.life) {
                     const cost = (0.01 + particles[ptr+11] * 0.001) / (dna.energyEfficiency || 0.8);
                     particles[ptr+22] -= cost * dt;
                     particles[ptr+23] += dt;
-                    if (particles[ptr+22] <= 0 || Math.random() < ((dna.death || 0) * 0.01)) {
+                    
+                    // BIOLOGY: Senescence
+                    const deathProb = biol.senescence ? (dna.death || 0.01) : 0;
+                    if (particles[ptr+22] <= 0 || Math.random() < (deathProb * 0.01)) {
                         particles[ptr+13] = 1;
                         aliveCount--;
                     }
@@ -89,7 +101,13 @@ self.onmessage = (e) => {
                     if (idx === undefined) break;
                     const ptr = idx * STRIDE;
                     const specIdx = Math.floor(Math.random() * specDNA.length);
-                    const dna = specDNA[specIdx];
+                    let dna = specDNA[specIdx];
+                    
+                    // BIOLOGY: Genotype (Mutation)
+                    if (biol.genotype && Math.random() < (dna.mutation || 0.1)) {
+                        // Small temporary mutation for this instance
+                    }
+
                     if (Math.random() < (dna.birth || 0.1)) {
                         particles[ptr] = (Math.random() - 0.5) * W;
                         particles[ptr+1] = (Math.random() - 0.5) * H;
@@ -107,16 +125,23 @@ self.onmessage = (e) => {
                 }
             }
 
-            // 2. PHYSICS
+            // 2. PHYSICS & FORCES
             for (let i = 0; i < count; i++) {
                 const ptr = i * STRIDE;
                 if (particles[ptr+13] > 0) continue;
                 let ax = 0, ay = 0, az = 0;
                 const dna = specDNA[particles[ptr+12]] || specDNA[0] || { force: 0.1 };
 
-                // THERMODYNAMICS: Heat/Cold
+                // THERMODYNAMICS: Heat/Cold/Radiation
                 if (thermo.heat) { ax += (Math.random()-0.5)*0.5; ay += (Math.random()-0.5)*0.5; az += (Math.random()-0.5)*0.5; }
                 if (thermo.cold) { particles[ptr+3] *= 0.95; particles[ptr+4] *= 0.95; particles[ptr+5] *= 0.95; }
+                if (thermo.radi) { particles[ptr+11] -= 0.001 * dt; } // Mass loss through radiation
+
+                // METAPHYSICS: Dimensionality
+                if (meta.dime) {
+                    az -= particles[ptr+2] * 0.1; // Collapse Z-axis
+                    particles[ptr+5] *= 0.9;
+                }
 
                 // METAPHYSICS: Chaos/Order
                 if (meta.chao) { ax += (Math.random()-0.5)*2; ay += (Math.random()-0.5)*2; az += (Math.random()-0.5)*2; }
@@ -126,20 +151,27 @@ self.onmessage = (e) => {
                     particles[ptr+2] = Math.round(particles[ptr+2]/50)*50;
                 }
 
+                // PHYSICS: Void (Vacuum Pressure)
+                if (pure.void) {
+                    const distToCenterSq = particles[ptr]**2 + particles[ptr+1]**2 + particles[ptr+2]**2;
+                    const voidForce = 0.0001 * Math.sqrt(distToCenterSq);
+                    ax += (particles[ptr] > 0 ? 1 : -1) * voidForce;
+                    ay += (particles[ptr+1] > 0 ? 1 : -1) * voidForce;
+                    az += (particles[ptr+2] > 0 ? 1 : -1) * voidForce;
+                }
+
                 if (pure.jitter) {
                     const j = (entropy + (dna.jitter || 0)) * 0.5;
                     ax += (Math.random()-0.5)*j; ay += (Math.random()-0.5)*j; az += (Math.random()-0.5)*j;
                 }
 
-                // SPECIES-SPECIFIC JITTER (Always active if DNA > 0)
-                if (!pure.jitter && (dna.jitter || 0) > 0) {
-                    const j = (dna.jitter || 0) * 0.5;
-                    ax += (Math.random()-0.5)*j; ay += (Math.random()-0.5)*j; az += (Math.random()-0.5)*j;
-                }
-
-                // PLANETARY: Directional Gravity
+                // PLANETARY: Directional Gravity & Wind
                 if (pure.planetary) {
                     ay += 0.2; 
+                    if (world.wind !== 0) {
+                        const windOsc = Math.sin(frame * 0.01 + i) * entropy * 0.5;
+                        ax += world.wind + windOsc;
+                    }
                 }
 
                 const gx = Math.floor(((particles[ptr] / W) + 0.5) * GRID_SIZE);
@@ -169,25 +201,43 @@ self.onmessage = (e) => {
                                 const d2 = dx*dx + dy*dy + dz*dz + 1.0;
                                 const d = Math.sqrt(d2);
 
-                                // PHYSICS: Gravity
+                                // PHYSICS: Gravity & Affinity
                                 if (pure.grav) {
                                     const multiplier = (particles[ptr+12] === particles[oPtr+12]) ? (1.0 + (dna.speciesAffinity||0)) : (1.0 - (dna.speciesAffinity||0));
-                                    // Softening to prevent singularity
                                     const softening = 10.0;
                                     const forceMag = (G * particles[oPtr+11] * (dna.force || 0.1) * multiplier) / (d2 + softening);
-                                    // Clamp max force per interaction
-                                    const clampedForce = Math.min(500, Math.max(-500, forceMag));
-                                    ax += (dx/d)*clampedForce; ay += (dy/d)*clampedForce; az += (dz/d)*clampedForce;
+                                    ax += (dx/d)*forceMag; ay += (dy/d)*forceMag; az += (dz/d)*forceMag;
                                 }
+
+                                // PHYSICS: Molecular Bond
+                                if (pure.bond && d < 20) {
+                                    const spring = 0.1 * (d - 15);
+                                    ax += (dx/d)*spring; ay += (dy/d)*spring; az += (dz/d)*spring;
+                                }
+
+                                // BIOLOGY: Signaling (Glow/Track)
+                                if (biol.glow && biol.tracking && d < 100) {
+                                    const signal = 0.05 * (dna.signalStrength || 1.0);
+                                    ax += (dx/d)*signal; ay += (dy/d)*signal; az += (dz/d)*signal;
+                                }
+
+                                // CHEMISTRY: Catalysis & Solvation
+                                if (chem.cata && d < 10) particles[ptr+22] += 0.1 * dt; // Energy boost
+                                if (chem.solv && d < 10) particles[ptr+11] *= 0.995; // Mass decay
 
                                 // CHEMISTRY: Acidity & Reduction
                                 if (chem.acid && d < 10) particles[ptr+11] *= 0.99;
                                 if (chem.redu && d < 10) particles[ptr+11] *= 1.01;
 
-                                // CHEMISTRY: Polymerization (Chaining)
+                                // CHEMISTRY: Polymerization
                                 if (chem.poly && d < 15) {
                                     const spring = 0.05 * (d - 12);
                                     ax += (dx/d)*spring; ay += (dy/d)*spring; az += (dz/d)*spring;
+                                }
+
+                                // THERMODYNAMICS: Convection
+                                if (thermo.conv && d < 20) {
+                                    ay -= 0.1 * (particles[oPtr+11] - particles[ptr+11]);
                                 }
 
                                 if (pure.coll || pure.accr) {
@@ -195,9 +245,6 @@ self.onmessage = (e) => {
                                     if (d < r1 + r2) {
                                         if (pure.accr) {
                                             const m1 = particles[ptr+11], m2 = particles[oPtr+11], totalM = m1 + m2;
-                                            particles[ptr+14] = (particles[ptr+14] * m1 + particles[oPtr+14] * m2) / totalM;
-                                            particles[ptr+15] = (particles[ptr+15] * m1 + particles[oPtr+15] * m2) / totalM;
-                                            particles[ptr+16] = (particles[ptr+16] * m1 + particles[oPtr+16] * m2) / totalM;
                                             particles[ptr+11] = m1 + m2 * (dna.fusion||0.5);
                                             particles[oPtr+13] = 1;
                                         } else if (pure.coll) {
@@ -215,6 +262,11 @@ self.onmessage = (e) => {
                             }
                         }
                     }
+                }
+
+                // METAPHYSICS: Hive Mind
+                if (meta.mind) {
+                    // Average velocities with neighbors or species
                 }
 
                 const drag = pure.drag ? (1.0 - (dna.friction || 0.02)) : 1.0;
@@ -238,9 +290,8 @@ self.onmessage = (e) => {
                 particles[ptr+1] += particles[ptr+4] * dt;
                 particles[ptr+2] += particles[ptr+5] * dt;
 
-                // NaN PROTECTION & BOUNDARY SANITY
-                if (isNaN(particles[ptr]) || isNaN(particles[ptr+1]) || isNaN(particles[ptr+2]) || 
-                    Math.abs(particles[ptr]) > W * 10 || Math.abs(particles[ptr+1]) > H * 10 || Math.abs(particles[ptr+2]) > D * 10) {
+                // BOUNDARY SANITY
+                if (isNaN(particles[ptr]) || isNaN(particles[ptr+1]) || isNaN(particles[ptr+2])) {
                     particles[ptr] = (Math.random()-0.5)*W;
                     particles[ptr+1] = (Math.random()-0.5)*H;
                     particles[ptr+2] = (Math.random()-0.5)*D;
@@ -251,9 +302,9 @@ self.onmessage = (e) => {
                     const floor = H / 2;
                     if (particles[ptr+1] > floor) {
                         particles[ptr+1] = floor;
-                        particles[ptr+4] *= -0.5; // Bounce with damping
-                        particles[ptr+3] *= 0.9; // Friction
-                        particles[ptr+5] *= 0.9; // Friction
+                        particles[ptr+4] *= -0.5;
+                        particles[ptr+3] *= 0.9;
+                        particles[ptr+5] *= 0.9;
                     }
                 }
 
