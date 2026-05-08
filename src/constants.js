@@ -703,6 +703,15 @@ export const HELP_DB = {
         },
         category: "Biology"
     },
+    "PLANET": {
+        layers: {
+            hint: "Toggles planetary gravity and ground.",
+            explanation: "Applies a constant downward force and creates a solid floor at the bottom of the simulation.",
+            system: "Simulates a terrestrial environment instead of open space.",
+            advanced: "Disables vertical wrapping and implements elastic ground collisions with friction."
+        },
+        category: "Laws"
+    },
     "ENER": {
         layers: {
             hint: "Toggles global energy conservation.",
@@ -877,9 +886,9 @@ export const HELP_DB = {
 
 export const DNA_RANGES = [
     { min: -100, max: 100, default: 0.1 },
-    { min: 0.8, max: 1.0, default: 0.98 },
+    { min: 0.5, max: 1.0, default: 0.98 }, // Viscosity (more range)
     { min: -1, max: 1, default: 0 },
-    { min: 0, max: 0.5, default: 0.05 },
+    { min: 0, max: 5.0, default: 0.05 }, // Jitter (way more range)
     { min: -1, max: 1, default: 0 },
     { min: 0, max: 1, default: 0.5 },
     { min: -1, max: 1, default: 0 },

@@ -78,6 +78,10 @@
                     </div>
 
                     <div id="tab-world" class="tab-content active">
+                        <button id="toggle-all-laws-btn" class="info-module-toggle" onclick="window.toggleAllLaws()" style="margin-top: 10px; margin-bottom: 15px;">
+                            <span>MINIMIZE ALL LAWS</span> <span id="toggle-laws-arrow">▲</span>
+                        </button>
+
                         <div class="toggle-grid-header" data-help-key="WORLD_LAWS">PHYSICS LAWS</div>
                         <div class="toggle-grid condensed">
                             <div class="sq-toggle" id="syn-grav" onclick="window.handleLawClick('grav', 'GRAV', event)">GRAV</div>
@@ -88,6 +92,7 @@
                             <div class="sq-toggle" id="syn-accr" onclick="window.handleLawClick('accr', 'ACCR', event)">ACCR</div>
                             <div class="sq-toggle" id="syn-void" onclick="window.handleLawClick('void', 'VOID', event)">VOID</div>
                             <div class="sq-toggle" id="syn-bond" onclick="window.handleLawClick('bond', 'BOND', event)">BOND</div>
+                            <div class="sq-toggle" id="syn-planetary" onclick="window.handleLawClick('planetary', 'PLANET', event)">PLANET</div>
                             <div class="sq-toggle" id="syn-ener" onclick="window.handleLawClick('ener', 'ENER', event)">ENER</div>
                             <div class="sq-toggle" id="syn-rad" onclick="window.handleLawClick('rad', 'RAD', event)">RAD</div>
                         </div>
@@ -184,6 +189,14 @@
                     </div>
 
                     <div id="tab-settings" class="tab-content">
+                        <div class="settings-group-header">CAMERA CONTROL</div>
+                        <div class="settings-group">
+                            <select id="camera-mode-select" class="preset-input" onchange="window.updateWorld('cameraMode', this.value)" style="margin-bottom: 15px;">
+                                <option value="panning">MODE: 1-FINGER PAN / 2-FINGER ROTATE</option>
+                                <option value="orbital">MODE: 1-FINGER ROTATE / 2-FINGER PAN</option>
+                            </select>
+                        </div>
+
                         <div class="settings-group-header">FACTORY OPTIONS</div>
                         <div class="settings-group">
                             <button class="btn" style="width:100%; margin-bottom: 10px;" onclick="window.hardReset()">FACTORY_RESET</button>

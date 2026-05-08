@@ -69,6 +69,7 @@ These 42 parameters define how a species behaves and interacts with its environm
 *   **coll:** Physical elastic collisions.
 *   **accr:** Mass accretion (fusion) on collision.
 *   **wrap:** Toroidal spatial topology (screen wrap).
+*   **planetary:** Constant downward gravity and solid floor collision.
 *   **void:** Linear evaporative decay for large masses.
 *   **bond:** Elastic molecular linking (Hooke's law).
 *   **ener:** Global energy conservation tracking.

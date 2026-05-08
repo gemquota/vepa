@@ -127,8 +127,19 @@ self.onmessage = (e) => {
                 }
 
                 if (pure.jitter) {
-                    const j = entropy * 0.5;
+                    const j = (entropy + (dna.jitter || 0)) * 0.5;
                     ax += (Math.random()-0.5)*j; ay += (Math.random()-0.5)*j; az += (Math.random()-0.5)*j;
+                }
+
+                // SPECIES-SPECIFIC JITTER (Always active if DNA > 0)
+                if (!pure.jitter && (dna.jitter || 0) > 0) {
+                    const j = (dna.jitter || 0) * 0.5;
+                    ax += (Math.random()-0.5)*j; ay += (Math.random()-0.5)*j; az += (Math.random()-0.5)*j;
+                }
+
+                // PLANETARY: Directional Gravity
+                if (pure.planetary) {
+                    ay += 0.2; 
                 }
 
                 const gx = Math.floor(((particles[ptr] / W) + 0.5) * GRID_SIZE);
@@ -161,8 +172,12 @@ self.onmessage = (e) => {
                                 // PHYSICS: Gravity
                                 if (pure.grav) {
                                     const multiplier = (particles[ptr+12] === particles[oPtr+12]) ? (1.0 + (dna.speciesAffinity||0)) : (1.0 - (dna.speciesAffinity||0));
-                                    const f = (G * particles[oPtr+11] * (dna.force || 0.1) * multiplier) / d2;
-                                    ax += (dx/d)*f; ay += (dy/d)*f; az += (dz/d)*f;
+                                    // Softening to prevent singularity
+                                    const softening = 10.0;
+                                    const forceMag = (G * particles[oPtr+11] * (dna.force || 0.1) * multiplier) / (d2 + softening);
+                                    // Clamp max force per interaction
+                                    const clampedForce = Math.min(500, Math.max(-500, forceMag));
+                                    ax += (dx/d)*clampedForce; ay += (dy/d)*clampedForce; az += (dz/d)*clampedForce;
                                 }
 
                                 // CHEMISTRY: Acidity & Reduction
@@ -203,9 +218,13 @@ self.onmessage = (e) => {
                 }
 
                 const drag = pure.drag ? (1.0 - (dna.friction || 0.02)) : 1.0;
-                particles[ptr+3] = (particles[ptr+3] + ax) * drag;
-                particles[ptr+4] = (particles[ptr+4] + ay) * drag;
-                particles[ptr+5] = (particles[ptr+5] + az) * drag;
+                const speciesViscosity = dna.viscosity !== undefined ? dna.viscosity : 0.98;
+                const globalViscosity = world.globalViscosity !== undefined ? world.globalViscosity : 0.98;
+                const totalViscosity = speciesViscosity * globalViscosity;
+                
+                particles[ptr+3] = (particles[ptr+3] + ax) * drag * totalViscosity;
+                particles[ptr+4] = (particles[ptr+4] + ay) * drag * totalViscosity;
+                particles[ptr+5] = (particles[ptr+5] + az) * drag * totalViscosity;
 
                 // Speed Limit
                 const maxV = dna.maxVelocity || 20;
@@ -218,6 +237,25 @@ self.onmessage = (e) => {
                 particles[ptr] += particles[ptr+3] * dt;
                 particles[ptr+1] += particles[ptr+4] * dt;
                 particles[ptr+2] += particles[ptr+5] * dt;
+
+                // NaN PROTECTION & BOUNDARY SANITY
+                if (isNaN(particles[ptr]) || isNaN(particles[ptr+1]) || isNaN(particles[ptr+2]) || 
+                    Math.abs(particles[ptr]) > W * 10 || Math.abs(particles[ptr+1]) > H * 10 || Math.abs(particles[ptr+2]) > D * 10) {
+                    particles[ptr] = (Math.random()-0.5)*W;
+                    particles[ptr+1] = (Math.random()-0.5)*H;
+                    particles[ptr+2] = (Math.random()-0.5)*D;
+                    particles[ptr+3] = particles[ptr+4] = particles[ptr+5] = 0;
+                }
+
+                if (pure.planetary) {
+                    const floor = H / 2;
+                    if (particles[ptr+1] > floor) {
+                        particles[ptr+1] = floor;
+                        particles[ptr+4] *= -0.5; // Bounce with damping
+                        particles[ptr+3] *= 0.9; // Friction
+                        particles[ptr+5] *= 0.9; // Friction
+                    }
+                }
 
                 if (pure.wrap) {
                     if (particles[ptr] < -W/2) particles[ptr] += W; if (particles[ptr] > W/2) particles[ptr] -= W;

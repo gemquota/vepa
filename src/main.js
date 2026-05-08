@@ -21,7 +21,7 @@ class VepaEngine {
         this.app = new PIXI.Application();
         this.paused = false;
         this.laws = { 
-            pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, G: 0.15, dt: 1.0 },
+            pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, planetary: false, G: 0.15, dt: 1.0 },
             biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false },
             chem: { cata: false, solv: false, acid: false, oxid: false, redu: false, poly: false, isom: false, chir: false, crys: false, allo: false },
             thermo: { heat: false, cold: false, conv: false, radi: false, subl: false, melt: false, boil: false, cond: false, depo: false, exop: false },
@@ -30,7 +30,9 @@ class VepaEngine {
         this.worldConfig = { 
             count: 1000, dimX: 500, dimY: 500, dimZ: 500, 
             spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, 
-            baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5 
+            baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5,
+            groundHeight: 0.9, cameraMode: 'panning', 
+            globalViscosity: 0.98
         };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
         this.rotation = { x: 0, y: 0 };
@@ -212,62 +214,97 @@ class VepaEngine {
     }
 
     setupInteraction() {
-        let activePointers = new Map(), initialDistance = 0, initialZoom = 1.0;
+        let activePointers = new Map(), initialDistance = 0, initialZoom = 1.0, initialPan = { x: 0, y: 0 };
+        this.app.canvas.addEventListener('contextmenu', e => e.preventDefault());
         this.app.canvas.addEventListener('wheel', (e) => { 
             e.preventDefault();
             this.zoom *= Math.pow(0.999, e.deltaY); 
             this.applyLimits(); 
         }, { passive: false });
-this.app.canvas.addEventListener('pointerdown', e => { 
-    e.preventDefault();
-    activePointers.set(e.pointerId, { lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY, startTime: Date.now() }); 
-    if (activePointers.size === 2) {
-        const pts = Array.from(activePointers.values());
-        initialDistance = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
-        initialZoom = this.zoom;
-    }
-});
 
-window.addEventListener('pointerup', e => { 
-    const data = activePointers.get(e.pointerId);
-    if (data && activePointers.size === 1) {
-        const dx = e.clientX - data.startX;
-        const dy = e.clientY - data.startY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const duration = Date.now() - data.startTime;
-        if (dist < 5 && duration < 200) {
-            this.selectParticleAt(e.clientX, e.clientY);
-        }
-    }
-    activePointers.delete(e.pointerId); 
-});
+        this.app.canvas.addEventListener('pointerdown', e => { 
+            e.preventDefault();
+            activePointers.set(e.pointerId, { 
+                lastX: e.clientX, lastY: e.clientY, 
+                startX: e.clientX, startY: e.clientY, 
+                startTime: Date.now(),
+                button: e.button
+            }); 
+            if (activePointers.size === 2) {
+                const pts = Array.from(activePointers.values());
+                initialDistance = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
+                initialZoom = this.zoom;
+                initialPan = { x: this.pan.x, y: this.pan.y };
+                // Also store initial center
+                this.initialCenter = { x: (pts[0].lastX + pts[1].lastX)/2, y: (pts[0].lastY + pts[1].lastY)/2 };
+            }
+        });
+
+        window.addEventListener('pointerup', e => { 
+            const data = activePointers.get(e.pointerId);
+            if (data && activePointers.size === 1) {
+                const dx = e.clientX - data.startX;
+                const dy = e.clientY - data.startY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const duration = Date.now() - data.startTime;
+                if (dist < 5 && duration < 200) {
+                    this.selectParticleAt(e.clientX, e.clientY);
+                }
+            }
+            activePointers.delete(e.pointerId); 
+            if (activePointers.size < 2) initialDistance = 0;
+        });
 
         window.addEventListener('pointermove', e => {
             const p = activePointers.get(e.pointerId); if (!p) return;
             const dx = e.clientX - p.lastX, dy = e.clientY - p.lastY;
-            
+            p.lastX = e.clientX; p.lastY = e.clientY;
+
+            const mode = this.worldConfig.cameraMode || 'panning';
+
             if (activePointers.size === 1) {
-                // Dragging moves the CAMERA, so the WORLD moves the same way as the drag (standard for many sims)
-                // or dragging moves the world directly (dx/zoom).
-                const sensitivity = 1.0 / this.zoom;
-                this.pan.x += dx * sensitivity;
-                this.pan.y += dy * sensitivity;
+                if (mode === 'panning') {
+                    // 1-FINGER PAN
+                    const sensitivity = 1.0 / this.zoom;
+                    this.pan.x += dx * sensitivity;
+                    this.pan.y += dy * sensitivity;
+                } else {
+                    // 1-FINGER ROTATE (ORBITAL)
+                    this.rotation.y += dx * 0.005;
+                    this.rotation.x -= dy * 0.005;
+                    this.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.rotation.x));
+                }
             } else if (activePointers.size === 2) {
                 const pts = Array.from(activePointers.values());
                 const dist = Math.hypot(pts[0].lastX - pts[1].lastX, pts[0].lastY - pts[1].lastY);
+                const center = { x: (pts[0].lastX + pts[1].lastX)/2, y: (pts[0].lastY + pts[1].lastY)/2 };
+                
+                // ZOOM (Always 2-finger)
                 if (initialDistance > 0) this.zoom = initialZoom * (dist / initialDistance);
+
+                if (mode === 'panning') {
+                    // 2-FINGER ROTATE
+                    this.rotation.y += (dx * 0.005) / 2;
+                    this.rotation.x -= (dy * 0.005) / 2;
+                    this.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.rotation.x));
+                } else {
+                    // 2-FINGER PAN
+                    if (this.initialCenter) {
+                        const cDx = center.x - this.initialCenter.x;
+                        const cDy = center.y - this.initialCenter.y;
+                        const sensitivity = 1.0 / this.zoom;
+                        this.pan.x = initialPan.x + cDx * sensitivity;
+                        this.pan.y = initialPan.y + cDy * sensitivity;
+                    }
+                }
             }
             
-            p.lastX = e.clientX; p.lastY = e.clientY;
             this.applyLimits(); 
         }, { passive: false });
     }
 
     applyLimits() { 
-        const minZoom = 0.005; this.zoom = Math.max(minZoom, Math.min(500, this.zoom));
-        const limitX = this.worldConfig.dimX * 1.5; const limitY = this.worldConfig.dimY * 1.5;
-        this.pan.x = Math.max(-limitX, Math.min(limitX, this.pan.x));
-        this.pan.y = Math.max(-limitY, Math.min(limitY, this.pan.y));
+        const minZoom = 0.001; this.zoom = Math.max(minZoom, Math.min(1000, this.zoom));
     }
 
     restartSim() {
@@ -276,6 +313,9 @@ window.addEventListener('pointerup', e => {
         this.history.colors = [];
         this.historyThrottle = 0;
         const count = this.worldConfig.count;
+        if (count > 20000) {
+            bus.emit('narrative:entry', { text: `SYSTEM: Allocating high-density buffer (${count} particles). Expect temporary latency.`, time: new Date().toLocaleTimeString() });
+        }
         this.particles = new Float32Array(count * STRIDE);
         this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
@@ -439,21 +479,32 @@ window.addEventListener('pointerup', e => {
     selectParticleAt(screenX, screenY) {
         if (!this.particles) return;
         const cX = window.innerWidth / 2, cY = window.innerHeight / 2;
-        let nearestIdx = -1, minDist = 40; // 40px click radius
+        let nearestIdx = -1, minDist = 40; 
+
+        const cosX = Math.cos(this.rotation.x), sinX = Math.sin(this.rotation.x);
+        const cosY = Math.cos(this.rotation.y), sinY = Math.sin(this.rotation.y);
 
         for (let i = 0; i < this.worldConfig.count; i++) {
             const ptr = i * STRIDE;
             if (this.particles[ptr+13] > 0) continue; 
 
-            let x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
+            const px = this.particles[ptr], py = this.particles[ptr+1], pz = this.particles[ptr+2];
+            
+            // Rotate
+            let x1 = px * cosY - pz * sinY;
+            let z1 = px * sinY + pz * cosY;
+            let y2 = py * cosX - z1 * sinX;
+            let z2 = py * sinX + z1 * cosX;
+            
+            const x = x1 + this.pan.x, y = y2 + this.pan.y, z = z2 + this.pan.z;
             const depth = this.focalLength + z;
             if (depth <= 10) continue;
             
             const pScale = this.focalLength / depth;
-            const px = cX + x * pScale * this.zoom;
-            const py = cY + y * pScale * this.zoom;
+            const screenPx = cX + x * pScale * this.zoom;
+            const screenPy = cY + y * pScale * this.zoom;
 
-            const dist = Math.hypot(screenX - px, screenY - py);
+            const dist = Math.hypot(screenX - screenPx, screenY - screenPy);
             if (dist < minDist) {
                 minDist = dist;
                 nearestIdx = i;
@@ -498,27 +549,36 @@ window.addEventListener('pointerup', e => {
         const speciesMap = new Map(); this.species.forEach(s => speciesMap.set(s.id, s));
         this.minimap.clear().rect(0, 0, 100, 100).fill({ color: 0x000, alpha: 0.5 }).stroke({ color: 0x00ff41, width: 1 });
         
+        const cosX = Math.cos(this.rotation.x), sinX = Math.sin(this.rotation.x);
+        const cosY = Math.cos(this.rotation.y), sinY = Math.sin(this.rotation.y);
+
         for (let i = 0; i < this.particleSprites.length; i++) {
             const ptr = i * STRIDE, s = this.particleSprites[i];
             if (this.particles[ptr+13] > 0) { s.visible = false; continue; }
             
-            let x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
+            const px = this.particles[ptr], py = this.particles[ptr+1], pz = this.particles[ptr+2];
             
-            if (isNaN(x)) { x=y=z=0; }
+            // Rotate
+            let x1 = px * cosY - pz * sinY;
+            let z1 = px * sinY + pz * cosY;
+            let y2 = py * cosX - z1 * sinX;
+            let z2 = py * sinX + z1 * cosX;
+
+            const x = x1 + this.pan.x, y = y2 + this.pan.y, z = z2 + this.pan.z;
             const depth = this.focalLength + z;
             if (depth <= 10) { s.visible = false; continue; }
+            
             s.visible = true;
             const pScale = this.focalLength / depth;
             s.x = cX + x * pScale * this.zoom; s.y = cY + y * pScale * this.zoom;
+            
             const mass = this.particles[ptr+11];
             const size = Math.sqrt(mass) * 2 * this.worldConfig.baseSize * pScale * this.zoom;
             s.scale.set(size / 32);
             
-            // Highlight selected particle
             if (i === this.selectedParticleIndex) {
                 s.alpha = 1.0;
                 s.scale.set(size / 32 * 1.5);
-                // Draw a small ring or something? (Simple: larger size)
             } else {
                 s.alpha = 0.8;
             }
@@ -532,18 +592,53 @@ window.addEventListener('pointerup', e => {
             import('./ui.js').then(ui => ui.updateParticleHUD(this.getParticleData(this.selectedParticleIndex)));
         }
 
-        updateHUD(Math.round(this.app.ticker.fps), this.worldConfig.count, this.simStep);
+        updateHUD(Math.round(this.app.ticker.FPS), this.worldConfig.count, this.simStep);
     }
 
     renderEnvironment() {
         const g = this.envGraphics; g.clear();
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
         const cX = window.innerWidth / 2, cY = window.innerHeight / 2;
+        
+        const cosX = Math.cos(this.rotation.x), sinX = Math.sin(this.rotation.x);
+        const cosY = Math.cos(this.rotation.y), sinY = Math.sin(this.rotation.y);
+
         const project = (px, py, pz) => {
-            const x = px + this.pan.x, y = py + this.pan.y, z = pz + this.pan.z;
-            const pScale = this.focalLength / (this.focalLength + z);
-            return { x: cX + x * pScale * this.zoom, y: cY + y * pScale * this.zoom, visible: (this.focalLength + z) > 0 };
+            // Rotate
+            let x1 = px * cosY - pz * sinY;
+            let z1 = px * sinY + pz * cosY;
+            let y2 = py * cosX - z1 * sinX;
+            let z2 = py * sinX + z1 * cosX;
+
+            const x = x1 + this.pan.x, y = y2 + this.pan.y, z = z2 + this.pan.z;
+            const depth = this.focalLength + z;
+            const pScale = this.focalLength / depth;
+            return { x: cX + x * pScale * this.zoom, y: cY + y * pScale * this.zoom, scale: pScale, visible: depth > 10 };
         };
+
+        if (this.laws.pure.planetary) {
+            const groundY = H / 2;
+            const res = 10;
+            const stepX = W / res, stepZ = D / res;
+            
+            for (let i = 0; i <= res; i++) {
+                const z = -D/2 + i * stepZ;
+                const p1 = project(-W/2, groundY, z);
+                const p2 = project(W/2, groundY, z);
+                if (p1.visible && p2.visible) {
+                    g.moveTo(p1.x, p1.y).lineTo(p2.x, p2.y).stroke({ color: 0x224422, width: 1, alpha: 0.3 * p1.scale });
+                }
+            }
+            for (let i = 0; i <= res; i++) {
+                const x = -W/2 + i * stepX;
+                const p1 = project(x, groundY, -D/2);
+                const p2 = project(x, groundY, D/2);
+                if (p1.visible && p2.visible) {
+                    g.moveTo(p1.x, p1.y).lineTo(p2.x, p2.y).stroke({ color: 0x224422, width: 1, alpha: 0.3 * p1.scale });
+                }
+            }
+        }
+
         const corners = [];
         for (let i = 0; i < 8; i++) {
             corners.push(project((i & 1 ? 1 : -1) * W / 2, (i & 2 ? 1 : -1) * H / 2, (i & 4 ? 1 : -1) * D / 2));
@@ -559,26 +654,46 @@ window.addEventListener('pointerup', e => {
     getFlattenedDNA(s) { 
         return { 
             force: s.dna[0],
+            viscosity: s.dna[1],
+            torque: s.dna[2],
+            jitter: s.dna[3],
             birth: s.dna[10],
             death: s.dna[11],
             resp: s.dna[13],
             pulse: s.dna[14],
+            tidal: s.dna[15],
+            fusionMomentum: s.dna[16],
+            fusionTime: s.dna[17],
+            neighborhoodRadius: s.dna[18],
             strength: s.dna[19],
             decay: s.dna[20],
             speed: s.dna[21],
             tuning: [s.dna[22], s.dna[23], s.dna[24], s.dna[25]],
+            inertia: s.dna[26],
+            friction: s.dna[27],
+            maxVelocity: s.dna[28],
             fusion: s.dna[9],
-            fusionMomentum: s.dna[16],
-            fusionTime: s.dna[17],
             baseRadius: s.dna[29] || 2.0,
             elasticity: s.dna[30] || 0.5,
+            bondAngle: s.dna[31],
+            conductivity: s.dna[32],
+            magneticMoment: s.dna[33],
             efficiency: s.dna[34] || 0.8,
+            sexChance: s.dna[35],
+            predationBias: s.dna[36],
+            reactionThreshold: s.dna[37],
+            catalysis: s.dna[38],
+            heatOutput: s.dna[39],
+            memoryDecay: s.dna[40],
             affinity: s.dna[41] || 0.0
         }; 
     }
     setPlaybackMode(mode) { this.playbackMode = mode; this.paused = false; updatePlaybackUI(this.playbackMode, this.paused); }
     updateDNA(sIdx, rIdx, val) { if(this.species[sIdx]) this.species[sIdx].dna[rIdx] = parseFloat(val); }
-    updateWorld(key, val) { this.worldConfig[key] = parseFloat(val); }
+    updateWorld(key, val) { 
+        if (key === 'focalLength') this.focalLength = parseFloat(val);
+        else this.worldConfig[key] = parseFloat(val); 
+    }
     updatePhysics(key, val) { 
         if (this.laws.pure[key] !== undefined) this.laws.pure[key] = parseFloat(val);
         else if (this.laws.biol[key] !== undefined) this.laws.biol[key] = parseFloat(val);

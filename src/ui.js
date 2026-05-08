@@ -9,7 +9,7 @@ let selectedPresetCategories = new Set();
 const narrativeHistory = [];
 
 const WORLD_CATEGORIES = {
-    "BASIC": { keys: ["count", "G", "dt", "spawnRate"], minLevel: 0 },
+    "BASIC": { keys: ["count", "G", "dt", "globalViscosity", "spawnRate", "cameraMode", "focalLength"], minLevel: 0 },
     "DIMENSIONS": { keys: ["dimX", "dimY", "dimZ", "baseSize"], minLevel: 0 },
     "DISTRIBUTION": { keys: ["spreadX", "spreadY", "spreadZ", "shape"], minLevel: 0 },
     "ENTROPY": { keys: ["entropy"], minLevel: 0 }
@@ -260,6 +260,17 @@ export function setupUI(engine) {
         }
     };
 
+    window.toggleAllLaws = () => {
+        const tab = document.getElementById('tab-world');
+        const btn = document.getElementById('toggle-all-laws-btn');
+        const arrow = document.getElementById('toggle-laws-arrow');
+        const isMinimized = tab.classList.toggle('laws-minimized');
+        
+        btn.querySelector('span').innerText = isMinimized ? 'EXPAND ALL LAWS' : 'MINIMIZE ALL LAWS';
+        arrow.innerText = isMinimized ? '▼' : '▲';
+        arrow.style.transform = isMinimized ? 'rotate(0deg)' : 'rotate(0deg)'; // Arrow handles rotation via text change for now
+    };
+
     window.toggleSelectionMode = (enabled) => {
         selectionMode = enabled;
         if (!enabled) {
@@ -334,7 +345,19 @@ export function setupUI(engine) {
     window.handleDNAForceLog = (el, dnaIdx, dId) => {
         const pct = parseFloat(el.value);
         window.trackSliderWithDrone(el, 'Force');
-        // ... (rest of logic)
+        
+        const minLog = Math.log(0.001), maxLog = Math.log(100);
+        let val;
+        if (pct === 50) val = 0;
+        else if (pct > 50) {
+            const p = (pct - 50) / 50;
+            val = Math.exp(minLog + (maxLog - minLog) * p);
+        } else {
+            const p = (50 - pct) / 50;
+            val = -Math.exp(minLog + (maxLog - minLog) * p);
+        }
+        
+        window.updateDNA(currentSpeciesIdx, dnaIdx, val, dId, null, 'Force');
     };
 
     window.updateWorld = (key, val, dId, el) => {
@@ -883,6 +906,7 @@ export function renderWorldAccordion(engine) {
     const allWorldParams = [
         { name: 'Particle Count', key: 'count', min: 10, max: 50000, val: engine.worldConfig.count, type: 'world', log: true, snaps: [10, 100, 500, 1000, 5000, 10000, 50000] },
         { name: 'Entropy', key: 'entropy', min: 0, max: 1, step: 0.05, val: engine.worldConfig.entropy, type: 'world' },
+        { name: 'Global Viscosity', key: 'globalViscosity', min: 0.5, max: 1, step: 0.01, val: engine.worldConfig.globalViscosity, type: 'world' },
         { name: 'Spawn Rate', key: 'spawnRate', min: 1, max: 1000, val: engine.worldConfig.spawnRate || 10, type: 'world', log: true, snaps: [1, 10, 50, 100, 500, 1000] },
         { name: 'Shape', key: 'shape', min: 0, max: 1, step: 0.05, val: engine.worldConfig.shape, type: 'world' },
         { name: 'Spread X', key: 'spreadX', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadX, type: 'world' },
@@ -890,10 +914,12 @@ export function renderWorldAccordion(engine) {
         { name: 'Spread Z', key: 'spreadZ', min: 0.1, max: 1.0, step: 0.05, val: engine.worldConfig.spreadZ, type: 'world' },
         { name: 'Global G', key: 'G', min: 0.001, max: 100, val: engine.laws.pure.G, type: 'phys', log: true, snaps: [0.01, 0.1, 1, 10, 50, 100] },
         { name: 'Sim Speed', key: 'dt', min: 0.1, max: 1000, val: engine.laws.pure.dt, type: 'phys', log: true, snaps: [1, 10, 100, 500, 1000] },
+        { name: 'Perspective', key: 'focalLength', min: 500, max: 10000, step: 100, val: engine.focalLength, type: 'engine' },
         { name: 'Base Size', key: 'baseSize', min: 0.1, max: 10, step: 0.1, val: engine.worldConfig.baseSize, type: 'world' },
         { name: 'Map Width (X)', key: 'dimX', min: 100, max: 50000, val: engine.worldConfig.dimX, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
         { name: 'Map Height (Y)', key: 'dimY', min: 100, max: 50000, val: engine.worldConfig.dimY, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
-        { name: 'Map Depth (Z)', key: 'dimZ', min: 100, max: 50000, val: engine.worldConfig.dimZ, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] }
+        { name: 'Map Depth (Z)', key: 'dimZ', min: 100, max: 50000, val: engine.worldConfig.dimZ, type: 'world', log: true, snaps: [100, 500, 1000, 5000, 10000, 20000, 50000] },
+        { name: 'Cam Mode', key: 'cameraMode', type: 'select', options: ['panning', 'orbital'], val: engine.worldConfig.cameraMode }
     ];
     let sectionIdx = 0;
     Object.entries(WORLD_CATEGORIES).forEach(([catName, config]) => {
@@ -909,7 +935,13 @@ export function renderWorldAccordion(engine) {
             const row = document.createElement('div'); row.className = 'slider-row'; 
             if (it.val === 0) row.classList.add('zero-val');
             const updateFn = it.type === 'phys' ? 'updatePhysics' : 'updateWorld';
-            if (it.log) {
+            
+            if (it.type === 'select') {
+                row.innerHTML = `<span class="slider-label">${it.name}: </span>
+                    <select class="preset-input" onchange="window.updateWorld('${it.key}', this.value)" style="width:100%; font-size: 8px;">
+                        ${it.options.map(opt => `<option value="${opt}" ${it.val === opt ? 'selected' : ''}>${opt.toUpperCase()}</option>`).join('')}
+                    </select>`;
+            } else if (it.log) {
                 const minLog = Math.log(it.min), maxLog = Math.log(it.max), valLog = Math.log(it.val), percent = ((valLog - minLog) / (maxLog - minLog)) * 100;
                 let notchesHtml = '<div class="slider-notches">' + it.snaps.map(snap => { const snapPct = ((Math.log(snap) - minLog) / (maxLog - minLog)) * 100; return `<div class="notch" style="left: ${snapPct}%;" data-val="${snap}"></div>`; }).join('') + '</div>';
                 row.innerHTML = `<span class="slider-label" onclick="window.showTooltip('${it.name}', event)">${it.name}: </span><span id="world-val-${it.key}">${it.val}</span><div class="log-slider-container"><input type="range" min="0" max="100" step="0.1" value="${percent}" style="width: 100%;" oninput="window.handleLogSlider(this, ${it.min}, ${it.max}, '${it.snaps.join(',')}', '${it.key}', '${updateFn}')">${notchesHtml}</div>`;
@@ -1003,14 +1035,12 @@ function renderNarrativeLog() {
     lastLogRenderedCount = narrativeHistory.length;
 }
 
-export function updateHUD(fps, pCount, simStep = 0) { 
-let frame = 0;
-    const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count'), stepEl = document.getElementById('sim-step'); 
-    if (fpsEl) fpsEl.innerText = fps; 
-    if (pCountEl) pCountEl.innerText = pCount; 
-    if (stepEl) stepEl.innerText = simStep;
+export function updateHUD(fps, pCount, simStep = 0) {
+    const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count'), stepEl = document.getElementById('sim-step');
+    if (fpsEl) fpsEl.innerText = isNaN(fps) ? 0 : fps;
+    if (pCountEl) pCountEl.innerText = isNaN(pCount) ? 0 : pCount;
+    if (stepEl) stepEl.innerText = isNaN(simStep) ? 0 : simStep;
 }
-
 export function updateParticleHUD(data) {
     const s = document.getElementById('p-info-species'), m = document.getElementById('p-info-mass'), a = document.getElementById('p-info-age'), e = document.getElementById('p-info-energy'), v = document.getElementById('p-info-vel'), p = document.getElementById('p-info-pos');
     if (s) s.innerText = data.species;

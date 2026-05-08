@@ -133,6 +133,11 @@ body {
 .tab-content { display: none; flex: 1; overflow-y: auto; scrollbar-width: none; }
 .tab-content.active { display: flex !important; flex-direction: column; }
 
+#tab-world.laws-minimized .toggle-grid-header,
+#tab-world.laws-minimized .toggle-grid {
+    display: none !important;
+}
+
 .toggle-grid.condensed { gap: 4px; margin-bottom: 10px; display: grid; grid-template-columns: repeat(8, 1fr); flex-shrink: 0; }
 
 .zero-val { opacity: 0.3 !important; filter: grayscale(1); }
@@ -291,7 +296,17 @@ body {
 input[type=range] { width: 100%; accent-color: var(--red-bright); height: 2px; }
 
 /* HUD */
-#zoom-hud { position: fixed; bottom: 5px; right: 5px; font-size: 8px; color: #444; }
+#zoom-hud { 
+    position: fixed; bottom: 40px; right: 10px; 
+    font-size: 10px; color: var(--red-bright); 
+    background: rgba(0,0,0,0.6); padding: 4px 10px; 
+    border: 1px solid var(--red-muted); border-radius: 2px;
+    z-index: 50; font-family: monospace;
+    pointer-events: none;
+    text-shadow: 0 0 5px var(--red-bright);
+    letter-spacing: 1px;
+}
+#zoom-hud span { color: #fff; }
 .timeline-container { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: 260px; background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid #222; }
 #insight-panel { position: fixed; bottom: 80px; right: 10px; width: 220px; pointer-events: none; z-index: 90; }
 .suggestions-panel { position: fixed; bottom: 80px; left: 10px; width: 220px; pointer-events: auto; z-index: 90; display: flex; flex-direction: column; gap: 8px; }
