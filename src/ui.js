@@ -244,7 +244,23 @@ class Tooltip {
 const helpPanel = new HelpPanel(); const tooltip = new Tooltip();
 
 // UI EVENT BUS HELPERS
-const emit = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
+const emit = (name, detail) => {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+    
+    // Broadcast to chaos grid iframes
+    const overlay = document.getElementById('chaos-grid-overlay');
+    if (overlay && !overlay.classList.contains('hidden') && name !== 'cmd:chaos') {
+        const container = document.getElementById('chaos-grid-container');
+        if (container) {
+            const iframes = container.querySelectorAll('iframe');
+            iframes.forEach(f => {
+                if (f.contentWindow && f.contentWindow.dispatchEvent) {
+                    f.contentWindow.dispatchEvent(new CustomEvent(name, { detail }));
+                }
+            });
+        }
+    }
+};
 
 export function setupUI(engine) {
     window.triggerSmartChaos = (intensity) => emit('cmd:chaos', { intensity });
@@ -305,6 +321,14 @@ export function setupUI(engine) {
         const container = document.getElementById('chaos-grid-container');
         overlay.classList.add('hidden');
         container.innerHTML = ''; // Kill iframes
+    };
+
+    window.rerollChaosGrid = () => {
+        const container = document.getElementById('chaos-grid-container');
+        if (container) {
+            const iframes = container.querySelectorAll('iframe');
+            iframes.forEach(f => f.src = f.src);
+        }
     };
 
     const chaosBtn = document.getElementById('chaos-btn');

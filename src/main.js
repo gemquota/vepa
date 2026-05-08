@@ -77,6 +77,9 @@ class VepaEngine {
             if (isChaos && basePreset) {
                 this.persistence.loadPreset(basePreset, this, new Set(['laws', 'world', 'species']));
                 document.getElementById('ui-layer').style.display = 'none';
+                const zh = document.getElementById('zoom-hud'); if (zh) zh.style.display = 'none';
+                const drone = document.getElementById('help-drone'); if (drone) drone.style.display = 'none';
+                const tp = document.getElementById('tooltip'); if (tp) tp.style.display = 'none';
                 this.triggerSmartChaos();
             } else {
                 this.restartSim();
@@ -451,7 +454,28 @@ class VepaEngine {
             }
         }
 
+        this.syncChaosGridCameras();
         this.draw();
+    }
+
+    syncChaosGridCameras() {
+        const overlay = document.getElementById('chaos-grid-overlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            const container = document.getElementById('chaos-grid-container');
+            if (container) {
+                const iframes = container.querySelectorAll('iframe');
+                iframes.forEach(f => {
+                    if (f.contentWindow && f.contentWindow.engine) {
+                        f.contentWindow.engine.pan.x = this.pan.x;
+                        f.contentWindow.engine.pan.y = this.pan.y;
+                        f.contentWindow.engine.pan.z = this.pan.z;
+                        f.contentWindow.engine.zoom = this.zoom;
+                        f.contentWindow.engine.rotation.x = this.rotation.x;
+                        f.contentWindow.engine.rotation.y = this.rotation.y;
+                    }
+                });
+            }
+        }
     }
 
     captureHistory() {

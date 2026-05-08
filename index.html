@@ -374,9 +374,12 @@
         <iframe id="codex-iframe" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
     </div>
 
-    <div id="chaos-grid-overlay" class="fullscreen-overlay hidden" style="z-index: 6000; background: #000;">
-        <button class="close-overlay-btn" onclick="window.closeChaosGrid()" style="position: absolute; top: 10px; right: 10px; z-index: 6001;">CLOSE_MULTIPLEX [ESC]</button>
-        <div id="chaos-grid-container" style="display: grid; width: 100%; height: 100%; gap: 2px; padding: 40px 10px 10px 10px; box-sizing: border-box;"></div>
+    <div id="chaos-grid-overlay" class="fullscreen-overlay hidden" style="z-index: 50; background: #000; pointer-events: none !important;">
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 6001; display: flex; gap: 10px; pointer-events: auto;">
+            <button class="close-overlay-btn" onclick="window.rerollChaosGrid()">REROLL [R]</button>
+            <button class="close-overlay-btn" onclick="window.closeChaosGrid()">CLOSE_MULTIPLEX [ESC]</button>
+        </div>
+        <div id="chaos-grid-container" style="display: grid; width: 100%; height: 100%; gap: 2px; padding: 40px 10px 10px 10px; box-sizing: border-box; pointer-events: none;"></div>
     </div>
 
     <script type="module" src="./src/main.js"></script></body>
