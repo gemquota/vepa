@@ -64,32 +64,61 @@ class VepaEngine {
         this.persistence.load(this);
         this.selectedParticleIndex = -1;
 
-        this.initPixi().then(() => {
-            this.setupInteraction();
+        const urlParams = new URLSearchParams(window.location.search);
+        const isChaos = urlParams.get('chaos');
+        const basePreset = urlParams.get('base');
+
+        if (isChaos && basePreset) {
+            this.isChaosMode = true;
+            this.canvas = document.createElement('canvas');
+            this.canvas.id = 'sim-canvas';
+            this.canvas.style.width = '100%';
+            this.canvas.style.height = '100%';
+            document.body.appendChild(this.canvas);
+            this.ctx = this.canvas.getContext('2d', { alpha: false });
+            
+            const resize = () => {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
             this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
             this.worker.onmessage = (e) => this.handleWorkerMessage(e);
-            let frame = 0;
             
-            const urlParams = new URLSearchParams(window.location.search);
-            const isChaos = urlParams.get('chaos');
-            const basePreset = urlParams.get('base');
-
-            if (isChaos && basePreset) {
-                this.persistence.loadPreset(basePreset, this, new Set(['laws', 'world', 'species']));
-                document.getElementById('ui-layer').style.display = 'none';
-                const zh = document.getElementById('zoom-hud'); if (zh) zh.style.display = 'none';
-                const drone = document.getElementById('help-drone'); if (drone) drone.style.display = 'none';
-                const tp = document.getElementById('tooltip'); if (tp) tp.style.display = 'none';
-                this.triggerSmartChaos();
-            } else {
+            // Fix categories for loadPreset
+            const allCats = new Set(['laws_pure', 'laws_biol', 'laws_chem', 'laws_thermo', 'laws_meta', 'worldConfig']);
+            for (let i = 0; i < 12; i++) allCats.add(`species_${i}`);
+            this.persistence.loadPreset(basePreset, this, allCats);
+            
+            document.getElementById('ui-layer').style.display = 'none';
+            const zh = document.getElementById('zoom-hud'); if (zh) zh.style.display = 'none';
+            const drone = document.getElementById('help-drone'); if (drone) drone.style.display = 'none';
+            const tp = document.getElementById('tooltip'); if (tp) tp.style.display = 'none';
+            
+            this.restartSim();
+            this.triggerSmartChaos();
+            
+            const loop = () => {
+                this.update();
+                requestAnimationFrame(loop);
+            };
+            requestAnimationFrame(loop);
+            
+        } else {
+            this.initPixi().then(() => {
+                this.setupInteraction();
+                this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
+                this.worker.onmessage = (e) => this.handleWorkerMessage(e);
+                let frame = 0;
                 this.restartSim();
-            }
-            
-            setupUI(this); syncUI(this.laws);
-            import('./ui.js').then(ui => ui.renderQuickPresets(this));
-            updatePlaybackUI(this.playbackMode || 'forward', this.paused);
-            this.app.ticker.add(() => this.update());
-        });
+                setupUI(this); syncUI(this.laws);
+                import('./ui.js').then(ui => ui.renderQuickPresets(this));
+                updatePlaybackUI(this.playbackMode || 'forward', this.paused);
+                this.app.ticker.add(() => this.update());
+            });
+        }
 
         this.setupEventListeners();
     }
@@ -337,29 +366,37 @@ class VepaEngine {
             bus.emit('narrative:entry', { text: `SYSTEM: Allocating high-density buffer (${count} particles). Expect temporary latency.`, time: new Date().toLocaleTimeString() });
         }
         this.particles = new Float32Array(count * STRIDE);
-        this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
+
+        if (!this.isChaosMode) {
+            if (this.particleSprites) this.particleSprites.forEach(s => s.destroy());
+            this.particleSprites = [];
+        }
+
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
         const spread = this.worldConfig.spreadRadius || 1.0;
         const distType = this.worldConfig.distributionType || 'Grid';
-        
+
         const side = Math.ceil(Math.pow(count, 1/3));
         const spacingX = (W * spread) / side;
         const spacingY = (H * spread) / side;
         const spacingZ = (D * spread) / side;
 
         for (let i = 0; i < count; i++) {
-            const ptr = i * STRIDE, sprite = new PIXI.Sprite(this.texture);
-            sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
+            const ptr = i * STRIDE;
+            if (!this.isChaosMode && this.texture && this.world) {
+                const sprite = new PIXI.Sprite(this.texture);
+                sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
+            }
+
             const spec = this.species[i % this.species.length];
-            
+
             let px = 0, py = 0, pz = 0, vx = 0, vy = 0, vz = 0;
 
             if (distType === 'Soup') {
                 px = (Math.random() - 0.5) * W * spread;
                 py = (Math.random() - 0.5) * H * spread;
                 pz = (Math.random() - 0.5) * D * spread;
-            } else if (distType === 'Big Bang') {
-                px = (Math.random() - 0.5) * 10;
+            } else if (distType === 'Big Bang') {                px = (Math.random() - 0.5) * 10;
                 py = (Math.random() - 0.5) * 10;
                 pz = (Math.random() - 0.5) * 10;
                 const mag = 5.0 + Math.random() * 10.0;
@@ -585,6 +622,49 @@ class VepaEngine {
     }
 
     draw() {
+        if (this.isChaosMode) {
+            if (!this.ctx) return;
+            const w = this.canvas.width; const h = this.canvas.height;
+            const cX = w / 2; const cY = h / 2;
+            this.ctx.fillStyle = '#000';
+            this.ctx.fillRect(0, 0, w, h);
+            
+            const cosX = Math.cos(this.rotation.x), sinX = Math.sin(this.rotation.x);
+            const cosY = Math.cos(this.rotation.y), sinY = Math.sin(this.rotation.y);
+            
+            for (let i = 0; i < this.worldConfig.count; i++) {
+                const ptr = i * 24;
+                if (this.particles[ptr+13] > 0) continue;
+                
+                const px = this.particles[ptr], py = this.particles[ptr+1], pz = this.particles[ptr+2];
+                let x1 = px * cosY - pz * sinY;
+                let z1 = px * sinY + pz * cosY;
+                let y2 = py * cosX - z1 * sinX;
+                let z2 = py * sinX + z1 * cosX;
+                
+                const x = x1 + this.pan.x, y = y2 + this.pan.y, z = z2 + this.pan.z;
+                const depth = this.focalLength + z;
+                if (depth <= 10) continue;
+                
+                const pScale = this.focalLength / depth;
+                const sx = cX + x * pScale * this.zoom;
+                const sy = cY + y * pScale * this.zoom;
+                
+                if (sx < 0 || sx > w || sy < 0 || sy > h) continue;
+                
+                const r = Math.floor(this.particles[ptr+14]*255);
+                const g = Math.floor(this.particles[ptr+15]*255);
+                const b = Math.floor(this.particles[ptr+16]*255);
+                
+                const mass = this.particles[ptr+11];
+                const size = Math.max(1, Math.sqrt(mass) * 2 * this.worldConfig.baseSize * pScale * this.zoom);
+                
+                this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+                this.ctx.fillRect(sx - size/2, sy - size/2, size, size);
+            }
+            return;
+        }
+
         this.renderEnvironment();
         const cX = window.innerWidth/2, cY = window.innerHeight/2;
         const speciesMap = new Map(); this.species.forEach(s => speciesMap.set(s.id, s));
