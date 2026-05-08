@@ -1,116 +1,109 @@
 # VEPA ENGINE: SINGLE SOURCE OF TRUTH (SSoT)
-**Version:** 1.1.0
+**Version:** 3.0.0
 **Project:** Vector Emergent Physics Automata
 
-This document serves as the absolute reference for all engine capabilities and tooltip documentation.
+This document serves as the absolute reference for all engine capabilities and documentation in the current codebase.
 
 ---
 
-## 1. DNA PARAMETERS (Local Interaction)
-These 16 parameters define how a species interacts with others within its local neighborhood grid.
+## 1. DNA PARAMETERS (42 Indices)
+These 42 parameters define how a species behaves and interacts with its environment and other species.
 
-### [Motion]
-*   **Force:** Primary attraction/repulsion. Positive values create gravity-like attraction; negative values create repulsive fields. Essential for clump formation. (Range: -2 to 2)
-*   **Viscosity:** Kinetic energy dampening. Higher values (0.98) simulate thick fluids; lower values (0.8) allow high-speed "gas" behaviors. (Range: 0.8 to 1.0)
-*   **Torque:** Applies rotational momentum when two particles interact. High torque leads to spinning "vortex" colonies. (Range: -1 to 1)
-*   **Jitter:** Adds random Brownian motion. Prevents static locking and helps clusters "vibrate" into stable geometric configurations. (Range: 0 to 0.5)
-
-### [Electromagnetism]
-*   **C1 (Polarity):** The electromagnetic charge. Like charges repel, opposite charges attract. Drives the Green (Pos) and Purple (Neg) neon glows. (Range: -1 to 1)
-*   **C2 (Alpha):** Fundamental matter density. Controls how solid or ghostly a species appears. Low alpha allows particles to overlap more visually. (Range: 0 to 1)
+### [Physics & Motion]
+*   **Force (0):** Primary attraction/repulsion. Positive pulls particles together; negative pushes them apart.
+*   **Viscosity (1):** Kinetic energy dampening. Higher values freeze motion; lower values allow fast behavior.
+*   **Torque (2):** Applies rotational momentum.
+*   **Jitter (3):** Adds random Brownian motion (entropy).
+*   **Tidal (15):** Applies differential forces across structures.
+*   **Inertia (26):** Resistance to acceleration.
+*   **Friction (27):** Velocity-dependent drag.
+*   **Max Velocity (28):** Terminal speed limit.
 
 ### [Matter & Morphology]
-*   **C3 (Symmetry):** Dimensional warping. `0.0` is a perfect circle. Positive values stretch the particle horizontally; negative values stretch it vertically. (Range: -1 to 1)
-*   **Hidden Mass:** An invisible mass multiplier. Affects gravity and collision forces without changing the visible size or color of the particle. (Range: -5 to 5)
-*   **Stiffness:** The "Hardness" of local interaction. High stiffness makes clusters behave like solid objects; low stiffness makes them behave like gel or clouds. (Range: 0.1 to 5)
-*   **Fusion:** Efficiency of mass-merging. High fusion allows particles to rapidly aggregate into large "stars" or planets. (Range: 0 to 1)
+*   **C3 (Symmetry) (6):** Distorts interaction shape.
+*   **Hidden Mass (7):** Invisible mass multiplier.
+*   **Stiffness (8):** Rigidity of structural bounds.
+*   **Fusion (9):** Efficiency of mass-merging.
+*   **Fusion Momentum (16):** Minimum collision strength for merging.
+*   **Fusion Time (17):** Temporal gating to growth.
+*   **Base Radius (29):** Starting size before mass scaling.
+*   **Elasticity (30):** Collision energy retention (bounciness).
+*   **Bond Angle (31):** Favored cluster geometry.
 
-### [Life & Evolution]
-*   **Birth Rate:** Spontaneous reproduction chance per frame. High rates lead to population explosions. (Range: 0 to 0.1)
-*   **Death Rate:** Spontaneous decay chance. Simulates radiation or fundamental instability. (Range: 0 to 0.1)
-*   **Mutation:** The degree of genetic drift. Higher values mean offspring will have significantly different DNA rules than their parents. (Range: 0 to 0.5)
+### [Electromagnetism & Chemistry]
+*   **C1 (Polarity) (4):** Charge (like repels, opposite attracts).
+*   **C2 (Alpha) (5):** Visual matter density.
+*   **Conductivity (32):** Rate of charge/energy transfer on contact.
+*   **Magnetic Moment (33):** Neighbor charge alignment.
+*   **Reaction Threshold (37):** Mass limit for phase change.
+*   **Catalysis (38):** Reaction speed multiplier.
+*   **Heat Output (39):** Interaction energy byproduct.
 
-### [Communication]
-*   **Signal Resp:** Sensitivity to neighboring "blinks." High response allows for synchronized colony behaviors and wave propagation. (Range: 0 to 2)
-*   **Pulse Rate:** Internal oscillator frequency. Determines how often a particle "pings" its neighbors. (Range: 0 to 1)
+### [Biology & Life]
+*   **Birth Rate (10):** Spontaneous reproduction chance per frame.
+*   **Death Rate (11):** Spontaneous decay chance.
+*   **Mutation (12):** Randomness in offspring DNA.
+*   **Energy Efficiency (34):** Mass-to-energy conversion ratio.
+*   **Sex Chance (35):** Multi-parent reproduction probability.
+*   **Predation Bias (36):** Bonus attraction toward lower-mass species.
+*   **Species Affinity (41):** Attraction bias toward same (+) or different (-) species.
 
-### [Advanced]
-*   **Tidal:** Force gradient across particle diameter. High tidal forces can tear clusters apart or create complex orbital dragging effects. (Range: -1 to 1)
-
----
-
-## 2. RENDER PARAMETERS (Aesthetics)
-New in v1.1.0. These parameters control the visual output of individual species or interaction profiles.
-
-*   **Trail Life:** Controls both Trail Length and Fade. Higher values (0.9) create long, persistent streaks; lower values (0.1) result in short, crisp movement.
-*   **Glow Intensity:** Multiplier for the neon bloom effect (shadowBlur). Controls the radius and brightness of the particle's light emission.
-*   **Pulse Opacity:** The amplitude of the alpha oscillation. Works in tandem with the "Pulse Rate" DNA parameter to create a heartbeat effect.
-*   **Particle Opacity:** Base alpha transparency for the particle body. Allows for the creation of "ghost" species or dense, solid matter.
-
----
-
-## 3. SELECTIVE CHAOS SYSTEM
-The "CHAOS" button now features a granular control menu to determine which systems are affected by entropy.
-
-### [Chaos Categories]
-*   **DNA Rules:** Randomizes the 16 DNA interaction parameters.
-*   **DNA Grid:** Randomizes the species interaction matrix.
-*   **Biology:** Randomizes all parameters in the BIRTH and DEATH tabs.
-*   **Physics:** Randomizes global constants like Gravity, Sim Speed, and Elasticity.
-
----
-
-## 4. WORLD & GLOBAL SETTINGS
-
-### [WORLD TAB]
-*   **Initial Distribution:** The geometric pattern used when re-seeding the simulation.
-    *   **Soup:** Balanced random distribution within the central area.
-    *   **Big Bang:** High-density central core with significant outward velocity.
-    *   **Bipolar:** Two distinct clusters at opposite poles of the spread radius.
-    *   **Galaxy:** Gaussian density distribution (denser at the center).
-    *   **Grid:** Perfect crystalline lattice distribution.
-    *   **Uniform:** Even random spread throughout the entire selected "Spread" area.
-*   **Spread Radius:** The spatial extent of the initial distribution pattern.
-
-### [PHYS TAB]
-*   **Gravity (1/r²):** Global Newtonian attraction constant.
-*   **Sim Speed:** The delta-time (dt) multiplier for the physics loop.
-*   **Elasticity:** The energy retention during a boundary bounce.
-*   **Safety Cap:** The maximum number of particles allowed in the simulation.
+### [Communication & Memory]
+*   **Signal Resp (13):** Sensitivity to neighboring pulses.
+*   **Pulse Rate (14):** Internal oscillator frequency.
+*   **Neighborhood Radius (18):** Range of influence.
+*   **Signal Strength (19):** Intensity of communication.
+*   **Signal Decay (20):** Persistence of signals.
+*   **Propagation Speed (21):** Speed at which signals travel.
+*   **Tuning Ch1-Ch4 (22-25):** Receptor filtering channels for complex logic.
+*   **Memory Decay (40):** Internal state persistence over time.
 
 ---
 
-## 5. WORLD LAWS & PRESETS
+## 2. WORLD LAWS (Global System Toggles)
 
-### [Laws of Nature]
-*   **Gravity:** Enables the Universal 1/r² law.
-*   **Accretion:** Allows particles to merge mass when they collide.
-*   **Biology:** Enables the metabolism, reproduction, and death systems.
-*   **Glow:** Activates the neon radiance.
+### [Pure Physics Laws]
+*   **grav:** Global Newtonian 1/r² attraction.
+*   **drag:** Fluid motion damping.
+*   **jitter:** Brownian motion/entropy injection.
+*   **coll:** Physical elastic collisions.
+*   **accr:** Mass accretion (fusion) on collision.
+*   **wrap:** Toroidal spatial topology (screen wrap).
+*   **void:** Linear evaporative decay for large masses.
+*   **bond:** Elastic molecular linking (Hooke's law).
+*   **ener:** Global energy conservation tracking.
+*   **rad:** High-energy radiation voxel grid (sterilization).
 
-### [Recipes]
-*   **Quicksilver:** Liquid metal fluid.
-*   **Star Formation:** High-G accretion.
-*   **Neural Cloud:** Signal propagation network.
-*   **Von Neumann:** Self-assembling structural machines.
+### [Biological Laws]
+*   **life:** Enables metabolism, reproduction, and death logic.
+*   **tracking:** Allows predator/prey vectors.
+*   **glow, affinity, reproduction, senescence, genotype, phenotype:** Specialized biol overrides.
 
 ---
 
-## 6. IDENTITY & GOAL EMERGENCE (The Sentient Engine)
-New in v2.1.0. This layer interprets simulation behavior and develops internal direction.
+## 3. WORLD CONFIGURATION
+*   **count:** Base particle count target.
+*   **dimX, dimY, dimZ:** Physical dimensions of the simulation volume.
+*   **spreadX, spreadY, spreadZ:** Starting spatial distribution ratios.
+*   **baseSize:** Global scale multiplier.
 
-### [Goal Seeking System]
-*   **Stability:** Preferred when species populations remain steady and structure is preserved. Increases global drag and decreases simulation speed.
-*   **Complexity:** Preferred when new structures (proto-stars, synchronized swarms) emerge. Biases global gravity and mutation.
-*   **Entropy:** Preferred when chaotic fluctuations dominate. Increases global noise and simulation speed.
+---
 
-### [Personality Core]
-*   **Curiosity:** Bias toward noticing and weighting new or diverse insights.
-*   **Stability Preference:** Bias toward downplaying chaos in narrative interpretation.
-*   **Chaos Tolerance:** Bias toward amplifying instability in narrative interpretation.
-*   **Narrative Certainty:** Controls the decisiveness of the system's internal monologue.
+## 4. PRESETS
+1.  **PRIME_DEFAULT:** Balanced Newton/Euler physics (Sol, Aether, Void).
+2.  **VOID_CORE:** High-gravity singularity with linear evaporative decay.
+3.  **NEURAL_DRIFT:** Distributed mesh network with elastic tethers and damping.
+4.  **SOLAR_FLARE:** High-energy radiation emitter (sterilization grid).
+5.  **CRYSTAL_LATTICE:** Rigid structure with conductive energy flow.
+6.  **PREDATOR_SWARM:** Aggressive, fast-moving tracking swarm.
+7.  **KINETIC_GAS:** High-energy kinetic gas, perfectly elastic collisions.
+8.  **SYMBIOTIC_LOOP:** Highly adaptive ecosystem driven by energy exchange.
+9.  **CHRONOS_FLUX:** Temporal anomaly with high inertia and tidal stretching.
 
-### [Narrative Consciousness]
-*   **Multi-Voice Identity:** The system speaks through four distinct internal narrators (Stabilizer, Diverger, Observer, Dissolver).
-*   **Interpretive Tone:** The system's "mood," shaped by long-term history (Measured, Fluid, Pattern-Seeking).
-*   **Perspective Modes:** Shifts between neutral observer ("The system...") and agentic first-person ("I...").
+---
+
+## 5. INTELLIGENCE ENGINES
+*   **Insight Engine (V5):** Spatio-temporal cluster detection and pattern logging.
+*   **Narrative Consciousness:** Multi-voice internal monologue (Stabilizer, Diverger, Observer, Dissolver).
+*   **Goal Engine:** Auto-adjusts world constraints based on system stability and complexity metrics.
+*   **Personality Engine:** Drives systemic bias toward Curiosity, Stability, or Chaos.

@@ -1,0 +1,26 @@
+{
+    "Force": {
+        "title": "Fundamental Force",
+        "tags": ["Physics", "Interaction"],
+        "summary": "The baseline attraction or repulsion between all entities in the simulation.",
+        "content": "Force is the most primitive interaction in VEPA. It defines how entities cluster or disperse. In high-positive regimes, it simulates gravitational collapse, leading to the formation of stars and planets. In negative regimes, it acts as an expansion field."
+    },
+    "QUICK_PRESET": {
+        "title": "Quickload Buffer",
+        "tags": ["System", "Interface"],
+        "summary": "Rapid state injection system for experimental iteration.",
+        "content": "The Quickload system allows the user to store up to 9 active states in volatile memory for near-instant switching. This is essential for comparing divergent evolutionary paths or stress-testing specific configurations against different environmental laws."
+    },
+    "SMART_CHAOS": {
+        "title": "Stochastic Destabilization",
+        "tags": ["System", "Entropy"],
+        "summary": "Injects controlled randomness into the system parameters.",
+        "content": "Smart Chaos is a targeted entropy injection mechanism. Instead of randomizing the entire state, it applies a Gaussian jitter to a subset of parameters, allowing the simulation to escape local minima without destroying the underlying structure."
+    },
+    "WORLD_TAB": {
+        "title": "Environmental Parameters",
+        "tags": ["Interface", "Global"],
+        "summary": "The master controls for the simulation's physical stage.",
+        "content": "The World Tab houses the universal constants that govern all entities equally. This includes gravity strength (G), time resolution (dt), and spawn frequencies. Adjusting these parameters fundamentally changes the physical 'rules' of the universe."
+    }
+}

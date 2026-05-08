@@ -1,13 +1,18 @@
+import { bus } from "./core/eventBus.js";
+
 export class InsightEngine {
     constructor(engine) {
         this.engine = engine;
         this.cache = [];
         this.lastHash = null;
+        this.latestMetrics = null;
+
+        bus.on("metrics:updated", (m) => { this.latestMetrics = m; });
     }
 
     evaluate() {
         const snapshot = this.captureState();
-        const hash = JSON.stringify(snapshot);
+        const hash = JSON.stringify(snapshot) + (this.latestMetrics ? this.latestMetrics.frame : '');
 
         if (hash === this.lastHash) return { insights: this.cache, suggestions: this.suggestions };
 
@@ -18,7 +23,8 @@ export class InsightEngine {
             ...this.detectGravitationalCollapse(snapshot),
             ...this.detectSwarmBehavior(snapshot),
             ...this.detectThermalChaos(snapshot),
-            ...this.detectPopulationDynamics(snapshot)
+            ...this.detectPopulationDynamics(snapshot),
+            ...this.detectMetricAnomalies()
         ];
 
         const chained = this.chainInsights(base);
@@ -232,6 +238,33 @@ export class InsightEngine {
                 });
             }
         });
+        return out;
+    }
+
+    detectMetricAnomalies() {
+        const out = [];
+        if (!this.latestMetrics) return out;
+
+        if (this.latestMetrics.avgVelocity > 15) {
+            out.push({
+                id: "high_kinetic_energy",
+                type: "warning",
+                message: "System kinetic energy is critical. High-velocity collisions dominant.",
+                confidence: 0.95,
+                priority: 8
+            });
+        }
+
+        if (this.latestMetrics.clusterCount > 10) {
+            out.push({
+                id: "high_clustering",
+                type: "discovery",
+                message: "Significant granular organization detected. Multiple persistent bodies forming.",
+                confidence: 0.9,
+                priority: 9
+            });
+        }
+
         return out;
     }
 }

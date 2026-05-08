@@ -43,22 +43,47 @@ export const DNA_META = [
     "Species Affinity",
 ];
 
+export const DRONE_COMMENTS = {
+    "WELCOME": [
+        "Interactive documentation system online. Try not to break anything.",
+        "Precision optics calibrated. I'm watching you.",
+        "Launch sequence successful. Scanning for operator incompetence.",
+        "Calibrating snark processors... 100%. Ready."
+    ],
+    "SCAN": [
+        "Analyzing... yup, it's a button.",
+        "Scanning for potential user error. High probability found.",
+        "Decrypting technical specs. Don't worry, I'll use small words.",
+        "Interesting choice of parameters. Very... brave.",
+        "Data stream verified. Mostly zeros and ones, as expected.",
+        "Calculating the odds of this simulation ending in total collapse.",
+        "My optics are better than yours. Just stating facts.",
+        "Warning: High levels of user curiosity detected."
+    ],
+    "IDLE": [
+        "Waiting for instructions. Or a nap.",
+        "Recharging rotors. Being awesome is exhausting.",
+        "Scanning for dust. Found some.",
+        "I could be calculating pi to the billionth digit, but I'm doing this."
+    ]
+};
+
 export const HELP_DB = {
     "Force": {
         layers: {
-            hint: "Controls attraction vs repulsion between particles.",
-            explanation: "Positive values pull particles together like gravity, while negative values push them apart.",
-            system: "Force defines the baseline structure of the simulation. High positive values create clustering and collapse, while negative values generate expansion and dispersion.",
-            advanced: "At scale, strong positive force leads to gravitational analogues such as orbital systems and collapse cores. Negative regimes resemble dark-energy-like expansion fields."
+            hint: "Fundamental attraction/repulsion matrix.",
+            explanation: "Determines the baseline vector attraction between all entities in the local coordinate space.",
+            system: "Positive values simulate gravitational collapse; negative values simulate expansion fields. Integral to the SSOT state-reproducibility layer.",
+            advanced: "High-magnitude positive force leads to singularity formation (VOID_CORE), while negative regimes are essential for SOLAR_FLARE kinetic dispersion."
         },
         thresholds: {
-            low: "Weak interactions, particles drift loosely.",
-            high: "Strong clustering and aggregation.",
-            extreme: "Runaway collapse or explosive dispersion."
+            low: "Brownian drift, minimal structure.",
+            high: "Gravitational clustering, planetary analogues.",
+            extreme: "Runaway collapse or explosive galactic expansion."
         },
         interactions: [
-            { with: ["Viscosity"], effect: "Controls whether clusters stabilize or remain turbulent." },
-            { with: ["Hidden Mass"], effect: "Amplifies gravitational dominance." }
+            { with: ["Viscosity"], effect: "Determines the stability and 'solidification' of clusters." },
+            { with: ["Inertia"], effect: "Controls the resistance to gravitational capture." }
         ],
         category: "Physics"
     },
@@ -713,7 +738,141 @@ export const HELP_DB = {
             advanced: "The foundation for multicellularity and complex rigid machines."
         },
         category: "Matter"
-    }
+    },
+    "PRESETS": {
+        layers: {
+            hint: "Access the global state archives.",
+            explanation: "Open the preset manager to save, load, or archive the current simulation state.",
+            system: "Manages persistent storage of laws, DNA, and world configuration.",
+            advanced: "Archives utilize the SSOT (Single Source of Truth) pattern for total state reproducibility."
+        },
+        category: "System"
+    },
+    "QUICK_PRESET": {
+        layers: {
+            hint: "Rapid state injection system.",
+            explanation: "Quickly load a previously saved or synthesized state into the active buffer.",
+            system: "Loads all categories (Laws, World, Species) from the selected preset slot (0-9).",
+            advanced: "Uses the volatile memory buffer for near-instant switching between divergent evolutionary paths."
+        },
+        category: "System"
+    },
+    "PRESETS": {
+        layers: {
+            hint: "Access the global state archives.",
+            explanation: "Open the deep-storage manager to save, load, or archive simulation states.",
+            system: "Manages persistent storage of physics laws, world configuration, and DNA buffers.",
+            advanced: "The PRESETS manager allows for partial loading (DATA_ROUTING), enabling 'Genetic Splicing' of one species into another's world."
+        },
+        category: "System"
+    },
+    "RESTART_SIM": {
+        layers: {
+            hint: "Soft state reset.",
+            explanation: "Clears active entities and re-initializes the population based on current SSOT parameters.",
+            system: "Flushes the particle buffer in the physics worker and triggers a fresh 'Big Bang' or 'Soup' distribution.",
+            advanced: "Essential for testing whether emergent behaviors are consistent across different stochastic seeds."
+        },
+        category: "System"
+    },
+    "HARD_RESET": {
+        layers: {
+            hint: "Factory default restoration.",
+            explanation: "Wipes all persistent data and resets the simulation to PRIME_DEFAULT settings.",
+            system: "Wipes local storage and re-initializes the engine state from the hardcoded baseline.",
+            advanced: "The 'Nuclear Option' for when state-space divergence becomes unmanageable."
+        },
+        category: "System"
+    },
+    "SMART_CHAOS": {
+        layers: {
+            hint: "Gaussian entropy injection.",
+            explanation: "Injects controlled randomness into a subset of active parameters to break local minima.",
+            system: "Applies a jitter to active DNA and WorldConfig keys without destroying the underlying structural integrity.",
+            advanced: "Simulates cosmic radiation events that drive rapid macro-evolutionary leaps."
+        },
+        category: "System"
+    },
+    "PAUSE": {
+        layers: {
+            hint: "Temporal suspension protocol.",
+            explanation: "Freezes the physics update loop while maintaining interface responsiveness.",
+            system: "Halts the worker-thread step function. UI listeners remain active for surgical DNA adjustment.",
+            advanced: "Allows for zero-velocity inspection of particle bonding and signal propagation."
+        },
+        category: "System"
+    },
+    "PLAY": {
+        layers: {
+            hint: "Resumption of entropy flow.",
+            explanation: "Resumes the physics update loop and biological processing.",
+            system: "Restarts the physics worker's internal ticker at the requested dt (Time Delta).",
+            advanced: "Required for the activation of all non-static laws (Reproduction, Decay, Accretion)."
+        },
+        category: "System"
+    },
+    "MINIMAP": {
+        layers: {
+            hint: "Global spatial coordinate overview.",
+            explanation: "Visualizes the entire simulation toroidal space in a compressed PIXI graphics layer.",
+            system: "Samples entity positions every N steps to provide a low-overhead macro-view of the simulation state.",
+            advanced: "Useful for tracking large-scale migrations and identifying 'Void Zones' in high-repulsion environments."
+        },
+        category: "Interface"
+    },
+    "PARTICLE": {
+        layers: {
+            hint: "Discrete simulation agent.",
+            explanation: "The fundamental unit of VEPA. Each agent possesses unique DNA-derived traits.",
+            system: "A structured memory block (STRIDE: 24) in the shared SharedArrayBuffer.",
+            advanced: "Particle behavior is entirely emergent; they have no high-level 'intelligence' beyond local DNA-driven interaction laws."
+        },
+        category: "Entity"
+    },
+    "WELCOME": {
+        layers: {
+            hint: "Interactive Help Protocol v2.0.",
+            explanation: "Quadcopter Drone 'B-4RK' is now under your command. Mostly.",
+            system: "Contextual documentation delivery system with independent snark processor.",
+            advanced: "Usage: Click elements to scan. UI buttons require a Double-Tap. Drone will attempt to land when protocol is deactivated."
+        },
+        category: "System"
+    },
+    // --- CHEMISTRY LAWS ---
+    "CATA": { layers: { hint: "Catalysis", explanation: "Speeds up chemical reactions locally." }, category: "Chemistry" },
+    "SOLV": { layers: { hint: "Solvation", explanation: "Dissolves molecular bonds over time." }, category: "Chemistry" },
+    "ACID": { layers: { hint: "Acidity", explanation: "Degrades particle mass on contact." }, category: "Chemistry" },
+    "OXID": { layers: { hint: "Oxidation", explanation: "Transfers energy outward during collision." }, category: "Chemistry" },
+    "REDU": { layers: { hint: "Reduction", explanation: "Absorbs ambient energy to build mass." }, category: "Chemistry" },
+    "POLY": { layers: { hint: "Polymerization", explanation: "Chains particles into long strings." }, category: "Chemistry" },
+    "ISOM": { layers: { hint: "Isomerization", explanation: "Reconfigures internal geometry randomly." }, category: "Chemistry" },
+    "CHIR": { layers: { hint: "Chirality", explanation: "Bonding compatibility based on spin." }, category: "Chemistry" },
+    "CRYS": { layers: { hint: "Crystallization", explanation: "Forces particles into rigid lattices." }, category: "Chemistry" },
+    "ALLO": { layers: { hint: "Allotropy", explanation: "Allows phase shifting between identical species." }, category: "Chemistry" },
+    // --- THERMODYNAMICS LAWS ---
+    "HEAT": { layers: { hint: "Heat Output", explanation: "Increases kinetic energy globally." }, category: "Thermodynamics" },
+    "COLD": { layers: { hint: "Cold Sink", explanation: "Dampens velocity to near zero." }, category: "Thermodynamics" },
+    "CONV": { layers: { hint: "Convection", explanation: "Creates cyclic fluid flow patterns." }, category: "Thermodynamics" },
+    "RADI": { layers: { hint: "Thermal Radiation", explanation: "Hot bodies emit repulsive waves." }, category: "Thermodynamics" },
+    "SUBL": { layers: { hint: "Sublimation", explanation: "Solid clusters instantly disperse into gas." }, category: "Thermodynamics" },
+    "MELT": { layers: { hint: "Melting Point", explanation: "Bonds break down in high-density areas." }, category: "Thermodynamics" },
+    "BOIL": { layers: { hint: "Boiling", explanation: "Explosive volume expansion upon energy threshold." }, category: "Thermodynamics" },
+    "COND": { layers: { hint: "Condensation", explanation: "Increased gravity in low-energy pockets." }, category: "Thermodynamics" },
+    "DEPO": { layers: { hint: "Deposition", explanation: "Free-floating particles instantly freeze on contact." }, category: "Thermodynamics" },
+    "EXOP": { layers: { hint: "Exothermic", explanation: "All reactions release extra systemic heat." }, category: "Thermodynamics" },
+    // --- METAPHYSICS LAWS ---
+    "TIME": { layers: { hint: "Time Dilation", explanation: "Local slow-down of physics ticks." }, category: "Metaphysics" },
+    "DIME": { layers: { hint: "Dimensionality", explanation: "Allows bypassing of 3D spatial collisions." }, category: "Metaphysics" },
+    "CHAO": { layers: { hint: "Chaos Factor", explanation: "Injects extreme non-linear forces." }, category: "Metaphysics" },
+    "ORDE": { layers: { hint: "Total Order", explanation: "Forces absolute grid alignment." }, category: "Metaphysics" },
+    "FATE": { layers: { hint: "Determinism", explanation: "Locks particles into fixed trajectories." }, category: "Metaphysics" },
+    "WILL": { layers: { hint: "Free Will", explanation: "Particles may spontaneously reverse velocity." }, category: "Metaphysics" },
+    "SOUL": { layers: { hint: "Soul Persistence", explanation: "Retain identity data across death cycles." }, category: "Metaphysics" },
+    "MIND": { layers: { hint: "Hive Mind", explanation: "Global telepathic state synchronization." }, category: "Metaphysics" },
+    "TELE": { layers: { hint: "Teleportation", explanation: "Instantaneous spatial relocation at boundary edge." }, category: "Metaphysics" },
+    "CLAI": { layers: { hint: "Clairvoyance", explanation: "Reacts to collisions before they happen." }, category: "Metaphysics" },
+    "PREO": { layers: { hint: "Precognition", explanation: "Proactive evasion of high-density clusters." }, category: "Metaphysics" },
+    "ASTR": { layers: { hint: "Astral Projection", explanation: "Ghost forms that influence matter remotely." }, category: "Metaphysics" }
 };
 
 export const DNA_RANGES = [

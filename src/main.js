@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
+import { bus } from "./core/eventBus.js";
 import { DNA_META, DNA_RANGES } from './constants.js';
-import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative, updateTimelineUI, notifyNewProposal, updatePlaybackUI, renderWorldAccordion, renderDNAAccordion, renderSpeciesList } from './ui.js';
+import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative, updateTimelineUI, notifyNewProposal, updatePlaybackUI, renderWorldAccordion, renderDNAAccordion, renderSpeciesList, renderDNAAnalytics, updateDNAGraphs } from './ui.js';
 import { InsightEngine } from './insightEngine.js';
 import { NarrativeEngine } from './narrativeEngine.js';
 import { TimelineEngine } from './timelineEngine.js';
@@ -10,22 +11,38 @@ import { PersistenceEngine } from './persistenceEngine.js';
 import { GoalSystem } from './goalEngine.js';
 import { NarrativeConsciousness } from './narrativeConsciousness.js';
 import { PersonalityCore } from './personalityEngine.js';
+import { wireSystem } from './system/integration.js';
 
 const STRIDE = 24;
 
 class VepaEngine {
     constructor() {
+        wireSystem();
         this.app = new PIXI.Application();
         this.paused = false;
         this.laws = { 
             pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, G: 0.15, dt: 1.0 },
-            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false }
+            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false },
+            chem: { cata: false, solv: false, acid: false, oxid: false, redu: false, poly: false, isom: false, chir: false, crys: false, allo: false },
+            thermo: { heat: false, cold: false, conv: false, radi: false, subl: false, melt: false, boil: false, cond: false, depo: false, exop: false },
+            meta: { time: false, dime: false, chao: false, orde: false, fate: false, will: false, soul: false, mind: false, tele: false, clai: false, preo: false, astr: false }
         };
-        this.worldConfig = { count: 2000, dimX: 2000, dimY: 2000, dimZ: 2000, spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, baseSize: 1.0 };
+        this.worldConfig = { 
+            count: 1000, dimX: 500, dimY: 500, dimZ: 500, 
+            spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, 
+            baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5 
+        };
         this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
+        this.rotation = { x: 0, y: 0 };
         this.particles = null;
         this.simVersion = 0;
         this.simStep = 0;
+        this.history = {
+            population: [], // Array of { timestamp, speciesCounts: [] }
+            colors: [],      // Array of { timestamp, colorCounts: [] }
+            maxPoints: 100
+        };
+        this.historyThrottle = 0;
         this.focalLength = 3000;
         this.workerBusy = false;
         this.simAge = 0;
@@ -49,8 +66,10 @@ class VepaEngine {
             this.setupInteraction();
             this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
             this.worker.onmessage = (e) => this.handleWorkerMessage(e);
+            let frame = 0;
             this.restartSim();
             setupUI(this); syncUI(this.laws);
+            import('./ui.js').then(ui => ui.renderQuickPresets(this));
             updatePlaybackUI(this.playbackMode || 'forward', this.paused);
             this.app.ticker.add(() => this.update());
         });
@@ -60,6 +79,7 @@ class VepaEngine {
 
     setupEventListeners() {
         const on = (name, fn) => window.addEventListener(name, (e) => fn(e.detail));
+        const emit = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
         on('cmd:chaos', () => this.triggerSmartChaos());
         on('cmd:pause', () => this.togglePause());
         on('cmd:restart', () => this.restartSim());
@@ -71,6 +91,40 @@ class VepaEngine {
         on('cmd:updatePhysics', ({ key, val }) => this.updatePhysics(key, val));
         on('cmd:addSpecies', () => { this.addSpecies(); });
         on('ui:resized', () => this.recenter());
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const manager = document.getElementById('preset-manager');
+                if (manager && !manager.classList.contains('hidden')) {
+                    window.togglePresetManager();
+                }
+                const codex = document.getElementById('codex-overlay');
+                if (codex && !codex.classList.contains('hidden')) {
+                    window.closeCodex();
+                }
+            }
+        });
+
+        // PRESETS
+        on('cmd:savePreset', (name) => {
+            this.persistence.savePreset(name, this);
+            emit('ui:presetsUpdated');
+        });
+        on('cmd:loadPreset', ({ name, categories }) => {
+            const catSet = new Set(categories);
+            if (this.persistence.loadPreset(name, this, catSet)) {
+                this.species.forEach(s => this.fixSpeciesDNA(s));
+                this.restartSim();
+                syncUI(this.laws);
+                renderSpeciesList(this);
+                renderDNAAccordion(this);
+                renderWorldAccordion(this);
+            }
+        });
+        on('cmd:deletePreset', (name) => {
+            this.persistence.deletePreset(name);
+            emit('ui:presetsUpdated');
+        });
     }
 
     createDefaultSpecies() {
@@ -112,14 +166,30 @@ class VepaEngine {
     createSpecies(parentId = null) {
         const dna = DNA_RANGES.map(r => r.default);
         const record = this.lineageTracker.createSpecies(dna, parentId);
-        return { id: record.id, name: record.name, dna, color: null, rgb: null };
+        const s = { id: record.id, name: record.name, dna, color: null, rgb: null };
+        this.fixSpeciesDNA(s);
+        return s;
+    }
+
+    fixSpeciesDNA(spec) {
+        if (!spec.dna) spec.dna = [];
+        DNA_RANGES.forEach((range, i) => {
+            if (spec.dna[i] === undefined || spec.dna[i] === null) {
+                spec.dna[i] = range.default;
+            }
+        });
+        if (!spec.rgb) {
+            const r = Math.random(), g = Math.random(), b = Math.random();
+            spec.rgb = [r, g, b];
+            spec.color = `rgb(${Math.floor(r*255)}, ${Math.floor(g*255)}, ${Math.floor(b*255)})`;
+        }
     }
 
     addSpecies() { if (this.species.length < 12) { this.species.push(this.createSpecies(null)); renderSpeciesList(this); } }
 
     async initPixi() {
         await this.app.init({ background: '#000', resizeTo: window });
-        document.body.appendChild(this.app.canvas);
+        this.app.canvas.id = 'sim-canvas'; document.body.appendChild(this.app.canvas);
         this.world = new PIXI.Container();
         this.app.stage.addChild(this.world);
         this.envGraphics = new PIXI.Graphics();
@@ -129,6 +199,15 @@ class VepaEngine {
         this.particleSprites = [];
         this.minimap = new PIXI.Graphics();
         this.minimap.x = 20; this.minimap.y = window.innerHeight - 120;
+        this.minimap.eventMode = 'static';
+        this.minimap.on('pointerdown', (e) => {
+            if (document.body.classList.contains('help-mode-active')) {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('ui:helpRequested', { 
+                    detail: { key: 'MINIMAP', x: e.global.x, y: e.global.y } 
+                }));
+            }
+        });
         this.app.stage.addChild(this.minimap);
     }
 
@@ -193,29 +272,64 @@ window.addEventListener('pointerup', e => {
 
     restartSim() {
         this.simVersion++; this.workerBusy = false; this.simStep = 0;
+        this.history.population = [];
+        this.history.colors = [];
+        this.historyThrottle = 0;
         const count = this.worldConfig.count;
         this.particles = new Float32Array(count * STRIDE);
         this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
-        const sX = this.worldConfig.spreadX, sY = this.worldConfig.spreadY, sZ = this.worldConfig.spreadZ;
+        const spread = this.worldConfig.spreadRadius || 1.0;
+        const distType = this.worldConfig.distributionType || 'Grid';
         
         const side = Math.ceil(Math.pow(count, 1/3));
-        const spacingX = (W * sX) / side;
-        const spacingY = (H * sY) / side;
-        const spacingZ = (D * sZ) / side;
+        const spacingX = (W * spread) / side;
+        const spacingY = (H * spread) / side;
+        const spacingZ = (D * spread) / side;
 
         for (let i = 0; i < count; i++) {
             const ptr = i * STRIDE, sprite = new PIXI.Sprite(this.texture);
             sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
             const spec = this.species[i % this.species.length];
             
-            const gx = i % side;
-            const gy = Math.floor(i / side) % side;
-            const gz = Math.floor(i / (side * side));
-            
-            this.particles[ptr] = (gx - side/2) * spacingX;
-            this.particles[ptr+1] = (gy - side/2) * spacingY;
-            this.particles[ptr+2] = (gz - side/2) * spacingZ;
+            let px = 0, py = 0, pz = 0, vx = 0, vy = 0, vz = 0;
+
+            if (distType === 'Soup') {
+                px = (Math.random() - 0.5) * W * spread;
+                py = (Math.random() - 0.5) * H * spread;
+                pz = (Math.random() - 0.5) * D * spread;
+            } else if (distType === 'Big Bang') {
+                px = (Math.random() - 0.5) * 10;
+                py = (Math.random() - 0.5) * 10;
+                pz = (Math.random() - 0.5) * 10;
+                const mag = 5.0 + Math.random() * 10.0;
+                const dir = { x: px, y: py, z: pz };
+                const d = Math.hypot(dir.x, dir.y, dir.z) || 1;
+                vx = (dir.x/d) * mag; vy = (dir.y/d) * mag; vz = (dir.z/d) * mag;
+            } else if (distType === 'Bipolar') {
+                const side = Math.random() > 0.5 ? 1 : -1;
+                px = side * W * 0.4 * spread + (Math.random()-0.5) * 100;
+                py = (Math.random()-0.5) * H * spread;
+                pz = (Math.random()-0.5) * D * spread;
+            } else if (distType === 'Galaxy') {
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.pow(Math.random(), 0.5) * W * 0.5 * spread;
+                px = Math.cos(angle) * r;
+                py = Math.sin(angle) * r;
+                pz = (Math.random() - 0.5) * D * 0.1 * spread;
+                const vMag = 2.0;
+                vx = -Math.sin(angle) * vMag; vy = Math.cos(angle) * vMag;
+            } else { // Grid
+                const gx = i % side;
+                const gy = Math.floor(i / side) % side;
+                const gz = Math.floor(i / (side * side));
+                px = (gx - side/2) * spacingX;
+                py = (gy - side/2) * spacingY;
+                pz = (gz - side/2) * spacingZ;
+            }
+
+            this.particles[ptr] = px; this.particles[ptr+1] = py; this.particles[ptr+2] = pz;
+            this.particles[ptr+3] = vx; this.particles[ptr+4] = vy; this.particles[ptr+5] = vz;
             
             this.particles[ptr+11] = 1.0; 
             this.particles[ptr+12] = spec.id; this.particles[ptr+13] = 0;
@@ -226,11 +340,24 @@ window.addEventListener('pointerup', e => {
             this.particles[ptr+14] = rgb[0]; this.particles[ptr+15] = rgb[1]; this.particles[ptr+16] = rgb[2];
         }
         this.worker.postMessage({ type: 'init', data: { particles: this.particles }, version: this.simVersion });
+        
+        // Refresh DNA tab if visible
+        const dnaTab = document.getElementById('tab-dna');
+        if (dnaTab && dnaTab.classList.contains('active')) {
+            renderDNAAnalytics(this);
+        }
     }
 
     handleWorkerMessage(e) { 
         if (e.data.version !== this.simVersion) return;
         if (e.data.type === 'update') { this.particles = e.data.particles; this.workerBusy = false; this.simStep++; }
+        const particles = this.particles;
+        const frame = this.simStep;
+        bus.emit("physics:update", {
+            particles,
+            time: performance.now?.() ?? Date.now(),
+            frame
+        });
     }
 
     update() {
@@ -258,7 +385,55 @@ window.addEventListener('pointerup', e => {
             this.timelineEngine.capture();
         }
 
+        // Capture history for graphs (Throttled)
+        if (!this.paused) {
+            this.historyThrottle++;
+            if (this.historyThrottle >= 30) {
+                this.historyThrottle = 0;
+                this.captureHistory();
+            }
+        }
+
         this.draw();
+    }
+
+    captureHistory() {
+        if (!this.particles) return;
+        const counts = new Array(this.species.length).fill(0);
+        const colorGroups = [];
+        const THRESHOLD = 30;
+        const STRIDE = 24;
+
+        for (let i = 0; i < this.worldConfig.count; i++) {
+            const ptr = i * STRIDE;
+            if (this.particles[ptr+13] === 0) {
+                const sIdx = Math.floor(this.particles[ptr+12]);
+                if (counts[sIdx] !== undefined) counts[sIdx]++;
+
+                const r = Math.round(this.particles[ptr+14] * 255);
+                const g = Math.round(this.particles[ptr+15] * 255);
+                const b = Math.round(this.particles[ptr+16] * 255);
+                
+                let found = false;
+                for (const group of colorGroups) {
+                    const dist = Math.sqrt((r - group.r)**2 + (g - group.g)**2 + (b - group.b)**2);
+                    if (dist < THRESHOLD) {
+                        group.count++; found = true; break;
+                    }
+                }
+                if (!found) colorGroups.push({ r, g, b, count: 1 });
+            }
+        }
+
+        this.history.population.push({ step: this.simStep, counts });
+        this.history.colors.push({ step: this.simStep, colorGroups: colorGroups.sort((a,b) => b.count-a.count).slice(0, 5) });
+
+        if (this.history.population.length > this.history.maxPoints) {
+            this.history.population.shift();
+            this.history.colors.shift();
+        }
+        
+        updateDNAGraphs(this);
     }
 
     selectParticleAt(screenX, screenY) {
@@ -286,6 +461,15 @@ window.addEventListener('pointerup', e => {
         }
 
         this.selectedParticleIndex = nearestIdx;
+
+        // If help mode is active, trigger the drone for the particle
+        if (document.body.classList.contains('help-mode-active')) {
+            window.dispatchEvent(new CustomEvent('ui:helpRequested', { 
+                detail: { key: 'PARTICLE', x: screenX, y: screenY } 
+            }));
+            return;
+        }
+
         const panel = document.getElementById('particle-info-panel');
         if (panel) {
             if (nearestIdx === -1) panel.classList.add('hidden');
@@ -402,8 +586,7 @@ window.addEventListener('pointerup', e => {
     }
     triggerSmartChaos() { this.species.forEach(s => { s.dna = s.dna.map((v, i) => Math.random() * (DNA_RANGES[i].max - DNA_RANGES[i].min) + DNA_RANGES[i].min); }); this.restartSim(); }
     toggleLaw(k) { 
-        if (this.laws.pure[k] !== undefined) this.laws.pure[k] = !this.laws.pure[k];
-        else if (this.laws.biol[k] !== undefined) this.laws.biol[k] = !this.laws.biol[k];
+        if (this.laws.pure[k] !== undefined) this.laws.pure[k] = !this.laws.pure[k]; else if (this.laws.biol[k] !== undefined) this.laws.biol[k] = !this.laws.biol[k]; else if (this.laws.chem[k] !== undefined) this.laws.chem[k] = !this.laws.chem[k]; else if (this.laws.thermo[k] !== undefined) this.laws.thermo[k] = !this.laws.thermo[k]; else if (this.laws.meta[k] !== undefined) this.laws.meta[k] = !this.laws.meta[k];
         syncUI(this.laws); 
     }
     togglePause() { this.paused = !this.paused; updatePlaybackUI(this.playbackMode, this.paused); }
