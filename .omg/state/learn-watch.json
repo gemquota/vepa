@@ -1,0 +1,12 @@
+{
+  "last_session_id": "2518f8fa-d5ae-45ae-bd76-a7e79470a483",
+  "last_event_key": "2518f8fa-d5ae-45ae-bd76-a7e79470a483:transcript:7af4fe09e7c3a14af4aa145342c47ae1fe986bdf4c900c25ee9bf40f2b928be2",
+  "last_prompted_session_id": "",
+  "last_reason": "short-session",
+  "last_prompted_at": "",
+  "last_user_message_count": 0,
+  "last_actionable_message_count": 0,
+  "deep_interview_lock_active": false,
+  "deep_interview_lock_source": "/data/data/com.termux/files/home/dev/sim/vepa/.omg/state/deep-interview.json",
+  "updated_at": "2026-05-08T08:40:42.252Z"
+}

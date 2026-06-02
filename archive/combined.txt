@@ -1,0 +1,3092 @@
+# Hierarchical Table of Contents
+
+```
+.
+├── scripts/
+│   └── build_ssot.py
+├── src/
+│   ├── worker/
+│   │   └── physics.worker.js
+│   ├── constants.js
+│   ├── main.js
+│   └── ui.js
+├── tests/
+│   └── validate_engine.py
+├── tickets/
+│   ├── vepa-b3-01/
+│   │   └── linear_ticket_vepa-b3-01.md
+│   ├── vepa-b3-02/
+│   │   └── linear_ticket_vepa-b3-02.md
+│   ├── vepa-b4-01/
+│   │   └── linear_ticket_vepa-b4-01.md
+│   ├── vepa-b4-02/
+│   │   └── linear_ticket_vepa-b4-02.md
+│   ├── vepa-b4-03/
+│   │   └── linear_ticket_vepa-b4-03.md
+│   ├── vepa-b5-01/
+│   │   └── linear_ticket_vepa-b5-01.md
+│   ├── vepa-b5-02/
+│   │   └── linear_ticket_vepa-b5-02.md
+│   ├── vepa-b5-03/
+│   │   └── linear_ticket_vepa-b5-03.md
+│   ├── vepa-b6-01/
+│   │   └── linear_ticket_vepa-b6-01.md
+│   ├── vepa-b6-02/
+│   │   └── linear_ticket_vepa-b6-02.md
+│   └── vepa-epic-01/
+│       └── linear_ticket_vepa-epic-01.md
+├── .gitignore
+├── CHANGELOG.md
+├── ENGINE_SSOT.md
+├── GUIDE.md
+├── index.html
+├── legacy_index.html
+├── package-lock.json
+├── package.json
+├── PICKLE_JAR.md
+├── plan_quicksilver.md
+├── plan_review.md
+├── plan_stellar_evolution.md
+├── research_quicksilver.md
+├── research_review.md
+├── research_stellar_evolution.md
+├── run.py
+├── style.css
+└── VERSION
+```
+
+
+================================================================================
+File: scripts/build_ssot.py
+Directory: scripts
+Name: build_ssot.py
+File Type: .py
+================================================================================
+
+import os
+import re
+
+def generate_js():
+    # Hardcoding high-quality descriptions to ensure "A-Grade" status
+    dna_data = [
+        ("Force", "Governs the primary attraction and repulsion between particles; positive values simulate gravitational clumping while negative values create expansive repulsive fields that prevent structural collapse.", -2, 2, 0.1),
+        ("Viscosity", "Determines the rate of kinetic energy dissipation within the local neighborhood; high values simulate thick, honey-like fluids that dampen motion, whereas low values allow for high-velocity gas-like turbulence.", 0.8, 1.0, 0.98),
+        ("Torque", "Applies a rotational force during neighbor interactions which induces angular momentum; this parameter is essential for the formation of stable orbital vortices and complex spinning cellular colonies.", -1, 1, 0),
+        ("Jitter", "Introduces stochastic Brownian motion into the system to prevent static equilibrium; this constant vibration allows particle clusters to 'settle' into more efficient geometric configurations over time.", 0, 0.5, 0.05),
+        ("C1 (Polarity)", "Represents the fundamental electromagnetic charge of the species; like charges exert a repulsive force while opposite charges attract, directly influencing the vibrant neon color shifts during interaction.", -1, 1, 0),
+        ("C2 (Alpha)", "Controls the material density and visual transparency of the particle body; lower values create 'ghost' species that can occupy the same spatial coordinates without total visual occlusion.", 0, 1, 0.5),
+        ("C3 (Symmetry)", "Warps the physical dimensions of the particle's interaction field; positive values stretch the influence horizontally while negative values induce a vertical elongation, breaking perfect circular symmetry.", -1, 1, 0),
+        ("Hidden Mass", "Assigns an invisible mass multiplier that influences gravity and momentum without altering the visible size; this allows for the creation of 'dark matter' particles that exert massive physical influence.", -5, 5, 0),
+        ("Stiffness", "Defines the rigidity of the local structural bonds during accretion; high stiffness results in brittle, rock-like formations while low stiffness allows for gel-like or cloud-like elastic behaviors.", 0.1, 5, 1.0),
+        ("Fusion", "Determines the efficiency of mass transfer during a successful merger event; high values allow for rapid growth into massive entities while low values restrict the growth potential of individual colonies.", 0, 1, 0.5),
+        ("Birth Rate", "Sets the statistical probability for spontaneous reproduction within high-energy clusters; this drives population expansion and is balanced against the metabolic costs of the local environment.", 0, 0.1, 0.01),
+        ("Death Rate", "Controls the natural decay rate of the species due to simulated instability or radiation; high values prevent overpopulation by ensuring that older or isolated particles eventually dissolve.", 0, 0.1, 0.01),
+        ("Mutation", "Governs the degree of genetic drift when new particles are spawned or merged; higher values ensure that offspring possess significantly varied physical constants compared to their progenitors.", 0, 0.5, 0.05),
+        ("Signal Resp", "Determines how sensitively a particle responds to the communication blinks of its neighbors; high response values facilitate synchronized swarming behaviors and complex wave propagation.", 0, 2, 1.0),
+        ("Pulse Rate", "Sets the frequency of the internal oscillator that drives signal emission; this creates a 'heartbeat' effect that is used by colonies to coordinate movement and signal-driven scaling.", 0, 1, 0.2),
+        ("Tidal", "Calculates the force gradient across the diameter of a particle cluster; high tidal values can tear large accreted masses apart or create complex dragging effects in high-gravity zones.", -1, 1, 0),
+        ("Fusion Momentum", "Defines the minimum relative momentum required to trigger an accretion event; if set to zero, particles will attempt to merge regardless of their impact velocity.", 0, 50, 5),
+        ("Fusion Time", "The number of simulation ticks that two particles must remain in close proximity before they successfully fuse; setting this to zero allows for instantaneous merging upon contact.", 0, 100, 10),
+        ("Neighborhood Radius", "Sets the maximum spatial range for all local DNA interactions and signal propagation; larger radii allow for more complex multi-neighbor calculations at the cost of processing density.", 20, 500, 120),
+        ("Signal Strength", "Amplifies the magnitude of the signal emitted during each pulse cycle; this directly influences how far and how strongly a particle can communicate its internal state to the swarm.", 0, 1, 0.5),
+        ("Signal Decay", "Determines the rate at which incoming signals fade over time within a particle's memory; high decay ensures short-term responses while low decay allows for sustained colonial states.", 0.1, 0.99, 0.95),
+        ("Propagation Speed", "Controls the velocity at which communication signals travel through the medium; faster speeds allow for near-instantaneous swarm synchronization across vast distances.", 0.01, 1.0, 0.5),
+        ("Tuning Ch1", "Adjusts the sensitivity of the species to information received on the first frequency channel; this allows for the creation of specialized roles within a multi-species ecosystem.", 0, 1, 1),
+        ("Tuning Ch2", "Adjusts the sensitivity to the second communication channel; often used for coordinating defensive or repulsive swarm behaviors in response to specific environmental stimuli.", 0, 1, 1),
+        ("Tuning Ch3", "Adjusts the sensitivity to the third communication channel; typically mapped to metabolic or reproductive signals that trigger colony growth phases.", 0, 1, 1),
+        ("Tuning Ch4", "Adjusts the sensitivity to the fourth communication channel; enables complex four-state logic gates within the emerging neural structures of the particle swarm.", 0, 1, 1)
+    ]
+
+    js_content = "export const DNA_META = [\n"
+    for name, desc, mn, mx, df in dna_data: js_content += f'    "{name}",\n'
+    js_content += "];\n\nexport const DNA_DESCS = [\n"
+    for name, desc, mn, mx, df in dna_data: js_content += f'    "{desc}",\n'
+    js_content += "];\n\nexport const DNA_RANGES = [\n"
+    for name, desc, mn, mx, df in dna_data: js_content += f'    {{ min: {mn}, max: {mx}, default: {df} }},\n'
+    js_content += "];\n"
+    
+    with open('src/constants.js', 'w') as f:
+        f.write(js_content)
+
+if __name__ == "__main__":
+    generate_js()
+    print("Generated src/constants.js with A-Grade descriptions.")
+
+
+
+================================================================================
+File: src/worker/physics.worker.js
+Directory: src/worker
+Name: physics.worker.js
+File Type: .js
+================================================================================
+
+// STRIDE 18: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer
+const STRIDE = 18;
+let particles;
+let cellS = 500;
+
+self.onmessage = (e) => {
+    const { type, data, config, version } = e.data;
+    if (type === 'init') {
+        particles = data.particles;
+    } else if (type === 'step') {
+        if (!particles) return;
+        step(config.laws, config.specDNA, config.world);
+        self.postMessage({ type: 'update', particles, version });
+    }
+};
+
+function step(laws, specDNA, world) {
+    const count = particles.length / STRIDE;
+    const dt = laws.dt || 1.0, G = laws.G !== undefined ? laws.G : 0.15;
+    const pic = new Map();
+    const W = world.dimX, H = world.dimY, D = world.dimZ;
+
+    for (let i = 0; i < count; i++) {
+        const ptr = i * STRIDE;
+        if (particles[ptr + 13] > 0 && Math.random() < world.spawnRate * 0.05) {
+            particles[ptr] = (Math.random()-0.5)*W*0.3;
+            particles[ptr+1] = (Math.random()-0.5)*H*0.3;
+            particles[ptr+2] = (Math.random()-0.5)*D*0.3;
+            particles[ptr+3] = particles[ptr+4] = particles[ptr+5] = 0;
+            particles[ptr+11] = 1.0; particles[ptr+13] = 0; particles[ptr+17] = 0;
+        }
+        if (particles[ptr + 13] > 0) continue;
+        const spId = particles[ptr + 12], dna = specDNA[spId] || specDNA[0];
+        particles[ptr + 6] += dna.pulse * 0.15 * dt;
+        particles[ptr + 7] = Math.max(0, Math.sin(particles[ptr + 6])) * dna.strength;
+        const gx = Math.floor((particles[ptr] + W/2)/cellS), gy = Math.floor((particles[ptr+1] + H/2)/cellS), gz = Math.floor((particles[ptr+2] + D/2)/cellS);
+        const key = (gx << 20) | (gy << 10) | gz;
+        if(!pic.has(key)) pic.set(key, []);
+        pic.get(key).push(i);
+    }
+
+    for (let i = 0; i < count; i++) {
+        const ptr = i * STRIDE;
+        if (particles[ptr + 13] > 0) continue;
+        const spId = particles[ptr + 12], dna = specDNA[spId] || specDNA[0];
+        const gx = Math.floor((particles[ptr] + W/2)/cellS), gy = Math.floor((particles[ptr+1] + H/2)/cellS), gz = Math.floor((particles[ptr+2] + D/2)/cellS);
+        let inContact = false;
+        for (let oz = -1; oz <= 1; oz++) {
+            for (let oy = -1; oy <= 1; oy++) {
+                for (let ox = -1; ox <= 1; ox++) {
+                    const key = ((gx+ox) << 20) | ((gy+oy) << 10) | (gz+oz);
+                    const neighbors = pic.get(key);
+                    if (!neighbors) continue;
+                    neighbors.forEach(oIdx => {
+                        if (i === oIdx) return;
+                        const oPtr = oIdx * STRIDE;
+                        if (particles[oPtr + 13] > 0) return;
+                        const dx = particles[oPtr]-particles[ptr], dy = particles[oPtr+1]-particles[ptr+1], dz = particles[oPtr+2]-particles[ptr+2];
+                        const d2 = dx*dx + dy*dy + dz*dz, r1 = Math.sqrt(particles[ptr+11]), r2 = Math.sqrt(particles[oPtr+11]);
+                        if (d2 < (r1 + r2) * (r1 + r2)) {
+                            inContact = true;
+                            const rvx = particles[oPtr+3]-particles[ptr+3], rvy = particles[oPtr+4]-particles[ptr+4], rvz = particles[oPtr+5]-particles[ptr+5];
+                            const relMom = Math.sqrt(rvx*rvx + rvy*rvy + rvz*rvz) * (particles[ptr+11] + particles[oPtr+11]);
+                            if (relMom >= dna.fusionMomentum) {
+                                particles[ptr+17] += 1;
+                                if (particles[ptr+17] >= dna.fusionTime) {
+                                    const m1 = particles[ptr+11], m2 = particles[oPtr+11], newM = m1 + m2;
+                                    particles[ptr+3] = (particles[ptr+3]*m1 + particles[oPtr+3]*m2) / newM;
+                                    particles[ptr+4] = (particles[ptr+4]*m1 + particles[oPtr+4]*m2) / newM;
+                                    particles[ptr+5] = (particles[ptr+5]*m1 + particles[oPtr+5]*m2) / newM;
+                                    particles[ptr+14] = (particles[ptr+14]*m1 + particles[oPtr+14]*m2) / newM;
+                                    particles[ptr+15] = (particles[ptr+15]*m1 + particles[oPtr+15]*m2) / newM;
+                                    particles[ptr+16] = (particles[ptr+16]*m1 + particles[oPtr+16]*m2) / newM;
+                                    particles[ptr+11] = newM; particles[oPtr+13] = 1; particles[ptr+17] = 0;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+        if (!inContact) particles[ptr+17] = Math.max(0, particles[ptr+17] - 1);
+    }
+
+    for (let i = 0; i < count; i++) {
+        const ptr = i * STRIDE;
+        if (particles[ptr + 13] > 0) continue;
+        let ax = 0, ay = 0, az = 0;
+        const px = particles[ptr], py = particles[ptr+1], pz = particles[ptr+2], spId = particles[ptr+12], dna = specDNA[spId] || specDNA[0];
+        const gx = Math.floor((px + W/2)/cellS), gy = Math.floor((py + H/2)/cellS), gz = Math.floor((pz + D/2)/cellS);
+        for (let oz = -1; oz <= 1; oz++) {
+            for (let oy = -1; oy <= 1; oy++) {
+                for (let ox = -1; ox <= 1; ox++) {
+                    const key = ((gx+ox) << 20) | ((gy+oy) << 10) | (gz+oz);
+                    const neighbors = pic.get(key);
+                    if (neighbors) {
+                        neighbors.forEach(oIdx => {
+                            const oPtr = oIdx * STRIDE;
+                            if (i === oIdx || particles[oPtr+13] > 0) return;
+                            const dx = particles[oPtr]-px, dy = particles[oPtr+1]-py, dz = particles[oPtr+2]-pz, d2 = dx*dx + dy*dy + dz*dz;
+                            if (d2 < dna.radius2 && d2 > 0.1) {
+                                const d = Math.sqrt(d2), f = (G * particles[oPtr+11]) / d2;
+                                ax += (dx/d)*f; ay += (dy/d)*f; az += (dz/d)*f;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        if (laws.jitter) { ax += (Math.random()-0.5)*0.15; ay += (Math.random()-0.5)*0.15; az += (Math.random()-0.5)*0.15; }
+        const drag = laws.drag ? laws.dragCoeff : 1.0;
+        particles[ptr+3] = (particles[ptr+3]+ax)*drag; particles[ptr+4] = (particles[ptr+4]+ay)*drag; particles[ptr+5] = (particles[ptr+5]+az)*drag;
+        particles[ptr] += particles[ptr+3]*dt; particles[ptr+1] += particles[ptr+4]*dt; particles[ptr+2] += particles[ptr+5]*dt;
+    }
+}
+
+
+
+================================================================================
+File: src/constants.js
+Directory: src
+Name: constants.js
+File Type: .js
+================================================================================
+
+export const DNA_META = [
+    "Force",
+    "Viscosity",
+    "Torque",
+    "Jitter",
+    "C1 (Polarity)",
+    "C2 (Alpha)",
+    "C3 (Symmetry)",
+    "Hidden Mass",
+    "Stiffness",
+    "Fusion",
+    "Birth Rate",
+    "Death Rate",
+    "Mutation",
+    "Signal Resp",
+    "Pulse Rate",
+    "Tidal",
+    "Fusion Momentum",
+    "Fusion Time",
+    "Neighborhood Radius",
+    "Signal Strength",
+    "Signal Decay",
+    "Propagation Speed",
+    "Tuning Ch1",
+    "Tuning Ch2",
+    "Tuning Ch3",
+    "Tuning Ch4",
+];
+
+export const DNA_DESCS = [
+    "Governs the primary attraction and repulsion between particles; positive values simulate gravitational clumping while negative values create expansive repulsive fields that prevent structural collapse.",
+    "Determines the rate of kinetic energy dissipation within the local neighborhood; high values simulate thick, honey-like fluids that dampen motion, whereas low values allow for high-velocity gas-like turbulence.",
+    "Applies a rotational force during neighbor interactions which induces angular momentum; this parameter is essential for the formation of stable orbital vortices and complex spinning cellular colonies.",
+    "Introduces stochastic Brownian motion into the system to prevent static equilibrium; this constant vibration allows particle clusters to 'settle' into more efficient geometric configurations over time.",
+    "Represents the fundamental electromagnetic charge of the species; like charges exert a repulsive force while opposite charges attract, directly influencing the vibrant neon color shifts during interaction.",
+    "Controls the material density and visual transparency of the particle body; lower values create 'ghost' species that can occupy the same spatial coordinates without total visual occlusion.",
+    "Warps the physical dimensions of the particle's interaction field; positive values stretch the influence horizontally while negative values induce a vertical elongation, breaking perfect circular symmetry.",
+    "Assigns an invisible mass multiplier that influences gravity and momentum without altering the visible size; this allows for the creation of 'dark matter' particles that exert massive physical influence.",
+    "Defines the rigidity of the local structural bonds during accretion; high stiffness results in brittle, rock-like formations while low stiffness allows for gel-like or cloud-like elastic behaviors.",
+    "Determines the efficiency of mass transfer during a successful merger event; high values allow for rapid growth into massive entities while low values restrict the growth potential of individual colonies.",
+    "Sets the statistical probability for spontaneous reproduction within high-energy clusters; this drives population expansion and is balanced against the metabolic costs of the local environment.",
+    "Controls the natural decay rate of the species due to simulated instability or radiation; high values prevent overpopulation by ensuring that older or isolated particles eventually dissolve.",
+    "Governs the degree of genetic drift when new particles are spawned or merged; higher values ensure that offspring possess significantly varied physical constants compared to their progenitors.",
+    "Determines how sensitively a particle responds to the communication blinks of its neighbors; high response values facilitate synchronized swarming behaviors and complex wave propagation.",
+    "Sets the frequency of the internal oscillator that drives signal emission; this creates a 'heartbeat' effect that is used by colonies to coordinate movement and signal-driven scaling.",
+    "Calculates the force gradient across the diameter of a particle cluster; high tidal values can tear large accreted masses apart or create complex dragging effects in high-gravity zones.",
+    "Defines the minimum relative momentum required to trigger an accretion event; if set to zero, particles will attempt to merge regardless of their impact velocity.",
+    "The number of simulation ticks that two particles must remain in close proximity before they successfully fuse; setting this to zero allows for instantaneous merging upon contact.",
+    "Sets the maximum spatial range for all local DNA interactions and signal propagation; larger radii allow for more complex multi-neighbor calculations at the cost of processing density.",
+    "Amplifies the magnitude of the signal emitted during each pulse cycle; this directly influences how far and how strongly a particle can communicate its internal state to the swarm.",
+    "Determines the rate at which incoming signals fade over time within a particle's memory; high decay ensures short-term responses while low decay allows for sustained colonial states.",
+    "Controls the velocity at which communication signals travel through the medium; faster speeds allow for near-instantaneous swarm synchronization across vast distances.",
+    "Adjusts the sensitivity of the species to information received on the first frequency channel; this allows for the creation of specialized roles within a multi-species ecosystem.",
+    "Adjusts the sensitivity to the second communication channel; often used for coordinating defensive or repulsive swarm behaviors in response to specific environmental stimuli.",
+    "Adjusts the sensitivity to the third communication channel; typically mapped to metabolic or reproductive signals that trigger colony growth phases.",
+    "Adjusts the sensitivity to the fourth communication channel; enables complex four-state logic gates within the emerging neural structures of the particle swarm.",
+];
+
+export const DNA_RANGES = [
+    { min: -2, max: 2, default: 0.1 },
+    { min: 0.8, max: 1.0, default: 0.98 },
+    { min: -1, max: 1, default: 0 },
+    { min: 0, max: 0.5, default: 0.05 },
+    { min: -1, max: 1, default: 0 },
+    { min: 0, max: 1, default: 0.5 },
+    { min: -1, max: 1, default: 0 },
+    { min: -5, max: 5, default: 0 },
+    { min: 0.1, max: 5, default: 1.0 },
+    { min: 0, max: 1, default: 0.5 },
+    { min: 0, max: 0.1, default: 0.01 },
+    { min: 0, max: 0.1, default: 0.01 },
+    { min: 0, max: 0.5, default: 0.05 },
+    { min: 0, max: 2, default: 1.0 },
+    { min: 0, max: 1, default: 0.2 },
+    { min: -1, max: 1, default: 0 },
+    { min: 0, max: 50, default: 5 },
+    { min: 0, max: 100, default: 10 },
+    { min: 20, max: 500, default: 120 },
+    { min: 0, max: 1, default: 0.5 },
+    { min: 0.1, max: 0.99, default: 0.95 },
+    { min: 0.01, max: 1.0, default: 0.5 },
+    { min: 0, max: 1, default: 1 },
+    { min: 0, max: 1, default: 1 },
+    { min: 0, max: 1, default: 1 },
+    { min: 0, max: 1, default: 1 },
+];
+
+
+
+================================================================================
+File: src/main.js
+Directory: src
+Name: main.js
+File Type: .js
+================================================================================
+
+import * as PIXI from 'pixi.js';
+import { DNA_META, DNA_RANGES } from './constants';
+import { setupUI, updateHUD, syncUI } from './ui';
+
+// STRIDE 18: 0:x, 1:y, 2:z, 3:vx, 4:vy, 5:vz, 6:phase, 7:s1, 8:s2, 9:s3, 10:s4, 11:mass, 12:id, 13:dead, 14:R, 15:G, 16:B, 17:timer
+const STRIDE = 18;
+
+class VepaEngine {
+    constructor() {
+        this.app = new PIXI.Application();
+        this.paused = false;
+        this.laws = { grav: true, life: false, drag: true, jitter: true, G: 0.15, dt: 1.0, dragCoeff: 0.993 };
+        this.worldConfig = { 
+            count: 5000, entropy: 0.5, spawnRate: 0.0, baseSize: 0.05, 
+            dimX: 10000, dimY: 10000, dimZ: 10000,
+            spreadX: 0.5, spreadY: 0.5, spreadZ: 0.5,
+            shape: 0 
+        };
+        this.zoom = 1.0; this.pan = { x: 0, y: 0, z: 0 }; 
+        this.particles = null;
+        this.simVersion = 0;
+        this.focalLength = 3000;
+        this.workerBusy = false;
+
+        this.species = [this.createSpecies(0)];
+
+        this.initPixi().then(() => {
+            this.setupInteraction();
+            this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
+            this.worker.onmessage = (e) => this.handleWorkerMessage(e);
+            this.restartSim();
+            setupUI(this); syncUI(this.laws);
+            this.app.ticker.add(() => this.update());
+        });
+    }
+
+    createSpecies(id) {
+        const h = id * 45;
+        return { id: id, color: `hsl(${h}, 70%, 50%)`, rgb: this.hslToRgb(h / 360, 0.7, 0.5), dna: DNA_RANGES.map(r => r.default) };
+    }
+    addSpecies() { if (this.species.length < 8) this.species.push(this.createSpecies(this.species.length)); }
+    hslToRgb(h, s, l) {
+        let r, g, b; const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < 1/2) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
+        return [r, g, b];
+    }
+
+    async initPixi() {
+        await this.app.init({ background: '#000', resizeTo: window });
+        document.body.appendChild(this.app.canvas);
+        this.world = new PIXI.Container();
+        this.app.stage.addChild(this.world);
+        this.texture = this.app.renderer.generateTexture(new PIXI.Graphics().circle(0, 0, 4).fill(0xffffff));
+        this.particleSprites = [];
+        this.minimap = new PIXI.Graphics();
+        this.minimap.x = 20; this.minimap.y = window.innerHeight - 120;
+        this.app.stage.addChild(this.minimap);
+    }
+
+    setupInteraction() {
+        let activePointers = new Map(), lastPos = null;
+        this.app.canvas.addEventListener('wheel', (e) => { this.zoom *= Math.pow(0.999, e.deltaY); }, { passive: true });
+        this.app.canvas.addEventListener('pointerdown', e => { activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (activePointers.size === 1) lastPos = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('pointerup', e => { activePointers.delete(e.pointerId); if (activePointers.size === 0) lastPos = null; });
+        window.addEventListener('pointermove', e => {
+            if (!activePointers.has(e.pointerId)) return;
+            const current = { x: e.clientX, y: e.clientY };
+            if (activePointers.size === 1 && lastPos) {
+                this.pan.x += (current.x - lastPos.x) / this.zoom; this.pan.y += (current.y - lastPos.y) / this.zoom;
+            } else if (activePointers.size === 3 && lastPos) {
+                this.pan.z += (current.y - lastPos.y) * 20;
+                this.pan.z = Math.max(-this.focalLength + 500, Math.min(this.focalLength * 5, this.pan.z));
+            }
+            lastPos = current; activePointers.set(e.pointerId, current);
+        });
+    }
+
+    restartSim() {
+        this.simVersion++;
+        this.workerBusy = false;
+        const count = this.worldConfig.count;
+        this.particles = new Float32Array(count * STRIDE);
+        this.particleSprites.forEach(s => s.destroy()); this.particleSprites = [];
+        const side = Math.ceil(Math.pow(count, 1/3));
+        const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
+        const sX = this.worldConfig.spreadX, sY = this.worldConfig.spreadY, sZ = this.worldConfig.spreadZ;
+        for (let i = 0; i < count; i++) {
+            const ptr = i * STRIDE, sprite = new PIXI.Sprite(this.texture);
+            sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
+            const gx = (i % side) / side - 0.5, gy = (Math.floor(i / side) % side) / side - 0.5, gz = Math.floor(i / (side * side)) / side - 0.5;
+            const rx = Math.random() - 0.5, ry = Math.random() - 0.5, rz = Math.random() - 0.5, ent = this.worldConfig.entropy;
+            let px = (gx * (1-ent) + rx * ent), py = (gy * (1-ent) + ry * ent), pz = (gz * (1-ent) + rz * ent);
+            if (this.worldConfig.shape > 0) {
+                const d = Math.sqrt(px*px+py*py+pz*pz);
+                if(d > 0.001) { const morph = this.worldConfig.shape; const mag = d*(1-morph)+0.5*morph; px=(px/d)*mag; py=(py/d)*mag; pz=(pz/d)*mag; }
+            }
+            this.particles[ptr] = px*W*sX; this.particles[ptr+1] = py*H*sY; this.particles[ptr+2] = pz*D*sZ;
+            this.particles[ptr+11] = 1.0 + Math.random();
+            const sp = this.species[Math.floor(Math.random() * this.species.length)];
+            this.particles[ptr+12] = sp.id; this.particles[ptr+13] = 0;
+            this.particles[ptr+14] = sp.rgb[0]; this.particles[ptr+15] = sp.rgb[1]; this.particles[ptr+16] = sp.rgb[2];
+        }
+        this.worker.postMessage({ type: 'init', data: { particles: this.particles }, version: this.simVersion });
+    }
+
+    handleWorkerMessage(e) { 
+        if (e.data.type === 'update' && e.data.version === this.simVersion) {
+            this.particles = e.data.particles;
+            this.workerBusy = false;
+        }
+    }
+
+    update() {
+        if (this.paused || !this.particles) return;
+        if (!this.workerBusy) {
+            this.workerBusy = true;
+            this.worker.postMessage({ type: 'step', version: this.simVersion, config: { laws: this.laws, world: this.worldConfig, specDNA: this.species.map(s => this.getFlattenedDNA(s)) } });
+        }
+
+        this.minimap.clear().rect(0, 0, 100, 100).fill({ color: 0x000, alpha: 0.5 }).stroke({ color: 0x00ff41, width: 1 });
+        let aliveCount = 0;
+        const centerX = window.innerWidth/2, centerY = window.innerHeight/2;
+
+        for (let i = 0; i < this.particleSprites.length; i++) {
+            const ptr = i * STRIDE, s = this.particleSprites[i];
+            if (this.particles[ptr+13] > 0) { s.visible = false; continue; }
+            s.visible = true; aliveCount++;
+            
+            const x = this.particles[ptr] + this.pan.x, y = this.particles[ptr+1] + this.pan.y, z = this.particles[ptr+2] + this.pan.z;
+            const pScale = this.focalLength / (this.focalLength + z);
+            
+            s.x = centerX + x * pScale * this.zoom;
+            s.y = centerY + y * pScale * this.zoom;
+            const sigSum = this.particles[ptr+7] + this.particles[ptr+8] + this.particles[ptr+9] + this.particles[ptr+10];
+            s.scale.set((Math.sqrt(this.particles[ptr+11]) * this.worldConfig.baseSize + sigSum * 0.8) * pScale * this.zoom);
+            s.alpha = Math.max(0.05, pScale * 0.5);
+
+            const r = Math.floor(this.particles[ptr+14]*255), g = Math.floor(this.particles[ptr+15]*255), b = Math.floor(this.particles[ptr+16]*255);
+            s.tint = (r << 16) | (g << 8) | b;
+            if (i % 20 === 0) this.minimap.rect(50 + x/(this.worldConfig.dimX/100), 50 + y/(this.worldConfig.dimY/100), 1, 1).fill(s.tint);
+        }
+        updateHUD(Math.round(this.app.ticker.FPS), aliveCount);
+    }
+
+    getFlattenedDNA(s) {
+        const d = s.dna;
+        return { fusionMomentum: d[16], fusionTime: d[17], radius2: Math.pow(d[18], 2), pulse: d[14], strength: d[19], decay: d[20], speed: d[21], tuning: [d[22], d[23], d[24], d[25]] };
+    }
+
+    updateDNA(sIdx, rIdx, val, dId) { if(this.species[sIdx]) this.species[sIdx].dna[rIdx] = parseFloat(val); if (dId) document.getElementById(dId).innerText = val; }
+    updateWorld(key, val, dId) { this.worldConfig[key] = parseFloat(val); if (dId) document.getElementById(dId).innerText = val; }
+    updatePhysics(key, val, dId) { this.laws[key] = parseFloat(val); if (dId) document.getElementById(dId).innerText = val; }
+    triggerSmartChaos() { this.species.forEach(s => { s.dna = s.dna.map((v, i) => Math.random() * (DNA_RANGES[i].max - DNA_RANGES[i].min) + DNA_RANGES[i].min); }); this.restartSim(); }
+    toggleLaw(k) { this.laws[k] = !this.laws[k]; syncUI(this.laws); }
+    togglePause() { this.paused = !this.paused; }
+    hardReset() { location.reload(); }
+}
+const engine = new VepaEngine();
+
+
+
+================================================================================
+File: src/ui.js
+Directory: src
+Name: ui.js
+File Type: .js
+================================================================================
+
+import { DNA_META, DNA_RANGES, DNA_DESCS } from './constants';
+
+let currentSpeciesIdx = 0;
+
+export function setupUI(engine) {
+    window.triggerSmartChaos = () => engine.triggerSmartChaos();
+    window.togglePause = () => engine.togglePause();
+    window.restartSim = () => engine.restartSim();
+    window.toggleLaw = (k) => engine.toggleLaw(k);
+    window.updateDNA = (sIdx, rIdx, val, dId) => engine.updateDNA(sIdx, rIdx, val, dId);
+    window.updateWorld = (key, val, dId) => engine.updateWorld(key, val, dId);
+    window.updatePhysics = (key, val, dId) => engine.updatePhysics(key, val, dId);
+    window.openTab = (event, tabId) => {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    };
+    window.addSpecies = () => { engine.addSpecies(); renderSpeciesList(engine); };
+    window.selectSpecies = (idx) => { currentSpeciesIdx = idx; renderSpeciesList(engine); renderDNASliders(engine); };
+    window.showTooltip = (event, text) => {
+        const tip = document.getElementById('tooltip');
+        tip.innerText = text; tip.style.display = 'block';
+        tip.style.left = (event.clientX + 10) + 'px'; tip.style.top = (event.clientY + 10) + 'px';
+        setTimeout(() => tip.style.display = 'none', 5000);
+    };
+
+    renderWorldSliders(engine);
+    renderPhysicsSliders(engine);
+    renderSpeciesList(engine);
+    renderDNASliders(engine);
+}
+
+function renderWorldSliders(engine) {
+    const container = document.getElementById('world-sliders');
+    if (!container) return;
+    const items = [
+        { name: 'Particle Count', key: 'count', min: 100, max: 10000, step: 100, val: 5000 },
+        { name: 'Entropy (Grid-Chaos)', key: 'entropy', min: 0, max: 1, step: 0.01, val: 0.5 },
+        { name: 'Spawn Rate', key: 'spawnRate', min: 0, max: 1, step: 0.01, val: 0.0 },
+        { name: 'Shape (Cube-Sphere)', key: 'shape', min: 0, max: 1, step: 0.01, val: 0.0 },
+        { name: 'Spread X', key: 'spreadX', min: 0.1, max: 1.0, step: 0.01, val: 0.5 },
+        { name: 'Spread Y', key: 'spreadY', min: 0.1, max: 1.0, step: 0.01, val: 0.5 },
+        { name: 'Spread Z', key: 'spreadZ', min: 0.1, max: 1.0, step: 0.01, val: 0.5 },
+    ];
+    container.innerHTML = '<h3>World Setup</h3>';
+    items.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'slider-row';
+        row.innerHTML = `
+            <span class="slider-label" onclick="window.showTooltip(event, 'Controls ${it.name}')">${it.name}: </span><span id="world-val-${it.key}">${it.val}</span>
+            <input type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.val}" 
+                   style="width: 100%;" oninput="window.updateWorld('${it.key}', this.value, 'world-val-${it.key}')">
+        `;
+        container.appendChild(row);
+    });
+}
+
+function renderPhysicsSliders(engine) {
+    const container = document.getElementById('phys-sliders');
+    if (!container) return;
+    const items = [
+        { name: 'Global G', key: 'G', min: 0, max: 2, step: 0.01, val: 0.15 },
+        { name: 'Sim Speed', key: 'dt', min: 0, max: 5, step: 0.1, val: 1.0 },
+        { name: 'Base Size', key: 'baseSize', min: 0.01, max: 0.5, step: 0.01, val: 0.05 },
+        { name: 'Map Width (X)', key: 'dimX', min: 2000, max: 20000, step: 500, val: 10000 },
+        { name: 'Map Height (Y)', key: 'dimY', min: 2000, max: 20000, step: 500, val: 10000 },
+        { name: 'Map Depth (Z)', key: 'dimZ', min: 2000, max: 20000, step: 500, val: 10000 }
+    ];
+    container.innerHTML = '<h3>Simulation Scale</h3>';
+    items.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'slider-row';
+        row.innerHTML = `
+            <span class="slider-label" onclick="window.showTooltip(event, 'Controls ${it.name}')">${it.name}: </span><span id="phys-val-${it.key}">${it.val}</span>
+            <input type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.val}" 
+                   style="width: 100%;" oninput="window.updatePhysics('${it.key}', this.value, 'phys-val-${it.key}')">
+        `;
+        container.appendChild(row);
+    });
+}
+
+function renderSpeciesList(engine) {
+    const list = document.getElementById('species-list');
+    if (!list) return;
+    list.innerHTML = '';
+    engine.species.forEach((s, idx) => {
+        const div = document.createElement('div');
+        div.className = `species-card ${idx === currentSpeciesIdx ? 'active' : ''}`;
+        div.innerHTML = `<span>Species ${idx + 1}</span> <div style="width:10px; height:10px; background:${s.color}"></div>`;
+        div.onclick = () => window.selectSpecies(idx);
+        list.appendChild(div);
+    });
+}
+
+function renderDNASliders(engine) {
+    const container = document.getElementById('dna-sliders');
+    if (!container) return;
+    container.innerHTML = `<h3>Species ${currentSpeciesIdx + 1} DNA</h3>`;
+    const spec = engine.species[currentSpeciesIdx];
+    DNA_META.forEach((name, idx) => {
+        const val = spec.dna[idx];
+        const row = document.createElement('div');
+        row.className = 'slider-row';
+        row.innerHTML = `
+            <span class="slider-label" onclick="window.showTooltip(event, '${DNA_DESCS[idx]}')">${name}: </span><span id="dna-val-${idx}">${val.toFixed(2)}</span>
+            <input type="range" min="${DNA_RANGES[idx].min}" max="${DNA_RANGES[idx].max}" step="${0.01}" value="${val}" 
+                   style="width: 100%;" oninput="window.updateDNA(${currentSpeciesIdx}, ${idx}, this.value, 'dna-val-${idx}')">
+        `;
+        container.appendChild(row);
+    });
+}
+
+export function updateHUD(fps, pCount) {
+    const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count');
+    if (fpsEl) fpsEl.innerText = fps; if (pCountEl) pCountEl.innerText = pCount;
+}
+
+export function syncUI(laws) {
+    Object.keys(laws).forEach(k => {
+        const el = document.getElementById(`syn-${k}`);
+        if(el) el.classList.toggle('active', laws[k]);
+    });
+}
+
+
+
+================================================================================
+File: tests/validate_engine.py
+Directory: tests
+Name: validate_engine.py
+File Type: .py
+================================================================================
+
+import re
+import subprocess
+import os
+import sys
+
+def test_js_syntax():
+    print("[TEST] Checking JavaScript Syntax...")
+    with open('index.html', 'r') as f:
+        html = f.read()
+    
+    js_match = re.search(r'<script>(.*?)</script>', html, re.DOTALL)
+    if not js_match:
+        print("FAILED: No <script> tag found.")
+        return False
+    
+    js_code = js_match.group(1)
+    with open('tmp_test.js', 'w') as f:
+        f.write(js_code)
+    
+    # Use node --check to validate syntax without executing
+    result = subprocess.run(['node', '--check', 'tmp_test.js'], capture_output=True, text=True)
+    os.remove('tmp_test.js')
+    
+    if result.returncode != 0:
+        print(f"FAILED: JS Syntax Error:\n{result.stderr}")
+        return False
+    print("PASSED: JS Syntax is valid.")
+    return True
+
+def test_ssot_alignment():
+    print("[TEST] Verifying SSoT Parameter Alignment...")
+    with open('ENGINE_SSOT.md', 'r') as f:
+        ssot = f.read()
+    with open('index.html', 'r') as f:
+        html = f.read()
+
+    # Extract all bullet points from sections 1 and 2 of SSoT
+    # This regex looks for names like "**Force:**"
+    params = re.findall(r'\*   \*\*(.*?):\*\*', ssot)
+    
+    missing = []
+    for p in params:
+        # Check if the parameter name exists in the HTML (UI or Logic)
+        # We look for the literal name in the metadata or IDs
+        if p not in html:
+            missing.append(p)
+    
+    if missing:
+        print(f"FAILED: Missing SSoT parameters in index.html: {', '.join(missing)}")
+        return False
+    
+    print(f"PASSED: All {len(params)} SSoT parameters accounted for.")
+    return True
+
+def test_ui_integrity():
+    print("[TEST] Checking UI Element Integrity...")
+    with open('index.html', 'r') as f:
+        html = f.read()
+    
+    required_ids = [
+        'header-controls', 'simple-interface', 'main-interface',
+        'dna-sliders', 'birth-sliders', 'death-sliders', 'eco-sliders', 'phys-sliders',
+        'chaos-menu', 'modal-overlay', 'sim-canvas'
+    ]
+    
+    missing = [rid for rid in required_ids if f'id="{rid}"' not in html]
+    
+    if missing:
+        print(f"FAILED: Missing critical UI IDs: {', '.join(missing)}")
+        return False
+    
+    print("PASSED: All critical UI elements present.")
+    return True
+
+if __name__ == "__main__":
+    results = [
+        test_js_syntax(),
+        test_ssot_alignment(),
+        test_ui_integrity()
+    ]
+    
+    if all(results):
+        print("\n--- ALL TESTS PASSED: VEPA ENGINE IS HEALTHY ---")
+        sys.exit(0)
+    else:
+        print("\n--- TESTS FAILED: ENGINE HAS REGRESSIONS ---")
+        sys.exit(1)
+
+
+
+================================================================================
+File: tickets/vepa-b3-01/linear_ticket_vepa-b3-01.md
+Directory: tickets/vepa-b3-01
+Name: linear_ticket_vepa-b3-01.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b3-01
+title: "Implement Neighborhood Radius (v1.2)"
+status: Todo
+priority: Medium
+order: 20
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Currently, the physics engine uses a hard-coded grid for spatial hashing. We need a per-species "Neighborhood Radius" to control the range of influence for forces and signals.
+
+## Solution
+Implement a species-level `neighborhoodRadius` parameter and update the physics loop to use this value when sampling the spatial hash.
+
+## Implementation Details
+- Add `neighborhoodRadius` to species DNA metadata.
+- Update spatial hashing sampling to respect per-species radius.
+- UI: Add a master range slider for the radius.
+
+
+
+================================================================================
+File: tickets/vepa-b3-02/linear_ticket_vepa-b3-02.md
+Directory: tickets/vepa-b3-02
+Name: linear_ticket_vepa-b3-02.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b3-02
+title: "Expanded Communication System (v1.2)"
+status: Todo
+priority: Medium
+order: 30
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+The current signal response is a single parameter. We need a more complex communication system for emergent collective behavior.
+
+## Solution
+Implement multi-channel signal propagation with strength, decay, and receiver tuning.
+
+## Implementation Details
+- Add Signal Strength, Signal Decay, and Signal Channels (1–4) to DNA.
+- Implement Receiver Tuning to filter signal channels.
+- Implement Propagation Speed (delay in wave traversal).
+- UI: Add Communication sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b4-01/linear_ticket_vepa-b4-01.md
+Directory: tickets/vepa-b4-01
+Name: linear_ticket_vepa-b4-01.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b4-01
+title: "Advanced Motion: Inertia, Friction & Max Velocity (v1.3)"
+status: Todo
+priority: Medium
+order: 40
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+The current motion model is too simple for complex structures. We need species-level control over momentum and speed.
+
+## Solution
+Implement Inertia (resistance to acceleration), Friction (velocity-dependent drag), and a Max Velocity Cap.
+
+## Implementation Details
+- Add Inertia, Friction, and Max Velocity Cap to DNA.
+- Update the physics integration to include these factors.
+- UI: Add Motion sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b4-02/linear_ticket_vepa-b4-02.md
+Directory: tickets/vepa-b4-02
+Name: linear_ticket_vepa-b4-02.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b4-02
+title: "Advanced Matter: Base Radius & Elasticity (v1.3)"
+status: Todo
+priority: Medium
+order: 50
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Particles currently have a fixed relationship between mass and radius. We need species-level control over their physical extent and collision behavior.
+
+## Solution
+Implement Base Radius (independent of mass), Per-species Elasticity, and Bond Angle Preference.
+
+## Implementation Details
+- Add Base Radius, Per-species Elasticity, and Bond Angle Preference to DNA.
+- Update collision resolution to use species-level elasticity.
+- Implement angle-dependent force bias for "Crystal" tuning.
+- UI: Add Matter sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b4-03/linear_ticket_vepa-b4-03.md
+Directory: tickets/vepa-b4-03
+Name: linear_ticket_vepa-b4-03.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b4-03
+title: "EM Depth: Conductivity & Magnetic Moment (v1.3)"
+status: Todo
+priority: Low
+order: 60
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Electromagnetic interaction is currently limited to polarity attraction/repulsion.
+
+## Solution
+Implement charge transfer (Conductivity) and rotational alignment (Magnetic Moment).
+
+## Implementation Details
+- Add Conductivity and Magnetic Moment to DNA.
+- Implement charge balancing on collision based on conductivity.
+- Implement torque bias based on neighbor charge alignment.
+- UI: Add EM sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b5-01/linear_ticket_vepa-b5-01.md
+Directory: tickets/vepa-b5-01
+Name: linear_ticket_vepa-b5-01.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b5-01
+title: "Advanced Biology: Efficiency, Sex & Predation (v1.4)"
+status: Todo
+priority: High
+order: 70
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Biological systems currently only have spontaneous mitosis. We need more complex population dynamics.
+
+## Solution
+Implement multi-parent reproduction, predation bonuses, and energy efficiency.
+
+## Implementation Details
+- Add Energy Efficiency, Sexual Reproduction Chance, and Predation Bias to DNA.
+- Implement sexual reproduction logic (merging DNA from two parents).
+- Implement predation bonus force when targeting lower-mass species.
+- UI: Add Biology sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b5-02/linear_ticket_vepa-b5-02.md
+Directory: tickets/vepa-b5-02
+Name: linear_ticket_vepa-b5-02.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b5-02
+title: "Chemistry Category: Reactions, Catalysis & Heat (v1.4)"
+status: Todo
+priority: Medium
+order: 80
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Interactions are currently limited to forces and mass fusion. We need "phase changes" and environmental effects.
+
+## Solution
+Implement a Chemistry category for mass/charge-triggered reactions and heat output.
+
+## Implementation Details
+- Add Reaction Threshold, Catalysis, and Heat Output to DNA.
+- Implement state transformations when mass/charge reaches the reaction threshold.
+- Implement "Heat" as a byproduct of collisions/reactions (linked to global temperature).
+- UI: Add Chemistry sliders to a new DNA tab section.
+
+
+
+================================================================================
+File: tickets/vepa-b5-03/linear_ticket_vepa-b5-03.md
+Directory: tickets/vepa-b5-03
+Name: linear_ticket_vepa-b5-03.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b5-03
+title: "Particle Memory System (v1.4)"
+status: Todo
+priority: Low
+order: 90
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+Particles have no internal state memory. They react only to the current frame.
+
+## Solution
+Implement memory slots for storing internal variables that persist across frames.
+
+## Implementation Details
+- Add State Memory Decay and Memory Slots (0–4) to DNA.
+- Implement internal memory buffer for particles to store last stimulus.
+- Use memory to bias future interactions (e.g., persistent attraction after signal).
+- UI: Add Memory sliders to the DNA tab.
+
+
+
+================================================================================
+File: tickets/vepa-b6-01/linear_ticket_vepa-b6-01.md
+Directory: tickets/vepa-b6-01
+Name: linear_ticket_vepa-b6-01.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b6-01
+title: "Global Fields: Temp, Pressure & Wind (v1.5+)"
+status: Todo
+priority: Medium
+order: 100
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+The simulation environment is static and uniform. We need global environmental stressors.
+
+## Solution
+Implement world-wide fields for temperature, pressure, and air-currents (wind/turbulence).
+
+## Implementation Details
+- Add World Temperature, Pressure, and Wind Vector to Global Settings.
+- Implement Temperature-linked jitter and Metabolism scaling.
+- Implement Wind as a global force vector.
+- UI: Add World Field sliders to the PHYS tab.
+
+
+
+================================================================================
+File: tickets/vepa-b6-02/linear_ticket_vepa-b6-02.md
+Directory: tickets/vepa-b6-02
+Name: linear_ticket_vepa-b6-02.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-b6-02
+title: "Enhanced Chaos, Laws & Performance (v1.5+)"
+status: Todo
+priority: Medium
+order: 110
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../vepa-epic-01/linear_ticket_vepa-epic-01.md
+    title: Parent Ticket
+---
+
+# Description
+
+## Problem to solve
+The simulation needs more variety and performance optimization for massive populations.
+
+## Solution
+Expand Selective Chaos, Laws of Nature, and implement LOD (Level of Detail) controls.
+
+## Implementation Details
+- Add Heritability Bias and Category-specific chaos sliders.
+- Implement new boundary types: Void, Solid, Sticky, Periodic.
+- Implement LOD/pruning logic for high particle counts.
+- Add more default Recipes (Presets).
+- UI: Final polish of all tabs and sliders.
+
+
+
+================================================================================
+File: tickets/vepa-epic-01/linear_ticket_vepa-epic-01.md
+Directory: tickets/vepa-epic-01
+Name: linear_ticket_vepa-epic-01.md
+File Type: .md
+================================================================================
+
+---
+id: vepa-epic-01
+title: "[Epic] VEPA Evolution: Batches 3-6"
+status: Backlog
+priority: High
+order: 10
+created: 2026-03-03
+updated: 2026-03-03
+links:
+  - url: ../../PICKLE_JAR.md
+    title: Pickle Jar Roadmap
+---
+
+# Description
+
+## Problem to solve
+The VEPA engine is currently at v1.1.0 with basic physics and render capabilities. To achieve true emergent artificial life and complex physical simulations, we need to implement Sensing, Communication, Advanced Motion/Matter, Biology/Chemistry, and Global Environmental Laws.
+
+## Solution
+Execute the roadmap defined in the PICKLE_JAR.md across 4 major batches (3-6), transforming the engine into a multi-layered simulation of complex systems.
+
+## Implementation Details
+- Batch 3: Sensing & Communication (v1.2)
+- Batch 4: Motion, Matter & EM Depth (v1.3)
+- Batch 5: Biology, Chemistry & Memory (v1.4)
+- Batch 6: Global, Chaos, Laws & Final Polish (v1.5+)
+
+
+
+================================================================================
+File: .gitignore
+Directory: .
+Name: .gitignore
+File Type: (no extension)
+================================================================================
+
+__pycache__/
+*.pyc
+.DS_Store
+
+
+
+================================================================================
+File: CHANGELOG.md
+Directory: .
+Name: CHANGELOG.md
+File Type: .md
+================================================================================
+
+# VEPA (Vector Emergent Physics Automata) Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.1.0] - 2026-03-03
+### Added
+- **Visual & Render Layer (Batch 2):** Introduced the [Render] category in the DNA interface.
+- **Trails System:** Implemented movement trails controlled by the "Trail Life" parameter (combining length and fade).
+- **Aesthetic DNA:** Added "Glow Intensity", "Pulse Opacity", and "Particle Opacity" to species profiles.
+- **Pulse Sync:** Pulse Opacity now oscillates based on the "Pulse Rate" DNA parameter.
+- **Initial Mass Distributions:** Implemented 6 distinct startup patterns in the WORLD tab: Soup, Big Bang, Bipolar, Galaxy, Grid, and Uniform.
+- **Spread Control:** Added a dedicated slider to control the spatial extent of initial distributions.
+
+## [1.0.2] - 2026-03-03
+### Added
+- **Foundation Polish:** Finalized the core parameter set with calibrated ranges and sensible defaults.
+- **Enhanced Tooltips:** Added comprehensive descriptions to all 16 DNA parameters and all biological/physics sliders.
+- **Renamed C4 (Ghost):** Updated "Ghost" to "Hidden Mass" across UI and documentation to clarify its physical role as an invisible mass multiplier.
+- **Parameter Clarification:** Refined interaction between Fusion (DNA) vs Accretion (Law) and Viscosity vs Stiffness to reduce conceptual overlap.
+- **UI Consistency:** Minor interface cleanup including localized font scaling and improved button responsiveness.
+
+## [0.8.6] - 2026-03-02
+### Added
+- **Bouncing Borders:** When "Wrap Edges" is disabled, the world boundaries now act as solid borders. Particles will bounce off the edges with a velocity multiplier controlled by the "Elasticity" parameter in the PHYS tab.
+
+## [0.8.5] - 2026-03-02
+### Added
+- **Meta-Evolution UI:** Redesigned the entire interface with categorized parameter groups (Motion, Matter, Life, etc.).
+- **Parameter Gating:** All DNA rules now start disabled by default (except base Force) and must be explicitly enabled via checkboxes.
+- **Range Locking:** Added an "UNLOCK" toggle to edit the min/max ranges of any slider.
+- **Configuration Management:** New "SYS" tab for Quick Save/Load (LocalStorage) and JSON Export/Import.
+- **Advanced World Controls:** Added World Size slider, Wrap Edges toggle, and Variability/Density controls for re-seeding.
+
+## [0.8.4] - 2026-03-02
+### Fixed
+- **Panning Logic:** Re-engineered panning using `PointerEvents` for robust support on both touch and mouse devices. Fixed a bug where panning was using stale initial coordinates.
+- **Painting Logic:** Added a global pointer listener to properly reset the drawing state (`isDrawing`), fixing a bug where the brush would remain active after leaving the grid.
+
+## [0.8.3] - 2026-03-02
+### Added
+- **Development Server:** Created `run.py` with automatic restart functionality on file changes.
+- **Uniform Distribution Mode:** Added a "UNIFORM" distribution option in the WORLD tab with a dedicated "Spread / Variability" slider.
+### Fixed
+- **Painting Logic:** Corrected coordinate mapping in `gridData` to ensure brush strokes accurately reflect the DNA rules applied to physics.
+
+## [0.8.2] - 2026-03-01
+### Added
+- **Contextual Help System:** Added "ⓘ" buttons next to every DNA parameter that trigger a detailed information tooltip.
+- **Engineering Guide:** Created `vepa/GUIDE.md` containing parameter synergy matrices and quick-start recipes for emergent life.
+- **In-Engine HELP Tab:** Added a dedicated tab for quick reference of parameter archetypes (Crystals, Amoebas, etc.).
+- **Initial Spawn Clustering:** Particles now spawn in a denser central cluster (100x100) on reset to ensure they are immediately visible.
+- **Improved UI Layout:** Optimized tab buttons and slider spacing for small Android screens.
+
+## [0.8.1] - 2026-03-01
+### Added
+- **Error Diagnostics Layer:** Implemented a visible error log on the screen to capture and display JavaScript crashes in real-time.
+- **NaN Death Shield:** Added checks to force and distance calculations to prevent invalid numerical states from propagating.
+- **Robust Touch Tracking:** Completely rewrote the touch-panning logic using absolute coordinate tracking, fixing the "disappearing matter" bug on Android.
+- **Loop Guard:** Wrapped the entire render and physics cycle in a safety block to prevent silent engine death.
+- **Resolution Sync:** Fixed a initialization race condition that caused the grid data to be unpopulated on the first frame.
+
+## [0.6.2] - 2026-03-01
+### Added
+- **Mobile Touch Pan Fix:** Replaced `e.movementX` with absolute touch coordinate tracking, ensuring smooth camera movement on Android devices.
+- **Dynamic Grid Scaling:** Integrated the resolution (5x5 to 15x15) and scale (0.1x to 10.0x) parameters into the core physics engine.
+- **Background Grid:** Added a visible coordinate grid to the world to provide spatial orientation when zoomed out.
+- **Always-On UI Controls:** Moved the Play/Pause and Reset buttons to the header for persistent access.
+- **NaN Safety:** Implemented coordinate validation to prevent the simulation from disappearing on invalid touch interactions.
+
+## [0.6.1] - 2026-03-01
+### Added
+- **Elastic Collision Physics:** Particles now physically bounce off each other based on mass and a global Elasticity constant.
+- **Spatio-Temporal DNA (Pulse Rate):** DNA nodes now support a pulse rate, causing attraction/repulsion forces to oscillate like a heartbeat.
+- **Biological Aging:** Particles track their age and have a maximum lifespan. Rules can now be biased based on particle age (Age Bias).
+- **Collision Fragmentation:** High-velocity impacts cause large particles to shatter into smaller fragments, conserving mass.
+- **Visual Aging Feedback:** Particles now fade out as they approach their maximum age.
+- **Global Physics Parameters:** Added "Elasticity" and "Collision Shatter" sliders to the Global config panel.
+
+## [0.5.0] - 2026-03-01
+### Added
+- **3D Charge Manifold:** Particles now track Color (Charge), Opacity (Phase), and Geometry (Shape: Triangle/Square/Circle).
+- **Geometric Rendering:** Matter is now rendered as distinct primitives with alpha-blending and variable size scaling based on mass.
+- **Smart Chaos Engine:** The Chaos button now selects from "Complexity Archetypes" (Crystal, Stellar, Swarm) to ensure emergent patterns are triggered.
+- **Advanced Startup Distributions:** Added "Galaxy" (Gaussian density) and "Grid" (Crystalline lattice) initial states.
+- **Morphological DNA:** Added `Alpha Bias` and `Shape Bias` sliders to the DNA kernel for complex geometric interactions.
+- **Dynamic Mass Scaling:** Particle size and interaction volume are now calculated as `sqrt(mass)`, linking physics to visual scale.
+
+## [0.4.2] - 2026-03-01
+### Added
+- **Inverse-Square Universal Gravity:** High-mass "Stars" now exert a global gravitational field on all nearby particles, enabling solar systems and orbital mechanics.
+- **Persistent Seed Memory:** Added a MEMORY tab for saving and loading DNA/Grid configurations to the browser's local storage.
+- **Massive Coordinate Space:** Decoupled world size from screen size. The universe is now a 4000x4000 field with viewport-centered zooming.
+- **Charge Resonance Dim:** Particles with matching charges now gain a resonance attraction bonus, encouraging complex homogeneous cluster formation.
+- **Global Config Panel:** Added sliders for SIM SPEED, GRAVITY CONSTANT, WORLD SCALE, and RESONANCE.
+- **Persistent Chaos:** The Chaos button is now a permanent floating trigger at the top of the UI.
+
+## [0.4.1] - 2026-03-01
+### Added
+- **Celestial Fusion Engine:** Particles can now combine into higher-mass "Stars" with blooming visual effects and increased gravitational influence.
+- **Life-Cycle Dimensions:** Added `Birth` and `Death` parameters to DNA nodes, allowing rules to create or destroy matter.
+- **Interactive Camera:** Added Pinch-to-Zoom and Drag-to-Pan support for multi-scale observation.
+- **Matter Distribution Config:** Choose between "Soup," "Big Bang," or "Bipolar" initial states.
+- **The Chaos Button:** One-tap randomization of all physics laws, grid patterns, and matter states.
+- **Tabbed UI System:** Optimized interface for Android, separating DNA Editing, World Config, and Chaos Settings.
+
+## [0.3.5] - 2026-03-01
+### Added
+- **5 New Physics Dimensions:** Thermal Jitter, Mass Coupling, Stiffness (Spring), Mutation Rate, and Tidal Shear.
+- **Extended Node Inspector:** Scrollable UI for mobile to accommodate 9 distinct parameter sliders.
+- **Mass-Dependent Dynamics:** Particle size and interaction strength now scale with randomized mass property.
+- **Spring-Stiffness Logic:** Particles can now "snap" to specific relative distances, enabling rigid structures.
+- **State Mutation:** Particles can now flip their "Charge" state based on proximity to specific DNA nodes.
+
+## [0.3.0] - 2026-03-01
+### Added
+- **N-Dimensional Genomic Control:** Each cell in the $7\times7$ neighborhood grid now has a 4-parameter DNA vector (Spatial Force, Torque, Charge Bias, Viscosity).
+- **Node Inspector Modal:** Tap any cell to open a slider-based interface for precise physical constant tuning.
+- **Particle State (Charge):** Added internal charge property to particles, allowing for state-dependent logic (e.g., like charges attract/repel).
+- **Chaos DNA Engine:** A randomization button to quickly explore the emergent parameter space.
+
+### Changed
+- Refactored physics loop to support multi-parameter calculations across PIC spatial hashing.
+- Updated grid visualization to reflect node DNA (Color = Force, Intensity = Torque).
+
+## [0.2.0] - 2026-03-01
+### Added
+- **Relative Neighborhood Kernel Editor:** Replaced "World Painting" with a $7\times7$ DNA grid representing relative distance to a particle.
+- **Touch-Native UI:** Large on-screen buttons and tap/drag-to-paint grid controls optimized for Android.
+- **PIC (Particle-In-Cell) Optimization:** Implemented spatial hashing to maintain 60FPS with high particle counts on mobile browsers.
+
+### Changed
+- Shifted from global logic zones to local interaction "DNA," allowing for more complex emergent "organisms."
+
+## [0.1.0] - 2026-03-01
+### Added
+- **Initial VEPA Proof-of-Concept:** Standalone HTML/Canvas simulation engine.
+- **Vector Physics Loop:** Continuous Euler integration with Friction and Quadratic Drag.
+- **World Painting:** Initial system for painting global physical zones (Attract, Repel, Viscous, Spawn).
+
+
+
+================================================================================
+File: ENGINE_SSOT.md
+Directory: .
+Name: ENGINE_SSOT.md
+File Type: .md
+================================================================================
+
+# VEPA ENGINE: SINGLE SOURCE OF TRUTH (SSoT)
+**Version:** 1.1.0
+**Project:** Vector Emergent Physics Automata
+
+This document serves as the absolute reference for all engine capabilities and tooltip documentation.
+
+---
+
+## 1. DNA PARAMETERS (Local Interaction)
+These 16 parameters define how a species interacts with others within its local neighborhood grid.
+
+### [Motion]
+*   **Force:** Primary attraction/repulsion. Positive values create gravity-like attraction; negative values create repulsive fields. Essential for clump formation. (Range: -2 to 2)
+*   **Viscosity:** Kinetic energy dampening. Higher values (0.98) simulate thick fluids; lower values (0.8) allow high-speed "gas" behaviors. (Range: 0.8 to 1.0)
+*   **Torque:** Applies rotational momentum when two particles interact. High torque leads to spinning "vortex" colonies. (Range: -1 to 1)
+*   **Jitter:** Adds random Brownian motion. Prevents static locking and helps clusters "vibrate" into stable geometric configurations. (Range: 0 to 0.5)
+
+### [Electromagnetism]
+*   **C1 (Polarity):** The electromagnetic charge. Like charges repel, opposite charges attract. Drives the Green (Pos) and Purple (Neg) neon glows. (Range: -1 to 1)
+*   **C2 (Alpha):** Fundamental matter density. Controls how solid or ghostly a species appears. Low alpha allows particles to overlap more visually. (Range: 0 to 1)
+
+### [Matter & Morphology]
+*   **C3 (Symmetry):** Dimensional warping. `0.0` is a perfect circle. Positive values stretch the particle horizontally; negative values stretch it vertically. (Range: -1 to 1)
+*   **Hidden Mass:** An invisible mass multiplier. Affects gravity and collision forces without changing the visible size or color of the particle. (Range: -5 to 5)
+*   **Stiffness:** The "Hardness" of local interaction. High stiffness makes clusters behave like solid objects; low stiffness makes them behave like gel or clouds. (Range: 0.1 to 5)
+*   **Fusion:** Efficiency of mass-merging. High fusion allows particles to rapidly aggregate into large "stars" or planets. (Range: 0 to 1)
+
+### [Life & Evolution]
+*   **Birth Rate:** Spontaneous reproduction chance per frame. High rates lead to population explosions. (Range: 0 to 0.1)
+*   **Death Rate:** Spontaneous decay chance. Simulates radiation or fundamental instability. (Range: 0 to 0.1)
+*   **Mutation:** The degree of genetic drift. Higher values mean offspring will have significantly different DNA rules than their parents. (Range: 0 to 0.5)
+
+### [Communication]
+*   **Signal Resp:** Sensitivity to neighboring "blinks." High response allows for synchronized colony behaviors and wave propagation. (Range: 0 to 2)
+*   **Pulse Rate:** Internal oscillator frequency. Determines how often a particle "pings" its neighbors. (Range: 0 to 1)
+
+### [Advanced]
+*   **Tidal:** Force gradient across particle diameter. High tidal forces can tear clusters apart or create complex orbital dragging effects. (Range: -1 to 1)
+
+---
+
+## 2. RENDER PARAMETERS (Aesthetics)
+New in v1.1.0. These parameters control the visual output of individual species or interaction profiles.
+
+*   **Trail Life:** Controls both Trail Length and Fade. Higher values (0.9) create long, persistent streaks; lower values (0.1) result in short, crisp movement.
+*   **Glow Intensity:** Multiplier for the neon bloom effect (shadowBlur). Controls the radius and brightness of the particle's light emission.
+*   **Pulse Opacity:** The amplitude of the alpha oscillation. Works in tandem with the "Pulse Rate" DNA parameter to create a heartbeat effect.
+*   **Particle Opacity:** Base alpha transparency for the particle body. Allows for the creation of "ghost" species or dense, solid matter.
+
+---
+
+## 3. SELECTIVE CHAOS SYSTEM
+The "CHAOS" button now features a granular control menu to determine which systems are affected by entropy.
+
+### [Chaos Categories]
+*   **DNA Rules:** Randomizes the 16 DNA interaction parameters.
+*   **DNA Grid:** Randomizes the species interaction matrix.
+*   **Biology:** Randomizes all parameters in the BIRTH and DEATH tabs.
+*   **Physics:** Randomizes global constants like Gravity, Sim Speed, and Elasticity.
+
+---
+
+## 4. WORLD & GLOBAL SETTINGS
+
+### [WORLD TAB]
+*   **Initial Distribution:** The geometric pattern used when re-seeding the simulation.
+    *   **Soup:** Balanced random distribution within the central area.
+    *   **Big Bang:** High-density central core with significant outward velocity.
+    *   **Bipolar:** Two distinct clusters at opposite poles of the spread radius.
+    *   **Galaxy:** Gaussian density distribution (denser at the center).
+    *   **Grid:** Perfect crystalline lattice distribution.
+    *   **Uniform:** Even random spread throughout the entire selected "Spread" area.
+*   **Spread Radius:** The spatial extent of the initial distribution pattern.
+
+### [PHYS TAB]
+*   **Gravity (1/r²):** Global Newtonian attraction constant.
+*   **Sim Speed:** The delta-time (dt) multiplier for the physics loop.
+*   **Elasticity:** The energy retention during a boundary bounce.
+*   **Safety Cap:** The maximum number of particles allowed in the simulation.
+
+---
+
+## 5. WORLD LAWS & PRESETS
+
+### [Laws of Nature]
+*   **Gravity:** Enables the Universal 1/r² law.
+*   **Accretion:** Allows particles to merge mass when they collide.
+*   **Biology:** Enables the metabolism, reproduction, and death systems.
+*   **Glow:** Activates the neon radiance.
+
+### [Recipes]
+*   **Quicksilver:** Liquid metal fluid.
+*   **Star Formation:** High-G accretion.
+*   **Neural Cloud:** Signal propagation network.
+*   **Von Neumann:** Self-assembling structural machines.
+
+
+================================================================================
+File: GUIDE.md
+Directory: .
+Name: GUIDE.md
+File Type: .md
+================================================================================
+
+# VEPA Engineering Guide: The Complexity Compendium (Final Master Version)
+
+## 1. Core Parameter Synergies
+
+Emergence in VEPA is rarely the result of a single slider. It is the **interference pattern** between multiple rules.
+
+*   **Kinetic Cohesion (Force + Viscosity):** High Force (Attraction) usually leads to chaotic collisions. Adding **Viscosity** (0.8+) dampens these orbits, allowing particles to form stable "Molecules" that move as a single unit rather than a cloud.
+*   **Ionic Locking (Charge Bias + Stiffness):** When **Charge Bias** is high, particles of opposite charges attract. By increasing **Stiffness**, you create a "Hard Shell" around these bonds, resulting in rigid, non-deformable crystal lattices.
+*   **Social Synchronicity (Signal Resp + Pulse Rate):** When **Signal Resp** is enabled, particles respond to the "Blink" of their neighbors. Matching this with a high **Pulse Rate** creates rhythmic, flashing colonies that pulse with a shared "heartbeat."
+*   **Genetic Drift (Mutation + Hybridization):** High **Mutation** in the DNA tab coupled with **Hybridization** in the Cell tab allows species to not only mix but to actively evolve new traits every time they "Breed" (Birth).
+
+## 2. Universe Archetypes (Recipes)
+
+*   **The Crystal Lattice:**
+    *   DNA: `Stiffness: 2.0` | `Force: -0.5` (Repulsion) | `Charge Bias: 1.5`.
+    *   Result: Particles lock into a perfect geometric grid, vibrating but never breaking.
+*   **The Primordial Soup (Amoebas):**
+    *   DNA: `Viscosity: 0.9` | `Jitter: 0.1` | `Force: 0.2`.
+    *   Result: Soft, blob-like clusters that drift and merge organically.
+*   **The Viral Swarm:**
+    *   DNA: `Birth Rate: 0.15` | `Death Rate: 0.05` | `Mutation: 0.08`.
+    *   Result: Rapidly expanding colonies that change color and behavior as they grow.
+*   **The Solar Engine:**
+    *   PHYS: `Gravity: 1.5` | `Elasticity: 0.2`.
+    *   DNA: `Fusion: 0.5`.
+    *   Result: A central gravity well that crushes matter until "Fusion" triggers, emitting energy and pushing back.
+
+## 3. The Universal Theory of Emergence
+In VEPA v0.8.5+, we have reached **Closed-Loop Simulation**. Matter now possesses its own internal state (CELL) independent of its spatial rules (DNA). 
+
+### The Singularity Cycle
+Black Holes are no longer just "deletion zones." They are massive gravity wells that clean the universe of "Inert Slop" (energy-less matter). By adjusting the **Hawking Radiation** parameters in the Singularity tab, you can turn Black Holes into "Particle Forges" that emit new, high-energy particles once they reach a critical mass. This creates a cycle of **Collapse and Rebirth**.
+
+## 4. Hybridization & Genetic Ecosystems
+The **Hybridization** parameter in the Cell tab allows different species to cross-breed.
+
+### Symbiotic Engineering
+*   **Species Red:** High Force, Low Metabolism (The Hunters).
+*   **Species Blue:** High Stiffness, High Signal (The Builders).
+*   **Hybridization Synergy:** If Red and Blue breed, they create **Species Purple**. The hybrid will have the architectural strength of the Builders but the aggressive movement of the Hunters. Over millions of cycles, your "Species Palette" will transform from pure colors into a diverse, emergent spectrum of life.
+
+## 5. Resurrection Mechanics
+Particles that run out of energy turn **Inert (Gray)**. They stop applying their DNA rules and drift aimlessly.
+
+### Stellar Recharging
+If an Inert cluster drifts near a **Star**, it will begin to absorb energy. Once it crosses the **15% threshold**, it "Wakes Up." You can engineer "Rescue Organisms" (High Signal, High Force) that actively push inert matter back toward stars to revive them.
+
+## 6. Advanced Singularity Tactics
+*   **Event Horizon Snaring:** Set the **Horizon Scale** to 2.0. This creates a "Sticky" black hole that catches orbiting matter long before they touch the core.
+*   **Evaporative Chaos:** Set **Evaporation** to High. This makes black holes short-lived "Flash Events" that pull the universe into a point and then immediately vanish, scattering matter everywhere.
+
+## 7. The Final Vade Mecum (Cheat Sheet)
+1.  **Stop Exploding:** Lower Sim Speed or Stiffness.
+2.  **Encourage Life:** Set Metabolism to 0.05 and Birth to 0.01.
+3.  **Create Empires:** Use high **Signal** and **Signal Resp** to force particles to follow a leader.
+4.  **End the Universe:** Set Collapse Difficulty to Common and Gravity Pull to 10.
+
+
+================================================================================
+File: index.html
+Directory: .
+Name: index.html
+File Type: .html
+================================================================================
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v2.1: Particle God</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="ui-layer">
+        <div id="header-controls">
+            <button class="btn chaos-btn" onclick="window.triggerSmartChaos()">CHAOS</button>
+            <button class="btn" onclick="window.restartSim()">RESTART</button>
+            <button class="btn" onclick="window.togglePause()" id="play-pause-btn">PAUSE</button>
+        </div>
+        
+        <div class="panel" style="max-width: 250px;">
+            <div class="toggle-grid">
+                <div class="sq-toggle" id="syn-grav" onclick="window.toggleLaw('grav')">GRAV</div>
+                <div class="sq-toggle" id="syn-life" onclick="window.toggleLaw('life')">BIOL</div>
+                <div class="sq-toggle" id="syn-drag" onclick="window.toggleLaw('drag')">DRAG</div>
+                <div class="sq-toggle" id="syn-jitter" onclick="window.toggleLaw('jitter')">ENTR</div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab-link active" onclick="window.openTab(event, 'tab-world')">WORLD</div>
+                <div class="tab-link" onclick="window.openTab(event, 'tab-phys')">PHYS</div>
+                <div class="tab-link" onclick="window.openTab(event, 'tab-spec')">SPEC</div>
+            </div>
+            
+            <div id="tab-world" class="tab-content active">
+                <div id="world-sliders"></div>
+            </div>
+            
+            <div id="tab-phys" class="tab-content">
+                <div id="phys-sliders"></div>
+            </div>
+            
+            <div id="tab-spec" class="tab-content">
+                <div id="species-list" style="margin-bottom: 10px;"></div>
+                <button class="btn" onclick="window.addSpecies()" style="width: 100%; margin-bottom: 5px;">+ SPECIES</button>
+                <div id="dna-sliders"></div>
+            </div>
+        </div>
+    </div>
+    <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span></div>
+    <div id="tooltip"></div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
+
+
+
+================================================================================
+File: legacy_index.html
+Directory: .
+Name: legacy_index.html
+File Type: .html
+================================================================================
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v2.0: Nuclear Rewrite</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="ui-layer">
+        <div id="header-controls">
+            <button class="btn chaos-btn" onclick="triggerSmartChaos()">!!! CHAOS !!!</button>
+            <button class="btn" onclick="hardReset()">HARD RESET</button>
+            <button class="btn" onclick="togglePause()" id="play-pause-btn">PAUSE</button>
+            <button class="btn" onclick="restartSim()">RESTART</button>
+        </div>
+        <div class="panel" style="max-width: 200px;">
+            <div class="syn-toggle" id="syn-grav" onclick="toggleLaw('grav')"><span>Gravity</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-life" onclick="toggleLaw('life')"><span>Biology</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-drag" onclick="toggleLaw('drag')"><span>Drag</span> <span class="status">OFF</span></div>
+            <div class="syn-toggle" id="syn-jitter" onclick="toggleLaw('jitter')"><span>Entropy</span> <span class="status">OFF</span></div>
+            <div style="margin-top: 10px; font-size: 8px;">
+                <span>S1 Radius: </span><span id="rad-val">120</span>
+                <input type="range" min="20" max="500" value="120" style="width: 100%;" oninput="updateDNA(0, 'Neighborhood Radius', this.value, 'rad-val')">
+            </div>
+            <!-- Additional sliders will be auto-generated in Phase 2 -->
+        </div>
+    </div>
+    <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span> | C: <span id="c-count">0</span></div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
+
+
+
+================================================================================
+File: package-lock.json
+Directory: .
+Name: package-lock.json
+File Type: .json
+================================================================================
+
+{
+  "name": "vepa",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "vepa",
+      "version": "1.0.0",
+      "license": "ISC",
+      "dependencies": {
+        "pixi.js": "^8.18.1"
+      },
+      "devDependencies": {
+        "vite": "^8.0.8"
+      }
+    },
+    "node_modules/@emnapi/core": {
+      "version": "1.9.2",
+      "resolved": "https://registry.npmjs.org/@emnapi/core/-/core-1.9.2.tgz",
+      "integrity": "sha512-UC+ZhH3XtczQYfOlu3lNEkdW/p4dsJ1r/bP7H8+rhao3TTTMO1ATq/4DdIi23XuGoFY+Cz0JmCbdVl0hz9jZcA==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/wasi-threads": "1.2.1",
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/runtime": {
+      "version": "1.9.2",
+      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.9.2.tgz",
+      "integrity": "sha512-3U4+MIWHImeyu1wnmVygh5WlgfYDtyf0k8AbLhMFxOipihf6nrWC4syIm/SwEeec0mNSafiiNnMJwbza/Is6Lw==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/wasi-threads": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.1.tgz",
+      "integrity": "sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@napi-rs/wasm-runtime": {
+      "version": "1.1.4",
+      "resolved": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.4.tgz",
+      "integrity": "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@tybys/wasm-util": "^0.10.1"
+      },
+      "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/Brooooooklyn"
+      },
+      "peerDependencies": {
+        "@emnapi/core": "^1.7.1",
+        "@emnapi/runtime": "^1.7.1"
+      }
+    },
+    "node_modules/@oxc-project/types": {
+      "version": "0.124.0",
+      "resolved": "https://registry.npmjs.org/@oxc-project/types/-/types-0.124.0.tgz",
+      "integrity": "sha512-VBFWMTBvHxS11Z5Lvlr3IWgrwhMTXV+Md+EQF0Xf60+wAdsGFTBx7X7K/hP4pi8N7dcm1RvcHwDxZ16Qx8keUg==",
+      "dev": true,
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/Boshen"
+      }
+    },
+    "node_modules/@pixi/colord": {
+      "version": "2.9.6",
+      "resolved": "https://registry.npmjs.org/@pixi/colord/-/colord-2.9.6.tgz",
+      "integrity": "sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==",
+      "license": "MIT"
+    },
+    "node_modules/@rolldown/binding-android-arm64": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.0.0-rc.15.tgz",
+      "integrity": "sha512-YYe6aWruPZDtHNpwu7+qAHEMbQ/yRl6atqb/AhznLTnD3UY99Q1jE7ihLSahNWkF4EqRPVC4SiR4O0UkLK02tA==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-arm64": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.0.0-rc.15.tgz",
+      "integrity": "sha512-oArR/ig8wNTPYsXL+Mzhs0oxhxfuHRfG7Ikw7jXsw8mYOtk71W0OkF2VEVh699pdmzjPQsTjlD1JIOoHkLP1Fg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-x64": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.0.0-rc.15.tgz",
+      "integrity": "sha512-YzeVqOqjPYvUbJSWJ4EDL8ahbmsIXQpgL3JVipmN+MX0XnXMeWomLN3Fb+nwCmP/jfyqte5I3XRSm7OfQrbyxw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-freebsd-x64": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.0.0-rc.15.tgz",
+      "integrity": "sha512-9Erhx956jeQ0nNTyif1+QWAXDRD38ZNjr//bSHrt6wDwB+QkAfl2q6Mn1k6OBPerznjRmbM10lgRb1Pli4xZPw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.0.0-rc.15.tgz",
+      "integrity": "sha512-cVwk0w8QbZJGTnP/AHQBs5yNwmpgGYStL88t4UIaqcvYJWBfS0s3oqVLZPwsPU6M0zlW4GqjP0Zq5MnAGwFeGA==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-gnu": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.0.0-rc.15.tgz",
+      "integrity": "sha512-eBZ/u8iAK9SoHGanqe/jrPnY0JvBN6iXbVOsbO38mbz+ZJsaobExAm1Iu+rxa4S1l2FjG0qEZn4Rc6X8n+9M+w==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-musl": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.0.0-rc.15.tgz",
+      "integrity": "sha512-ZvRYMGrAklV9PEkgt4LQM6MjQX2P58HPAuecwYObY2DhS2t35R0I810bKi0wmaYORt6m/2Sm+Z+nFgb0WhXNcQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.0.0-rc.15.tgz",
+      "integrity": "sha512-VDpgGBzgfg5hLg+uBpCLoFG5kVvEyafmfxGUV0UHLcL5irxAK7PKNeC2MwClgk6ZAiNhmo9FLhRYgvMmedLtnQ==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-s390x-gnu": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.0.0-rc.15.tgz",
+      "integrity": "sha512-y1uXY3qQWCzcPgRJATPSOUP4tCemh4uBdY7e3EZbVwCJTY3gLJWnQABgeUetvED+bt1FQ01OeZwvhLS2bpNrAQ==",
+      "cpu": [
+        "s390x"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-gnu": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.0.0-rc.15.tgz",
+      "integrity": "sha512-023bTPBod7J3Y/4fzAN6QtpkSABR0rigtrwaP+qSEabUh5zf6ELr9Nc7GujaROuPY3uwdSIXWrvhn1KxOvurWA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-musl": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.0.0-rc.15.tgz",
+      "integrity": "sha512-witB2O0/hU4CgfOOKUoeFgQ4GktPi1eEbAhaLAIpgD6+ZnhcPkUtPsoKKHRzmOoWPZue46IThdSgdo4XneOLYw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-openharmony-arm64": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.0.0-rc.15.tgz",
+      "integrity": "sha512-UCL68NJ0Ud5zRipXZE9dF5PmirzJE4E4BCIOOssEnM7wLDsxjc6Qb0sGDxTNRTP53I6MZpygyCpY8Aa8sPfKPg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openharmony"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-wasm32-wasi": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.0.0-rc.15.tgz",
+      "integrity": "sha512-ApLruZq/ig+nhaE7OJm4lDjayUnOHVUa77zGeqnqZ9pn0ovdVbbNPerVibLXDmWeUZXjIYIT8V3xkT58Rm9u5Q==",
+      "cpu": [
+        "wasm32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/core": "1.9.2",
+        "@emnapi/runtime": "1.9.2",
+        "@napi-rs/wasm-runtime": "^1.1.3"
+      },
+      "engines": {
+        "node": ">=14.0.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-arm64-msvc": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.0.0-rc.15.tgz",
+      "integrity": "sha512-KmoUoU7HnN+Si5YWJigfTws1jz1bKBYDQKdbLspz0UaqjjFkddHsqorgiW1mxcAj88lYUE6NC/zJNwT+SloqtA==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-x64-msvc": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.0.0-rc.15.tgz",
+      "integrity": "sha512-3P2A8L+x75qavWLe/Dll3EYBJLQmtkJN8rfh+U/eR3MqMgL/h98PhYI+JFfXuDPgPeCB7iZAKiqii5vqOvnA0g==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.15.tgz",
+      "integrity": "sha512-UromN0peaE53IaBRe9W7CjrZgXl90fqGpK+mIZbA3qSTeYqg3pqpROBdIPvOG3F5ereDHNwoHBI2e50n1BDr1g==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tybys/wasm-util": {
+      "version": "0.10.1",
+      "resolved": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.1.tgz",
+      "integrity": "sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@types/earcut": {
+      "version": "3.0.0",
+      "resolved": "https://registry.npmjs.org/@types/earcut/-/earcut-3.0.0.tgz",
+      "integrity": "sha512-k/9fOUGO39yd2sCjrbAJvGDEQvRwRnQIZlBz43roGwUZo5SHAmyVvSFyaVVZkicRVCaDXPKlbxrUcBuJoSWunQ==",
+      "license": "MIT"
+    },
+    "node_modules/@webgpu/types": {
+      "version": "0.1.69",
+      "resolved": "https://registry.npmjs.org/@webgpu/types/-/types-0.1.69.tgz",
+      "integrity": "sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@xmldom/xmldom": {
+      "version": "0.8.12",
+      "resolved": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.12.tgz",
+      "integrity": "sha512-9k/gHF6n/pAi/9tqr3m3aqkuiNosYTurLLUtc7xQ9sxB/wm7WPygCv8GYa6mS0fLJEHhqMC1ATYhz++U/lRHqg==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=10.0.0"
+      }
+    },
+    "node_modules/detect-libc": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/earcut": {
+      "version": "3.0.2",
+      "resolved": "https://registry.npmjs.org/earcut/-/earcut-3.0.2.tgz",
+      "integrity": "sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==",
+      "license": "ISC"
+    },
+    "node_modules/eventemitter3": {
+      "version": "5.0.4",
+      "resolved": "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.4.tgz",
+      "integrity": "sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==",
+      "license": "MIT"
+    },
+    "node_modules/fdir": {
+      "version": "6.5.0",
+      "resolved": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "peerDependencies": {
+        "picomatch": "^3 || ^4"
+      },
+      "peerDependenciesMeta": {
+        "picomatch": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/fsevents": {
+      "version": "2.3.3",
+      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
+      "dev": true,
+      "hasInstallScript": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
+      }
+    },
+    "node_modules/gifuct-js": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/gifuct-js/-/gifuct-js-2.1.2.tgz",
+      "integrity": "sha512-rI2asw77u0mGgwhV3qA+OEgYqaDn5UNqgs+Bx0FGwSpuqfYn+Ir6RQY5ENNQ8SbIiG/m5gVa7CD5RriO4f4Lsg==",
+      "license": "MIT",
+      "dependencies": {
+        "js-binary-schema-parser": "^2.0.3"
+      }
+    },
+    "node_modules/ismobilejs": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/ismobilejs/-/ismobilejs-1.1.1.tgz",
+      "integrity": "sha512-VaFW53yt8QO61k2WJui0dHf4SlL8lxBofUuUmwBo0ljPk0Drz2TiuDW4jo3wDcv41qy/SxrJ+VAzJ/qYqsmzRw==",
+      "license": "MIT"
+    },
+    "node_modules/js-binary-schema-parser": {
+      "version": "2.0.3",
+      "resolved": "https://registry.npmjs.org/js-binary-schema-parser/-/js-binary-schema-parser-2.0.3.tgz",
+      "integrity": "sha512-xezGJmOb4lk/M1ZZLTR/jaBHQ4gG/lqQnJqdIv4721DMggsa1bDVlHXNeHYogaIEHD9vCRv0fcL4hMA+Coarkg==",
+      "license": "MIT"
+    },
+    "node_modules/lightningcss": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz",
+      "integrity": "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ==",
+      "dev": true,
+      "license": "MPL-2.0",
+      "dependencies": {
+        "detect-libc": "^2.0.3"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      },
+      "optionalDependencies": {
+        "lightningcss-android-arm64": "1.32.0",
+        "lightningcss-darwin-arm64": "1.32.0",
+        "lightningcss-darwin-x64": "1.32.0",
+        "lightningcss-freebsd-x64": "1.32.0",
+        "lightningcss-linux-arm-gnueabihf": "1.32.0",
+        "lightningcss-linux-arm64-gnu": "1.32.0",
+        "lightningcss-linux-arm64-musl": "1.32.0",
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-arm64-msvc": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0"
+      }
+    },
+    "node_modules/lightningcss-android-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz",
+      "integrity": "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.32.0.tgz",
+      "integrity": "sha512-RzeG9Ju5bag2Bv1/lwlVJvBE3q6TtXskdZLLCyfg5pt+HLz9BqlICO7LZM7VHNTTn/5PRhHFBSjk5lc4cmscPQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.32.0.tgz",
+      "integrity": "sha512-U+QsBp2m/s2wqpUYT/6wnlagdZbtZdndSmut/NJqlCcMLTWp5muCrID+K5UJ6jqD2BFshejCYXniPDbNh73V8w==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-freebsd-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.32.0.tgz",
+      "integrity": "sha512-JCTigedEksZk3tHTTthnMdVfGf61Fky8Ji2E4YjUTEQX14xiy/lTzXnu1vwiZe3bYe0q+SpsSH/CTeDXK6WHig==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm-gnueabihf": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.32.0.tgz",
+      "integrity": "sha512-x6rnnpRa2GL0zQOkt6rts3YDPzduLpWvwAF6EMhXFVZXD4tPrBkEFqzGowzCsIWsPjqSK+tyNEODUBXeeVHSkw==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.32.0.tgz",
+      "integrity": "sha512-0nnMyoyOLRJXfbMOilaSRcLH3Jw5z9HDNGfT/gwCPgaDjnx0i8w7vBzFLFR1f6CMLKF8gVbebmkUN3fa/kQJpQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.32.0.tgz",
+      "integrity": "sha512-UpQkoenr4UJEzgVIYpI80lDFvRmPVg6oqboNHfoH4CQIfNA+HOrZ7Mo7KZP02dC6LjghPQJeBsvXhJod/wnIBg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz",
+      "integrity": "sha512-V7Qr52IhZmdKPVr+Vtw8o+WLsQJYCTd8loIfpDaMRWGUZfBOYEJeyJIkqGIDMZPwPx24pUMfwSxxI8phr/MbOA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.32.0.tgz",
+      "integrity": "sha512-bYcLp+Vb0awsiXg/80uCRezCYHNg1/l3mt0gzHnWV9XP1W5sKa5/TCdGWaR/zBM2PeF/HbsQv/j2URNOiVuxWg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-arm64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.32.0.tgz",
+      "integrity": "sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-x64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz",
+      "integrity": "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/nanoid": {
+      "version": "3.3.11",
+      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
+      "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "bin": {
+        "nanoid": "bin/nanoid.cjs"
+      },
+      "engines": {
+        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
+      }
+    },
+    "node_modules/parse-svg-path": {
+      "version": "0.1.2",
+      "resolved": "https://registry.npmjs.org/parse-svg-path/-/parse-svg-path-0.1.2.tgz",
+      "integrity": "sha512-JyPSBnkTJ0AI8GGJLfMXvKq42cj5c006fnLz6fXy6zfoVjJizi8BNTpu8on8ziI1cKy9d9DGNuY17Ce7wuejpQ==",
+      "license": "MIT"
+    },
+    "node_modules/picocolors": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/picomatch": {
+      "version": "4.0.4",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.4.tgz",
+      "integrity": "sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/jonschlinkert"
+      }
+    },
+    "node_modules/pixi.js": {
+      "version": "8.18.1",
+      "resolved": "https://registry.npmjs.org/pixi.js/-/pixi.js-8.18.1.tgz",
+      "integrity": "sha512-6LUPWYgulZhp/w4kam2XHXB0QedISZIqrJbRdHLLQ3csn5a38uzKxAp6B5j6s89QFYaIJbg95kvgTRcbgpO1ow==",
+      "license": "MIT",
+      "workspaces": [
+        "examples",
+        "playground"
+      ],
+      "dependencies": {
+        "@pixi/colord": "^2.9.6",
+        "@types/earcut": "^3.0.0",
+        "@webgpu/types": "^0.1.69",
+        "@xmldom/xmldom": "^0.8.12",
+        "earcut": "^3.0.2",
+        "eventemitter3": "^5.0.1",
+        "gifuct-js": "^2.1.2",
+        "ismobilejs": "^1.1.1",
+        "parse-svg-path": "^0.1.2",
+        "tiny-lru": "^11.4.7"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/pixijs"
+      }
+    },
+    "node_modules/postcss": {
+      "version": "8.5.10",
+      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
+      "integrity": "sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/postcss/"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/postcss"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "nanoid": "^3.3.11",
+        "picocolors": "^1.1.1",
+        "source-map-js": "^1.2.1"
+      },
+      "engines": {
+        "node": "^10 || ^12 || >=14"
+      }
+    },
+    "node_modules/rolldown": {
+      "version": "1.0.0-rc.15",
+      "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.0.0-rc.15.tgz",
+      "integrity": "sha512-Ff31guA5zT6WjnGp0SXw76X6hzGRk/OQq2hE+1lcDe+lJdHSgnSX6nK3erbONHyCbpSj9a9E+uX/OvytZoWp2g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@oxc-project/types": "=0.124.0",
+        "@rolldown/pluginutils": "1.0.0-rc.15"
+      },
+      "bin": {
+        "rolldown": "bin/cli.mjs"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "optionalDependencies": {
+        "@rolldown/binding-android-arm64": "1.0.0-rc.15",
+        "@rolldown/binding-darwin-arm64": "1.0.0-rc.15",
+        "@rolldown/binding-darwin-x64": "1.0.0-rc.15",
+        "@rolldown/binding-freebsd-x64": "1.0.0-rc.15",
+        "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.15",
+        "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.15",
+        "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.15",
+        "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.15",
+        "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.15",
+        "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.15",
+        "@rolldown/binding-linux-x64-musl": "1.0.0-rc.15",
+        "@rolldown/binding-openharmony-arm64": "1.0.0-rc.15",
+        "@rolldown/binding-wasm32-wasi": "1.0.0-rc.15",
+        "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.15",
+        "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.15"
+      }
+    },
+    "node_modules/source-map-js": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+      "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/tiny-lru": {
+      "version": "11.4.7",
+      "resolved": "https://registry.npmjs.org/tiny-lru/-/tiny-lru-11.4.7.tgz",
+      "integrity": "sha512-w/Te7uMUVeH0CR8vZIjr+XiN41V+30lkDdK+NRIDCUYKKuL9VcmaUEmaPISuwGhLlrTGh5yu18lENtR9axSxYw==",
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/tinyglobby": {
+      "version": "0.2.16",
+      "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.16.tgz",
+      "integrity": "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "fdir": "^6.5.0",
+        "picomatch": "^4.0.4"
+      },
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/SuperchupuDev"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.8.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "dev": true,
+      "license": "0BSD",
+      "optional": true
+    },
+    "node_modules/vite": {
+      "version": "8.0.8",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-8.0.8.tgz",
+      "integrity": "sha512-dbU7/iLVa8KZALJyLOBOQ88nOXtNG8vxKuOT4I2mD+Ya70KPceF4IAmDsmU0h1Qsn5bPrvsY9HJstCRh3hG6Uw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "lightningcss": "^1.32.0",
+        "picomatch": "^4.0.4",
+        "postcss": "^8.5.8",
+        "rolldown": "1.0.0-rc.15",
+        "tinyglobby": "^0.2.15"
+      },
+      "bin": {
+        "vite": "bin/vite.js"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "funding": {
+        "url": "https://github.com/vitejs/vite?sponsor=1"
+      },
+      "optionalDependencies": {
+        "fsevents": "~2.3.3"
+      },
+      "peerDependencies": {
+        "@types/node": "^20.19.0 || >=22.12.0",
+        "@vitejs/devtools": "^0.1.0",
+        "esbuild": "^0.27.0 || ^0.28.0",
+        "jiti": ">=1.21.0",
+        "less": "^4.0.0",
+        "sass": "^1.70.0",
+        "sass-embedded": "^1.70.0",
+        "stylus": ">=0.54.8",
+        "sugarss": "^5.0.0",
+        "terser": "^5.16.0",
+        "tsx": "^4.8.1",
+        "yaml": "^2.4.2"
+      },
+      "peerDependenciesMeta": {
+        "@types/node": {
+          "optional": true
+        },
+        "@vitejs/devtools": {
+          "optional": true
+        },
+        "esbuild": {
+          "optional": true
+        },
+        "jiti": {
+          "optional": true
+        },
+        "less": {
+          "optional": true
+        },
+        "sass": {
+          "optional": true
+        },
+        "sass-embedded": {
+          "optional": true
+        },
+        "stylus": {
+          "optional": true
+        },
+        "sugarss": {
+          "optional": true
+        },
+        "terser": {
+          "optional": true
+        },
+        "tsx": {
+          "optional": true
+        },
+        "yaml": {
+          "optional": true
+        }
+      }
+    }
+  }
+}
+
+
+
+================================================================================
+File: package.json
+Directory: .
+Name: package.json
+File Type: .json
+================================================================================
+
+{
+  "name": "vepa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gemquota/vepa.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gemquota/vepa/issues"
+  },
+  "homepage": "https://github.com/gemquota/vepa#readme",
+  "devDependencies": {
+    "vite": "^8.0.8"
+  },
+  "dependencies": {
+    "pixi.js": "^8.18.1"
+  }
+}
+
+
+
+================================================================================
+File: PICKLE_JAR.md
+Directory: .
+Name: PICKLE_JAR.md
+File Type: .md
+================================================================================
+
+# THE PICKLE JAR 🥒
+
+This is the roadmap for the next evolution of VEPA.
+
+## [Batch 2] Visual & Render Layer (v1.1)
+*   **New [Render] category in DNA**
+*   **Parameters:**
+    *   **Trail Length:** Persistence of particle movement trails.
+    *   **Glow Intensity:** Multiplier for neon radiance.
+    *   **Pulse Opacity:** Controls the alpha oscillation of the blink.
+    *   **Particle Opacity:** Base alpha for the particle body.
+    *   **Trail Fade:** Decay rate for the rendered trail tail.
+
+## [Batch 3] Sensing & Communication Upgrade (v1.2)
+*   **Neighborhood Radius:** Per-species master range multiplier for force + signals.
+*   **Expanded Communication:**
+    *   **Signal Strength:** Amplitude of the blink signal.
+    *   **Signal Decay:** Rate at which the signal dissipates through neighbors.
+    *   **Signal Channels (1–4):** Independent channels for signal differentiation.
+    *   **Receiver Tuning:** Sensitivity bias to specific channels.
+    *   **Propagation Speed:** Delay in signal wave traversal.
+
+## [Batch 4] Motion, Matter & EM Depth (v1.3)
+*   **Motion Additions:**
+    *   **Inertia:** Resistance to acceleration.
+    *   **Friction:** Velocity-dependent drag (independent of global Viscosity).
+    *   **Max Velocity Cap:** Hard speed limit for species.
+*   **Matter Additions:**
+    *   **Base Radius:** Fundamental size without mass influence.
+    *   **Per-species Elasticity:** Local collision bounce factor.
+    *   **Bond Angle Preference:** Favored angles for cluster formation (Crystal tuning).
+*   **EM Additions:**
+    *   **Conductivity:** Rate of charge transfer on collision.
+    *   **Magnetic Moment:** Rotational alignment in proximity.
+
+## [Batch 5] Biology, Chemistry & Memory (v1.4)
+*   **Biology Additions:**
+    *   **Energy Efficiency:** Ratio of mass-to-energy conversion.
+    *   **Sexual Reproduction Chance:** Probability of multi-parent offspring.
+    *   **Predation Bias:** Bonus force when targeting lower-mass particles.
+*   **New [Chemistry] Category:**
+    *   **Reaction Threshold:** Mass/Charge limit for "phase change."
+    *   **Catalysis:** Speed multiplier for nearby reactions.
+    *   **Heat Output:** Energy byproduct of interactions.
+*   **Memory:**
+    *   **State Memory Decay:** How long a particle "remembers" its last stimulus.
+    *   **Memory Slots (0–4):** Storage for internal state variables.
+
+## [Batch 6] Global, Chaos, Laws & Final Polish (v1.5+)
+*   **Global Fields:**
+    *   **Temperature:** Thermal jitter baseline.
+    *   **Pressure:** Influence on density/repulsion.
+    *   **Wind/Turbulence Vector:** Constant directional force field.
+*   **Enhanced Selective Chaos:** Strength sliders per category + heritability bias.
+*   **Expanded Laws of Nature:** More complex global interactions.
+*   **More Recipes:** New presets for exotic emergent life.
+*   **Boundary Types:** Void, Solid, Sticky, Periodic.
+*   **LOD/Performance Controls:** Dynamic particle pruning and spatial hash tuning.
+
+
+
+================================================================================
+File: plan_quicksilver.md
+Directory: .
+Name: plan_quicksilver.md
+File Type: .md
+================================================================================
+
+# Quicksilver Recipe Implementation Plan
+
+## Overview
+Implement the 'quicksilver' case in the `applyRecipe` function to create a liquid metal simulation preset.
+
+## Scope Definition
+### In Scope
+- Modify `index.html` to add logic for `case 'quicksilver'` inside `applyRecipe`.
+- Set Viscosity to `0.98` (High).
+- Set Force to `-0.5` (Repulsion).
+- Set Elasticity to `0.9` (High bounce).
+- Set visual style to Silver.
+- Update UI sliders.
+
+### Out of Scope
+- Creating new recipes not listed.
+- Refactoring the entire engine.
+
+## Implementation Phases
+### Phase 1: Engine Logic
+- **Goal**: Implement the parameter changes.
+- **Steps**:
+  1. [ ] Locate `function applyRecipe(k)` in `index.html`.
+  2. [ ] Add `case 'quicksilver':` logic.
+  3. [ ] Iterate through `species` array:
+     - Set `rules[0].val` (Force) to `-0.5`.
+     - Set `rules[1].val` (Viscosity) to `0.98`.
+     - Set `renderColor` to `hsl(0, 0%, 80%)`.
+  4. [ ] Set `globalPhysics[2].val` (Elasticity) to `0.9`.
+  5. [ ] Call `renderSliders()` and `renderPalette()` to update UI.
+- **Verification**:
+  - Click 'Quicksilver' button.
+  - Verify Viscosity slider shows `0.98`.
+  - Verify particles repel and move like thick liquid.
+  - Verify particles are silver.
+
+
+
+================================================================================
+File: plan_review.md
+Directory: .
+Name: plan_review.md
+File Type: .md
+================================================================================
+
+# Plan Review: Quicksilver Recipe Implementation Plan
+
+**Status**: ✅ APPROVED
+**Reviewed**: 2026-03-02
+
+## 1. Structural Integrity
+- [x] **Atomic Phases**: The plan is simple enough to be a single phase.
+- [x] **Worktree Safe**: No dependencies on other tickets.
+
+## 2. Specificity & Clarity
+- [x] **File-Level Detail**: Targets `index.html` and specific functions (`applyRecipe`).
+- [x] **No "Magic"**: Values are explicit (`0.98`, `-0.5`, `hsl(0, 0%, 80%)`).
+
+## 3. Verification & Safety
+- [x] **Automated Tests**: N/A for this UI-heavy change, but manual verification steps are clear.
+- [x] **Manual Steps**: Click 'Quicksilver', check sliders and behavior.
+
+## 4. Architectural Risks
+- None. Standard state manipulation.
+
+## 5. Recommendations
+- Proceed.
+
+
+
+================================================================================
+File: plan_stellar_evolution.md
+Directory: .
+Name: plan_stellar_evolution.md
+File Type: .md
+================================================================================
+
+# Stellar Evolution Upgrade Implementation Plan
+
+## Overview
+Transform the simulation from a purely local particle-to-particle system into a hierarchical celestial engine. This includes the formation of swarms, the collapse of matter into solid cores (planetoids), and the ignition of stars (fusion) with global gravity and radiation pressure.
+
+## Scope Definition (CRITICAL)
+### In Scope
+- **Celestial Entity System**: A new `celestials` array to track massive objects (Planetoids/Stars).
+- **Global Gravity**: 1/r² pull from all `celestials` on all particles and other `celestials`.
+- **Condensation Logic**: Automatic merging of high-density, low-velocity particle clusters into `celestials`.
+- **Accretion**: Particles that collide with `celestials` are absorbed, increasing the celestial's mass.
+- **Stellar Ignition**: High-mass planetoids transform into stars, emitting radiation and losing mass.
+- **Radiation Pressure**: Stars exert a repulsive force on nearby matter.
+### Out of Scope
+- **Complex Chemistry**: Gas dynamics (like hydrogen vs. helium) are for later.
+- **Detailed Surface Rendering**: Planetoids will remain as colored/textured circles for now.
+
+## Current State Analysis
+- **File**: `index.html:482` (Current `physics()` loop uses spatial hashing for local gravity/forces only).
+- **File**: `index.html:565` (Current `draw()` loop only renders particles).
+- **Current Fusion**: Only exists as a simple particle-to-particle merger.
+
+## Implementation Phases
+
+### Phase 1: Celestial Entity Foundation
+- **Goal**: Establish the data structure for massive objects and ensure they persist through resets.
+- **Steps**:
+  1. [ ] Define `celestials = []` in the global state.
+  2. [ ] Update `restartSim()` and `hardReset()` to clear `celestials`.
+  3. [ ] Add a `drawCelestials()` call to the main rendering loop.
+- **Verification**: Manually call `celestials.push(...)` in the console and verify a large circle appears on the canvas.
+
+### Phase 2: Global Gravity & Accretion
+- **Goal**: Make `celestials` attract everything and "eat" particles they touch.
+- **Steps**:
+  1. [ ] In `physics()`, loop through all particles and add 1/r² pull from each `celestial`.
+  2. [ ] Implement `handleCelestialCollisions()`: If `dist(particle, celestial) < celestial.radius`, delete particle and increase celestial mass.
+  3. [ ] Implement celestial-on-celestial gravity: Massive objects pull each other.
+- **Verification**: Spawn a celestial and observe particles being sucked in like a vacuum.
+
+### Phase 3: Condensation (Swarms to Solids)
+- **Goal**: Detect when matter is "packed so tightly it can't move anymore" and collapse it.
+- **Steps**:
+  1. [ ] Inside the spatial hash loop, track the `totalMass` and `avgVel` of each cell.
+  2. [ ] If `cellMass > CONDENSE_THRESHOLD` and `v_variance < STABLE_THRESHOLD`:
+      - Create a new `celestial` at the cluster's center of mass.
+      - Delete the contributing particles.
+- **Verification**: Increase gravity/attraction and observe clusters spontaneously turning into solid cores.
+
+### Phase 4: Stellar Ignition & Radiation
+- **Goal**: High-mass objects become stars with unique physics.
+- **Steps**:
+  1. [ ] If `celestial.mass > STAR_MASS_THRESHOLD`, set `type = 'star'`.
+  2. [ ] Add `dm/dt` mass loss to stars (simulating fusion fuel consumption).
+  3. [ ] Implement **Radiation Pressure**: Stars push matter away with 1/r² force (offsetting gravity).
+  4. [ ] Update `drawCelestials()` to give stars a massive neon glow and a pulsating core.
+- **Verification**: Feed a planetoid until it ignites, then observe the surrounding cloud being pushed back by the radiation.
+
+## Finalize
+- Integrate these laws into the "Laws of Nature" UI toggle.
+
+
+
+================================================================================
+File: research_quicksilver.md
+Directory: .
+Name: research_quicksilver.md
+File Type: .md
+================================================================================
+
+# Research: Implement 'Quicksilver' Recipe
+
+**Date**: 2026-03-02
+
+## 1. Executive Summary
+The `applyRecipe` function in `index.html` is currently a placeholder. The task is to implement the 'quicksilver' case, which sets specific physics parameters (Viscosity, Force, Elasticity) and visual styles (Silver color) to simulate a liquid metal behavior.
+
+## 2. Technical Context
+- **File**: `index.html`
+- **Function**: `function applyRecipe(k)` (currently empty)
+- **Data Structures**:
+    - `species`: Array of 8 objects containing `rules` (DNA), `renderColor`, etc.
+    - `DNA_META`: Maps indices to rule names. Index 0 = Force, Index 1 = Viscosity.
+    - `globalPhysics`: Array containing global settings. Index 2 = Elasticity.
+    - `renderSliders()`: Function to update the UI with new values.
+    - `resetSim()`: Function to re-initialize particles (optional but often paired with recipes).
+
+## 3. Findings & Analysis
+- **Parameters**:
+    - **Viscosity**: `species[i].rules[1].val`. Target: `0.98`.
+    - **Force**: `species[i].rules[0].val`. Target: `-0.5` (Repulsion).
+    - **Elasticity**: `globalPhysics[2].val`. Target: `~0.9` (High).
+    - **Color**: `species[i].renderColor`. Target: Metallic/Silver (e.g., `hsl(0, 0%, 80%)`).
+- **Implementation Logic**:
+    - Input `k` will be `'quicksilver'`.
+    - Iteration over `species` array is required to apply changes to all particle types.
+    - `renderSliders()` must be called to reflect changes in the UI.
+    - `init()` and `changeResolution()` are available if grid resets are needed, but likely not required for this task.
+
+## 4. Technical Constraints
+- No new libraries.
+- Must work within the existing `index.html` structure.
+- Must preserve the "God Mode" standard (efficient, clean code).
+
+## 5. Architecture Documentation
+The application uses a simple functional approach where global state (`species`, `globalPhysics`) drives the simulation loop (`physics()`, `draw()`). UI functions (`applyRecipe`, `changeResolution`) modify this global state.
+
+
+
+================================================================================
+File: research_review.md
+Directory: .
+Name: research_review.md
+File Type: .md
+================================================================================
+
+# Research Review: Implement 'Quicksilver' Recipe
+
+**Status**: ✅ APPROVED
+**Reviewed**: 2026-03-02
+
+## 1. Objectivity Check
+- [x] **No Solutioning**: The research describes the *current* state of the `applyRecipe` function (empty) and identifies the *target* parameters based on the request, without designing the implementation details (like exact loop structure or helper functions).
+- [x] **Unbiased Tone**: It is a factual mapping of the existing codebase.
+- [x] **Strict Documentation**: It correctly identifies the data structures and functions involved.
+
+## 2. Evidence & Depth
+- [x] **Code References**: It references `index.html` and specific arrays like `species`, `DNA_META`, and `globalPhysics`.
+- [x] **Specificity**: It correctly identifies the indices for Viscosity (1), Force (0), and Elasticity (2).
+
+## 3. Missing Information / Gaps
+- None. The task is straightforward and the research covers all necessary state variables.
+
+## 4. Actionable Feedback
+- Proceed to planning.
+
+
+
+================================================================================
+File: research_stellar_evolution.md
+Directory: .
+Name: research_stellar_evolution.md
+File Type: .md
+================================================================================
+
+# Research: Stellar Evolution & Hierarchical Matter (v1.6)
+
+## Problem Statement
+The current physics engine only supports local interactions via a spatial hash. This prevents the formation of large-scale structures like swarms, planetoids, and stars that exert universal gravitational influence.
+
+## 1. The "Combined Gravity" Problem
+- **Current state**: Gravity is 1/r², but only calculated within neighboring spatial cells (200px radius). This is why swarms don't feel "combined."
+- **Proposed Solution**: 
+    - Maintain a list of **Global Entities** (Planetoids, Stars).
+    - Every particle, regardless of its position, calculates the gravitational pull from every Global Entity.
+    - Since there will be few Global Entities (e.g., 5-20), this is O(N_particles * N_globals), which is very efficient.
+
+## 2. Condensation & Fusion Logic
+- **Particle-to-Solid Transition**:
+    - Particles within a "Swarm" (defined by local density) with low relative velocity (v_rel < threshold) can "Condense."
+    - Condensation merges multiple particles into a single `SolidObject`.
+    - This reduces the total particle count, improving performance.
+- **Solid-to-Star Transition**:
+    - `SolidObject` mass increases as it absorbs nearby particles.
+    - If `mass > StarThreshold`, the object ignites.
+    - `type` changes from `planetoid` to `star`.
+
+## 3. Stellar Physics
+- **Radiation Pressure**: Stars emit a repulsive force (Inverse Square Law) that counters gravity. This creates a "habitable zone" where forces balance.
+- **Mass Consumption**: Stars lose mass over time: `dm/dt = -fusion_constant`.
+- **Radiation Effects**: Light from stars could increase the `energy` or `jitter` of nearby particles.
+
+## 4. Implementation Details
+- **Data Structure**: 
+    - A new `celestials` array in the simulation state.
+    - Each `celestial` has `x, y, vx, vy, mass, radius, type`.
+- **Physics Loop Update**:
+    - `updateCelestials()`: Handle gravity between celestials and their internal logic (fusion).
+    - `updateParticles()`: Add global gravity from `celestials`.
+    - `handleAccretion()`: Check if particles hit a celestial's radius and integrate them.
+
+## 5. Performance Goals
+- By merging clusters into single objects, we can maintain higher total mass in the simulation with fewer active entities.
+- Spatial hash continues to handle local particle-to-particle interactions (DNA rules).
+
+
+
+================================================================================
+File: run.py
+Directory: .
+Name: run.py
+File Type: .py
+================================================================================
+
+import sys
+import subprocess
+import time
+import os
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+class RestartHandler(FileSystemEventHandler):
+    """Restarts a subprocess when files are modified."""
+    def __init__(self, command):
+        self.command = command
+        self.process = None
+        self.last_restart = 0
+        self.debounce_seconds = 0.5
+        self.start_server()
+
+    def start_server(self):
+        if self.process:
+            print("\n[RESTART] Changes detected. Restarting server...")
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+        else:
+            print(f"[START] Starting server with command: {' '.join(self.command)}")
+        
+        # Start the server as a new process
+        self.process = subprocess.Popen(self.command)
+        self.last_restart = time.time()
+
+    def on_any_event(self, event):
+        # Ignore directory events and temporary files
+        if event.is_directory or event.src_path.endswith(('.tmp', '.swp', '~')):
+            return
+        
+        # Only watch for relevant web/python files
+        if event.src_path.endswith(('.html', '.js', '.css', '.py', '.json', 'VERSION')):
+            current_time = time.time()
+            if current_time - self.last_restart > self.debounce_seconds:
+                self.start_server()
+
+if __name__ == "__main__":
+    # Configuration
+    port = "8000"
+    path = "."
+    command = [sys.executable, "-m", "http.server", port]
+    
+    print(f"--- VEPA Development Server ---")
+    print(f"Watching directory: {os.path.abspath(path)}")
+    print(f"Serving on: http://localhost:{port}")
+    print(f"Press Ctrl+C to stop.")
+    print(f"-------------------------------")
+
+    event_handler = RestartHandler(command)
+    observer = Observer()
+    observer.schedule(event_handler, path, recursive=True)
+    observer.start()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n[STOP] Stopping observer...")
+        observer.stop()
+        if event_handler.process:
+            print("[STOP] Killing server process...")
+            event_handler.process.terminate()
+    
+    observer.join()
+    print("[EXIT] Server stopped.")
+
+
+
+================================================================================
+File: style.css
+Directory: .
+Name: style.css
+File Type: .css
+================================================================================
+
+:root { --neon: #00ff41; --bg: #000; --panel: rgba(5, 10, 5, 0.95); --danger: #ff3e3e; --info: #3e88ff; --warn: #fffb3e; --square: 40px; }
+body { margin: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; font-size: 11px; }
+canvas { display: block; position: fixed; inset: 0; z-index: 0; }
+#ui-layer { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; padding: 10px; z-index: 10; }
+.panel { pointer-events: auto; background: var(--panel); border: 1px solid var(--neon); padding: 8px; border-radius: 4px; box-shadow: 0 0 15px rgba(0,255,65,0.1); }
+#header-controls { pointer-events: auto; display: flex; gap: 5px; margin-bottom: 10px; }
+.btn { padding: 8px; background: #000; border: 1px solid var(--neon); color: var(--neon); font-size: 9px; cursor: pointer; flex: 1; text-align: center; font-weight: bold; text-transform: uppercase; }
+.chaos-btn { background: var(--danger); color: #fff; border: 1px solid #fff; }
+
+.toggle-grid { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+.sq-toggle { width: var(--square); height: var(--square); border: 1px solid #333; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 8px; text-align: center; color: #666; transition: 0.2s; }
+.sq-toggle.active { border-color: var(--neon); background: rgba(0, 255, 65, 0.1); color: var(--neon); box-shadow: inset 0 0 10px rgba(0,255,65,0.2); }
+
+.tabs { display: flex; border-bottom: 1px solid var(--neon); margin-bottom: 8px; }
+.tab-link { padding: 6px; cursor: pointer; font-size: 9px; flex: 1; text-align: center; border: 1px solid transparent; border-bottom: none; }
+.tab-link.active { border-color: var(--neon); background: rgba(0, 255, 65, 0.1); }
+.tab-content { display: none; max-height: 60vh; overflow-y: auto; padding-right: 5px; }
+.tab-content.active { display: block; }
+
+.slider-row { margin-top: 8px; font-size: 8px; }
+.slider-label { cursor: help; border-bottom: 1px dotted #666; display: inline-block; margin-bottom: 2px; }
+
+#tooltip { position: fixed; background: var(--panel); border: 1px solid var(--info); color: #fff; padding: 8px; font-size: 9px; pointer-events: none; display: none; z-index: 100; max-width: 150px; border-radius: 4px; }
+#zoom-hud { position: absolute; bottom: 10px; right: 10px; font-size: 8px; pointer-events: none; background: rgba(0,0,0,0.7); padding: 6px; border: 1px solid #333; color: #fff; }
+
+.species-card { border: 1px solid #333; padding: 5px; margin-bottom: 5px; cursor: pointer; font-size: 9px; display: flex; justify-content: space-between; }
+.species-card.active { border-color: var(--neon); background: rgba(255,255,255,0.05); }
+
+/* Custom Scrollbar */
+.tab-content::-webkit-scrollbar { width: 4px; }
+.tab-content::-webkit-scrollbar-track { background: #000; }
+.tab-content::-webkit-scrollbar-thumb { background: var(--neon); }
+
+
+
+================================================================================
+File: VERSION
+Directory: .
+Name: VERSION
+File Type: (no extension)
+================================================================================
+
+1.1.0
+

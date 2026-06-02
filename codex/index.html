@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEPA_CODEX // HG2G_DATABASE</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="codex-app">
+    <div class="background-effects">
+        <div class="grid"></div>
+        <div class="scanline"></div>
+    </div>
+
+    <header class="codex-header">
+        <div class="header-inner">
+            <div class="logo">VEPA_CODEX<span class="version">v1.0.0</span></div>
+            <div class="search-container">
+                <input type="text" id="codex-search" placeholder="SEARCH_DATABASE..." autocomplete="off">
+            </div>
+            <div class="status-indicators">
+                <span class="indicator pulse">ONLINE</span>
+                <span class="indicator">SECURE</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="codex-main">
+        <nav class="codex-sidebar">
+            <div class="sidebar-header">ENTRY_LIST</div>
+            <ul id="entry-list">
+                <!-- Entries will be injected here -->
+            </ul>
+        </nav>
+
+        <section id="content-area" class="codex-content">
+            <div id="entry-view" class="entry-view hidden">
+                <div class="entry-header">
+                    <h1 id="entry-title">TITLE_PENDING</h1>
+                    <div id="entry-tags" class="entry-tags"></div>
+                </div>
+                <div class="entry-summary" id="entry-summary">
+                    SUMMARY_PENDING
+                </div>
+                <div class="entry-body" id="entry-body">
+                    CONTENT_PENDING
+                </div>
+                <div class="entry-footer">
+                    <div class="footer-line"></div>
+                    <div class="footer-text">END_OF_ENTRY // SYSTEM_HASH_VERIFIED</div>
+                </div>
+            </div>
+            <div id="empty-state" class="empty-state">
+                <div class="glitch-text">SELECT_ENTRY_FOR_DECRYPTION</div>
+                <div class="decorative-ascii">
+[ ACCESSING_VEPA_CORE_DATABASE ]
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+import{S as e,x as t}from"./index-B-HPfFXm.js";e();export{t as WebGLRenderer};
