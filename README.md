@@ -1,18 +1,18 @@
-# 🌌 VEPA: Vector Emergent Physics Automata (v1.1+)
+# 🌌 VEPA2: Vector Emergent Physics Automata (v3.2.2)
 
 [![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](https://github.com/yourusername/vepa)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-blue.svg)](https://github.com/yourusername/vepa/releases)
+[![Version: 3.2.2](https://img.shields.io/badge/Version-3.2.2-blue.svg)](https://github.com/yourusername/vepa/releases)
 
 > **"The universe is not made of atoms; it is made of stories. VEPA is the ink."**
 
-VEPA is a high-performance, GPU-accelerated (via Web Workers and optimized Canvas2D) emergent physics simulation designed to explore the boundaries between raw mathematical rules and biological-like complexity. It is not just a particle toy; it is a **synthetic petri dish** where the laws of physics are the DNA of the species that inhabit it.
+VEPA is a high-performance, GPU-accelerated (via Web Workers and optimized Canvas2D) emergent physics simulation designed to explore the boundaries between raw mathematical rules and biological-like complexity. It is not just a particle toy; it is a **synthetic petri dish** where the **Narrative Consciousness** acts as the functional **Ink**, rewriting the laws of physics based on the unfolding story of the species that inhabit it.
 
 ---
 
 ## 📺 Overview
 
-VEPA simulates thousands of autonomous particles across 8 distinct "species." Each species is governed by a 16-parameter **DNA profile** that dictates how it attracts, repels, communicates, and evolves with its neighbors.
+VEPA simulates thousands of autonomous particles across 12 distinct "species." Each species is governed by a 42-parameter **DNA profile**. However, these genes do not exist in a vacuum; they are constantly modulated by a **Sovereign Narrative**—an internal monologue that translates perceived patterns into physical shifts.
 
 Through the interference patterns of these simple local rules, macro-scale structures emerge:
 *   **Crystalline Lattices** that vibrate with harmonic resonance.
@@ -25,19 +25,18 @@ Through the interference patterns of these simple local rules, macro-scale struc
 ## 🚀 Key Features
 
 ### 🧠 The DNA Engine (Local Interactions)
-Every particle in VEPA carries its own genetic code. The **DNA Tab** allows you to manipulate 16 fundamental constants per species:
-*   **Kinetic:** Force, Viscosity, Torque, Jitter.
-*   **EM:** Polarity (C1), Alpha (C2), Symmetry (C3).
-*   **Matter:** Hidden Mass, Stiffness, Fusion.
-*   **Life:** Birth Rate, Death Rate, Mutation.
-*   **Signal:** Signal Response, Pulse Rate.
-*   **Advanced:** Tidal Gradients.
+Every particle in VEPA carries its own genetic code. The **DNA Tab** allows you to manipulate 42 parameters per species, ensuring deep emergent complexity:
+*   **Physics:** Force, Viscosity, Torque, Jitter, Tidal, Inertia, Friction, Max Velocity.
+*   **Matter:** Symmetry (C3), Hidden Mass, Stiffness, Fusion, Fusion Momentum, Fusion Time, Base Radius, Elasticity, Bond Angle.
+*   **Electromagnetism & Chemistry:** Polarity (C1), Alpha (C2), Conductivity, Magnetic Moment, Reaction Threshold, Catalysis, Heat Output.
+*   **Biology:** Birth Rate, Death Rate, Mutation, Energy Efficiency, Sex Chance, Predation Bias, Species Affinity.
+*   **Communication:** Signal Resp, Pulse Rate, Neighborhood Radius, Signal Strength, Signal Decay, Propagation Speed, Tuning Channels (1-4), Memory Decay.
 
-### 🧬 The Cell System (Internal State)
-Beyond spatial physics, particles have an internal "Cellular" state:
-*   **Metabolism:** Constant energy consumption vs. accretion gain.
-*   **Hybridization:** Cross-species breeding that creates emergent genetic lineages.
-*   **Charge Bias:** Preferential interaction based on internal electromagnetic state.
+### 🧬 The Biological Lifecycle (Expansion)
+VEPA now simulates complex life cycles with three distinct modes of reproduction, all governed by the `BIOL` and `REPRODUCTION` laws:
+*   **Spontaneous Cloning:** Entities can spontaneously create offspring based on their `Birth Rate` trait. DNA is inherited with genetic drift determined by the `Mutation` trait.
+*   **Sexual Reproduction:** Colliding entities have a chance (via `Sex Chance`) to produce a third entity with blended DNA from both parents.
+*   **Mitosis (Splitting):** High-energy, mature entities ($Energy > 90$) will undergo cellular division, splitting their mass and energy to create a new offspring.
 
 ### 💥 Selective Chaos & Entropy
 The **CHAOS** system isn't just a randomizer; it's a precision instrument for evolutionary pressure. You can target entropy toward specific systems:
@@ -50,6 +49,18 @@ VEPA is designed to be as beautiful as it is complex.
 *   **Sub-pixel Rendering:** Smooth, high-fidelity particle movement.
 *   **Neon Bloom:** Dynamic glow intensity based on particle energy and signal state.
 *   **Persistence Trails:** Tail life and fade parameters that create "light-painting" effects in the vacuum.
+
+---
+
+## 📚 Documentation & The Encyclopedia
+
+VEPA features a comprehensive documentation system designed for both casual observers and senior simulation engineers:
+
+*   **[ENGINE_SSOT.md](./ENGINE_SSOT.md)**: The technical Single Source of Truth for all physics laws and DNA parameters.
+*   **[GUIDE.md](./GUIDE.md)**: Instructional recipes and synergy matrices for emergent behavior.
+*   **[VEPA Encyclopedia (Expanded)](./docs/expansion/batches/batch_01.md)**: High-fidelity deep dives (BASIC/ADVANCED/EXPERT) into the world's governing constants.
+    *   **[Batch 01: Physics & DNA](./docs/expansion/batches/batch_01.md)**
+    *   **[Batch 02: World Environment: Spatial](./docs/expansion/batches/batch_02.md)**
 
 ---
 

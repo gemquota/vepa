@@ -1,6 +1,49 @@
-# VEPA (Vector Emergent Physics Automata) Changelog
+# VEPA2 (Vector Emergent Physics Automata) Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [2.5.0] - 2026-06-19
+### Features
+- **Per-Axis Spread Controls:** spreadX/Y/Z UI sliders now actually control particle spawn distribution per axis (X, Y, Z) instead of the legacy single spreadRadius value. All 5 distribution modes (Soup, Grid, Big Bang, Bipolar, Galaxy) respect per-axis spread.
+- **Persistence Presets Updated:** All saved presets now use per-axis spreadX/Y/Z values instead of spreadRadius.
+### Fixes
+- **SSOT Alignment:** Added HELP_DB entries for SENESCENCE, GENOTYPE, PHENOTYPE laws to resolve validation test failure.
+### Maintenance
+- **Version Sync:** VERSION, package.json, and CHANGELOG now consistent at 2.5.0.
+
+## [2.4.1] - 2026-06-17
+### Documentation
+- **Batch 04 Expansion Complete:** World Seeding & Entropy — spreadX, spreadY, spreadZ, entropy, cameraMode, cameraLocked — all 6 parameters now have BASIC, ADVANCED, and EXPERT tier documentation in docs/expansion/batches/batch_04.md.
+- **EXPANSION_PROGRESS.md:** Batch 04 marked complete.
+- **ENGINE_SSOT.md:** Added entropy, cameraMode, cameraLocked entries; corrected spreadX/Y/Z description.
+
+## [2.4.0] - 2026-06-17
+### Fixed
+- **Comprehensive Law & Parameter Audit (All 5 Phases):** Addressed all issues identified in the 5-phase audit.
+- **10 Unimplemented Laws Now Functional:** `chir` (Chirality), `cond` (Condensation), `depo` (Deposition), `fate` (Determinism), `soul` (Soul Persistence), `mind` (Hive Mind), `tele` (Teleportation), `clai` (Clairvoyance), `preo` (Precognition), `astr` (Astral Projection) — all now have simulation effects in the worker.
+- **21 DNA Parameters Wired:** `POLARITY`, `HIDDEN_MASS`, `BIRTH_RATE`, `SIGNAL_RESP`, `TIDAL`, `FUSION_MOMENTUM`, `FUSION_TIME`, `NEIGHBORHOOD_RADIUS`, `SIGNAL_STRENGTH`, `SIGNAL_DECAY`, `PROPAGATION_SPEED`, `TUNING_CH1-4`, `INERTIA`, `CONDUCTIVITY`, `MAGNETIC_MOMENT`, `SEX_CHANCE`, `REACTION_THRESHOLD`, `MEMORY_DECAY` — all now read and applied in the physics worker.
+- **Reproduction DNA Inheritance:** New particles now inherit DNA from parent species using `BIRTH_RATE` for parent selection, `MUTATION` for random drift, and `SEX_CHANCE` for multi-parent recombination.
+- **Heritable Mutations:** `genotype` law mutations now write to the species-level DNA buffer, making evolution heritable.
+- **Accretion Momentum/Time Gating:** `FUSION_MOMENTUM` (minimum velocity) and `FUSION_TIME` (energy merge rate) now gate accretion events.
+- **Collision Radius from BASE_RADIUS:** Collision detection now uses `BASE_RADIUS` DNA parameter alongside mass-based radius.
+- **Signal Network:** `glow` law writes to `SIGNAL` stride field; `SIGNAL_STRENGTH`, `SIGNAL_DECAY`, `PROPAGATION_SPEED`, `SIGNAL_RESP`, and `TUNING_CH1-4` now form a working signal propagation network between particles.
+- **Energy Transfer with Conductivity:** `ener` law now uses `CONDUCTIVITY` and `MAGNETIC_MOMENT` for energy transfer rate.
+- **Inertia Factor:** `INERTIA` DNA parameter now scales acceleration resistance.
+- **Electrostatic Force:** `POLARITY` now creates Coulomb-like electrostatic interactions between charged particles.
+- **Hidden Mass in Gravity:** `HIDDEN_MASS` now contributes to gravitational force calculations.
+- **Tidal Forces:** `TIDAL` DNA parameter creates differential stretching forces.
+- **Reaction Threshold:** `REACTION_THRESHOLD` now gates acid/reduction chemistry reactions.
+- **Memory Decay:** `MEMORY_DECAY` DNA parameter controls how fast particle memory fades.
+- **Hunger System:** Particles now accumulate HUNGER based on mass; predation reduces it.
+- **Synergy System:** 7 documented synergy pairs now compute modifiers (GRAV+TIME, ENTR+CRYS, COLL+RAD, RAD+GENO, MIND+ENER, POLY+MIND, ASTR+SOUL).
+- **Free Will Semantic Fix:** `will` law now correctly amplifies velocity (more energy = more free movement) instead of damping it.
+- **Stride Slot Expansion:** `STRIDE_INDEXES` expanded with 8 new mapped slots (RADIUS, SIGNAL, BOND_COUNT, BOND_PARTNER_1/2, MEMORY, HUNGER, ARMOR) for indices 56-63.
+- **Added `PARTICLE_STRIDE`** named export to `constants.js` for clarity.
+- **COOP/COEP Headers:** HTTP server now sets required `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers for SharedArrayBuffer support.
+
+### Documentation
+- **docs/LAW_PARAMETER_RELATIONSHIPS.md:** New comprehensive 48KB relationship matrix mapping all 53 laws × 42 DNA parameters with implementation status, code locations, and verified effects.
+- **docs/LAW_AUDIT.md:** Updated with complete audit findings across all 5 law phases.
 
 ## [2.3.0] - 2026-05-17
 ### Added

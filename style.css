@@ -94,7 +94,7 @@ body {
 
 .drawer-inner {
     margin: 0; height: 100%; display: flex; flex-direction: column;
-    padding: 15px 20px 10px 20px; box-sizing: border-box;
+    padding: 15px 0 10px 0; box-sizing: border-box;
 }
 
 .squashed-drawer {
@@ -254,7 +254,7 @@ body {
     padding: 10px 15px;
     background: rgba(0,0,0,0.4);
     border-bottom: 1px solid #111;
-    margin: -15px -20px 15px -20px; /* Counter drawer padding */
+    margin: 0 0 15px 0; /* Counter drawer padding */
     border-top: 1px solid rgba(255,255,255,0.02);
 }
 
@@ -1128,3 +1128,10 @@ input[type=range] { width: 100%; accent-color: var(--red-bright); height: 2px; }
     opacity: 0.6;
 }
 .codex-deep-link:hover { opacity: 1; }
+
+/* Full-width sliders - fix extra space issue */
+.slider-row { display: flex; flex-direction: column; width: 100%; margin-bottom: 12px; }
+.slider-row input[type=range] { width: 100%; box-sizing: border-box; }
+.slider-row .log-slider-container { width: 100%; }
+.slider-row select,
+.slider-row .sq-toggle { width: 100%; box-sizing: border-box; }

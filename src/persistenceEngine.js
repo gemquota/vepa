@@ -61,8 +61,8 @@ export class PersistenceEngine {
     getDefaultPresets() {
         // Shared base config
         const baseLaws = {
-            pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, planetary: false, G: 0.15, dt: 1.0 },
-            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false },
+            pure: { grav: true, drag: true, jitter: false, coll: true, accr: false, wrap: true, void: false, bond: false, planetary: false, G: 1.0, dt: 1.0 },
+            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: false, genotype: false, phenotype: false, ener: false, rad: false },
             chem: { cata: false, solv: false, acid: false, oxid: false, redu: false, poly: false, isom: false, chir: false, crys: false, allo: false },
             thermo: { heat: false, cold: false, conv: false, radi: false, subl: false, melt: false, boil: false, cond: false, depo: false, exop: false },
             meta: { time: false, dime: false, chao: false, orde: false, fate: false, will: false, soul: false, mind: false, tele: false, clai: false, preo: false, astr: false }
@@ -110,7 +110,7 @@ export class PersistenceEngine {
 
         return {
             "PRIME_DEFAULT": createSet("PRIME", 0.1, 0.5, 0.05, 0.0, 0.2, 1.0, 0.15, {
-                world: { count: 1000, dimX: 500, dimY: 500, dimZ: 500, distributionType: 'Soup', spreadRadius: 1.0, spawnRate: 10 },
+                world: { count: 1000, dimX: 500, dimY: 500, dimZ: 500, distributionType: 'Soup', spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, spawnRate: 10 },
                 species: [
                     { name: "Sol", color: "rgb(255, 255, 0)", rgb: [1, 1, 0], dnaMod: (d) => { d[DNA_INDEXES.FORCE]=0.8; d[DNA_INDEXES.FUSION]=0.8; d[DNA_INDEXES.BIRTH_RATE]=0.1; d[DNA_INDEXES.VISCOSITY]=0.95; d[DNA_INDEXES.SPECIES_AFFINITY]=0.5; return d; } },
                     { name: "Aether", color: "rgb(0, 127, 255)", rgb: [0, 0.5, 1], dnaMod: (d) => { d[DNA_INDEXES.VISCOSITY]=0.99; d[DNA_INDEXES.JITTER]=0.1; d[DNA_INDEXES.SIGNAL_RESP]=2.0; d[DNA_INDEXES.NEIGHBORHOOD_RADIUS]=150; return d; } },
@@ -120,7 +120,7 @@ export class PersistenceEngine {
             
             "VOID_CORE": createSet("VOID_CORE", 0.0, 0.01, 0.1, -0.8, 0.1, 0.05, 2.0, { 
                 pure: { void: true, accr: true, G: 1.2, coll: false },
-                world: { count: 600, baseSize: 3.0, distributionType: 'Big Bang', spreadRadius: 0.05 },
+                world: { count: 600, baseSize: 3.0, distributionType: 'Big Bang', spreadX: 0.05, spreadY: 0.05, spreadZ: 0.05 },
                 species: [
                     { name: "Singularity", color: "rgb(200, 0, 255)", rgb: [0.8, 0, 1], dnaMod: (d) => { d[DNA_INDEXES.FORCE]=10.0; d[DNA_INDEXES.VISCOSITY]=1.0; d[DNA_INDEXES.MAX_VELOCITY]=50; return d; } },
                     { name: "Hawking_Radiation", color: "rgb(255, 255, 255)", rgb: [1, 1, 1], dnaMod: (d) => { d[DNA_INDEXES.FORCE]=-2.0; d[DNA_INDEXES.BIRTH_RATE]=0.0; d[DNA_INDEXES.MAX_VELOCITY]=100; return d; } }
@@ -129,7 +129,7 @@ export class PersistenceEngine {
             
             "NEURAL_DRIFT": createSet("NEURAL_DRIFT", 0.9, 0.05, 0.02, 0.5, 0.8, 2.5, 0.05, {
                 pure: { bond: true, jitter: true, drag: true },
-                world: { count: 2000, distributionType: 'Galaxy', spreadRadius: 1.5 },
+                world: { count: 2000, distributionType: 'Galaxy', spreadX: 1.5, spreadY: 1.5, spreadZ: 1.5 },
                 species: [
                     { name: "Synapse", color: "rgb(0, 255, 255)", rgb: [0, 1, 1], dnaMod: (d) => d },
                     { name: "Glial", color: "rgb(0, 128, 128)", rgb: [0, 0.5, 0.5], dnaMod: (d) => { d[DNA_INDEXES.PULSE_RATE]=0.2; d[DNA_INDEXES.VISCOSITY]=0.9; return d; } }
@@ -139,7 +139,7 @@ export class PersistenceEngine {
             "SOLAR_FLARE": createSet("SOLAR_FLARE", 0.1, 1.5, 2.0, -0.4, 0.9, 0.1, 0.1, {
                 pure: { radi: true, jitter: true, coll: true, accr: false },
                 biol: { rad: true, life: true, glow: true },
-                world: { count: 3000, distributionType: 'Big Bang', spreadRadius: 0.4 },
+                world: { count: 3000, distributionType: 'Big Bang', spreadX: 0.4, spreadY: 0.4, spreadZ: 0.4 },
                 species: [
                     { name: "Plasma", color: "rgb(255, 128, 0)", rgb: [1, 0.5, 0], dnaMod: (d) => d },
                     { name: "Corona", color: "rgb(255, 50, 0)", rgb: [1, 0.2, 0], dnaMod: (d) => { d[DNA_INDEXES.JITTER]=10.0; d[DNA_INDEXES.MAX_VELOCITY]=80; return d; } }
@@ -149,7 +149,7 @@ export class PersistenceEngine {
             "CRYSTAL_LATTICE": createSet("CRYSTAL_LATTICE", 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.8, {
                 pure: { coll: true, bond: true, drag: true, grav: true, G: 0.05 },
                 chem: { crys: true },
-                world: { count: 1200, distributionType: 'Grid', spreadRadius: 1.0 },
+                world: { count: 1200, distributionType: 'Grid', spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0 },
                 species: [
                     { name: "Cation", color: "rgb(255, 255, 255)", rgb: [1, 1, 1], dnaMod: (d) => { d[DNA_INDEXES.VISCOSITY]=0.95; d[DNA_INDEXES.STIFFNESS]=10.0; d[DNA_INDEXES.ELASTICITY]=1.0; d[DNA_INDEXES.BOND_ANGLE]=60; return d; } },
                     { name: "Anion", color: "rgb(100, 100, 100)", rgb: [0.4, 0.4, 0.4], dnaMod: (d) => { d[DNA_INDEXES.FORCE]=1.2; return d; } }
@@ -159,7 +159,7 @@ export class PersistenceEngine {
             "PREDATOR_SWARM": createSet("PREDATOR_SWARM", 0.1, 2.0, 0.2, 0.8, 0.5, 1.8, 0.4, {
                 pure: { drag: true },
                 biol: { tracking: true, affinity: true },
-                world: { distributionType: 'Bipolar', spreadRadius: 1.2 },
+                world: { distributionType: 'Bipolar', spreadX: 1.2, spreadY: 1.2, spreadZ: 1.2 },
                 species: [
                     { name: "Hunter", color: "rgb(255, 0, 50)", rgb: [1, 0, 0.2], dnaMod: (d) => { d[DNA_INDEXES.PREDATION_BIAS]=50.0; d[DNA_INDEXES.MAX_VELOCITY]=60; return d; } },
                     { name: "Prey", color: "rgb(50, 255, 100)", rgb: [0.2, 1, 0.4], dnaMod: (d) => { d[DNA_INDEXES.PREDATION_BIAS]=0.0; d[DNA_INDEXES.BIRTH_RATE]=5.0; d[DNA_INDEXES.MAX_VELOCITY]=30; return d; } }
@@ -168,7 +168,7 @@ export class PersistenceEngine {
             
             "KINETIC_GAS": createSet("KINETIC_GAS", 0.5, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, {
                 pure: { grav: false, drag: false, coll: true, wrap: true, jitter: true },
-                world: { count: 1000, distributionType: 'Soup', spreadRadius: 1.5 },
+                world: { count: 1000, distributionType: 'Soup', spreadX: 1.5, spreadY: 1.5, spreadZ: 1.5 },
                 species: [
                     { name: "Hot_Gas", color: "rgb(255, 100, 255)", rgb: [1, 0.4, 1], dnaMod: (d) => { d[DNA_INDEXES.MAX_VELOCITY]=120; return d; } },
                     { name: "Cold_Gas", color: "rgb(100, 255, 255)", rgb: [0.4, 1, 1], dnaMod: (d) => { d[DNA_INDEXES.MAX_VELOCITY]=40; return d; } }
@@ -177,7 +177,7 @@ export class PersistenceEngine {
             
             "SYMBIOTIC_LOOP": createSet("SYMBIOTIC_LOOP", 0.5, 1.2, 0.1, 0.95, 0.8, 2.0, 0.2, {
                 biol: { life: true, ener: true, reproduction: true, glow: true },
-                world: { count: 1800, distributionType: 'Soup', spreadRadius: 0.8 },
+                world: { count: 1800, distributionType: 'Soup', spreadX: 0.8, spreadY: 0.8, spreadZ: 0.8 },
                 species: [
                     { name: "Host", color: "rgb(100, 255, 100)", rgb: [0.4, 1, 0.4], dnaMod: (d) => d },
                     { name: "Parasite", color: "rgb(255, 100, 100)", rgb: [1, 0.4, 0.4], dnaMod: (d) => { d[DNA_INDEXES.ENERGY_EFFICIENCY]=15.0; d[DNA_INDEXES.FORCE]=1.5; return d; } }
@@ -187,7 +187,7 @@ export class PersistenceEngine {
             "CHRONOS_FLUX": createSet("CHRONOS_FLUX", 0.2, 0.1, 0.01, -0.6, 0.2, 0.2, -0.5, {
                 pure: { drag: true, jitter: false, void: true },
                 meta: { time: true },
-                world: { distributionType: 'Galaxy', spreadRadius: 0.1 },
+                world: { distributionType: 'Galaxy', spreadX: 0.1, spreadY: 0.1, spreadZ: 0.1 },
                 species: [
                     { name: "Temporal_Anchor", color: "rgb(200, 150, 0)", rgb: [0.8, 0.6, 0], dnaMod: (d) => { d[DNA_INDEXES.INERTIA]=10.0; return d; } },
                     { name: "Flux_Stream", color: "rgb(100, 0, 255)", rgb: [0.4, 0, 1], dnaMod: (d) => { d[DNA_INDEXES.VISCOSITY]=0.99; d[DNA_INDEXES.INERTIA]=0.2; return d; } }

@@ -1,1 +1,0 @@
-import{b as e,y as t}from"./index-B-HPfFXm.js";e();export{t as WebGPURenderer};
