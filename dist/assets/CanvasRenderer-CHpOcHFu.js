@@ -1,1 +1,0 @@
-import{C as e,w as t}from"./index-B-HPfFXm.js";t();export{e as CanvasRenderer};

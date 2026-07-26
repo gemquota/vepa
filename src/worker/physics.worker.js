@@ -1,5 +1,7 @@
 import { DNA_RANGES, DNA_INDEXES, DNA_STRIDE, DNA_PACK_MAX, STRIDE_INDEXES } from "../constants.js";
 const STRIDE = 64;
+const MAX_FORCE = 50.0;
+const MAX_INTERACTIONS = 500;
 let particles;
 let dnaView;
 let radiationGrid;
@@ -18,6 +20,9 @@ const DNA_OFFSETS = {};
 for (const key in DNA_INDEXES) {
     DNA_OFFSETS[key] = STRIDE_INDEXES.DNA_CACHE_START + DNA_INDEXES[key];
 }
+
+function isFinite_f(v) { return typeof v === 'number' && isFinite(v); }
+function clampFinite(v, fb) { return isFinite_f(v) ? v : (fb || 0); }
 
 const GRID_SIZE = 10;
 let spatialGrid = [];
@@ -165,6 +170,7 @@ self.onmessage = (e) => {
                 const ptr = i * STRIDE;
                 if (particles[ptr + STRIDE_INDEXES.DEAD] > 0) continue;
                 let ax = 0, ay = 0, az = 0;
+                let interactionCount = 0;
 
                 let localDt = dt;
                 if (meta.time) {
@@ -215,6 +221,7 @@ self.onmessage = (e) => {
                 for (let ox = -1; ox <= 1; ox++) {
                     for (let oy = -1; oy <= 1; oy++) {
                         for (let oz = -1; oz <= 1; oz++) {
+                            if (interactionCount >= MAX_INTERACTIONS) break;
                             let nx = gx + ox, ny = gy + oy, nz = gz + oz;
                             if (nx < 0) nx += GRID_SIZE; if (nx >= GRID_SIZE) nx -= GRID_SIZE;
                             if (ny < 0) ny += GRID_SIZE; if (ny >= GRID_SIZE) ny -= GRID_SIZE;
@@ -225,7 +232,10 @@ self.onmessage = (e) => {
 
                             for (const j of cell) {
                                 if (i === j) continue;
+                                if (interactionCount >= MAX_INTERACTIONS) break;
                                 const oPtr = j * STRIDE;
+                                if (particles[oPtr + STRIDE_INDEXES.DEAD] > 0) continue;
+                                interactionCount++;
                                 let dx = particles[oPtr + STRIDE_INDEXES.POS_X] - particles[ptr + STRIDE_INDEXES.POS_X];
                                 let dy = particles[oPtr + STRIDE_INDEXES.POS_Y] - particles[ptr + STRIDE_INDEXES.POS_Y];
                                 let dz = particles[oPtr + STRIDE_INDEXES.POS_Z] - particles[ptr + STRIDE_INDEXES.POS_Z];
@@ -347,7 +357,7 @@ self.onmessage = (e) => {
                                             const addedMass = m2 * fusionEff;
                                             
                                             // Intermediary Color Blending
-                                            const ratio = addedMass / (m1 + addedMass);
+                                            const ratio = addedMass / (m1 + addedMass + 0.001);
                                             particles[ptr + STRIDE_INDEXES.COLOR_R] += (particles[oPtr + STRIDE_INDEXES.COLOR_R] - particles[ptr + STRIDE_INDEXES.COLOR_R]) * ratio;
                                             particles[ptr + STRIDE_INDEXES.COLOR_G] += (particles[oPtr + STRIDE_INDEXES.COLOR_G] - particles[ptr + STRIDE_INDEXES.COLOR_G]) * ratio;
                                             particles[ptr + STRIDE_INDEXES.COLOR_B] += (particles[oPtr + STRIDE_INDEXES.COLOR_B] - particles[ptr + STRIDE_INDEXES.COLOR_B]) * ratio;
@@ -382,6 +392,10 @@ self.onmessage = (e) => {
                 particles[ptr+4] = (particles[ptr+4] + ay * invMass) * drag * totalViscosity;
                 particles[ptr+5] = (particles[ptr+5] + az * invMass) * drag * totalViscosity;
 
+                if (!isFinite_f(particles[ptr+3])) particles[ptr+3] = 0;
+                if (!isFinite_f(particles[ptr+4])) particles[ptr+4] = 0;
+                if (!isFinite_f(particles[ptr+5])) particles[ptr+5] = 0;
+
                 if (meta.orde) {
                     particles[ptr+3] *= 0.99; particles[ptr+4] *= 0.99; particles[ptr+5] *= 0.99;
                 }
@@ -402,6 +416,15 @@ self.onmessage = (e) => {
                 particles[ptr + STRIDE_INDEXES.POS_X] += particles[ptr + STRIDE_INDEXES.VEL_X] * localDt;
                 particles[ptr + STRIDE_INDEXES.POS_Y] += particles[ptr + STRIDE_INDEXES.VEL_Y] * localDt;
                 particles[ptr + STRIDE_INDEXES.POS_Z] += particles[ptr + STRIDE_INDEXES.VEL_Z] * localDt;
+
+                if (!isFinite_f(particles[ptr + STRIDE_INDEXES.POS_X])) particles[ptr + STRIDE_INDEXES.POS_X] = (Math.random()-0.5) * W;
+                if (!isFinite_f(particles[ptr + STRIDE_INDEXES.POS_Y])) particles[ptr + STRIDE_INDEXES.POS_Y] = (Math.random()-0.5) * H;
+                if (!isFinite_f(particles[ptr + STRIDE_INDEXES.POS_Z])) particles[ptr + STRIDE_INDEXES.POS_Z] = (Math.random()-0.5) * D;
+
+                if (!isFinite_f(particles[ptr + STRIDE_INDEXES.MASS])) particles[ptr + STRIDE_INDEXES.MASS] = 1.0;
+                if (!isFinite_f(particles[ptr + STRIDE_INDEXES.ENERGY])) particles[ptr + STRIDE_INDEXES.ENERGY] = 50.0;
+
+                particles[ptr + STRIDE_INDEXES.ENERGY] = Math.max(0, Math.min(200, particles[ptr + STRIDE_INDEXES.ENERGY]));
 
                 if (pure.planetary) {
                     const floor = H / 2;

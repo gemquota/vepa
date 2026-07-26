@@ -1,3 +1,22 @@
+## [2.4.0] - 2026-07-26
+### Fixed
+- **NaN Guard System:** Added comprehensive NaN/Infinity validation to Worker physics loop. Position, velocity, mass, and energy are now validated every frame with automatic recovery.
+- **Accretion Double-Consumption Bug:** Fixed inner force loop to skip dead particles, preventing same particle from being absorbed multiple times per frame.
+- **MAX_FORCE Clamp:** Added global force magnitude clamp (50.0) after force accumulation to prevent numerical instability.
+- **MAX_INTERACTIONS Throttle:** Added 500-interaction-per-particle limit to prevent frame time spikes in dense clusters.
+- **Energy Bounds:** Added explicit ENERGY clamp to [0, 200] range after all energy modifications.
+- **Division-by-Zero in Accretion:** Added epsilon to color blending ratio denominator.
+- **Timeline Deep Clone:** Fixed species RGB array shallow clone in TimelineEngine snapshot.
+
+### Removed
+- **Dead Code: NarrativeEngine** (src/narrativeEngine.js) — instantiated but never called; superseded by NarrativeConsciousness.
+- **Dead Code: LevelEngine** (src/levelEngine.js) — exported but never imported or used.
+- **Dead Code: Visual Buffer** — Float32Array allocated and transferred to Worker but never read; rendering reads directly from particle buffer.
+- **Redundant Files:** Removed backup/, .claude/, .specify/, .tests/, .tickets/, vepa-deploy.zip, combined.txt, deploy_payload.json, serve_vepa.py, test files.
+
+### Changed
+- **Updated .gitignore:** Added comprehensive exclusions for build artifacts, vendored deps, backups, and test artifacts.
+- **Worker Architecture Constants:** Documented MAX_FORCE=50.0, MAX_INTERACTIONS=500, STRIDE=64, species_limit=12, GRID_SIZE=10 as authoritative values.
 # VEPA (Vector Emergent Physics Automata) Changelog
 
 All notable changes to this project will be documented in this file.

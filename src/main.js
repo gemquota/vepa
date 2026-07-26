@@ -3,7 +3,6 @@ import { bus } from "./core/eventBus.js";
 import { DNA_META, DNA_RANGES, DNA_STRIDE, DNA_PACK_MAX, DNA_INDEXES, STRIDE_INDEXES } from './constants.js';
 import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative, updateTimelineUI, notifyNewProposal, updatePlaybackUI, renderWorldAccordion, renderDNAAccordion, renderSpeciesList, renderDNAAnalytics, updateDNAGraphs } from './ui.js';
 import { InsightEngine } from './insightEngine.js';
-import { NarrativeEngine } from './narrativeEngine.js';
 import { TimelineEngine } from './timelineEngine.js';
 import { LineageTracker } from './lineageTracker.js';
 import { EmergentParamEngine } from './emergentParamEngine.js';
@@ -61,7 +60,6 @@ class VepaEngine {
         this.species = this.createDefaultSpecies();
 
         this.insightEngine = new InsightEngine(this);
-        this.narrativeEngine = new NarrativeEngine();
         this.timelineEngine = new TimelineEngine(this, this.insightEngine);
         this.emergentEngine = new EmergentParamEngine(this);
         this.goalSystem = new GoalSystem(this);
@@ -389,7 +387,7 @@ class VepaEngine {
             bus.emit('narrative:entry', { text: `SYSTEM: Allocating high-density buffer (${count} particles). Expect temporary latency.`, time: new Date().toLocaleTimeString() });
         }
         this.particles = new Float32Array(count * STRIDE);
-        this.visuals = new Float32Array(count * 5); // RGB (0-2), Energy (3), Age (4)
+        // Visuals buffer removed: read directly from particle buffer
 
         if (!this.isChaosMode) {
             if (this.particleSprites) this.particleSprites.forEach(s => s.destroy());
@@ -407,7 +405,7 @@ class VepaEngine {
 
         for (let i = 0; i < count; i++) {
             const ptr = i * STRIDE;
-            const vPtr = i * 5;
+            // vPtr removed: visual data read from particle buffer
             if (!this.isChaosMode && this.texture && this.world) {
                 const sprite = new PIXI.Sprite(this.texture);
                 sprite.anchor.set(0.5); this.world.addChild(sprite); this.particleSprites.push(sprite);
@@ -478,15 +476,13 @@ class VepaEngine {
             this.particles[ptr + STRIDE_INDEXES.COLOR_G] = rgb[1];
             this.particles[ptr + STRIDE_INDEXES.COLOR_B] = rgb[2];
 
-            this.visuals[vPtr] = rgb[0]; this.visuals[vPtr+1] = rgb[1]; this.visuals[vPtr+2] = rgb[2];
-            this.visuals[vPtr+3] = 100.0; // Energy
-            this.visuals[vPtr+4] = 0; // Age
+            // Visual data read directly from particle buffer
         }
         
         // Sync all species DNA to buffer
         this.species.forEach((s, idx) => this.syncDNABuffer(idx));
 
-        this.worker.postMessage({ type: 'init', data: { particles: this.particles, dnaBuffer: this.dnaBuffer, visuals: this.visuals }, version: this.simVersion });
+        this.worker.postMessage({ type: 'init', data: { particles: this.particles, dnaBuffer: this.dnaBuffer }, version: this.simVersion });
         
         // Refresh DNA tab if visible
         const dnaTab = document.getElementById('tab-dna');

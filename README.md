@@ -1,8 +1,8 @@
-# 🌌 VEPA: Vector Emergent Physics Automata (v1.1+)
+# 🌌 VEPA: Vector Emergent Physics Automata (v2.4.0)
 
 [![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](https://github.com/yourusername/vepa)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-blue.svg)](https://github.com/yourusername/vepa/releases)
+[![Version: 1.1.0](https://img.shields.io/badge/Version-2.4.0-blue.svg)](https://github.com/yourusername/vepa/releases)
 
 > **"The universe is not made of atoms; it is made of stories. VEPA is the ink."**
 
@@ -12,7 +12,7 @@ VEPA is a high-performance, GPU-accelerated (via Web Workers and optimized Canva
 
 ## 📺 Overview
 
-VEPA simulates thousands of autonomous particles across 8 distinct "species." Each species is governed by a 16-parameter **DNA profile** that dictates how it attracts, repels, communicates, and evolves with its neighbors.
+VEPA simulates thousands of autonomous particles across 12 distinct "species." Each species is governed by a 42-parameter **DNA profile** that dictates how it attracts, repels, communicates, and evolves with its neighbors.
 
 Through the interference patterns of these simple local rules, macro-scale structures emerge:
 *   **Crystalline Lattices** that vibrate with harmonic resonance.

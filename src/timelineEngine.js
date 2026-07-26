@@ -29,7 +29,7 @@ export class TimelineEngine {
             species: this.engine.species.map(s => ({
                 dna: [...s.dna],
                 color: s.color,
-                rgb: s.rgb,
+                rgb: s.rgb ? [...s.rgb] : null,
                 id: s.id,
                 name: s.name
             })),
