@@ -128,8 +128,11 @@ These 42 parameters define how a species behaves and interacts with its environm
 ## 3. WORLD CONFIGURATION
 *   **count:** Base particle count target.
 *   **dimX, dimY, dimZ:** Physical dimensions of the simulation volume.
-*   **spreadX, spreadY, spreadZ:** Starting spatial distribution ratios.
+*   **spreadX, spreadY, spreadZ:** Per-axis initial distribution ratios (UI sliders, currently wired through spreadRadius for spawn logic).
 *   **baseSize:** Global scale multiplier.
+*   **entropy:** Global stochastic noise baseline for jitter calculation and sublimation threshold.
+*   **cameraMode:** Viewport interaction mode (panning | orbital).
+*   **cameraLocked:** Boolean toggle to suppress camera rotation for stable observation.
 
 ---
 

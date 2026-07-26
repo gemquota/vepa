@@ -1,5 +1,6 @@
 export const DNA_STRIDE = 64;
 export const DNA_PACK_MAX = 65535;
+export const PARTICLE_STRIDE = 64;
 
 export const STRIDE_INDEXES = {
     POS_X: 0,
@@ -17,7 +18,15 @@ export const STRIDE_INDEXES = {
     DEAD: 52,
     COLOR_R: 53,
     COLOR_G: 54,
-    COLOR_B: 55
+    COLOR_B: 55,
+    RADIUS: 56,
+    SIGNAL: 57,
+    BOND_COUNT: 58,
+    BOND_PARTNER_1: 59,
+    BOND_PARTNER_2: 60,
+    MEMORY: 61,
+    HUNGER: 62,
+    ARMOR: 63
 };
 
 export const DNA_INDEXES = {
@@ -856,7 +865,43 @@ export const HELP_DB = {
         },
         category: "Biology"
     },
-    "PLANET": {
+        "LIFE": {
+        layers: {
+            hint: "Toggles biological life cycle.",
+            explanation: "Particles consume energy each frame and age over time.",
+            system: "Energy cost = (0.01 + mass*0.001) / efficiency per step.",
+            advanced: "Enables death, hunger, and the core metabolic economy."
+        },
+        category: "Laws"
+    },
+    "AFFINITY": {
+        layers: {
+            hint: "Toggles species-based social bias.",
+            explanation: "When on, SPECIES_AFFINITY DNA modulates gravity between same vs different species.",
+            system: "Affinity > 0 attracts same species; Affinity < 0 attracts different species.",
+            advanced: "The primary driver of segregation and mixed-species clustering."
+        },
+        category: "Laws"
+    },
+    "REPRODUCTION": {
+        layers: {
+            hint: "Toggles spontaneous offspring spawning.",
+            explanation: "Particles can spawn new particles based on BIRTH_RATE DNA.",
+            system: "Offspring inherit parent position with random offset and base energy.",
+            advanced: "The engine for population growth and evolutionary pressure."
+        },
+        category: "Laws"
+    },
+    "TRACKING": {
+        layers: {
+            hint: "Toggles predation pursuit behavior.",
+            explanation: "Particles accelerate toward lower-mass particles (prey) and flee from higher-mass ones.",
+            system: "PREDATION_BIAS DNA controls strength. Mass difference > 0.5 triggers pursuit.",
+            advanced: "Creates predator-prey dynamics without explicit agent programming."
+        },
+        category: "Laws"
+    },
+"PLANET": {
         layers: {
             hint: "Toggles planetary gravity and ground.",
             explanation: "Applies a constant downward force and creates a solid floor at the bottom of the simulation.",
@@ -882,6 +927,33 @@ export const HELP_DB = {
             advanced: "Creates 'hot' zones where evolution accelerates but stability drops."
         },
         category: "Energetics"
+    },
+    "SENESCENCE": {
+        layers: {
+            hint: "Toggles aging-related decay.",
+            explanation: "Particles accumulate death probability over time based on Death Rate DNA.",
+            system: "Sets deathProb = deathRate when active, 0 when disabled.",
+            advanced: "When disabled, particles are functionally immortal and only die from predation or accidents."
+        },
+        category: "Laws"
+    },
+    "GENOTYPE": {
+        layers: {
+            hint: "Toggles DNA inheritance and mutation.",
+            explanation: "Offspring inherit DNA from parents with mutation drift when active.",
+            system: "Applies MUTATION DNA to offspring parameters. Synergizes with RAD for accelerated mutation.",
+            advanced: "The engine for open-ended evolution. Disabling locks all species to their initial DNA."
+        },
+        category: "Laws"
+    },
+    "PHENOTYPE": {
+        layers: {
+            hint: "Toggles physical expression of DNA.",
+            explanation: "Controls whether visual traits (alpha, color, size) reflect underlying DNA values.",
+            system: "Maps DNA parameters to visual rendering properties each frame.",
+            advanced: "Decouples genotype from appearance when disabled — useful for debugging selection pressure."
+        },
+        category: "Laws"
     },
     "VOID": {
         layers: {
@@ -1038,7 +1110,7 @@ export const HELP_DB = {
 };
 
 export const DNA_RANGES = [
-    { min: -100, max: 100, default: 0.1 },
+    { min: -100, max: 100, default: 1.0 },
     { min: 0.5, max: 1.0, default: 0.98 }, // Viscosity (more range)
     { min: -1, max: 1, default: 0 },
     { min: 0, max: 5.0, default: 0.05 }, // Jitter (way more range)

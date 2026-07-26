@@ -23,9 +23,41 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
 *   **The Fix:** Synchronize them. **Signal Response** allows one particle's state change to trigger its neighbors. When tuned correctly, you can create "Traveling Waves" or "Heartbeats" that ripple across an entire colony.
 *   **Recipe for Neural Nets:** `Pulse Rate: 0.1` | `Signal Resp: 1.5` | `Alpha: 0.4`.
 
+### D. The Boundary Condition (Wrap vs. Solid vs. Void vs. Sticky)
+*   **The Problem:** Toroidal wrapping (Periodic) is great for infinite fields but bad for simulating containers or "Leaking" systems.
+*   **The Fix:** Use the cycling **WRAP** law to shift topology:
+    *   **Periodic:** Infinite toroidal space (Screen wrap).
+    *   **Solid:** Elastic bounce at boundaries for high-pressure containment.
+    *   **Void:** Open system where matter "evaporates" out of bounds.
+    *   **Sticky:** Zero-velocity adhesion at the edge of space.
+
+### E. The Categorical Law Colors
+Laws are now color-coded by category to help you navigate the system status at a glance:
+*   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.
+*   **GREEN (Biology):** Life, Glow, Affinity, Repro, Track, Senescence, Energy, Radiation, Genotype, Phenotype.
+*   **PURPLE (Chemistry):** Catalysis, Solvation, Acidity, Oxidation, Poly, Isomerization, Chirality, Crystallization.
+*   **ORANGE (Thermodynamics):** Heat, Cold, Convection, Radiation, Phase changes.
+*   **RED (Metaphysics):** Time Dilation, Dimensionality, Chaos, Order, Fate, Will, Soul, Mind.
+
+### F. Evolutionary Coloring
+Color in VEPA is now a direct indicator of genetic history and stability:
+*   **Accretion (Mass-Weighted):** When particles merge, the survivor inherits a mass-weighted average of both parent colors.
+*   **Offspring (Randomized Intermediary):** In sexual reproduction, offspring inherit a randomized value within the R,G,B range of both parents.
+*   **The Variance Shift:** Offspring colors are further hue-shifted (perpendicular shift in color space) based on the magnitude of genetic mutations. A highly mutated offspring will appear color-shifted relative to its parents, providing a visual cue for evolutionary "leaps."
+
 ---
 
-## 2. Evolutionary Pressure (Chaos Strategy)
+## 2. Advanced Interaction Laws
+
+### The Three-Tier Reproduction System (REPRO)
+When the `REPRO` law is active, species can propagate through three distinct channels:
+1.  **Spontaneous Cloning:** Entities spontaneously produce offspring based on their `Birth Rate`. Offspring inherit DNA with slight drift.
+2.  **Sexual Reproduction:** Colliding entities with compatible energy levels have a chance to breed (via `Sex Chance`). This blends DNA from both parents and produces a randomized intermediary color.
+3.  **Mitosis (High-Energy Splitting):** Mature entities ($Energy > 90$, $Mass > 1.5$) will split into two, sharing their mass and energy. This is triggered by biological success.
+
+---
+
+## 3. Evolutionary Pressure (Chaos Strategy)
 
 The **CHAOS** system is your primary tool for "Forced Evolution."
 
@@ -55,3 +87,14 @@ Managing a **Singularity** (Black Hole) is an advanced architect's most dangerou
 ---
 
 ### "Do not just observe the emergence. Direct it."
+
+---
+
+## 📚 Further Research: The Encyclopedia
+
+For those requiring a total technical breakdown of the engine's core constants, refer to the **Expanded Physics Encyclopedia**:
+
+*   **[Batch 01: World Physics Core](./docs/expansion/batches/batch_01.md)**: count, G, dt, globalViscosity, spawnRate, temperature.
+*   **[Batch 02: World Environment: Spatial](./docs/expansion/batches/batch_02.md)**: pressure, windX/Y/Z, dimX/Y (World Dimensions).
+
+These volumes contain Advanced and Expert-level deep dives into implementation logic and emergent system behaviors.

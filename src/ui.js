@@ -9,7 +9,7 @@ let selectedPresetCategories = new Set();
 const narrativeHistory = [];
 
 const WORLD_CATEGORIES = {
-    "BASIC": { keys: ["count", "G", "dt", "globalViscosity", "spawnRate", "cameraMode", "cameraLocked", "focalLength"], minLevel: 0 },
+    "BASIC": { keys: ["initialCount", "count", "spawnRate", "G", "dt", "globalViscosity", "cameraMode", "cameraLocked", "focalLength"], minLevel: 0 },
     "PLANETARY": { keys: ["wind"], minLevel: 0 },
     "DIMENSIONS": { keys: ["dimX", "dimY", "dimZ", "baseSize"], minLevel: 0 },
     "DISTRIBUTION": { keys: ["spreadX", "spreadY", "spreadZ", "shape"], minLevel: 0 },
@@ -550,6 +550,7 @@ export function setupUI(engine) {
             const row = elVal.closest('.slider-row');
             if (row) row.classList.toggle('zero-val', parseFloat(val) === 0);
         }
+        if (key === 'initialCount' && window.engine) renderWorldAccordion(window.engine);
     };
     window.updatePhysics = (key, val, dId, el) => {
         emit('cmd:updatePhysics', { key, val });
@@ -1129,7 +1130,8 @@ export function renderWorldAccordion(engine) {
     const container = document.getElementById('world-accordion'); if (!container) return; container.innerHTML = '';
     const level = engine.complexityLevel || 0;
     const allWorldParams = [
-        { name: 'Particle Count', key: 'count', min: 10, max: 50000, val: engine.worldConfig.count, type: 'world', log: true, snaps: [10, 100, 500, 1000, 5000, 10000, 50000] },
+        { name: 'Initial Population', key: 'initialCount', min: 1, max: 5000, val: engine.worldConfig.initialCount || 500, type: 'world' },
+        { name: 'Max Population', key: 'count', min: 10, max: 50000, val: engine.worldConfig.count, type: 'world', log: true, snaps: [10, 100, 500, 1000, 5000, 10000, 50000] },
         { name: 'Entropy', key: 'entropy', min: 0, max: 1, step: 0.05, val: engine.worldConfig.entropy, type: 'world' },
         { name: 'Global Viscosity', key: 'globalViscosity', min: 0.5, max: 1, step: 0.01, val: engine.worldConfig.globalViscosity, type: 'world' },
         { name: 'Spawn Rate', key: 'spawnRate', min: 1, max: 1000, val: engine.worldConfig.spawnRate || 10, type: 'world', log: true, snaps: [1, 10, 50, 100, 500, 1000] },
@@ -1166,6 +1168,8 @@ export function renderWorldAccordion(engine) {
         const content = document.createElement('div'); content.className = 'tier-3-container';
         config.keys.forEach(k => {
             const it = allWorldParams.find(p => p.key === k); if (!it) return;
+            // Dynamic minimum: Max Population must be >= Initial Population
+            if (it.key === 'count' && engine.worldConfig.initialCount) { it.min = Math.max(it.min, engine.worldConfig.initialCount); if (it.val < it.min) { it.val = it.min; engine.worldConfig.count = it.min; } }
             const row = document.createElement('div'); row.className = 'slider-row'; 
             if (it.val === 0) row.classList.add('zero-val');
             const updateFn = it.type === 'phys' ? 'updatePhysics' : 'updateWorld';
@@ -1283,8 +1287,12 @@ function renderNarrativeLog() {
     lastLogRenderedCount = narrativeHistory.length;
 }
 
-export function updateHUD(fps, pCount, simStep = 0) {
-    const fpsEl = document.getElementById('fps'), pCountEl = document.getElementById('p-count'), stepEl = document.getElementById('sim-step');
+export function updateHUD(fps, aliveCount, maxCount, simStep = 0) {
+    const fpsEl = document.getElementById('fps'), aliveEl = document.getElementById('p-alive'), maxEl = document.getElementById('p-max'), stepEl = document.getElementById('sim-step');
+    if (aliveEl) aliveEl.innerText = isNaN(aliveCount) ? 0 : aliveCount;
+    if (maxEl) maxEl.innerText = isNaN(maxCount) ? 0 : maxCount;
+    if (fpsEl) fpsEl.innerText = isNaN(fps) ? 0 : fps;
+    if (stepEl) stepEl.innerText = isNaN(simStep) ? 0 : simStep;
     if (fpsEl) fpsEl.innerText = isNaN(fps) ? 0 : fps;
     if (pCountEl) pCountEl.innerText = isNaN(pCount) ? 0 : pCount;
     if (stepEl) stepEl.innerText = isNaN(simStep) ? 0 : simStep;

@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { bus } from "./core/eventBus.js";
-import { DNA_META, DNA_RANGES, DNA_STRIDE, DNA_PACK_MAX, DNA_INDEXES, STRIDE_INDEXES } from './constants.js';
+import { DNA_META, DNA_RANGES, DNA_STRIDE, DNA_PACK_MAX, DNA_INDEXES, STRIDE_INDEXES, PARTICLE_STRIDE } from './constants.js';
 import { setupUI, updateHUD, syncUI, renderInsights, renderSuggestions, renderNarrative, updateTimelineUI, notifyNewProposal, updatePlaybackUI, renderWorldAccordion, renderDNAAccordion, renderSpeciesList, renderDNAAnalytics, updateDNAGraphs } from './ui.js';
 import { InsightEngine } from './insightEngine.js';
 import { TimelineEngine } from './timelineEngine.js';
@@ -12,7 +12,7 @@ import { NarrativeConsciousness } from './narrativeConsciousness.js';
 import { PersonalityCore } from './personalityEngine.js';
 import { wireSystem } from './system/integration.js';
 
-const STRIDE = 64;
+const STRIDE = PARTICLE_STRIDE;
 
 class VepaEngine {
     constructor() {
@@ -27,14 +27,14 @@ class VepaEngine {
         this.dnaView = new Uint16Array(this.dnaBuffer);
         this.paused = false;
         this.laws = { 
-            pure: { grav: true, drag: true, jitter: true, coll: true, accr: true, wrap: true, void: false, bond: false, planetary: false, G: 0.15, dt: 1.0 },
-            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: true, genotype: true, phenotype: true, ener: false, rad: false },
+            pure: { grav: true, drag: true, jitter: false, coll: true, accr: false, wrap: true, void: false, bond: false, planetary: false, G: 1.0, dt: 1.0 },
+            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: false, genotype: false, phenotype: false, ener: false, rad: false },
             chem: { cata: false, solv: false, acid: false, oxid: false, redu: false, poly: false, isom: false, chir: false, crys: false, allo: false },
             thermo: { heat: false, cold: false, conv: false, radi: false, subl: false, melt: false, boil: false, cond: false, depo: false, exop: false },
             meta: { time: false, dime: false, chao: false, orde: false, fate: false, will: false, soul: false, mind: false, tele: false, clai: false, preo: false, astr: false }
         };
         this.worldConfig = { 
-            count: 1000, dimX: 500, dimY: 500, dimZ: 500, 
+            count: 2000, initialCount: 500, dimX: 500, dimY: 500, dimZ: 500, 
             spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, 
             baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5,
             groundHeight: 0.9, cameraMode: 'panning', cameraLocked: false,
@@ -118,6 +118,7 @@ class VepaEngine {
                 this.setupInteraction();
                 this.worker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
                 this.worker.onmessage = (e) => this.handleWorkerMessage(e);
+                this.worker.onerror = (e) => { console.error("Worker error:", e.message, e.filename, e.lineno); this.workerBusy = false; };
                 let frame = 0;
                 this.restartSim();
                 setupUI(this); syncUI(this.laws);
@@ -383,6 +384,7 @@ class VepaEngine {
         this.history.colors = [];
         this.historyThrottle = 0;
         const count = this.worldConfig.count;
+        const initCount = this.worldConfig.initialCount || Math.min(count, 500);
         if (count > 20000) {
             bus.emit('narrative:entry', { text: `SYSTEM: Allocating high-density buffer (${count} particles). Expect temporary latency.`, time: new Date().toLocaleTimeString() });
         }
@@ -395,15 +397,19 @@ class VepaEngine {
         }
 
         const W = this.worldConfig.dimX, H = this.worldConfig.dimY, D = this.worldConfig.dimZ;
-        const spread = this.worldConfig.spreadRadius || 1.0;
+        const sx = this.worldConfig.spreadX || 1.0;        const sy = this.worldConfig.spreadY || 1.0;        const sz = this.worldConfig.spreadZ || 1.0;
         const distType = this.worldConfig.distributionType || 'Grid';
 
         const side = Math.ceil(Math.pow(count, 1/3));
-        const spacingX = (W * spread) / side;
-        const spacingY = (H * spread) / side;
-        const spacingZ = (D * spread) / side;
+        const spacingX = (W * sx) / side;
+        const spacingY = (H * sy) / side;
+        const spacingZ = (D * sz) / side;
 
         for (let i = 0; i < count; i++) {
+            if (i >= initCount) {
+                this.particles[i * STRIDE + STRIDE_INDEXES.DEAD] = 1;
+                continue;
+            }
             const ptr = i * STRIDE;
             // vPtr removed: visual data read from particle buffer
             if (!this.isChaosMode && this.texture && this.world) {
@@ -416,9 +422,9 @@ class VepaEngine {
             let px = 0, py = 0, pz = 0, vx = 0, vy = 0, vz = 0;
 
             if (distType === 'Soup') {
-                px = (Math.random() - 0.5) * W * spread;
-                py = (Math.random() - 0.5) * H * spread;
-                pz = (Math.random() - 0.5) * D * spread;
+                px = (Math.random() - 0.5) * W * sx;
+                py = (Math.random() - 0.5) * H * sy;
+                pz = (Math.random() - 0.5) * D * sz;
             } else if (distType === 'Big Bang') {                px = (Math.random() - 0.5) * 10;
                 py = (Math.random() - 0.5) * 10;
                 pz = (Math.random() - 0.5) * 10;
@@ -428,24 +434,24 @@ class VepaEngine {
                 vx = (dir.x/d) * mag; vy = (dir.y/d) * mag; vz = (dir.z/d) * mag;
             } else if (distType === 'Bipolar') {
                 const side = Math.random() > 0.5 ? 1 : -1;
-                px = side * W * 0.4 * spread + (Math.random()-0.5) * 100;
-                py = (Math.random()-0.5) * H * spread;
-                pz = (Math.random()-0.5) * D * spread;
+                px = side * W * 0.4 * sx + (Math.random()-0.5) * 100;
+                py = (Math.random()-0.5) * H * sy;
+                pz = (Math.random()-0.5) * D * sz;
             } else if (distType === 'Galaxy') {
                 const angle = Math.random() * Math.PI * 2;
-                const r = Math.pow(Math.random(), 0.5) * W * 0.5 * spread;
+                const r = Math.pow(Math.random(), 0.5) * W * 0.5 * sx;
                 px = Math.cos(angle) * r;
                 py = Math.sin(angle) * r;
-                pz = (Math.random() - 0.5) * D * 0.1 * spread;
+                pz = (Math.random() - 0.5) * D * 0.1 * sz;
                 const vMag = 2.0;
                 vx = -Math.sin(angle) * vMag; vy = Math.cos(angle) * vMag;
             } else { // Grid
                 const gx = i % side;
                 const gy = Math.floor(i / side) % side;
                 const gz = Math.floor(i / (side * side));
-                px = (gx - side/2) * spacingX;
-                py = (gy - side/2) * spacingY;
-                pz = (gz - side/2) * spacingZ;
+                px = (gx - (side-1)/2) * spacingX;
+                py = (gy - (side-1)/2) * spacingY;
+                pz = (gz - (side-1)/2) * spacingZ;
             }
 
             this.particles[ptr + STRIDE_INDEXES.POS_X] = px; 
@@ -460,6 +466,12 @@ class VepaEngine {
             this.particles[ptr + STRIDE_INDEXES.DEAD] = 0;
             this.particles[ptr + STRIDE_INDEXES.ENERGY] = 100.0;
             this.particles[ptr + STRIDE_INDEXES.AGE] = 0;
+            this.particles[ptr + STRIDE_INDEXES.RADIUS] = 1.0;
+            this.particles[ptr + STRIDE_INDEXES.SIGNAL] = 0;
+            this.particles[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
+            this.particles[ptr + STRIDE_INDEXES.MEMORY] = 0;
+            this.particles[ptr + STRIDE_INDEXES.HUNGER] = 0;
+            this.particles[ptr + STRIDE_INDEXES.ARMOR] = 0;
 
             // Cache DNA for worker
             for (let d = 0; d < 42; d++) {
@@ -776,7 +788,8 @@ class VepaEngine {
             import('./ui.js').then(ui => ui.updateParticleHUD(this.getParticleData(this.selectedParticleIndex)));
         }
 
-        updateHUD(Math.round(this.app.ticker.FPS), this.worldConfig.count, this.simStep);
+        const aliveCount = this.particles ? (() => { let c = 0; for (let j = 0; j < this.worldConfig.count; j++) { if (this.particles[j * STRIDE + STRIDE_INDEXES.DEAD] === 0) c++; } return c; })() : 0;
+        updateHUD(Math.round(this.app.ticker.FPS), aliveCount, this.worldConfig.count, this.simStep);
     }
 
     renderEnvironment() {
@@ -900,6 +913,17 @@ class VepaEngine {
     }
     updateWorld(key, val) { 
         if (key === 'focalLength') this.focalLength = parseFloat(val);
+        else if (key === 'initialCount') {
+            const initVal = parseFloat(val);
+            this.worldConfig.initialCount = initVal;
+            if (this.worldConfig.count < initVal) {
+                this.worldConfig.count = initVal;
+            }
+        } else if (key === 'count') {
+            const countVal = parseFloat(val);
+            const initVal = this.worldConfig.initialCount || 1;
+            this.worldConfig.count = Math.max(countVal, initVal);
+        }
         else this.worldConfig[key] = parseFloat(val); 
     }
     updatePhysics(key, val) { 

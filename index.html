@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VEPA v2.1: Particle God</title>
+    <title>VEPA2: Particle God</title>
     <link rel="stylesheet" href="./style.css">
+<script src="./error_handler.js"></script>
 </head>
 <body class="theme-sanguine">
     <div class="bg-lines"></div>
@@ -388,7 +389,7 @@
         </div>
     </div>
 
-    <div id="zoom-hud">FPS: <span id="fps">0</span> | P: <span id="p-count">0</span> | S: <span id="sim-step">0</span></div>
+    <div id="zoom-hud">FPS: <span id="fps">0</span> | POP: <span id="p-alive">0</span>/<span id="p-max">0</span> | S: <span id="sim-step">0</span></div>
     <div id="help-drone" class="help-drone hidden" style="left: 90%; top: 50px;">
         <div class="drone-body-core"></div>
         <div class="drone-rotor tl"><div class="blade"></div></div>
@@ -419,6 +420,7 @@
         <div id="chaos-grid-container" style="display: grid; width: 100%; height: 100%; gap: 2px; padding: 40px 10px 10px 10px; box-sizing: border-box; pointer-events: none;"></div>
     </div>
 
+    
     <script type="module" src="./src/main.js"></script></body>
 </html>
 >

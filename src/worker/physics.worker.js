@@ -438,6 +438,14 @@ self.onmessage = (e) => {
                     if (particles[ptr] < -W/2) particles[ptr] += W; if (particles[ptr] > W/2) particles[ptr] -= W;
                     if (particles[ptr+1] < -H/2) particles[ptr+1] += H; if (particles[ptr+1] > H/2) particles[ptr+1] -= H;
                     if (particles[ptr+2] < -D/2) particles[ptr+2] += D; if (particles[ptr+2] > D/2) particles[ptr+2] -= D;
+                if (!pure.wrap) {
+                    if (particles[ptr] < -W/2) { particles[ptr] = -W/2; particles[ptr+3] *= -0.5; }
+                    if (particles[ptr] > W/2) { particles[ptr] = W/2; particles[ptr+3] *= -0.5; }
+                    if (particles[ptr+1] < -H/2) { particles[ptr+1] = -H/2; particles[ptr+4] *= -0.5; }
+                    if (particles[ptr+1] > H/2) { particles[ptr+1] = H/2; particles[ptr+4] *= -0.5; }
+                    if (particles[ptr+2] < -D/2) { particles[ptr+2] = -D/2; particles[ptr+5] *= -0.5; }
+                    if (particles[ptr+2] > D/2) { particles[ptr+2] = D/2; particles[ptr+5] *= -0.5; }
+                }
                 }
             }
         }
