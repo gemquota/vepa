@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v3: Vector Emergent Physics Automata</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="theme-sanguine">
+    <div id="app">
+        <canvas id="sim-canvas"></canvas>
+        <div id="ui-layer">
+            <div id="top-bar">
+                <div class="playback-group">
+                    <button id="play-pause-btn" class="sq-btn" title="Play/Pause">⏸</button>
+                    <button id="restart-btn" class="sq-btn" title="Restart">🔄</button>
+                    <button id="hard-reset-btn" class="sq-btn" title="Hard Reset">🗑️</button>
+                </div>
+                <div id="hud" class="hud">
+                    <span id="hud-fps">0 FPS</span>
+                    <span id="hud-particles">0 particles</span>
+                    <span id="hud-species">0 species</span>
+                    <span id="hud-tick">tick 0</span>
+                </div>
+            </div>
+
+            <div id="side-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-world">WORLD</button>
+                    <button class="tab-btn" data-tab="tab-species">SPECIES</button>
+                    <button class="tab-btn" data-tab="tab-dna">DNA</button>
+                    <button class="tab-btn" data-tab="tab-laws">LAWS</button>
+                    <button class="tab-btn" data-tab="tab-narrative">LOG</button>
+                </div>
+                <div id="tab-world" class="tab-content active">
+                    <div id="world-panel"></div>
+                </div>
+                <div id="tab-species" class="tab-content">
+                    <div id="species-panel"></div>
+                </div>
+                <div id="tab-dna" class="tab-content">
+                    <div id="dna-panel"></div>
+                </div>
+                <div id="tab-laws" class="tab-content">
+                    <div id="laws-panel"></div>
+                </div>
+                <div id="tab-narrative" class="tab-content">
+                    <div id="narrative-panel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>

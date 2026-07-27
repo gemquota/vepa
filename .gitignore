@@ -6,7 +6,6 @@ __pycache__/
 .DS_Store
 dist/
 backup/
-v3/
 v3-backup/
 .tests/
 .tickets/
