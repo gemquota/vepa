@@ -27,16 +27,27 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Build v2 (root)
       - run: npm ci
-
       - run: npx vite build
+      - run: cp -r .dist v2-dist
+
+      # Build v3
+      - run: cd v3 && npm ci && npm run build
+      - run: cp -r v3/.dist v3-dist
+
+      # Combine into single deploy directory
+      - run: mkdir -p deploy
+      - run: cp -r v2-dist/* deploy/
+      - run: mkdir -p deploy/v3
+      - run: cp -r v3-dist/* deploy/v3/
 
       - uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .dist
+          path: deploy
 
       - name: Deploy to GitHub Pages
         id: deployment
