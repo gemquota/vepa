@@ -5,8 +5,7 @@ on:
     branches: [new]
 
 permissions:
-  contents: read
-  pages: write
+  contents: write
   id-token: write
 
 concurrency:
@@ -16,9 +15,6 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,13 +38,10 @@ jobs:
       - run: mkdir -p deploy/v3
       - run: cp -r v3-dist/* deploy/v3/
 
-      - uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      # Deploy to gh-pages branch
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: deploy
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          publish_branch: gh-pages

@@ -5,6 +5,7 @@ __pycache__/
 *.pyc
 .DS_Store
 dist/
+.dist/
 backup/
 v3-backup/
 .tests/
