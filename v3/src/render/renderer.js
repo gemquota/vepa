@@ -121,6 +121,9 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
     // ── 3. Particles ──
     const scaleX = width  / worldSize;
     const scaleY = height / worldSize;
+    const halfWorld = worldSize * 0.5;
+    // Perspective Z range: -halfWorld to +halfWorld, mapped to 0.5x to 2x scale
+    const zScaleRange = 1.5;
 
     for (let i = 0; i < particleCount; i++) {
         const base = i * stride;
@@ -130,27 +133,31 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
 
         const x = view[base + STRIDE_INDEXES.POS_X];
         const y = view[base + STRIDE_INDEXES.POS_Y];
+        const z = view[base + STRIDE_INDEXES.POS_Z] || 0;
         const speciesId = view[base + STRIDE_INDEXES.SPECIES_ID];
 
         // NaN guard — never draw broken coordinates
         if (x !== x || y !== y) continue;
 
-        const screenX = x * scaleX;
-        const screenY = y * scaleY;
+        // Z perspective: closer Z → bigger, further Z → smaller
+        const zNorm = z / halfWorld; // -1 to +1
+        const zPerspective = 1.0 + zNorm * zScaleRange * 0.5; // 0.25 to 1.75
+        const screenX = x * scaleX + (x - halfWorld) * zNorm * 0.05;
+        const screenY = y * scaleY + (y - halfWorld) * zNorm * 0.05;
 
         // Phenotype expression
         const color  = computeColor(particleBuffer, speciesId, i, stride);
         const radius = computeRadius(particleBuffer, speciesId, i, stride);
         const alpha  = computeAlpha(particleBuffer, speciesId, i, stride);
 
-        // Radius in screen pixels (use average scale for uniform scaling)
-        const screenR = radius * ((scaleX + scaleY) * 0.5);
+        // Radius in screen pixels, scaled by Z perspective
+        const screenR = radius * ((scaleX + scaleY) * 0.5) * zPerspective;
 
         // Skip fully transparent particles
         if (alpha < 0.001) continue;
 
         // Draw the particle
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = alpha * Math.min(1, zPerspective * 0.8 + 0.2);
         ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
         ctx.beginPath();
         ctx.arc(screenX, screenY, Math.max(screenR, 0.5), 0, Math.PI * 2);

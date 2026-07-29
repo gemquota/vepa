@@ -63,7 +63,27 @@ function setupToolbarControls(bus) {
     hardResetBtn.addEventListener('click', () => bus.emit('sim:hardReset'));
   }
   if (chaosBtn) {
-    chaosBtn.addEventListener('click', () => bus.emit('sim:chaos'));
+    let chaosPressTimer = null;
+    chaosBtn.addEventListener('pointerdown', () => {
+      chaosPressTimer = setTimeout(() => {
+        chaosPressTimer = null;
+        showChaosMenu(bus);
+      }, 600);
+    });
+    chaosBtn.addEventListener('pointerup', () => {
+      if (chaosPressTimer) {
+        clearTimeout(chaosPressTimer);
+        chaosPressTimer = null;
+        // Short click = instant chaos
+        bus.emit('sim:chaos');
+      }
+    });
+    chaosBtn.addEventListener('pointerleave', () => {
+      if (chaosPressTimer) {
+        clearTimeout(chaosPressTimer);
+        chaosPressTimer = null;
+      }
+    });
   }
   if (helpToggle) {
     helpToggle.addEventListener('click', () => bus.emit('help:toggle'));
@@ -111,5 +131,53 @@ function setupKeyboardShortcuts(bus) {
       }
       default: break;
     }
+  });
+}
+
+
+function showChaosMenu(bus) {
+  var old = document.getElementById("chaos-menu");
+  if (old) old.remove();
+  var cats = [
+    { id: "physics", label: "PHYS" },
+    { id: "biology", label: "BIOL" },
+    { id: "chemistry", label: "CHEM" },
+    { id: "thermodynamics", label: "THERMO" },
+    { id: "metaphysics", label: "META" }
+  ];
+  var menu = document.createElement("div");
+  menu.id = "chaos-menu";
+  menu.className = "chaos-menu";
+  var html = "<div class=\"chaos-menu-content\">";
+  html += "<div class=\"chaos-menu-title\">CHAOS CONTROL</div>";
+  html += "<div class=\"chaos-menu-cats\">";
+  for (var i = 0; i < cats.length; i++) {
+    html += "<label class=\"chaos-cat-row\"><input type=\"checkbox\" data-cat=\"" + cats[i].id + "\" checked><span>" + cats[i].label + "</span></label>";
+  }
+  html += "</div>";
+  html += "<div class=\"chaos-menu-actions\">";
+  html += "<button class=\"chaos-btn-action\" data-action=\"randomize\">RANDOMIZE</button>";
+  html += "<button class=\"chaos-btn-action\" data-action=\"clear\">CLEAR ALL</button>";
+  html += "<button class=\"chaos-btn-action\" data-action=\"close\">CLOSE</button>";
+  html += "</div></div>";
+  menu.innerHTML = html;
+  document.body.appendChild(menu);
+  menu.querySelectorAll(".chaos-btn-action").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var action = btn.dataset.action;
+      if (action === "close") { menu.remove(); return; }
+      if (action === "clear") { bus.emit("sim:chaosClear"); menu.remove(); return; }
+      if (action === "randomize") {
+        var checked = [];
+        menu.querySelectorAll("input[type=\"checkbox\"]:checked").forEach(function(cb) {
+          checked.push(cb.dataset.cat);
+        });
+        bus.emit("sim:chaosSelective", { categories: checked });
+        menu.remove();
+      }
+    });
+  });
+  menu.addEventListener("click", function(e) {
+    if (e.target === menu) menu.remove();
   });
 }

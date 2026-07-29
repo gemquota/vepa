@@ -4,7 +4,7 @@
  */
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
-import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT } from './constants.js';
+import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet, clear as lawClear } from './state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
@@ -168,7 +168,7 @@ function setDNAFromProfile(species, profile) {
         location.reload();
     });
     bus.on('sim:chaos', () => {
-        // Chaos mode: randomize some laws and DNA
+        // Chaos mode: randomize all laws
         for (let i = 0; i < LAW_COUNT; i++) {
             if (Math.random() > 0.7) {
                 if (Math.random() > 0.5) {
@@ -181,6 +181,37 @@ function setDNAFromProfile(species, profile) {
         bus.emit('law:sync');
         bus.emit('narrative:system', { text: 'Chaos invoked — laws randomized.' });
     });
+
+    bus.on('sim:chaosClear', () => {
+        // Clear all laws
+        for (let i = 0; i < LAW_COUNT; i++) {
+            lawClear(lawState, i);
+        }
+        bus.emit('law:sync');
+        bus.emit('narrative:system', { text: 'All laws cleared.' });
+    });
+
+    bus.on('sim:chaosSelective', ({ categories }) => {
+        // Build set of law indices to randomize based on category names
+        const catMap = { physics: true, biology: true, chemistry: true, thermodynamics: true, metaphysics: true };
+        const activeCats = {};
+        for (const c of categories) { activeCats[c] = true; }
+        for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
+            if (!activeCats[catName]) continue;
+            for (const idx of cat.laws) {
+                if (Math.random() > 0.3) {
+                    if (Math.random() > 0.5) {
+                        lawSet(lawState, idx);
+                    } else {
+                        lawClear(lawState, idx);
+                    }
+                }
+            }
+        }
+        bus.emit('law:sync');
+        bus.emit('narrative:system', { text: 'Selective chaos applied.' });
+    });
+
     bus.on('sim:playbackMode', ({ mode }) => {
         // Playback speed modes (just toggle pause for now, future: dt multiplier)
         switch (mode) {

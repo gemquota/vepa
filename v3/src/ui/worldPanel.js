@@ -145,10 +145,13 @@ function renderLawGrid(grid, lawStateObj, bus) {
 
 function renderWorldSliders(container, bus) {
   const params = [
-    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250 },
-    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 10000, default: 1000 },
-    { key: 'SPAWN_RATE', label: 'SPAWN RATE', min: 0, max: 100, default: 10 },
-    { key: 'GLOBAL_G', label: 'GLOBAL G', min: 0, max: 10, default: 1 },
+    { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 100, max: 4000, default: 400, step: 50 },
+    { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 50000, default: 5000, step: 100 },
+    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250, step: 10 },
+    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 100000, default: 50000, step: 100 },
+    { key: 'GLOBAL_G', label: 'GRAVITY STRENGTH', min: 0, max: 20, default: 1, step: 1 },
+    { key: 'DAMPING', label: 'MOTION DAMPING %', min: 0, max: 100, default: 10, step: 1 },
+    { key: 'SPAWN_RATE', label: 'SPAWN RATE', min: 0, max: 100, default: 10, step: 1 },
   ];
 
   let html = '';
@@ -163,7 +166,8 @@ function renderWorldSliders(container, bus) {
 
   container.querySelectorAll('input[type="range"]').forEach((slider) => {
     slider.addEventListener('input', () => {
-      const val = parseInt(slider.value, 10);
+      const isFloat = slider.dataset.key === 'DAMPING' || slider.dataset.key === 'GLOBAL_G';
+      const val = isFloat ? parseFloat(slider.value) : parseInt(slider.value, 10);
       const display = container.querySelector(`.slider-value[data-key="${slider.dataset.key}"]`);
       if (display) display.textContent = val;
       bus.emit('world:paramChanged', { key: slider.dataset.key, value: val });

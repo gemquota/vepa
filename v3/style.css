@@ -1047,6 +1047,77 @@ body {
   color: var(--text-dim);
 }
 
+/* ── Chaos Menu ─────────────────────────────────────────────── */
+.chaos-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chaos-menu-content {
+  background: rgba(8,8,16,0.97);
+  border: 1px solid var(--accent-red);
+  border-radius: 6px;
+  padding: 16px;
+  min-width: 240px;
+  font-family: 'Courier New', monospace;
+}
+.chaos-menu-title {
+  color: var(--accent-red);
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.chaos-menu-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.chaos-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.chaos-cat-row:hover { background: rgba(255,74,74,0.1); }
+.chaos-cat-row input[type="checkbox"] {
+  accent-color: var(--accent-red);
+}
+.chaos-menu-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chaos-btn-action {
+  flex: 1;
+  min-width: 60px;
+  background: rgba(255,74,74,0.1);
+  border: 1px solid var(--accent-red);
+  border-radius: 3px;
+  color: var(--accent-red);
+  padding: 6px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.chaos-btn-action:hover {
+  background: rgba(255,74,74,0.25);
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
     #top-toolbar .sq-btn { width: 24px; height: 20px; font-size: 9px; }
