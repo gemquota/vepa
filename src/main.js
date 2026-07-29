@@ -28,13 +28,13 @@ class VepaEngine {
         this.paused = false;
         this.laws = { 
             pure: { grav: true, drag: true, jitter: false, coll: true, accr: false, wrap: true, void: false, bond: false, planetary: false, G: 1.0, dt: 1.0 },
-            biol: { life: true, glow: false, affinity: false, reproduction: true, tracking: false, senescence: false, genotype: false, phenotype: false, ener: false, rad: false },
+            biol: { life: false, glow: false, affinity: false, reproduction: false, tracking: false, senescence: false, genotype: false, phenotype: false, ener: false, rad: false },
             chem: { cata: false, solv: false, acid: false, oxid: false, redu: false, poly: false, isom: false, chir: false, crys: false, allo: false },
             thermo: { heat: false, cold: false, conv: false, radi: false, subl: false, melt: false, boil: false, cond: false, depo: false, exop: false },
             meta: { time: false, dime: false, chao: false, orde: false, fate: false, will: false, soul: false, mind: false, tele: false, clai: false, preo: false, astr: false }
         };
         this.worldConfig = { 
-            count: 2000, initialCount: 500, dimX: 500, dimY: 500, dimZ: 500, 
+            count: 1000, initialCount: 250, dimX: 250, dimY: 250, dimZ: 250, 
             spreadX: 1.0, spreadY: 1.0, spreadZ: 1.0, 
             baseSize: 1.0, spawnRate: 10, entropy: 0.1, shape: 0.5,
             groundHeight: 0.9, cameraMode: 'panning', cameraLocked: false,
