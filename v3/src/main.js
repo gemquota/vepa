@@ -52,6 +52,17 @@ async function boot() {
     const canvas = document.getElementById('sim-canvas');
     renderer = createRenderer(canvas, MAX_PARTICLES);
     resizeRenderer(renderer);
+    // Re-render on window resize
+    window.addEventListener('resize', () => {
+        if (renderer) resizeRenderer(renderer);
+    });
+    // Also observe the canvas for layout changes
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            if (renderer) resizeRenderer(renderer);
+        });
+        ro.observe(canvas);
+    }
     initCamera(canvas);
 
     // Init UI (includes HUD, all panels, event wiring)
