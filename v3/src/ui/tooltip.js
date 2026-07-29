@@ -79,7 +79,9 @@ function showLawInfo(idx) {
           <span class="info-category" style="color:var(--accent-${colorName})">${catName.toUpperCase()}</span>
           <button class="info-close">✕</button>
         </div>
-        <div class="info-text">${hint}</div>
+        <div class="info-hint">${hint}</div>
+        <div class="info-explanation">${explanation}</div>
+        <div class="info-system">${system}</div>
       </div>
     </div>
   `;
