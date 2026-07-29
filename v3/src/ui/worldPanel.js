@@ -180,10 +180,10 @@ function renderLawGrid(grid, lawStateObj, bus) {
 
 function renderWorldSliders(container, bus) {
   const params = [
-    { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 100, max: 4000, default: 400, step: 50 },
-    { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 50000, default: 5000, step: 100 },
-    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250, step: 10 },
-    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 100000, default: 50000, step: 100 },
+    { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 100, max: 4000, default: 600, step: 50 },
+    { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 20000, default: 500, step: 100 },
+    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 100, step: 10 },
+    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 50000, default: 5000, step: 100 },
     { key: 'GLOBAL_G', label: 'GRAVITY STRENGTH', min: 0, max: 20, default: 1, step: 1 },
     { key: 'DAMPING', label: 'MOTION DAMPING %', min: 0, max: 100, default: 10, step: 1 },
     { key: 'SPAWN_RATE', label: 'SPAWN RATE', min: 0, max: 100, default: 10, step: 1 },

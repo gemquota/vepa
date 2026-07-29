@@ -122,8 +122,9 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
     const scaleX = width  / worldSize;
     const scaleY = height / worldSize;
     const halfWorld = worldSize * 0.5;
-    // Perspective Z range: -halfWorld to +halfWorld, mapped to 0.5x to 2x scale
-    const zScaleRange = 1.5;
+    const cx = width * 0.5;
+    const cy = height * 0.5;
+    const focalLength = worldSize * 3; // perspective strength
 
     for (let i = 0; i < particleCount; i++) {
         const base = i * stride;
@@ -139,25 +140,26 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
         // NaN guard — never draw broken coordinates
         if (x !== x || y !== y) continue;
 
-        // Z perspective: closer Z → bigger, further Z → smaller
-        const zNorm = z / halfWorld; // -1 to +1
-        const zPerspective = 1.0 + zNorm * zScaleRange * 0.5; // 0.25 to 1.75
-        const screenX = x * scaleX + (x - halfWorld) * zNorm * 0.05;
-        const screenY = y * scaleY + (y - halfWorld) * zNorm * 0.05;
+        // 3D perspective projection
+        const perspective = focalLength / (focalLength + z);
+        const screenX = cx + (x * scaleX - cx) * perspective;
+        const screenY = cy + (y * scaleY - cy) * perspective;
 
         // Phenotype expression
         const color  = computeColor(particleBuffer, speciesId, i, stride);
         const radius = computeRadius(particleBuffer, speciesId, i, stride);
         const alpha  = computeAlpha(particleBuffer, speciesId, i, stride);
 
-        // Radius in screen pixels, scaled by Z perspective
-        const screenR = radius * ((scaleX + scaleY) * 0.5) * zPerspective;
+        // Radius scaled by perspective (closer = bigger, further = smaller)
+        const baseR = radius * ((scaleX + scaleY) * 0.5);
+        const screenR = baseR * perspective;
 
         // Skip fully transparent particles
         if (alpha < 0.001) continue;
 
-        // Draw the particle
-        ctx.globalAlpha = alpha * Math.min(1, zPerspective * 0.8 + 0.2);
+        // Depth排序: particles further back (smaller perspective) drawn first
+        // We approximate by just adjusting alpha — closer = brighter
+        ctx.globalAlpha = alpha * (0.3 + 0.7 * perspective);
         ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
         ctx.beginPath();
         ctx.arc(screenX, screenY, Math.max(screenR, 0.5), 0, Math.PI * 2);
