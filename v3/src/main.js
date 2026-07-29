@@ -41,7 +41,10 @@ async function boot() {
     dnaBuffer = createDNABuffer();
     loadDefaults(dnaBuffer, DNA_RANGES);
 
-    // No default laws — all behavior governed by toggled laws
+    // Apply default laws (GRAV, DRAG, WRAP, COLL)
+    for (const name of DEFAULT_LAWS) {
+        if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
+    }
 
     spawnDefaultPopulation();
 
