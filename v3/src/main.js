@@ -148,6 +148,10 @@ function setDNAFromProfile(species, profile) {
         particleView.fill(0);
         // Fresh law state (all off)
         lawState = createLawState();
+        // Re-apply default laws
+        for (const name of DEFAULT_LAWS) {
+            if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
+        }
         // Reset offspring ring
         resetOffspringRing();
         // Respawn
@@ -171,7 +175,6 @@ function setDNAFromProfile(species, profile) {
                     lawSet(lawState, i);
                 } else {
                     lawClear(lawState, i);
-                    clear(lawState, i);
                 }
             }
         }
