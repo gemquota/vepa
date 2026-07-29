@@ -35,6 +35,7 @@ import {
   applyWill,
   applySoul,
   applyMind,
+  setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
 
@@ -84,6 +85,7 @@ function readDNAFromCache(view, base, dnaOut) {
  */
 export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, worldSize, dt, prng) {
   const grid = ensureGrid();
+  setBuffer(particleBuffer);
   const view = particleBuffer; // Float32Array or SharedArrayBuffer view
   const S = STRIDE_INDEXES;
   const halfWorld = worldSize * 0.5;
@@ -184,34 +186,30 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // ── Gravity ──
 
       const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
-      const gravForce = applyGravity(lawState, view, iBase, jBase, dx, dy, dz, distSq, gravSynergy);
+      const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, G * gravSynergy);
       if (gravForce) {
-        ax += gravForce.fx;
-        ay += gravForce.fy;
-        az += gravForce.fz;
+        ax += gravForce.ax;
+        ay += gravForce.ay;
+        az += gravForce.az;
       }
 
       // ── Collision + Accretion ──
 
       if (isSet(lawState, LAW_INDEXES.COLL)) {
-        const radiusI = view[iBase + S.RADIUS];
-        const radiusJ = view[jBase + S.RADIUS];
-        const overlap = (radiusI + radiusJ) - dist;
-
-        const collision = applyCollision(view, iBase, jBase, dx, dy, dz, dist, overlap);
+        const collision = applyCollision(iBase, jBase, stride, dx, dy, dz, dist);
         if (collision) {
-          ax += collision.fx;
-          ay += collision.fy;
-          az += collision.fz;
+          ax += collision.ax;
+          ay += collision.ay;
+          az += collision.az;
 
           // Accretion
           if (isSet(lawState, LAW_INDEXES.ACCR)) {
             const accretionSynergy = computeSynergy(lawState, LAW_INDEXES.ACCR);
-            const massGain = applyAccretion(lawState, view, iBase, jBase, dist, dnaI, accretionSynergy);
-            if (massGain > 0) {
-              mass += massGain;
-              view[iBase + S.MASS] = mass;
-            }
+            const fusionVal = dnaI[9] || 1.0;
+            const fusionMom = dnaI[16] || 0.5;
+            applyAccretion(iBase, jBase, stride, fusionVal * accretionSynergy, fusionMom);
+            // Re-read mass after accretion (modified internally via buffer_global)
+            mass = view[iBase + S.MASS];
           }
         }
       }
@@ -221,9 +219,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const affinitySynergy = computeSynergy(lawState, LAW_INDEXES.AFFINITY);
       const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, affinitySynergy);
       if (affinityForce) {
-        ax += affinityForce.fx;
-        ay += affinityForce.fy;
-        az += affinityForce.fz;
+        ax += affinityForce.ax;
+        ay += affinityForce.ay;
+        az += affinityForce.az;
       }
 
       // ── Chemistry modifier ──
@@ -255,9 +253,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const orderSynergy = computeSynergy(lawState, LAW_INDEXES.ORDER);
       const orderForce = applyOrder(lawState, view, iBase, jBase, distSq, orderSynergy);
       if (orderForce) {
-        ax += orderForce.fx;
-        ay += orderForce.fy;
-        az += orderForce.fz;
+        ax += orderForce.ax;
+        ay += orderForce.ay;
+        az += orderForce.az;
       }
 
       // ── Fate ──
@@ -265,9 +263,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const fateSynergy = computeSynergy(lawState, LAW_INDEXES.FATE);
       const fateForce = applyFate(lawState, view, iBase, jBase, dx, dy, dz, distSq, fateSynergy);
       if (fateForce) {
-        ax += fateForce.fx;
-        ay += fateForce.fy;
-        az += fateForce.fz;
+        ax += fateForce.ax;
+        ay += fateForce.ay;
+        az += fateForce.az;
       }
 
       // ── Soul ──
@@ -294,9 +292,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     const planetSynergy = computeSynergy(lawState, LAW_INDEXES.PLANETARY);
     const planetForce = applyPlanetary(lawState, view, iBase, px, py, pz, worldSize, planetSynergy);
     if (planetForce) {
-      ax += planetForce.fx;
-      ay += planetForce.fy;
-      az += planetForce.fz;
+      ax += planetForce.ax;
+      ay += planetForce.ay;
+      az += planetForce.az;
     }
 
     // Dimensionality
