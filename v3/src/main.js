@@ -40,7 +40,7 @@ async function boot() {
     dnaBuffer = createDNABuffer();
     loadDefaults(dnaBuffer, DNA_RANGES);
 
-    const defaultLaws = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'LIFE', 'GLOW', 'REPRO', 'PHENOTYPE', 'GENOTYPE'];
+    const defaultLaws = ['GRAV', 'DRAG', 'WRAP', 'COLL'];
     for (const name of defaultLaws) {
         if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
     }

@@ -121,8 +121,8 @@ function renderLawGrid(grid, lawStateObj, bus) {
 
 function renderWorldSliders(container, bus) {
   const params = [
-    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 10000, default: 500 },
-    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 50000, default: 2000 },
+    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250 },
+    { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 10000, default: 1000 },
     { key: 'SPAWN_RATE', label: 'SPAWN RATE', min: 0, max: 100, default: 10 },
     { key: 'GLOBAL_G', label: 'GLOBAL G', min: 0, max: 10, default: 1 },
   ];

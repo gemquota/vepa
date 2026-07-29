@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/vepa/v3/',
+  base: '/vepa/vepar/',
   root: '.',
   build: {
     outDir: '.dist',

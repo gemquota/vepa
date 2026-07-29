@@ -10,9 +10,9 @@ export const PARTICLE_STRIDE = 100;
 export const DEFAULT_DNA_STRIDE = 64;
 export const DNA_PACK_MAX = 65535;
 export const MAX_SPECIES = 64;
-export const MAX_PARTICLES = 10000;
-export const DEFAULT_PARTICLES_PER_SPECIES = 200;
-export const WORLD_SIZE = 800;
+export const MAX_PARTICLES = 5000;
+export const DEFAULT_PARTICLES_PER_SPECIES = 100;
+export const WORLD_SIZE = 400;
 
 // --- Particle Stride Layout (100 floats per particle) ---
 

@@ -28,15 +28,15 @@ jobs:
       - run: npx vite build
       - run: cp -r .dist v2-dist
 
-      # Build v3
+      # Build vepar
       - run: cd v3 && npm ci && npm run build
-      - run: cp -r v3/.dist v3-dist
+      - run: cp -r v3/.dist vepar-dist
 
       # Combine into single deploy directory
       - run: mkdir -p deploy
       - run: cp -r v2-dist/* deploy/
-      - run: mkdir -p deploy/v3
-      - run: cp -r v3-dist/* deploy/v3/
+      - run: mkdir -p deploy/vepar
+      - run: cp -r vepar-dist/* deploy/vepar/
 
       # Deploy to gh-pages branch
       - name: Deploy to gh-pages
