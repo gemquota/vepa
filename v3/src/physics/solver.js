@@ -185,12 +185,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Gravity ──
 
-      const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
-      const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, G * gravSynergy);
-      if (gravForce) {
-        ax += gravForce.ax;
-        ay += gravForce.ay;
-        az += gravForce.az;
+      if (isSet(lawState, LAW_INDEXES.GRAV)) {
+        const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
+        const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, G * gravSynergy);
+        if (gravForce) {
+          ax += gravForce.ax;
+          ay += gravForce.ay;
+          az += gravForce.az;
+        }
       }
 
       // ── Collision + Accretion ──

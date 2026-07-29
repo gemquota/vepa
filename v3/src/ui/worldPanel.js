@@ -148,19 +148,27 @@ function renderWorldSliders(container, bus) {
 }
 
 function applyCategoryFilter(grid, filterRow) {
+  // Build set of active category names from filter tab data-cat attributes
   const activeCats = new Set();
   filterRow.querySelectorAll('.cat-tab.active').forEach((btn) => {
     activeCats.add(btn.dataset.cat);
   });
 
-  grid.querySelectorAll('.sq-toggle').forEach((btn) => {
-    let visible = false;
-    for (const cat of activeCats) {
-      if (btn.classList.contains(cat)) {
-        visible = true;
-        break;
-      }
+  // Map each law button index to its category name
+  // Uses a lookup from LAW_NAME_BY_IDX through LAW_CATEGORIES
+  const lawIdxToCat = {};
+  for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
+    for (const idx of cat.laws) {
+      lawIdxToCat[idx] = catName;
     }
+  }
+
+  grid.querySelectorAll('.sq-toggle').forEach((btn) => {
+    const idx = parseInt(btn.dataset.law, 10);
+    const catName = lawIdxToCat[idx];
+    // Check if this button's category is in the active filters
+    // Compare using 'cat-' + catName against the data-cat values
+    const visible = catName !== undefined && activeCats.has('cat-' + catName);
     btn.style.display = visible ? '' : 'none';
   });
 }
