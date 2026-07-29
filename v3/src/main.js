@@ -101,6 +101,19 @@ function spawnDefaultPopulation() {
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
             setEnergy(particleBuffer, idx, PARTICLE_STRIDE, 50 + prng.nextFloat(0, 50));
+            // Copy species DNA to particle DNA cache (stride 8-49)
+            const dnaBase = s * 64;
+            for (let d = 0; d < 42; d++) {
+                const raw = dnaBuffer[dnaBase + d] || 0;
+                const norm = raw / 65535;
+                const r = DNA_RANGES[d] || { min: -1, max: 1 };
+                particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = norm * (r.max - r.min) + r.min;
+            }
+            // Initialize visual color from species profile
+            // Colors set below (second block)
+            // removed duplicate color init
+            // removed duplicate color init
+            // removed duplicate color init
             particleView[ptr + STRIDE_INDEXES.DEAD] = 0;
             particleView[ptr + STRIDE_INDEXES.AGE] = 0;
             particleView[ptr + STRIDE_INDEXES.SIGNAL] = 0;
@@ -281,6 +294,50 @@ function setDNAFromProfile(species, profile) {
                 break;
         }
     });
+    bus.on('world:paramChanged', ({ key, value }) => {
+        switch (key) {
+            case 'WORLD_SIZE':
+                worldSize = Math.max(50, Math.min(4000, value));
+                console.log('[VEPA] World size set to', worldSize);
+                break;
+            case 'GLOBAL_G':
+                // Passed to solver via config — would need dynamic G integration
+                console.log('[VEPA] G changed to', value);
+                break;
+            case 'DAMPING':
+                // Applied in solver via drag law — stored for reference
+                break;
+            case 'SPAWN_RATE':
+                // Would be used by an auto-spawn system
+                break;
+            case 'BASE_SIZE':
+                // Applied per-particle via DNA
+                break;
+            case 'ENTROPY':
+                // Entropy law intensity
+                break;
+            case 'VISCOSITY':
+                // Global viscosity modifier
+                break;
+            case 'WIND':
+                // Global wind force vector
+                break;
+            case 'HEAT_CAPACITY':
+            case 'LIGHT_LEVEL':
+            case 'RADIATION_LEVEL':
+            case 'SPECIES_INTERACTION':
+            case 'MUTATION_RATE':
+            case 'ENERGY_TRANSFER':
+            case 'DECAY_RATE':
+                console.log('[VEPA] World param', key, '=', value);
+                break;
+            default:
+                console.log('[VEPA] Unhandled world param:', key, value);
+        }
+        // Emit event so other systems can react
+        bus.emit('world:paramApplied', { key, value });
+    });
+
 }
 
 let lastFrameTime = 0, frameCount = 0, fps = 0;

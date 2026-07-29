@@ -10,7 +10,7 @@
 //   DNA values accessed via: buffer[p1Ptr + DNA_CACHE_START + DNA_INDEX]
 // ============================================================================
 
-import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES } from '../constants.js';
+import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from '../constants.js';
 import { isSet } from '../state/lawState.js';
 
 const S = STRIDE_INDEXES;
@@ -397,7 +397,7 @@ export function applyGenotype(p1Ptr, stride, dt) {
 // 14. PLANETARY (Central gravity well)
 // ============================================================================
 export function applyPlanetary(lawState, view, base, px, py, pz, worldSize, synergy) {
-  if (!isSet(lawState, 6)) return null; // LAW_INDEXES.PLANETARY = 6
+  if (!isSet(lawState, LAW_INDEXES.PLANETARY)) return null; // LAW_INDEXES.PLANETARY = 6
 
   const cx = worldSize * 0.5;
   const cy = worldSize * 0.5;
@@ -421,7 +421,7 @@ export function applyPlanetary(lawState, view, base, px, py, pz, worldSize, syne
 // 15. LIFE CYCLE
 // ============================================================================
 export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synergy) {
-  if (!isSet(lawState, 7)) return; // LAW_INDEXES.LIFE = 7
+  if (!isSet(lawState, LAW_INDEXES.LIFE)) return; // LAW_INDEXES.LIFE = 7
 
   const age = view[base + S.AGE] + dt;
   view[base + S.AGE] = age;
@@ -445,9 +445,9 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   const mutRate = Math.abs(dnaParams[12] || 0.5); // MUTATION=12
 
   // Age-based color drift (biological fading)
-  view[base + S.COLOR_R] += (Math.sin(age * 0.001) * 0.001 * mutRate);
-  view[base + S.COLOR_G] += (Math.cos(age * 0.0007) * 0.001 * mutRate);
-  view[base + S.COLOR_B] += (Math.sin(age * 0.0013 + 1.0) * 0.001 * mutRate);
+  view[base + S.COLOR_R] += (Math.sin(age * 0.001) * 2.0 * mutRate);
+  view[base + S.COLOR_G] += (Math.cos(age * 0.0007) * 2.0 * mutRate);
+  view[base + S.COLOR_B] += (Math.sin(age * 0.0013 + 1.0) * 2.0 * mutRate);
 
   // Mass fluctuation from metabolism
   const mass = view[base + S.MASS] || 1.0;
@@ -459,14 +459,14 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   view[base + S.ENERGY] += bioPulse * dt * 0.1;
 
   // Clamp values
-  view[base + S.COLOR_R] = Math.max(0, Math.min(1, view[base + S.COLOR_R] || 0));
-  view[base + S.COLOR_G] = Math.max(0, Math.min(1, view[base + S.COLOR_G] || 0));
-  view[base + S.COLOR_B] = Math.max(0, Math.min(1, view[base + S.COLOR_B] || 0));
+  view[base + S.COLOR_R] = Math.max(0, Math.min(255, view[base + S.COLOR_R] || 0));
+  view[base + S.COLOR_G] = Math.max(0, Math.min(255, view[base + S.COLOR_G] || 0));
+  view[base + S.COLOR_B] = Math.max(0, Math.min(255, view[base + S.COLOR_B] || 0));
   view[base + S.MASS] = Math.max(0.1, Math.min(50, view[base + S.MASS] || 1));
   // === END BIOLOGICAL VARIANCE ===
 
   // Senescence (LAW_INDEXES.SENESCENCE = 12)
-  if (isSet(lawState, 12)) {
+  if (isSet(lawState, LAW_INDEXES.SENESCENCE)) {
     const deathRate = dnaParams[11] * 0.001 * (1.0 + ageNorm * 0.5); // Older = higher death chance
     if (age > 500 && prng() < deathRate * dt) {
       view[base + S.DEAD] = 1.0;
@@ -475,7 +475,7 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   }
 
   // Radiation (LAW_INDEXES.RADIATION = 14)
-  if (isSet(lawState, 14)) {
+  if (isSet(lawState, LAW_INDEXES.RADIATION)) {
     const armor = view[base + S.ARMOR];
     energy -= (0.1 - armor * 0.01) * dt;
     if (energy <= 0) {
@@ -489,7 +489,7 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
 // 16. SIGNAL DECAY
 // ============================================================================
 export function applySignalDecay(lawState, view, base, dnaParams, dt) {
-  if (!isSet(lawState, 8) && !isSet(lawState, 11)) return; // GLOW=8, TRACK=11
+  if (!isSet(lawState, LAW_INDEXES.GLOW) && !isSet(lawState, LAW_INDEXES.TRACK)) return; // GLOW=8, TRACK=11
 
   const decay = dnaParams[20]; // SIGNAL_DECAY=20
   let signal = view[base + S.SIGNAL];
@@ -505,7 +505,7 @@ export function applySignalDecay(lawState, view, base, dnaParams, dt) {
 // 17. AFFINITY
 // ============================================================================
 export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, synergy) {
-  if (!isSet(lawState, 9)) return null; // AFFINITY=9
+  if (!isSet(lawState, LAW_INDEXES.AFFINITY)) return null; // AFFINITY=9
   if (distSq < 1) return null;
 
   const speciesI = view[iBase + S.SPECIES_ID];
@@ -539,7 +539,7 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
 // 18. REPRODUCTION
 // ============================================================================
 export function applyReproduction(lawState, view, base, dnaParams, prng, synergy, dnaBuffer) {
-  if (!isSet(lawState, 10)) return null; // REPRO=10
+  if (!isSet(lawState, LAW_INDEXES.REPRO)) return null; // REPRO=10
 
   const energy = view[base + S.ENERGY];
   const age = view[base + S.AGE];
@@ -671,21 +671,21 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
 export function applyChemistry(lawState, view, iBase, jBase, distSq, synergy) {
   let multiplier = 1.0;
 
-  if (isSet(lawState, 17)) { // CATALYSIS_LAW=17
+  if (isSet(lawState, LAW_INDEXES.CATALYSIS_LAW)) { // CATALYSIS_LAW=17
     const catI = view[iBase + S.DNA_CACHE_START + 38]; // CATALYSIS=38
     multiplier *= 1.0 + catI * 0.5 * synergy;
   }
 
-  if (isSet(lawState, 18)) multiplier *= 1.2; // SOLVATION=18
+  if (isSet(lawState, LAW_INDEXES.SOLVATION)) multiplier *= 1.2; // SOLVATION=18
 
-  if (isSet(lawState, 19)) { // ACIDITY=19
+  if (isSet(lawState, LAW_INDEXES.ACIDITY)) { // ACIDITY=19
     const chargeI = view[iBase + S.CHARGE];
     const chargeJ = view[jBase + S.CHARGE];
     const polarity = Math.abs(chargeI - chargeJ);
     multiplier *= 1.0 + polarity * 0.3;
   }
 
-  if (isSet(lawState, 24) && distSq < 100) { // CRYSTALLIZATION=24
+  if (isSet(lawState, LAW_INDEXES.CRYSTALLIZATION) && distSq < 100) { // CRYSTALLIZATION=24
     multiplier *= 1.5;
   }
 
@@ -696,7 +696,7 @@ export function applyChemistry(lawState, view, iBase, jBase, distSq, synergy) {
 // 20. POLYMER (bond formation)
 // ============================================================================
 export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 21)) return { ax: 0, ay: 0, az: 0 };
+  if (!isSet(lawState, LAW_INDEXES.POLYMER)) return { ax: 0, ay: 0, az: 0 };
   if (dist > 25) return { ax: 0, ay: 0, az: 0 };
 
   const bondCount = view[iBase + S.BOND_COUNT];
@@ -732,19 +732,19 @@ export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, syn
 // 21. HEAT TRANSFER
 // ============================================================================
 export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synergy) {
-  if (!isSet(lawState, 25) && !isSet(lawState, 26)) return; // HEAT=25, COLD=26
+  if (!isSet(lawState, LAW_INDEXES.HEAT) && !isSet(lawState, LAW_INDEXES.COLD)) return; // HEAT=25, COLD=26
 
   const tempI = view[iBase + S.TEMPERATURE];
   const tempJ = view[jBase + S.TEMPERATURE];
   const diff = tempI - tempJ;
 
-  if (isSet(lawState, 25)) {
+  if (isSet(lawState, LAW_INDEXES.HEAT)) {
     const rate = 0.01 * dt * synergy;
     view[iBase + S.TEMPERATURE] -= diff * rate;
     view[jBase + S.TEMPERATURE] += diff * rate;
   }
 
-  if (isSet(lawState, 26) && tempJ > tempI) {
+  if (isSet(lawState, LAW_INDEXES.COLD) && tempJ > tempI) {
     const rate = 0.015 * dt * synergy;
     const tDec2 = diff * rate;
     const tInc2 = diff * rate;
@@ -757,7 +757,7 @@ export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synerg
 // 22. CONVECTION
 // ============================================================================
 export function applyConvection(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 27)) return; // CONVECTION=27
+  if (!isSet(lawState, LAW_INDEXES.CONVECTION)) return; // CONVECTION=27
 
   const temp = view[base + S.TEMPERATURE];
   const buoyancy = (temp - 0.5) * 0.001 * dt * synergy;
@@ -770,7 +770,7 @@ export function applyConvection(lawState, view, base, dt, synergy) {
 // 23. TIME DILATION
 // ============================================================================
 export function applyTimeDilation(lawState, view, base, synergy) {
-  if (!isSet(lawState, 30)) return 1.0; // TIME_DILATION=30
+  if (!isSet(lawState, LAW_INDEXES.TIME_DILATION)) return 1.0; // TIME_DILATION=30
   const soul = view[base + S.SOUL];
   return 1.0 - soul * 0.3 * synergy;
 }
@@ -779,7 +779,7 @@ export function applyTimeDilation(lawState, view, base, synergy) {
 // 24. DIMENSIONALITY
 // ============================================================================
 export function applyDimensionality(lawState, view, base, prng, dt, synergy) {
-  if (!isSet(lawState, 31)) return; // DIMENSIONALITY=31
+  if (!isSet(lawState, LAW_INDEXES.DIMENSIONALITY)) return; // DIMENSIONALITY=31
   const force = (prng() - 0.5) * 0.1 * synergy * dt;
   view[base + S.VEL_Z] += force;
 }
@@ -788,7 +788,7 @@ export function applyDimensionality(lawState, view, base, prng, dt, synergy) {
 // 25. CHAOS
 // ============================================================================
 export function applyChaos(lawState, view, base, prng, dt, synergy) {
-  if (!isSet(lawState, 32)) return; // CHAOS=32
+  if (!isSet(lawState, LAW_INDEXES.CHAOS)) return; // CHAOS=32
   const force = (prng() - 0.5) * 0.5 * synergy * dt;
   view[base + S.VEL_X] += force;
   view[base + S.VEL_Y] += force;
@@ -799,7 +799,7 @@ export function applyChaos(lawState, view, base, prng, dt, synergy) {
 // 26. ORDER
 // ============================================================================
 export function applyOrder(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 33)) return null; // ORDER=33
+  if (!isSet(lawState, LAW_INDEXES.ORDER)) return null; // ORDER=33
   if (distSq > 10000) return null;
 
   const strength = 0.005 * synergy;
@@ -814,7 +814,7 @@ export function applyOrder(lawState, view, iBase, jBase, distSq, synergy) {
 // 27. FATE
 // ============================================================================
 export function applyFate(lawState, view, iBase, jBase, dx, dy, dz, distSq, synergy) {
-  if (!isSet(lawState, 34)) return null; // FATE=34
+  if (!isSet(lawState, LAW_INDEXES.FATE)) return null; // FATE=34
   if (distSq < 1 || distSq > 250000) return null;
 
   const speciesI = view[iBase + S.SPECIES_ID];
@@ -834,7 +834,7 @@ export function applyFate(lawState, view, iBase, jBase, dx, dy, dz, distSq, syne
 // 28. WILL (Self-propulsion)
 // ============================================================================
 export function applyWill(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 35)) return; // WILL=35
+  if (!isSet(lawState, LAW_INDEXES.WILL)) return; // WILL=35
 
   const vx = view[base + S.VEL_X];
   const vy = view[base + S.VEL_Y];
@@ -855,7 +855,7 @@ export function applyWill(lawState, view, base, dt, synergy) {
 // 29. SOUL
 // ============================================================================
 export function applySoul(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 36)) return; // SOUL_LAW=36
+  if (!isSet(lawState, LAW_INDEXES.SOUL_LAW)) return; // SOUL_LAW=36
   if (distSq > 10000) return;
 
   const speciesI = view[iBase + S.SPECIES_ID];
@@ -873,7 +873,7 @@ export function applySoul(lawState, view, iBase, jBase, distSq, synergy) {
 // 30. MIND (Collective hivemind)
 // ============================================================================
 export function applyMind(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 37)) return null; // MIND=37
+  if (!isSet(lawState, LAW_INDEXES.MIND)) return null; // MIND=37
   if (distSq > 40000) return null;
 
   const speciesI = view[iBase + S.SPECIES_ID];
@@ -890,7 +890,7 @@ export function applyMind(lawState, view, iBase, jBase, distSq, synergy) {
 // 31. VOID — Vacuum pressure / cosmological constant
 // ============================================================================
 export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) {
-  if (!isSet(lawState, 38)) return null;
+  if (!isSet(lawState, LAW_INDEXES.VOID)) return null;
   const cx = worldSize * 0.5;
   const cy = worldSize * 0.5;
   const cz = worldSize * 0.5;
@@ -912,7 +912,7 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
 // 32. BOND — Spring-like molecular bonding
 // ============================================================================
 export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 39)) return null;
+  if (!isSet(lawState, LAW_INDEXES.BOND)) return null;
   if (dist < 0.1 || dist > 30) return null;
   const stiffness = view[iBase + S.DNA_CACHE_START + 8]; // STIFFNESS
   if (!Number.isFinite(stiffness) || stiffness < 0.01) return null;
@@ -975,7 +975,7 @@ export function applyReduction(b1Ptr, b2Ptr, stride, synergy) {
 // 34. ALLOY — Cross-species fusion
 // ============================================================================
 export function applyAlloy(lawState, view, iBase, jBase, stride, dist, synergy) {
-  if (!isSet(lawState, 41)) return;
+  if (!isSet(lawState, LAW_INDEXES.ALLOY)) return;
   const speciesI = view[iBase + S.SPECIES_ID];
   const speciesJ = view[jBase + S.SPECIES_ID];
   if (speciesI === speciesJ) return;
@@ -996,7 +996,7 @@ export function applyAlloy(lawState, view, iBase, jBase, stride, dist, synergy) 
 // 35. MELT — High temp particles lose mass
 // ============================================================================
 export function applyMelt(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 42)) return;
+  if (!isSet(lawState, LAW_INDEXES.MELT)) return;
   const temp = view[base + S.TEMPERATURE];
   if (!Number.isFinite(temp) || temp < 0.7) return;
   const mass = view[base + S.MASS];
@@ -1012,7 +1012,7 @@ export function applyMelt(lawState, view, base, dt, synergy) {
 // 36. BOIL — Very hot particles eject mass as energetic vapor
 // ============================================================================
 export function applyBoil(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 43)) return;
+  if (!isSet(lawState, LAW_INDEXES.BOIL)) return;
   const temp = view[base + S.TEMPERATURE];
   if (!Number.isFinite(temp) || temp < 0.9) return;
   const mass = view[base + S.MASS];
@@ -1032,7 +1032,7 @@ export function applyBoil(lawState, view, base, dt, synergy) {
 // 37. CONDENSE — Cool particles gain mass
 // ============================================================================
 export function applyCondense(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 44)) return;
+  if (!isSet(lawState, LAW_INDEXES.CONDENSE)) return;
   const temp = view[base + S.TEMPERATURE];
   if (!Number.isFinite(temp) || temp > 0.3) return;
   const mass = view[base + S.MASS];
@@ -1045,7 +1045,7 @@ export function applyCondense(lawState, view, base, dt, synergy) {
 // 38. DEPOSIT — Gas directly solidifies on cold particles
 // ============================================================================
 export function applyDeposit(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 45)) return;
+  if (!isSet(lawState, LAW_INDEXES.DEPOSIT)) return;
   const temp = view[base + S.TEMPERATURE];
   if (!Number.isFinite(temp) || temp > 0.2) return;
   const mass = view[base + S.MASS];
@@ -1059,7 +1059,7 @@ export function applyDeposit(lawState, view, base, dt, synergy) {
 // 39. EXOTHERMIC — Energy amplification for all reactions
 // ============================================================================
 export function applyExothermic(lawState, view, base, synergy) {
-  if (!isSet(lawState, 46)) return;
+  if (!isSet(lawState, LAW_INDEXES.EXOTHERMIC)) return;
   const energy = view[base + S.ENERGY];
   if (!Number.isFinite(energy)) return;
   const amp = 1.0 + 0.1 * synergy;
@@ -1070,7 +1070,7 @@ export function applyExothermic(lawState, view, base, synergy) {
 // 40. TELEPATHY — Instant signal sharing within species
 // ============================================================================
 export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 47)) return null;
+  if (!isSet(lawState, LAW_INDEXES.TELEPATHY)) return null;
   const speciesI = view[iBase + S.SPECIES_ID];
   const speciesJ = view[jBase + S.SPECIES_ID];
   if (speciesI !== speciesJ) return null;
@@ -1087,7 +1087,7 @@ export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy) {
 // 41. CLAIRVOYANCE — Predictive steering toward future positions
 // ============================================================================
 export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 48)) return null;
+  if (!isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)) return null;
   if (dist < 1) return null;
   // Predict where neighbor will be based on its velocity
   const vx_j = view[jBase + S.VEL_X];
@@ -1109,7 +1109,7 @@ export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist
 // 42. PRECOGNITION — Collision anticipation and avoidance
 // ============================================================================
 export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 49)) return null;
+  if (!isSet(lawState, LAW_INDEXES.PRECOGNITION)) return null;
   if (dist < 1 || dist > 50) return null;
   // Check if on collision course
   const vx_i = view[iBase + S.VEL_X];
@@ -1134,7 +1134,7 @@ export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist
 // 43. ASTRAL — Soul persists as ghost after death
 // ============================================================================
 export function applyAstral(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 50)) return;
+  if (!isSet(lawState, LAW_INDEXES.ASTRAL)) return;
   if (view[base + S.DEAD] < 0.5) return; // Only affects dead/soul particles
   const soul = view[base + S.SOUL];
   if (!Number.isFinite(soul) || soul < 0.01) return;
@@ -1153,7 +1153,7 @@ export function applyAstral(lawState, view, base, dt, synergy) {
 // 44. GLOW — Signal emission produces visual brightness
 // ============================================================================
 export function applyGlowEffect(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 8)) return;
+  if (!isSet(lawState, LAW_INDEXES.GLOW)) return;
   const signal = view[base + S.SIGNAL];
   if (!Number.isFinite(signal) || signal < 0.01) return;
   const energy = view[base + S.ENERGY];
@@ -1166,7 +1166,7 @@ export function applyGlowEffect(lawState, view, base, dt, synergy) {
 // 45. ENERGY — Thermal energy conduction between adjacent particles
 // ============================================================================
 export function applyEnergyTransfer(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 13)) return null;
+  if (!isSet(lawState, LAW_INDEXES.ENERGY)) return null;
   if (distSq > 40000) return null;
   const energyI = view[iBase + S.ENERGY];
   const energyJ = view[jBase + S.ENERGY];
@@ -1184,7 +1184,7 @@ export function applyEnergyTransfer(lawState, view, iBase, jBase, distSq, synerg
 // 46. RADIATION — Ambient radiation damages low-armor particles
 // ============================================================================
 export function applyRadiationDamage(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 14)) return;
+  if (!isSet(lawState, LAW_INDEXES.RADIATION)) return;
   const armor = view[base + S.ARMOR];
   const energy = view[base + S.ENERGY];
   if (!Number.isFinite(armor) || !Number.isFinite(energy)) return;
@@ -1198,7 +1198,7 @@ export function applyRadiationDamage(lawState, view, base, dt, synergy) {
 // 47. TRACK — Predation tracking
 // ============================================================================
 export function applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 11)) return null;
+  if (!isSet(lawState, LAW_INDEXES.TRACK)) return null;
   if (dist < 1) return null;
   const massI = view[iBase + S.MASS];
   const massJ = view[jBase + S.MASS];
@@ -1221,7 +1221,7 @@ export function applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, 
 // 48. GENOTYPE — DNA mutation from environmental stress
 // ============================================================================
 export function applyGenotypeMutation(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 15)) return;
+  if (!isSet(lawState, LAW_INDEXES.GENOTYPE)) return;
   const mutationRate = view[base + S.DNA_CACHE_START + 12];
   const temperature = view[base + S.TEMPERATURE];
   if (!Number.isFinite(mutationRate) || !Number.isFinite(temperature)) return;
@@ -1246,7 +1246,7 @@ export function applyGenotypeMutation(lawState, view, base, dt, synergy) {
 // 49. PHENOTYPE — Express DNA as visual trait modulation
 // ============================================================================
 export function applyPhenotype(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 16)) return;
+  if (!isSet(lawState, LAW_INDEXES.PHENOTYPE)) return;
   const energy = view[base + S.ENERGY];
   const radius = view[base + S.RADIUS];
   if (!Number.isFinite(energy) || !Number.isFinite(radius)) return;
@@ -1258,7 +1258,7 @@ export function applyPhenotype(lawState, view, base, dt, synergy) {
 // 50. SOLVATION — Increase reaction rate in solvent
 // ============================================================================
 export function applySolvationEffect(lawState, view, iBase, jBase, distSq, synergy) {
-  if (!isSet(lawState, 18)) return 1.0;
+  if (!isSet(lawState, LAW_INDEXES.SOLVATION)) return 1.0;
   const chargeI = view[iBase + S.CHARGE];
   const chargeJ = view[jBase + S.CHARGE];
   if (!Number.isFinite(chargeI) || !Number.isFinite(chargeJ)) return 1.0;
@@ -1273,7 +1273,7 @@ export function applySolvationEffect(lawState, view, iBase, jBase, distSq, syner
 // 51. ACIDITY — Acidic charge damages unprotected particles
 // ============================================================================
 export function applyAcidityEffect(lawState, view, iBase, jBase, dt, synergy) {
-  if (!isSet(lawState, 19)) return;
+  if (!isSet(lawState, LAW_INDEXES.ACIDITY)) return;
   const chargeI = view[iBase + S.CHARGE];
   const chargeJ = view[jBase + S.CHARGE];
   if (!Number.isFinite(chargeI) || !Number.isFinite(chargeJ)) return;
@@ -1291,7 +1291,7 @@ export function applyAcidityEffect(lawState, view, iBase, jBase, dt, synergy) {
 // 52. OXIDATION — Charge imbalance causes structural degradation
 // ============================================================================
 export function applyOxidationEffect(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 20)) return;
+  if (!isSet(lawState, LAW_INDEXES.OXIDATION)) return;
   const charge = Math.abs(view[base + S.CHARGE]);
   if (!Number.isFinite(charge) || charge < 0.3) return;
   const mass = view[base + S.MASS];
@@ -1304,7 +1304,7 @@ export function applyOxidationEffect(lawState, view, base, dt, synergy) {
 // 53. ISOMERIZATION — Structural rearrangement changes properties
 // ============================================================================
 export function applyIsomerization(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 22)) return;
+  if (!isSet(lawState, LAW_INDEXES.ISOMERIZATION)) return;
   const age = view[base + S.AGE];
   if (!Number.isFinite(age)) return;
   const phase = Math.sin(age * 0.01) * 0.1 * dt * synergy;
@@ -1318,7 +1318,7 @@ export function applyIsomerization(lawState, view, base, dt, synergy) {
 // 54. CHIRALITY — Handedness affects interaction bias
 // ============================================================================
 export function applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 23)) return null;
+  if (!isSet(lawState, LAW_INDEXES.CHIRALITY)) return null;
   if (dist < 1) return null;
   const polI = view[iBase + S.DNA_CACHE_START + 4];
   const polJ = view[jBase + S.DNA_CACHE_START + 4];
@@ -1339,7 +1339,7 @@ export function applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, s
 // 55. CRYSTALLIZATION — Particles align into ordered lattice
 // ============================================================================
 export function applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 24)) return null;
+  if (!isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)) return null;
   if (dist < 1 || dist > 30) return null;
   const gridSize = 8.0;
   const targetX = Math.round(dx / gridSize) * gridSize;
@@ -1359,7 +1359,7 @@ export function applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, d
 // 56. PHASE_RADIATION — Hot particles radiate energy as light
 // ============================================================================
 export function applyPhaseRadiation(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 28)) return;
+  if (!isSet(lawState, LAW_INDEXES.PHASE_RADIATION)) return;
   const temp = view[base + S.TEMPERATURE];
   const energy = view[base + S.ENERGY];
   if (!Number.isFinite(temp) || !Number.isFinite(energy)) return;
@@ -1375,7 +1375,7 @@ export function applyPhaseRadiation(lawState, view, base, dt, synergy) {
 // 57. SUBLIMATION — Solid particles skip liquid phase
 // ============================================================================
 export function applySublimation(lawState, view, base, dt, synergy) {
-  if (!isSet(lawState, 29)) return;
+  if (!isSet(lawState, LAW_INDEXES.SUBLIMATION)) return;
   const temp = view[base + S.TEMPERATURE];
   const mass = view[base + S.MASS];
   if (!Number.isFinite(temp) || !Number.isFinite(mass)) return;

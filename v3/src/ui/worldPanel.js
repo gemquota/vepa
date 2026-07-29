@@ -180,13 +180,26 @@ function renderLawGrid(grid, lawStateObj, bus) {
 
 function renderWorldSliders(container, bus) {
   const params = [
-    { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 100, max: 4000, default: 600, step: 50 },
-    { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 20000, default: 500, step: 100 },
-    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 100, step: 10 },
+    { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 50, max: 4000, default: 120, step: 10 },
+    { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 20000, default: 1000, step: 100 },
+    { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 200, step: 10 },
     { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 50000, default: 5000, step: 100 },
     { key: 'GLOBAL_G', label: 'GRAVITY STRENGTH', min: 0, max: 20, default: 1, step: 1 },
     { key: 'DAMPING', label: 'MOTION DAMPING %', min: 0, max: 100, default: 10, step: 1 },
     { key: 'SPAWN_RATE', label: 'SPAWN RATE', min: 0, max: 100, default: 10, step: 1 },
+    { key: 'BASE_SIZE', label: 'BASE SIZE', min: 0.5, max: 10, default: 2, step: 0.5 },
+    { key: 'ENTROPY', label: 'ENTROPY', min: 0, max: 2, default: 0.1, step: 0.05 },
+    { key: 'SHAPE', label: 'SPAWN SHAPE', min: 0, max: 1, default: 0.5, step: 0.1 },
+    { key: 'GROUND_HEIGHT', label: 'GROUND HEIGHT', min: 0, max: 1, default: 0.9, step: 0.05 },
+    { key: 'VISCOSITY', label: 'GLOBAL VISCOSITY', min: 0.5, max: 1, default: 0.98, step: 0.01 },
+    { key: 'WIND', label: 'WIND FORCE', min: 0, max: 5, default: 0, step: 0.5 },
+    { key: 'HEAT_CAPACITY', label: 'HEAT CAPACITY', min: 0.1, max: 10, default: 1, step: 0.5 },
+    { key: 'LIGHT_LEVEL', label: 'LIGHT LEVEL', min: 0, max: 2, default: 0.5, step: 0.1 },
+    { key: 'RADIATION_LEVEL', label: 'RADIATION LEVEL', min: 0, max: 5, default: 0, step: 0.5 },
+    { key: 'SPECIES_INTERACTION', label: 'SPECIES INTERACTION', min: -2, max: 2, default: 0.5, step: 0.1 },
+    { key: 'MUTATION_RATE', label: 'MUTATION RATE', min: 0, max: 5, default: 0.5, step: 0.1 },
+    { key: 'ENERGY_TRANSFER', label: 'ENERGY TRANSFER', min: 0, max: 2, default: 0.5, step: 0.1 },
+    { key: 'DECAY_RATE', label: 'DECAY RATE', min: 0, max: 2, default: 0.1, step: 0.05 },
   ];
 
   let html = '';
