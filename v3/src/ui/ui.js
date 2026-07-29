@@ -7,7 +7,6 @@ import { createHUD } from './hud.js';
 import { createWorldPanel } from './worldPanel.js';
 import { createSpeciesPanel } from './speciesPanel.js';
 import { createDNAAnalytics } from './dnaAnalytics.js';
-import { createLawPanel } from './lawPanel.js';
 import { createNarrativePanel } from './narrativePanel.js';
 import { createPresetPanel } from './presetPanel.js';
 import { initTooltip } from './tooltip.js';
@@ -24,7 +23,6 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   createWorldPanel(bus, lawStateObj);
   createSpeciesPanel(bus, dnaBuffer);
   createDNAAnalytics(bus);
-  createLawPanel(bus, lawStateObj);
   createNarrativePanel(bus);
   createPresetPanel(bus);
   initTooltip(bus, lawStateObj);

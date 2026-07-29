@@ -1118,6 +1118,55 @@ body {
   background: rgba(255,74,74,0.25);
 }
 
+/* ── View Mode Toggle ───────────────────────────────────────── */
+.view-mode-toggle {
+  margin-left: auto;
+  background: rgba(8,8,16,0.6);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.view-mode-toggle:hover {
+  border-color: var(--accent-blue);
+  color: var(--text);
+}
+.view-mode-toggle.word-mode {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+/* Word-mode law grid items */
+.sq-toggle-word {
+  width: auto !important;
+  height: 24px !important;
+  padding: 0 6px;
+  gap: 4px;
+  justify-content: flex-start !important;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.sq-toggle-word .tog-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.sq-toggle-word .tog-name {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#law-grid.word-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
     #top-toolbar .sq-btn { width: 24px; height: 20px; font-size: 9px; }

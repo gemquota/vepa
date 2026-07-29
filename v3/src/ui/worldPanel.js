@@ -54,6 +54,7 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 
 // Track which law is currently selected for info display
 let selectedLawIdx = -1;
+let viewMode = 'icon'; // 'icon' or 'word'
 
 /**
  * Create the world panel in the WORLD tab.
@@ -63,7 +64,7 @@ export function createWorldPanel(bus, lawStateObj) {
   const params = document.getElementById('world-params');
   if (!grid) return;
 
-  // ── Category filter buttons ──
+  // ── Category filter buttons + view toggle ──
   const filterRow = document.querySelector('.category-filter-row');
   if (filterRow) {
     filterRow.querySelectorAll('.cat-tab').forEach((btn) => {
@@ -72,6 +73,22 @@ export function createWorldPanel(bus, lawStateObj) {
         applyCategoryFilter(grid, filterRow);
       });
     });
+
+    // Add view mode toggle at the right end
+    let toggleBtn = filterRow.querySelector('.view-mode-toggle');
+    if (!toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.className = 'view-mode-toggle';
+      toggleBtn.textContent = 'ABC';
+      toggleBtn.title = 'Toggle icon/word view';
+      filterRow.appendChild(toggleBtn);
+      toggleBtn.addEventListener('click', () => {
+        viewMode = viewMode === 'icon' ? 'word' : 'icon';
+        toggleBtn.textContent = viewMode === 'icon' ? 'ABC' : '◈◈';
+        toggleBtn.classList.toggle('word-mode', viewMode === 'word');
+        renderLawGrid(grid, lawStateObj, bus);
+      });
+    }
   }
 
   // ── Build law icon grid ──
@@ -99,6 +116,13 @@ export function setSelectedLaw(idx) {
 }
 
 function renderLawGrid(grid, lawStateObj, bus) {
+  const isWordMode = viewMode === 'word';
+  // In word mode, use a single-column layout per category
+  if (isWordMode) {
+    grid.className = 'law-icon-grid word-mode';
+  } else {
+    grid.className = 'law-icon-grid';
+  }
   let html = '';
   for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
     for (const idx of cat.laws) {
@@ -110,10 +134,21 @@ function renderLawGrid(grid, lawStateObj, bus) {
       const color = LAW_COLOR_BY_INDEX[idx] || 'BLUE';
       const selectedClass = idx === selectedLawIdx ? ' selected' : '';
 
-      html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
-            + `data-law="${idx}" title="${name}" `
-            + `style="${active ? 'border-color:var(--accent-' + color.toLowerCase() + ')' : ''}">`
-            + `${icon}</button>`;
+      if (isWordMode) {
+        // Full word mode: icon + name text
+        html += `<button class="sq-toggle sq-toggle-word ${catClass}${active ? ' active' : ''}${selectedClass}" `
+              + `data-law="${idx}" title="${name}" `
+              + `style="${active ? 'border-color:var(--accent-' + color.toLowerCase() + ')' : ''}">`
+              + `<span class="tog-icon">${icon}</span>`
+              + `<span class="tog-name">${name}</span>`
+              + `</button>`;
+      } else {
+        // Icon mode: just the symbol
+        html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
+              + `data-law="${idx}" title="${name}" `
+              + `style="${active ? 'border-color:var(--accent-' + color.toLowerCase() + ')' : ''}">`
+              + `${icon}</button>`;
+      }
     }
   }
   grid.innerHTML = html;
