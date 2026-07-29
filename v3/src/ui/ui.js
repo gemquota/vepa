@@ -27,7 +27,7 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   createLawPanel(bus, lawStateObj);
   createNarrativePanel(bus);
   createPresetPanel(bus);
-  initTooltip(bus);
+  initTooltip(bus, lawStateObj);
 }
 
 function setupTabSwitching() {

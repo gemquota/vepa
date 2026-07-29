@@ -1,11 +1,15 @@
 /**
  * VEPA v3 — Law Info Module
  * Full-width info bar above the law grid showing the last-tapped law's
- * icon, name, category, and HELP_DB description.
+ * icon, name, category, HELP_DB description, and an on/off toggle.
  */
 import { LAW_INDEXES, LAW_HELP_DB, LAW_COLOR_BY_INDEX, LAW_TO_CATEGORY } from '../constants.js';
+import { isSet, toggle as toggleLaw } from '../state/lawState.js';
 
 let infoEl = null;
+let currentLawIdx = -1;
+let busRef = null;
+let lawStateRef = null;
 
 // Reverse: law index → name
 const LAW_NAME_BY_IDX = {};
@@ -13,7 +17,7 @@ for (const [name, idx] of Object.entries(LAW_INDEXES)) {
   LAW_NAME_BY_IDX[idx] = name;
 }
 
-// Law icon symbols (mirrors worldPanel.js)
+// Law icon symbols
 const LAW_ICONS = {
   GRAV: '⬡', DRAG: '≋', ENTR: '~', WRAP: '◯', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
   VOID: '∅', BOND: '⛓',
@@ -31,8 +35,11 @@ const LAW_ICONS = {
 /**
  * Initialize the law info module.
  * @param {object} bus - Event bus
+ * @param {object} lawStateObj - Law state object for toggling
  */
-export function initTooltip(bus) {
+export function initTooltip(bus, lawStateObj) {
+  busRef = bus;
+  lawStateRef = lawStateObj;
   infoEl = document.getElementById('law-info-module');
   if (!infoEl) return;
 
@@ -42,13 +49,6 @@ export function initTooltip(bus) {
       showLawInfo(lawIndex);
     });
   }
-
-  // Close button delegation
-  infoEl.addEventListener('click', (e) => {
-    if (e.target.closest('.info-close')) {
-      infoEl.classList.add('hidden');
-    }
-  });
 }
 
 /**
@@ -56,6 +56,7 @@ export function initTooltip(bus) {
  */
 function showLawInfo(idx) {
   if (!infoEl || idx === undefined || idx < 0) return;
+  currentLawIdx = idx;
 
   const name = LAW_NAME_BY_IDX[idx];
   if (!name) return;
@@ -69,6 +70,7 @@ function showLawInfo(idx) {
   const hint = help.hint || '';
   const explanation = help.explanation || '';
   const system = help.system || '';
+  const isActive = lawStateRef ? isSet(lawStateRef, idx) : false;
 
   infoEl.innerHTML = `
     <div class="info-row">
@@ -77,6 +79,12 @@ function showLawInfo(idx) {
         <div class="info-header">
           <span class="info-title">${name}</span>
           <span class="info-category" style="color:var(--accent-${colorName})">${catName.toUpperCase()}</span>
+          <button class="info-toggle ${isActive ? 'on' : 'off'}" data-law="${idx}">
+            <span class="toggle-track">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-label">${isActive ? 'ON' : 'OFF'}</span>
+          </button>
           <button class="info-close">✕</button>
         </div>
         <div class="info-hint">${hint}</div>
@@ -85,6 +93,41 @@ function showLawInfo(idx) {
       </div>
     </div>
   `;
+
+  // Wire toggle click
+  const toggleBtn = infoEl.querySelector('.info-toggle');
+  if (toggleBtn && lawStateRef && busRef) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const lawIdx = parseInt(toggleBtn.dataset.law, 10);
+      toggleLaw(lawStateRef, lawIdx);
+      const nowActive = isSet(lawStateRef, lawIdx);
+      // Update toggle visuals
+      toggleBtn.className = `info-toggle ${nowActive ? 'on' : 'off'}`;
+      toggleBtn.querySelector('.toggle-label').textContent = nowActive ? 'ON' : 'OFF';
+      // Update law grid button
+      const gridBtn = document.querySelector(`#law-grid .sq-toggle[data-law="${lawIdx}"]`);
+      if (gridBtn) {
+        gridBtn.classList.toggle('active', nowActive);
+        const color = (LAW_COLOR_BY_INDEX[lawIdx] || 'BLUE').toLowerCase();
+        gridBtn.style.borderColor = nowActive ? `var(--accent-${color})` : '';
+      }
+      // Notify
+      busRef.emit('law:toggled', {
+        lawIndex: lawIdx,
+        active: nowActive,
+        state: nowActive ? 1 : 0,
+      });
+    });
+  }
+
+  // Wire close button
+  const closeBtn = infoEl.querySelector('.info-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      infoEl.classList.add('hidden');
+    });
+  }
 
   infoEl.classList.remove('hidden');
 }

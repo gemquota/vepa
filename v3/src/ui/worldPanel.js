@@ -52,6 +52,9 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
   }
 }
 
+// Track which law is currently selected for info display
+let selectedLawIdx = -1;
+
 /**
  * Create the world panel in the WORLD tab.
  */
@@ -83,6 +86,18 @@ export function createWorldPanel(bus, lawStateObj) {
   bus.on('law:sync', () => renderLawGrid(grid, lawStateObj, bus));
 }
 
+/**
+ * Set the selected law (for info display).
+ */
+export function setSelectedLaw(idx) {
+  selectedLawIdx = idx;
+  // Update visual selection on all sq-toggle buttons
+  document.querySelectorAll('#law-grid .sq-toggle').forEach((btn) => {
+    const lawIdx = parseInt(btn.dataset.law, 10);
+    btn.classList.toggle('selected', lawIdx === idx);
+  });
+}
+
 function renderLawGrid(grid, lawStateObj, bus) {
   let html = '';
   for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
@@ -93,8 +108,9 @@ function renderLawGrid(grid, lawStateObj, bus) {
       const active = isSet(lawStateObj, idx);
       const catClass = `cat-${catName}`;
       const color = LAW_COLOR_BY_INDEX[idx] || 'BLUE';
+      const selectedClass = idx === selectedLawIdx ? ' selected' : '';
 
-      html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}" `
+      html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
             + `data-law="${idx}" title="${name}" `
             + `style="${active ? 'border-color:var(--accent-' + color.toLowerCase() + ')' : ''}">`
             + `${icon}</button>`;
@@ -116,6 +132,8 @@ function renderLawGrid(grid, lawStateObj, bus) {
       } else {
         btn.style.borderColor = '';
       }
+      // Update selected law
+      setSelectedLaw(idx);
       bus.emit('law:toggled', {
         lawIndex: idx,
         active: nowActive,

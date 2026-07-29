@@ -992,6 +992,60 @@ body {
   line-height: 1.3;
   font-style: italic;
 }
+.law-info-module .info-toggle {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.law-info-module .info-toggle:hover {
+  background: rgba(255,255,255,0.08);
+}
+.law-info-module .info-toggle .toggle-track {
+  width: 24px;
+  height: 12px;
+  border-radius: 6px;
+  position: relative;
+  transition: background 0.2s;
+}
+.law-info-module .info-toggle.on .toggle-track {
+  background: var(--accent-green);
+}
+.law-info-module .info-toggle.off .toggle-track {
+  background: rgba(255,255,255,0.15);
+}
+.law-info-module .info-toggle .toggle-knob {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s;
+}
+.law-info-module .info-toggle.on .toggle-knob {
+  left: 13px;
+}
+.law-info-module .info-toggle.off .toggle-knob {
+  left: 1px;
+}
+.law-info-module .info-toggle .toggle-label {
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.law-info-module .info-toggle.on .toggle-label {
+  color: var(--accent-green);
+}
+.law-info-module .info-toggle.off .toggle-label {
+  color: var(--text-dim);
+}
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
