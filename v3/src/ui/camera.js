@@ -1,6 +1,8 @@
 /**
  * VEPA v3 — 3D Camera + Touch/Mouse Controls
- * Manages pan, zoom, and orbit for the 3D viewport.
+ * - 1 finger / mouse drag → orbit rotation
+ * - 2 fingers → pan + pinch zoom
+ * - Scroll wheel → zoom
  */
 const camera = {
   x: 0,
@@ -11,18 +13,21 @@ const camera = {
   focalLength: 1800,
 };
 
-// ── Touch/mouse state ──
-let touchState = {
-  touches: [],
-  lastPinchDist: 0,
-  lastAngle: 0,
-  isDragging: false,
-  lastX: 0,
-  lastY: 0,
-  dragStartX: 0,
-  dragStartY: 0,
-  lastPanX: 0,
-  lastPanY: 0,
+// ── Internal state ──
+let _canvas = null;
+const ptr = {
+  // Pointer (mouse) orbit
+  mouseDown: false, mouseX: 0, mouseY: 0,
+  // Touch tracking
+  touches: {},
+  touchCount: 0,
+  // 1-finger orbit
+  orbitLastX: 0, orbitLastY: 0,
+  // 2-finger pan + pinch
+  pinchDist: 0,
+  panCenterX: 0, panCenterY: 0,
+  panStartX: 0, panStartY: 0,
+  panStartRotY: 0, panStartRotX: 0,
 };
 
 /**
@@ -30,6 +35,8 @@ let touchState = {
  */
 export function initCamera(canvas) {
   if (!canvas) return;
+  _canvas = canvas;
+  canvas.style.touchAction = 'none';
 
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -37,123 +44,134 @@ export function initCamera(canvas) {
   canvas.addEventListener('pointercancel', onPointerUp);
   canvas.addEventListener('wheel', onWheel, { passive: false });
 
-  // Touch events for pinch/rotate
   canvas.addEventListener('touchstart', onTouchStart, { passive: false });
   canvas.addEventListener('touchmove', onTouchMove, { passive: false });
   canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+  canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
 }
 
+// ── Mouse orbit (pointer events, touch-typed ignored) ──
+
 function onPointerDown(e) {
-  touchState.isDragging = true;
-  touchState.lastX = e.clientX;
-  touchState.lastY = e.clientY;
-  touchState.dragStartX = e.clientX;
-  touchState.dragStartY = e.clientY;
-  touchState.lastPanX = camera.x;
-  touchState.lastPanY = camera.y;
+  if (e.pointerType === 'touch') return;
+  ptr.mouseDown = true;
+  ptr.mouseX = e.clientX;
+  ptr.mouseY = e.clientY;
 }
 
 function onPointerMove(e) {
-  if (!touchState.isDragging) return;
-  // Single finger = pan
-  const dx = (e.clientX - touchState.lastX) / camera.zoom;
-  const dy = (e.clientY - touchState.lastY) / camera.zoom;
-  camera.x -= dx;
-  camera.y -= dy;
-  touchState.lastX = e.clientX;
-  touchState.lastY = e.clientY;
+  if (!ptr.mouseDown) return;
+  const dx = e.clientX - ptr.mouseX;
+  const dy = e.clientY - ptr.mouseY;
+  camera.rotY -= dx * 0.005;
+  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.005));
+  ptr.mouseX = e.clientX;
+  ptr.mouseY = e.clientY;
 }
 
 function onPointerUp() {
-  touchState.isDragging = false;
-  touchState.touches = [];
+  ptr.mouseDown = false;
 }
 
 function onWheel(e) {
   e.preventDefault();
   const delta = e.deltaY > 0 ? 0.9 : 1.1;
-  camera.zoom *= delta;
-  camera.zoom = Math.max(0.1, Math.min(10, camera.zoom));
+  camera.zoom = Math.max(0.1, Math.min(10, camera.zoom * delta));
 }
 
-// ── Touch gesture handling ──
-let touchIds = {};
+// ── Touch gestures ──
 
 function onTouchStart(e) {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    touchIds[t.identifier] = { x: t.clientX, y: t.clientY };
+    ptr.touches[t.identifier] = { x: t.clientX, y: t.clientY };
   }
-  const count = Object.keys(touchIds).length;
-  if (count === 1) {
-    // Single touch = pan
-    const t = e.changedTouches[0];
-    touchState.isDragging = true;
-    touchState.lastX = t.clientX;
-    touchState.lastY = t.clientY;
-    touchState.lastPanX = camera.x;
-    touchState.lastPanY = camera.y;
-  } else if (count === 2) {
-    touchState.isDragging = false;
-    const ids = Object.keys(touchIds);
-    const t0 = touchIds[ids[0]];
-    const t1 = touchIds[ids[1]];
-    const dx = t1.x - t0.x;
-    const dy = t1.y - t0.y;
-    touchState.lastPinchDist = Math.sqrt(dx * dx + dy * dy);
-    touchState.lastAngle = Math.atan2(dy, dx);
+  ptr.touchCount = Object.keys(ptr.touches).length;
+
+  if (ptr.touchCount === 1) {
+    // 1 finger → start orbit
+    const t = e.touches[0];
+    ptr.orbitLastX = t.clientX;
+    ptr.orbitLastY = t.clientY;
+  } else if (ptr.touchCount === 2) {
+    // 2 fingers → start pan + pinch
+    beginPanPinch();
   }
 }
 
 function onTouchMove(e) {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    if (touchIds[t.identifier]) {
-      touchIds[t.identifier].x = t.clientX;
-      touchIds[t.identifier].y = t.clientY;
+    if (ptr.touches[t.identifier]) {
+      ptr.touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
   }
-  const ids = Object.keys(touchIds);
-  if (ids.length === 1) {
-    // Pan
-    const t = e.changedTouches[0];
-    const dx = (t.clientX - touchState.lastX) / camera.zoom;
-    const dy = (t.clientY - touchState.lastY) / camera.zoom;
-    camera.x -= dx;
-    camera.y -= dy;
-    touchState.lastX = t.clientX;
-    touchState.lastY = t.clientY;
-  } else if (ids.length >= 2) {
-    const t0 = touchIds[ids[0]];
-    const t1 = touchIds[ids[1]];
-    const dx = t1.x - t0.x;
-    const dy = t1.y - t0.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx);
+  ptr.touchCount = Object.keys(ptr.touches).length;
 
-    if (touchState.lastPinchDist > 0) {
-      // Pinch zoom
-      const scale = dist / touchState.lastPinchDist;
-      camera.zoom *= scale;
-      camera.zoom = Math.max(0.1, Math.min(10, camera.zoom));
-    }
-    // Two-finger rotate
-    const angleDelta = angle - touchState.lastAngle;
-    camera.rotY += angleDelta * 1.5;
-
-    touchState.lastPinchDist = dist;
-    touchState.lastAngle = angle;
+  if (ptr.touchCount === 1) {
+    // 1 finger → orbit rotate
+    const t = e.touches[0];
+    const dx = t.clientX - ptr.orbitLastX;
+    const dy = t.clientY - ptr.orbitLastY;
+    camera.rotY -= dx * 0.005;
+    camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.005));
+    ptr.orbitLastX = t.clientX;
+    ptr.orbitLastY = t.clientY;
+  } else if (ptr.touchCount >= 2) {
+    // 2 fingers → pan + pinch zoom
+    doPanPinch();
   }
 }
 
 function onTouchEnd(e) {
+  e.preventDefault();
   for (const t of e.changedTouches) {
-    delete touchIds[t.identifier];
+    delete ptr.touches[t.identifier];
   }
-  if (Object.keys(touchIds).length === 0) {
-    touchState.isDragging = false;
-    touchState.lastPinchDist = 0;
+  ptr.touchCount = Object.keys(ptr.touches).length;
+  if (ptr.touchCount < 2) ptr.pinchDist = 0;
+  if (ptr.touchCount === 1) {
+    const t = e.touches[0];
+    ptr.orbitLastX = t.clientX;
+    ptr.orbitLastY = t.clientY;
   }
+}
+
+// ── 2-finger helpers ──
+
+function beginPanPinch() {
+  const ids = Object.keys(ptr.touches);
+  const t0 = ptr.touches[ids[0]];
+  const t1 = ptr.touches[ids[1]];
+  const dx = t1.x - t0.x;
+  const dy = t1.y - t0.y;
+  ptr.pinchDist = Math.sqrt(dx * dx + dy * dy);
+  ptr.panCenterX = (t0.x + t1.x) / 2;
+  ptr.panCenterY = (t0.y + t1.y) / 2;
+  ptr.panStartX = camera.x;
+  ptr.panStartY = camera.y;
+}
+
+function doPanPinch() {
+  const ids = Object.keys(ptr.touches);
+  const t0 = ptr.touches[ids[0]];
+  const t1 = ptr.touches[ids[1]];
+  const dx = t1.x - t0.x;
+  const dy = t1.y - t0.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // Pinch zoom
+  if (ptr.pinchDist > 0) {
+    camera.zoom = Math.max(0.1, Math.min(10, camera.zoom * (dist / ptr.pinchDist)));
+  }
+
+  // Pan (screen pixels → world, divided by zoom)
+  const centerX = (t0.x + t1.x) / 2;
+  const centerY = (t0.y + t1.y) / 2;
+  const panDx = (centerX - ptr.panCenterX) / camera.zoom;
+  const panDy = (centerY - ptr.panCenterY) / camera.zoom;
+  camera.x = ptr.panStartX - panDx;
+  camera.y = ptr.panStartY - panDy;
 }
 
 /**
@@ -185,7 +203,7 @@ export function projectPoint(x, y, z, worldSize, width, height) {
   const ry2 = ry1 * cosX - rz1 * sinX;
   const rz2 = ry1 * sinX + rz1 * cosX;
 
-  // Apply pan (in world units, before projection)
+  // Apply pan (in world units, after rotation)
   const tx = rx2 + camera.x;
   const ty = ry2 + camera.y;
   const tz = rz2;
