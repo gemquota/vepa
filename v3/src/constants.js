@@ -11,7 +11,7 @@ export const DEFAULT_DNA_STRIDE = 64;
 export const DNA_PACK_MAX = 65535;
 export const MAX_SPECIES = 64;
 export const MAX_PARTICLES = 2500;
-export const DEFAULT_PARTICLES_PER_SPECIES = 50;
+export const DEFAULT_PARTICLES_PER_SPECIES = 200;
 export const WORLD_SIZE = 120;
 
 // --- Particle Stride Layout (100 floats per particle) ---
@@ -98,9 +98,15 @@ export const DNA_INDEXES = {
   HEAT_OUTPUT:        39,
   MEMORY_DECAY:       40,
   SPECIES_AFFINITY:   41,
+  DOMINANCE:          42,
+  CROSSOVER_RATE:     43,
+  EPIGENETIC_DRIFT:   44,
+  HETEROZYGOSITY:     45,
+  GENE_FLOW:          46,
+  REPRESSOR:          47,
 };
 
-export const DNA_COUNT = 42;
+export const DNA_COUNT = 48;
 
 // --- Human-readable names for each DNA index ---
 
@@ -147,6 +153,12 @@ export const DNA_META = [
   'Heat Output',
   'Memory Decay',
   'Species Affinity',
+  'Dominance',
+  'Crossover Rate',
+  'Epigenetic Drift',
+  'Heterozygosity',
+  'Gene Flow',
+  'Repressor',
 ];
 
 // --- DNA Ranges [min, max, default] for each of the 42 parameters ---
@@ -194,6 +206,12 @@ export const DNA_RANGES = [
   { min: 0,     max: 1,    default: 0.1     },   // 39 HEAT_OUTPUT
   { min: 0.9,   max: 1.0,  default: 0.99    },   // 40 MEMORY_DECAY
   { min: -1.0,  max: 1.0,  default: 0.0     },   // 41 SPECIES_AFFINITY
+  { min: 0.0,   max: 1.0,  default: 0.5     },   // 42 DOMINANCE
+  { min: 0.0,   max: 0.5,  default: 0.1     },   // 43 CROSSOVER_RATE
+  { min: 0.0,   max: 0.1,  default: 0.01    },   // 44 EPIGENETIC_DRIFT
+  { min: 0.0,   max: 1.0,  default: 0.5     },   // 45 HETEROZYGOSITY
+  { min: 0.0,   max: 1.0,  default: 0.2     },   // 46 GENE_FLOW
+  { min: -1.0,  max: 1.0,  default: 0.0     },   // 47 REPRESSOR
 ];
 
 // --- Law Indexes (64 laws) ---

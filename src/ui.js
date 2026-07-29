@@ -683,7 +683,14 @@ export function setupUI(engine) {
         tele: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3l14 9-14 9V3z" stroke-dasharray="2 2"/></svg>`,
         clai: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 17l-5-5 5-5 5 5-5 5z"/><path d="M2 12h20M12 2v20" opacity="0.3"/></svg>`,
         preo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>`,
-        astr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`
+        astr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`,
+        mendel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h6v6H4zM14 14h6v6h-6zM4 18l6-6M14 4l6 6" opacity="0.5"/><circle cx="7" cy="7" r="2" fill="var(--red-bright)" fill-opacity="0.5"/><circle cx="17" cy="17" r="2" fill="var(--red-bright)" fill-opacity="0.5"/></svg>`,
+        crossover: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8 8-8M4 20l8-8 8 8" opacity="0.5"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="16" r="2"/></svg>`,
+        horiz: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h20M12 2v20" opacity="0.3"/><path d="M8 8l4 4-4 4M16 8l-4 4 4 4"/></svg>`,
+        epigen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9" stroke-dasharray="4 2"/><path d="M8 12l3 3 5-5"/><path d="M4 16l3-3" opacity="0.5"/></svg>`,
+        drift: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 20c3-6 6-6 9-2s6 4 9-2" fill="none"/><circle cx="5" cy="16" r="1.5" fill="var(--red-bright)" fill-opacity="0.5"/><circle cx="12" cy="14" r="1.5" fill="var(--red-bright)" fill-opacity="0.5"/><circle cx="19" cy="10" r="1.5" fill="var(--red-bright)" fill-opacity="0.5"/></svg>`,
+        speciate: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2c-5 0-9 4-9 9v0c0 5 4 9 9 9s9-4 9-9v0c0-5-4-9-9-9z" stroke-dasharray="3 3"/><path d="M8 12h8M12 8v8"/></svg>`,
+        ploidy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l10 5-10 5-10-5 10-5z"/><path d="M12 12l10 5-10 5-10-5 10-5z" opacity="0.5"/><path d="M12 22V2" opacity="0.3"/></svg>`
     };
 
     const renderLawCodex = () => {
@@ -723,7 +730,14 @@ export function setupUI(engine) {
             { key: 'genotype', help: 'Mutation', name: 'GENOTYPE', group: 'biol' },
             { key: 'phenotype', help: 'C2 (Alpha)', name: 'PHENOTYPE', group: 'biol' },
             { key: 'ener', help: 'ENER', name: 'ENERGY CONSERVATION', group: 'biol' },
-            { key: 'rad', help: 'RAD', name: 'RADIATION EMISSION', group: 'biol' }
+            { key: 'rad', help: 'RAD', name: 'RADIATION EMISSION', group: 'biol' },
+            { key: 'mendel', help: 'MENDEL', name: 'MENDELIAN INHERITANCE', group: 'biol' },
+            { key: 'crossover', help: 'CROSSOVER', name: 'GENETIC CROSSOVER', group: 'biol' },
+            { key: 'horiz', help: 'HORIZ', name: 'HORIZONTAL GENE TRANSFER', group: 'biol' },
+            { key: 'epigen', help: 'EPIGEN', name: 'EPIGENETICS', group: 'biol' },
+            { key: 'drift', help: 'DRIFT', name: 'GENETIC DRIFT', group: 'biol' },
+            { key: 'speciate', help: 'SPECIATE', name: 'SPECIATION', group: 'biol' },
+            { key: 'ploidy', help: 'PLOIDY', name: 'POLYPLOIDY', group: 'biol' }
         ];
 
         const chemMap = [
@@ -1417,45 +1431,124 @@ export function updatePlaybackUI(mode, paused) {
 export function renderDNAAnalytics(engine) {
     const container = document.getElementById('dna-analytics-container');
     if (!container) return;
-    
-    const counts = new Array(engine.species.length).fill(0);
-    const colorGroups = []; // Array of { r, g, b, count }
-    const COLOR_THRESHOLD = 30; // Max distance to group colors
+
+    const STRIDE = 64;
+    const numParticles = engine.worldConfig.count || 0;
+    const particles = engine.particles;
+
+    // Collect per-particle data for all live particles
+    const speciesCounts = new Array(engine.species.length).fill(0);
+    const speciesEnergy = new Array(engine.species.length).fill(0);
+    const speciesMass = new Array(engine.species.length).fill(0);
+    const speciesAge = new Array(engine.species.length).fill(0);
+    const speciesVel = new Array(engine.species.length).fill(0);
+    const speciesTraitSum = new Array(engine.species.length).fill(null).map(() => new Array(6).fill(0)); // First 6 key traits
+    const speciesTraitCount = new Array(engine.species.length).fill(0);
+    const colorGroups = [];
+    const COLOR_THRESHOLD = 30;
+    const massBuckets = new Array(20).fill(0);
+    const energyBuckets = new Array(20).fill(0);
+    const ageBuckets = new Array(20).fill(0);
+    const velBuckets = new Array(20).fill(0);
     let totalAlive = 0;
+    let totalMass = 0;
+    let totalEnergy = 0;
+    let totalVel = 0;
+    let bondedCount = 0;
+    let maxBondCount = 0;
+    let minMass = Infinity;
+    let maxMass = 0;
+    const keyTraits = [0, 1, 10, 11, 12, 4]; // Force, Viscosity, Birth Rate, Death Rate, Mutation, Polarity
 
-    const STRIDE = 64; 
-    if (engine.particles) {
-        for (let i = 0; i < engine.worldConfig.count; i++) {
+    if (particles) {
+        for (let i = 0; i < numParticles; i++) {
             const ptr = i * STRIDE;
-            if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
-                totalAlive++;
-                const sIdx = Math.floor(engine.particles[ptr + STRIDE_INDEXES.SPECIES_ID]);
-                if (counts[sIdx] !== undefined) counts[sIdx]++;
+            if (particles[ptr + STRIDE_INDEXES.DEAD] > 0) continue;
+            totalAlive++;
+            const sIdx = Math.floor(particles[ptr + STRIDE_INDEXES.SPECIES_ID]);
+            if (speciesCounts[sIdx] !== undefined) speciesCounts[sIdx]++;
 
-                // Track colors from visuals buffer if available, or species defaults
-                const spec = engine.species[sIdx];
-                if (spec && spec.rgb) {
-                    const [r, g, b] = spec.rgb.map(v => Math.round(v * 255));
-                    let found = false;
-                    for (const group of colorGroups) {
-                        const dist = Math.sqrt((r - group.r)**2 + (g - group.g)**2 + (b - group.b)**2);
-                        if (dist < COLOR_THRESHOLD) {
-                            group.count++;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) colorGroups.push({ r, g, b, count: 1 });
+            const mass = particles[ptr + STRIDE_INDEXES.MASS] || 1;
+            const energy = particles[ptr + STRIDE_INDEXES.ENERGY] || 0;
+            const age = particles[ptr + STRIDE_INDEXES.AGE] || 0;
+            const vx = particles[ptr + STRIDE_INDEXES.VEL_X] || 0;
+            const vy = particles[ptr + STRIDE_INDEXES.VEL_Y] || 0;
+            const vz = particles[ptr + STRIDE_INDEXES.VEL_Z] || 0;
+            const vel = Math.sqrt(vx*vx + vy*vy + vz*vz);
+            const bondCount = particles[ptr + STRIDE_INDEXES.BOND_COUNT] || 0;
+
+            totalMass += mass;
+            totalEnergy += energy;
+            totalVel += vel;
+            if (mass < minMass) minMass = mass;
+            if (mass > maxMass) maxMass = mass;
+            if (bondCount > 0) bondedCount++;
+            if (bondCount > maxBondCount) maxBondCount = bondCount;
+
+            // Species aggregates
+            if (speciesEnergy[sIdx] !== undefined) speciesEnergy[sIdx] += energy;
+            if (speciesMass[sIdx] !== undefined) speciesMass[sIdx] += mass;
+            if (speciesAge[sIdx] !== undefined) speciesAge[sIdx] += age;
+            if (speciesVel[sIdx] !== undefined) speciesVel[sIdx] += vel;
+            if (speciesTraitCount[sIdx] !== undefined) {
+                speciesTraitCount[sIdx]++;
+                for (let t = 0; t < keyTraits.length; t++) {
+                    speciesTraitSum[sIdx][t] += particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + keyTraits[t]] || 0;
                 }
+            }
+
+            // Histogram buckets
+            const massBucket = Math.min(19, Math.floor((mass / (maxMass || 10)) * 19));
+            massBuckets[massBucket]++;
+            const energyBucket = Math.min(19, Math.floor((energy / 200) * 19));
+            energyBuckets[energyBucket]++;
+            const ageBucket = Math.min(19, Math.floor((age / 10000) * 19));
+            ageBuckets[ageBucket]++;
+            const velBucket = Math.min(19, Math.floor((vel / 30) * 19));
+            velBuckets[velBucket]++;
+
+            // Track colors
+            const spec = engine.species[sIdx];
+            if (spec && spec.rgb) {
+                const [r, g, b] = spec.rgb.map(v => Math.round(v * 255));
+                let found = false;
+                for (const group of colorGroups) {
+                    const dist = Math.sqrt((r - group.r)**2 + (g - group.g)**2 + (b - group.b)**2);
+                    if (dist < COLOR_THRESHOLD) { group.count++; found = true; break; }
+                }
+                if (!found) colorGroups.push({ r, g, b, count: 1 });
             }
         }
     }
 
-    if (totalAlive === 0) totalAlive = 1;
+    if (totalAlive === 0) { totalAlive = 1; minMass = 1; maxMass = 10; }
 
-    let html = `<h3>GENETIC_DRIFT</h3>`;
+    const avgMass = (totalMass / totalAlive).toFixed(2);
+    const avgEnergy = (totalEnergy / totalAlive).toFixed(1);
+    const avgVel = (totalVel / totalAlive).toFixed(2);
+    const avgAge = speciesAge.reduce((a,b) => a+b, 0) / totalAlive;
+
+    // ====== START HTML ======
+    let html = '';
+
+    // --- OVERVIEW STATS BANNER ---
+    html += `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; margin-bottom:15px; background:#0a0a0a; border:1px solid #222; padding:8px;">
+        <div style="text-align:center;"><div style="font-size:9px; color:#666;">POPULATION</div><div style="font-size:14px; color:#0f0;">${totalAlive}</div></div>
+        <div style="text-align:center;"><div style="font-size:9px; color:#666;">AVG MASS</div><div style="font-size:14px; color:#ff4;">${avgMass}</div></div>
+        <div style="text-align:center;"><div style="font-size:9px; color:#666;">AVG NRG</div><div style="font-size:14px; color:#f44;">${avgEnergy}</div></div>
+        <div style="text-align:center; margin-top:5px;"><div style="font-size:9px; color:#666;">AVG VEL</div><div style="font-size:14px; color:#4ff;">${avgVel}</div></div>
+        <div style="text-align:center; margin-top:5px;"><div style="font-size:9px; color:#666;">BONDED</div><div style="font-size:14px; color:#f4f;">${bondedCount}</div></div>
+        <div style="text-align:center; margin-top:5px;"><div style="font-size:9px; color:#666;">MAX BONDS</div><div style="font-size:14px; color:#ff4;">${maxBondCount}</div></div>
+    </div>`;
+
+    // --- SPECIES BREAKDOWN ---
+    html += `<h3>SPECIES_BREAKDOWN</h3>`;
     engine.species.forEach((s, idx) => {
-        const pct = ((counts[idx] / totalAlive) * 100).toFixed(1);
+        const pct = ((speciesCounts[idx] / totalAlive) * 100).toFixed(1);
+        const sAvgMass = speciesTraitCount[idx] > 0 ? (speciesMass[idx] / speciesTraitCount[idx]).toFixed(2) : '-';
+        const sAvgEnergy = speciesTraitCount[idx] > 0 ? (speciesEnergy[idx] / speciesTraitCount[idx]).toFixed(1) : '-';
+        const sAvgAge = speciesTraitCount[idx] > 0 ? (speciesAge[idx] / speciesTraitCount[idx]).toFixed(0) : '-';
+        const sAvgVel = speciesTraitCount[idx] > 0 ? (speciesVel[idx] / speciesTraitCount[idx]).toFixed(2) : '-';
         html += `
             <div class="dna-stat-row">
                 <div class="dna-stat-label">
@@ -1464,34 +1557,153 @@ export function renderDNAAnalytics(engine) {
                 <div class="dna-stat-bar-bg">
                     <div class="dna-stat-bar" style="width:${pct}%; background:${s.color}"></div>
                 </div>
-                <div class="dna-stat-val">${counts[idx]} (${pct}%)</div>
+                <div class="dna-stat-val">${speciesCounts[idx]} (${pct}%)</div>
             </div>
-        `;
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1px; font-size:7px; color:#888; padding:0 0 6px 20px;">
+                <div>M:${sAvgMass}</div><div>E:${sAvgEnergy}</div><div>A:${sAvgAge}</div><div>V:${sAvgVel}</div>
+            </div>`;
     });
 
-    html += `<h3 style="margin-top:25px;">COLOUR_DIVERSITY</h3>`;
-    
-    // Sort color groups by count descending
-    const sortedColors = colorGroups.sort((a, b) => b.count - a.count).slice(0, 12); // Show top 12
-    
-    sortedColors.forEach((group) => {
-        const pct = ((group.count / totalAlive) * 100).toFixed(1);
-        const rgbStr = `${group.r},${group.g},${group.b}`;
-        const color = `rgb(${rgbStr})`;
-        html += `
-            <div class="dna-stat-row">
-                <div class="dna-stat-label" style="font-family:monospace; font-size:8px;">
-                    <span style="color:${color}">■</span> ${rgbStr}
-                </div>
-                <div class="dna-stat-bar-bg">
-                    <div class="dna-stat-bar" style="width:${pct}%; background:${color}"></div>
-                </div>
-                <div class="dna-stat-val">${group.count} (${pct}%)</div>
-            </div>
-        `;
+    // --- SPECIES TRAIT PROFILES ---
+    html += `<h3 style="margin-top:18px;">SPECIES_TRAIT_PROFILES</h3>`;
+    const traitNames = ['Force', 'Viscosity', 'Birth Rate', 'Death Rate', 'Mutation', 'Polarity'];
+    engine.species.forEach((s, idx) => {
+        if (speciesTraitCount[idx] > 0) {
+            html += `<div style="margin:4px 0; font-size:8px; color:${s.color};">${s.name}</div>`;
+            for (let t = 0; t < keyTraits.length; t++) {
+                const avg = (speciesTraitSum[idx][t] / speciesTraitCount[idx]).toFixed(3);
+                const barW = Math.min(100, Math.abs(parseFloat(avg)) * 50);
+                const barColor = parseFloat(avg) >= 0 ? '#4f4' : '#f44';
+                html += `<div class="dna-stat-row" style="font-size:7px;">
+                    <div class="dna-stat-label">${traitNames[t]}</div>
+                    <div class="dna-stat-bar-bg">
+                        <div class="dna-stat-bar" style="width:${barW}%; background:${barColor}; opacity:0.6;"></div>
+                    </div>
+                    <div class="dna-stat-val">${avg}</div>
+                </div>`;
+            }
+        }
     });
+
+    // --- GENETICS SECTION ---
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:18px;">GENETICS_SUMMARY</h3>`;
+        html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:3px; font-size:9px; margin-bottom:10px;">
+            <div>Total Species: <span style="color:#0f0;">${report.totalSpecies}</span></div>
+            <div>Crossover Events: <span style="color:#ff4;">${report.totalCrossoverEvents}</span></div>
+            <div>Speciation Events: <span style="color:#f44;">${report.totalSpeciationEvents}</span></div>
+            <div>HGT Events: <span style="color:#4ff;">${report.totalHGTEvents}</span></div>
+        </div>`;
+        html += `<h3 style="margin-top:10px; font-size:9px;">SPECIES_LINEAGE</h3>`;
+        report.species.slice(-5).reverse().forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children}` : '';
+            html += `<div class="dna-stat-row" style="font-size:8px;">
+                <div class="dna-stat-label">#${s.id}: ${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mut | ${childrenText}</div>
+            </div>`;
+        });
+    }
+
+    // --- GENETIC DIVERSITY ---
+    if (totalAlive > 0 && particles) {
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40];
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < numParticles && i < 300; i++) {
+                const ptr = i * 64;
+                if (particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val; sumSq += val * val; n++;
+                }
+            }
+            if (n > 1) { totalVariance += (sumSq / n) - (sum / n) * (sum / n); sampleCount++; }
+        }
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
+    // --- POPULATION DENSITY MAP (ASCII) ---
+    if (totalAlive > 0 && particles) {
+        html += `<h3 style="margin-top:18px;">POPULATION_DENSITY</h3>`;
+        const gridRes = 8;
+        const densityGrid = new Array(gridRes * gridRes).fill(0);
+        for (let i = 0; i < numParticles; i++) {
+            const ptr = i * STRIDE;
+            if (particles[ptr + STRIDE_INDEXES.DEAD] > 0) continue;
+            const gx = Math.floor(((particles[ptr] / (engine.worldConfig.dimX || 250)) + 0.5) * (gridRes - 1));
+            const gy = Math.floor(((particles[ptr+1] / (engine.worldConfig.dimY || 250)) + 0.5) * (gridRes - 1));
+            if (gx >= 0 && gx < gridRes && gy >= 0 && gy < gridRes) {
+                densityGrid[gy * gridRes + gx]++;
+            }
+        }
+        const maxDensity = Math.max(1, ...densityGrid);
+        html += `<div style="font-family:monospace; font-size:6px; line-height:7px; letter-spacing:1px;">`;
+        for (let gy = 0; gy < gridRes; gy++) {
+            for (let gx = 0; gx < gridRes; gx++) {
+                const d = densityGrid[gy * gridRes + gx];
+                const intensity = Math.min(4, Math.floor((d / maxDensity) * 4));
+                const chars = ['·', '░', '▒', '▓', '█'];
+                html += `<span style="color:${['#222','#464','#4a4','#4e4','#0f0'][intensity]}">${chars[intensity]}</span>`;
+            }
+            html += `<br>`;
+        }
+        html += `</div>`;
+    }
 
     container.innerHTML = html;
+
+    // Trigger chart drawing
+    window.requestAnimationFrame(() => {
+        drawHistogram('mass-histogram', massBuckets, '#ff4', 'Mass');
+        drawHistogram('energy-distribution', energyBuckets, '#f44', 'Energy');
+        drawHistogram('age-demographics', ageBuckets, '#4ff', 'Age');
+        drawHistogram('velocity-distribution', velBuckets, '#f4f', 'Velocity');
+    });
+}
+
+function drawHistogram(canvasId, buckets, color, label) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(rect.width * dpr);
+    const h = Math.floor(rect.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext('2d');
+    ctx.resetTransform();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const maxVal = Math.max(1, ...buckets);
+    const pad = 5;
+    const barW = (rect.width - pad * 2) / buckets.length;
+    const barH = rect.height - pad * 2;
+
+    buckets.forEach((val, i) => {
+        const x = pad + i * barW;
+        const hgt = (val / maxVal) * barH;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.fillRect(x, rect.height - pad - hgt, barW - 1, hgt);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x, rect.height - pad - hgt, barW - 1, hgt);
+    });
 }
 
 export function updateDNAGraphs(engine) {
@@ -1499,6 +1711,41 @@ export function updateDNAGraphs(engine) {
     if (!tab || !tab.classList.contains('active')) return;
     drawPopulationGraph(engine);
     drawScatterPlot(engine);
+    // Redraw histograms from cached bucket data
+    const STRIDE = 64;
+    const numParticles = engine.worldConfig.count || 0;
+    const particles = engine.particles;
+    if (!particles) return;
+    
+    const massBuckets = new Array(20).fill(0);
+    const energyBuckets = new Array(20).fill(0);
+    const ageBuckets = new Array(20).fill(0);
+    const velBuckets = new Array(20).fill(0);
+    let maxMass = 0;
+    
+    for (let i = 0; i < numParticles; i++) {
+        const ptr = i * STRIDE;
+        if (particles[ptr + STRIDE_INDEXES.DEAD] > 0) continue;
+        const mass = particles[ptr + STRIDE_INDEXES.MASS] || 1;
+        const energy = particles[ptr + STRIDE_INDEXES.ENERGY] || 0;
+        const age = particles[ptr + STRIDE_INDEXES.AGE] || 0;
+        const vx = particles[ptr + STRIDE_INDEXES.VEL_X] || 0;
+        const vy = particles[ptr + STRIDE_INDEXES.VEL_Y] || 0;
+        const vz = particles[ptr + STRIDE_INDEXES.VEL_Z] || 0;
+        const vel = Math.sqrt(vx*vx + vy*vy + vz*vz);
+        if (mass > maxMass) maxMass = mass;
+        massBuckets[Math.min(19, Math.floor((mass / (maxMass || 10)) * 19))]++;
+        energyBuckets[Math.min(19, Math.floor((energy / 200) * 19))]++;
+        ageBuckets[Math.min(19, Math.floor((age / 10000) * 19))]++;
+        velBuckets[Math.min(19, Math.floor((vel / 30) * 19))]++;
+    }
+    
+    if (document.getElementById('mass-histogram')) {
+        drawHistogram('mass-histogram', massBuckets, '#ff4', 'Mass');
+        drawHistogram('energy-distribution', energyBuckets, '#f44', 'Energy');
+        drawHistogram('age-demographics', ageBuckets, '#4ff', 'Age');
+        drawHistogram('velocity-distribution', velBuckets, '#f4f', 'Velocity');
+    }
 }
 
 function setupCanvas(canvas) {
@@ -1621,6 +1868,77 @@ export function renderPresetsInline(engine) {
             </div>
         `;
     });
+    // Add genetics analytics if lineage tracker is available
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:25px;">GENETICS</h3>`;
+        html += `<div class="dna-stat-row" style="border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">
+            <div class="dna-stat-label">Species Count</div>
+            <div class="dna-stat-val">${report.totalSpecies}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Crossover Events</div>
+            <div class="dna-stat-val">${report.totalCrossoverEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Speciation Events</div>
+            <div class="dna-stat-val">${report.totalSpeciationEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">HGT Events</div>
+            <div class="dna-stat-val">${report.totalHGTEvents}</div>
+        </div>`;
+        
+        // Show recent species
+        html += `<h3 style="margin-top:15px; font-size:10px;">SPECIES LINEAGE</h3>`;
+        report.species.slice(-5).forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children} children` : '';
+            html += `<div class="dna-stat-row" style="font-size:9px;">
+                <div class="dna-stat-label">${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mutations ${childrenText}</div>
+            </div>`;
+        });
+    }
+    
+    // Add genetic diversity heat indicator
+    if (totalAlive > 0 && engine.particles) {
+        // Sample genetic diversity (variance across first 5 DNA traits)
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40]; // Sample key traits
+        
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < engine.worldConfig.count && i < 200; i++) {
+                const ptr = i * 64;
+                if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = engine.particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val;
+                    sumSq += val * val;
+                    n++;
+                }
+            }
+            if (n > 1) {
+                const variance = (sumSq / n) - (sum / n) * (sum / n);
+                totalVariance += variance;
+                sampleCount++;
+            }
+        }
+        
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
     container.innerHTML = html;
 }
 
@@ -1714,6 +2032,77 @@ function renderCategoryGrid(engine, presetName) {
         const sel = selectedPresetCategories.has(cat.id) ? 'selected' : '';
         html += `<div class="category-item ${sel}" onclick="window.handleCategoryClick('${cat.id}', event)">${cat.label}</div>`;
     });
+    // Add genetics analytics if lineage tracker is available
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:25px;">GENETICS</h3>`;
+        html += `<div class="dna-stat-row" style="border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">
+            <div class="dna-stat-label">Species Count</div>
+            <div class="dna-stat-val">${report.totalSpecies}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Crossover Events</div>
+            <div class="dna-stat-val">${report.totalCrossoverEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Speciation Events</div>
+            <div class="dna-stat-val">${report.totalSpeciationEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">HGT Events</div>
+            <div class="dna-stat-val">${report.totalHGTEvents}</div>
+        </div>`;
+        
+        // Show recent species
+        html += `<h3 style="margin-top:15px; font-size:10px;">SPECIES LINEAGE</h3>`;
+        report.species.slice(-5).forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children} children` : '';
+            html += `<div class="dna-stat-row" style="font-size:9px;">
+                <div class="dna-stat-label">${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mutations ${childrenText}</div>
+            </div>`;
+        });
+    }
+    
+    // Add genetic diversity heat indicator
+    if (totalAlive > 0 && engine.particles) {
+        // Sample genetic diversity (variance across first 5 DNA traits)
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40]; // Sample key traits
+        
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < engine.worldConfig.count && i < 200; i++) {
+                const ptr = i * 64;
+                if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = engine.particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val;
+                    sumSq += val * val;
+                    n++;
+                }
+            }
+            if (n > 1) {
+                const variance = (sumSq / n) - (sum / n) * (sum / n);
+                totalVariance += variance;
+                sampleCount++;
+            }
+        }
+        
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
     container.innerHTML = html;
 }
 
@@ -1957,6 +2346,77 @@ function renderComplexDetails(preset) {
     });
     html += `</div></div>`;
 
+    // Add genetics analytics if lineage tracker is available
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:25px;">GENETICS</h3>`;
+        html += `<div class="dna-stat-row" style="border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">
+            <div class="dna-stat-label">Species Count</div>
+            <div class="dna-stat-val">${report.totalSpecies}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Crossover Events</div>
+            <div class="dna-stat-val">${report.totalCrossoverEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Speciation Events</div>
+            <div class="dna-stat-val">${report.totalSpeciationEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">HGT Events</div>
+            <div class="dna-stat-val">${report.totalHGTEvents}</div>
+        </div>`;
+        
+        // Show recent species
+        html += `<h3 style="margin-top:15px; font-size:10px;">SPECIES LINEAGE</h3>`;
+        report.species.slice(-5).forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children} children` : '';
+            html += `<div class="dna-stat-row" style="font-size:9px;">
+                <div class="dna-stat-label">${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mutations ${childrenText}</div>
+            </div>`;
+        });
+    }
+    
+    // Add genetic diversity heat indicator
+    if (totalAlive > 0 && engine.particles) {
+        // Sample genetic diversity (variance across first 5 DNA traits)
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40]; // Sample key traits
+        
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < engine.worldConfig.count && i < 200; i++) {
+                const ptr = i * 64;
+                if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = engine.particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val;
+                    sumSq += val * val;
+                    n++;
+                }
+            }
+            if (n > 1) {
+                const variance = (sumSq / n) - (sum / n) * (sum / n);
+                totalVariance += variance;
+                sampleCount++;
+            }
+        }
+        
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
     container.innerHTML = html;
 }
 
@@ -1985,6 +2445,77 @@ function renderArchiveCategoryGrid(engine, presetName) {
         const sel = selectedPresetCategories.has(cat.id) ? 'selected' : '';
         html += `<div class="category-item ${sel}" onclick="window.handleCategoryClick('${cat.id}', event); renderArchiveCategoryGrid(window.engine, '${presetName}');">${cat.label}</div>`;
     });
+    // Add genetics analytics if lineage tracker is available
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:25px;">GENETICS</h3>`;
+        html += `<div class="dna-stat-row" style="border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">
+            <div class="dna-stat-label">Species Count</div>
+            <div class="dna-stat-val">${report.totalSpecies}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Crossover Events</div>
+            <div class="dna-stat-val">${report.totalCrossoverEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Speciation Events</div>
+            <div class="dna-stat-val">${report.totalSpeciationEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">HGT Events</div>
+            <div class="dna-stat-val">${report.totalHGTEvents}</div>
+        </div>`;
+        
+        // Show recent species
+        html += `<h3 style="margin-top:15px; font-size:10px;">SPECIES LINEAGE</h3>`;
+        report.species.slice(-5).forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children} children` : '';
+            html += `<div class="dna-stat-row" style="font-size:9px;">
+                <div class="dna-stat-label">${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mutations ${childrenText}</div>
+            </div>`;
+        });
+    }
+    
+    // Add genetic diversity heat indicator
+    if (totalAlive > 0 && engine.particles) {
+        // Sample genetic diversity (variance across first 5 DNA traits)
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40]; // Sample key traits
+        
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < engine.worldConfig.count && i < 200; i++) {
+                const ptr = i * 64;
+                if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = engine.particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val;
+                    sumSq += val * val;
+                    n++;
+                }
+            }
+            if (n > 1) {
+                const variance = (sumSq / n) - (sum / n) * (sum / n);
+                totalVariance += variance;
+                sampleCount++;
+            }
+        }
+        
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
     container.innerHTML = html;
 }
 
@@ -2021,6 +2552,77 @@ export function renderQuickPresets(engine) {
             data-help-key="QUICK_PRESET"
             title="${name}">${idx}</button>`;
     });
+    // Add genetics analytics if lineage tracker is available
+    if (engine.lineageTracker) {
+        const report = engine.lineageTracker.getGeneticsReport();
+        html += `<h3 style="margin-top:25px;">GENETICS</h3>`;
+        html += `<div class="dna-stat-row" style="border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:8px;">
+            <div class="dna-stat-label">Species Count</div>
+            <div class="dna-stat-val">${report.totalSpecies}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Crossover Events</div>
+            <div class="dna-stat-val">${report.totalCrossoverEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">Speciation Events</div>
+            <div class="dna-stat-val">${report.totalSpeciationEvents}</div>
+        </div>`;
+        html += `<div class="dna-stat-row">
+            <div class="dna-stat-label">HGT Events</div>
+            <div class="dna-stat-val">${report.totalHGTEvents}</div>
+        </div>`;
+        
+        // Show recent species
+        html += `<h3 style="margin-top:15px; font-size:10px;">SPECIES LINEAGE</h3>`;
+        report.species.slice(-5).forEach(s => {
+            const childrenText = s.children > 0 ? `├${s.children} children` : '';
+            html += `<div class="dna-stat-row" style="font-size:9px;">
+                <div class="dna-stat-label">${s.name}</div>
+                <div class="dna-stat-val">${s.mutationCount} mutations ${childrenText}</div>
+            </div>`;
+        });
+    }
+    
+    // Add genetic diversity heat indicator
+    if (totalAlive > 0 && engine.particles) {
+        // Sample genetic diversity (variance across first 5 DNA traits)
+        let totalVariance = 0;
+        let sampleCount = 0;
+        const traitSamples = [0, 10, 20, 30, 40]; // Sample key traits
+        
+        for (const traitIdx of traitSamples) {
+            let sum = 0, sumSq = 0, n = 0;
+            for (let i = 0; i < engine.worldConfig.count && i < 200; i++) {
+                const ptr = i * 64;
+                if (engine.particles[ptr + STRIDE_INDEXES.DEAD] === 0) {
+                    const val = engine.particles[ptr + STRIDE_INDEXES.DNA_CACHE_START + traitIdx] || 0;
+                    sum += val;
+                    sumSq += val * val;
+                    n++;
+                }
+            }
+            if (n > 1) {
+                const variance = (sumSq / n) - (sum / n) * (sum / n);
+                totalVariance += variance;
+                sampleCount++;
+            }
+        }
+        
+        if (sampleCount > 0) {
+            const avgVariance = totalVariance / sampleCount;
+            const diversityLevel = Math.min(100, avgVariance * 100);
+            const color = diversityLevel > 50 ? '#4f4' : diversityLevel > 20 ? '#ff4' : '#f44';
+            html += `<div class="dna-stat-row" style="margin-top:8px;">
+                <div class="dna-stat-label">Genetic Diversity</div>
+                <div class="dna-stat-bar-bg">
+                    <div class="dna-stat-bar" style="width:${diversityLevel}%; background:${color}"></div>
+                </div>
+                <div class="dna-stat-val">${diversityLevel.toFixed(1)}%</div>
+            </div>`;
+        }
+    }
+
     container.innerHTML = html;
 }
 

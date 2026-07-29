@@ -1,3 +1,29 @@
+
+
+## [2.6.0] - 2026-07-29
+### Added
+- **Accretion Gene Fusion:** When particles merge via accretion, their DNA caches blend — the survivor acquires genetic traits from the consumed particle proportional to mass ratio.
+- **Cloning Reproduction:** When genetics laws are inactive, spawning defaults to cloning — offspring are near-identical copies of a random parent with slight mutation noise.
+- **Pair-Based Breeding:** Sexual reproduction now prefers nearby same-species mates within 200 units, creating more realistic breeding pairs rather than random global parents.
+- **Predation Gene Absorption:** When TRACKING law is active and a larger particle collides with a smaller one, the predator absorbs DNA traits from the prey (5 random traits blended at 5% per collision) and transfers mass.
+- **Non-Overlapping Polymer/Bond Structures:** Added hard-sphere constraint resolution for all particles — bonded pairs are pulled to their equilibrium distance based on combined radii, preventing overlap while maintaining structural integrity.
+- **Biological Particle Variance:** Life-cycle now includes age-based color drift, mass fluctuation tied to energy reserves, and bio-rhythm energy pulses — making each particle visually and behaviorally unique over its lifetime.
+- **Massive DNA Tab Expansion:** Completely rewritten analytics panel with overview stats banner (population, avg mass/energy/velocity, bonded count, max bonds), per-species breakdown with 4-metric summaries, species trait profiles showing Force/Viscosity/Birth Rate/Death Rate/Mutation/Polarity averages, detailed genetics summary with lineage tree, genetic diversity heat indicator, ASCII population density heatmap, and 4 real-time histogram charts (mass distribution, energy distribution, age demographics, velocity distribution).
+- **New DNA Tab Charts:** Added 4 canvas-based histograms (mass-histogram, energy-distribution, age-demographics, velocity-distribution) that update in real-time with the simulation.
+## [2.5.0] - 2026-07-29
+### Added
+- **DNA & Genetics Expansion:** Extended DNA system from 42 to 64 parameters with 22 new genetic control traits (Dominance, Crossover Rate, Allele Count, Heterozygote, Epigenetic Rate, HGT Rate, Repair Efficiency, Drift Rate, Selection Sensitivity, Speciation Threshold, Adaptation Rate, Lamarckian, Transposon Rate, Gene Silencing, Recombination Bias, Mutagen Sensitivity, Telomere Length, Ploidy Level, Codon Bias, Regulatory Depth, Gene Duplication, Heterosis).
+- **7 New Genetics Laws:** MENDEL (Mendelian inheritance with dominant/recessive alleles), CROSSOVER (genetic recombination during reproduction), HORIZ (horizontal gene transfer between particles), EPIGEN (epigenetic modifications), DRIFT (neutral genetic drift), SPECIATE (speciation from genetic divergence), PLOIDY (polyploidy effects on genome).
+- **Genetics Engine:** Complete genetics reproduction system in physics worker with allele-based inheritance, single-point crossover, dominance expression, heterozygote advantage, and mutation.
+- **Horizontal Gene Transfer:** Particles can exchange genetic material directly during close interactions.
+- **Epigenetic System:** Environmental entropy can modify gene expression without changing DNA sequence.
+- **Genetic Drift:** Neutral random fluctuations in allele frequencies over time.
+- **Speciation Monitoring:** Genetic distance tracking with automatic new species assignment at threshold divergence.
+- **Polyploidy Effects:** Chromosome set count modulates phenotype expression noise and mutation robustness.
+- **Genetics Analytics:** New GENETICS section in DNA tab showing species count, crossover events, speciation events, HGT events, species lineage, and genetic diversity heat indicator.
+- **Enhanced Lineage Tracker:** Dual-parent ancestry tracking, crossover history, speciation event logging, HGT event logging, epigenetic mark tracking, genetic distance calculation, comprehensive report generation.
+- **Genetics DNA Category:** New GENETICS category in DNA accordion with all 22 genetic control parameters.
+- **Genetics Law UI:** 7 new law toggles in BIOL tab with custom SVG icons and HELP_DB entries.
 ## [2.4.0] - 2026-07-26
 ### Fixed
 - **NaN Guard System:** Added comprehensive NaN/Infinity validation to Worker physics loop. Position, velocity, mass, and energy are now validated every frame with automatic recovery.

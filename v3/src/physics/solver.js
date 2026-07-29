@@ -52,6 +52,7 @@ import {
   applyEnergyTransfer,
   applyRadiationDamage,
   applyTrackingBehavior,
+  applyPredation,
   applyGenotypeMutation,
   applyPhenotype,
   applySolvationEffect,
@@ -431,6 +432,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
+      // ── Predation (mass-difference pursuit + gene absorption) ──
+      if (isSet(lawState, LAW_INDEXES.TRACK)) {
+        const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist);
+        if (predForce) {
+          ax += predForce.ax;
+          ay += predForce.ay;
+          az += predForce.az;
+        }
+      }
+
       // Telepathy
       if (isSet(lawState, LAW_INDEXES.TELEPATHY)) {
         const telepathySynergy = computeSynergy(lawState, LAW_INDEXES.TELEPATHY);
@@ -592,6 +603,57 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Write back to buffer ──
 
+    // Bond/Polymer non-overlap constraint
+    if (isSet(lawState, LAW_INDEXES.BOND) || isSet(lawState, LAW_INDEXES.POLYMER)) {
+      const nCount2 = getNeighbors(grid, px, py, pz, worldSize, _neighborBuf);
+      for (let n2 = 0; n2 < Math.min(nCount2, MAX_INTERACTIONS); n2++) {
+        const bj = _neighborBuf[n2];
+        if (bj === i) continue;
+        const bPtr = bj * stride;
+        if (view[bPtr + S.DEAD] >= 0.5) continue;
+        
+        let bx = view[bPtr + S.POS_X] - px;
+        let by = view[bPtr + S.POS_Y] - py;
+        let bz = view[bPtr + S.POS_Z] - pz;
+        
+        if (bx > halfWorld) bx -= worldSize; else if (bx < -halfWorld) bx += worldSize;
+        if (by > halfWorld) by -= worldSize; else if (by < -halfWorld) by += worldSize;
+        if (bz > halfWorld) bz -= worldSize; else if (bz < -halfWorld) bz += worldSize;
+        
+        const bd2 = bx*bx + by*by + bz*bz;
+        const bd = Math.sqrt(bd2 + 0.001);
+        const rA = view[iBase + S.RADIUS] || 1.0;
+        const rB = view[bPtr + S.RADIUS] || 1.0;
+        const minDist = (rA + rB) * 1.0;
+        
+        if (bd < minDist) {
+          const overlap = minDist - bd;
+          const mTotal = mass + view[bPtr + S.MASS];
+          const ratio = view[bPtr + S.MASS] / Math.max(mTotal, 0.001);
+          px -= (bx/bd) * overlap * ratio;
+          py -= (by/bd) * overlap * ratio;
+          pz -= (bz/bd) * overlap * ratio;
+        }
+        
+        // Bond equilibrium distance
+        if (isSet(lawState, LAW_INDEXES.BOND)) {
+          const sI = view[iBase + S.SPECIES_ID];
+          const sB = view[bPtr + S.SPECIES_ID];
+          const aff = dnaI[D.SPECIES_AFFINITY] || 0;
+          if ((sI === sB && aff >= 0) || (sI !== sB && aff < 0)) {
+            const eqDist = (dnaI[D.BASE_RADIUS] || 5) * 2.5 + (view[bPtr + S.DNA_CACHE_START + D.BASE_RADIUS] || 5) * 2.5;
+            if (bd > eqDist && bd > 0.1) {
+              const stiffness = dnaI[D.STIFFNESS] || 0.5;
+              const pull = (bd - eqDist) * stiffness * 0.15;
+              px += (bx/bd) * pull * 0.5;
+              py += (by/bd) * pull * 0.5;
+              pz += (bz/bd) * pull * 0.5;
+            }
+          }
+        }
+      }
+    }
+
     view[iBase + S.POS_X] = px;
     view[iBase + S.POS_Y] = py;
     view[iBase + S.POS_Z] = pz;
@@ -649,7 +711,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Reproduction ──
 
     const offspring = applyReproduction(lawState, view, iBase, dnaI, prng,
-      computeSynergy(lawState, LAW_INDEXES.REPRO));
+      computeSynergy(lawState, LAW_INDEXES.REPRO), dnaBuffer);
     if (offspring) {
       _offspringRing[_ringWrite] = offspring;
       _ringWrite = (_ringWrite + 1) % OFFSPRING_RING_SIZE;

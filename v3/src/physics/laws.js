@@ -10,7 +10,7 @@
 //   DNA values accessed via: buffer[p1Ptr + DNA_CACHE_START + DNA_INDEX]
 // ============================================================================
 
-import { STRIDE_INDEXES, DNA_INDEXES } from '../constants.js';
+import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES } from '../constants.js';
 import { isSet } from '../state/lawState.js';
 
 const S = STRIDE_INDEXES;
@@ -142,16 +142,27 @@ export function applyAccretion(p1Ptr, p2Ptr, stride, fusion, fusionMomentum) {
     const dvz = buf[p2Ptr + S.VEL_Z] - buf[p1Ptr + S.VEL_Z];
     const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
 
-    // Merge when particles are close and moving slowly
-    // fusionMomentum defines max relative speed for merging (higher = can merge faster collisions)
     if (relSpeed < fusionMomentum * 2.0) {
+      const m1 = buf[p1Ptr + S.MASS];
       const gain = m2 * 0.3;
+      // Gene Fusion: blend DNA from consumed particle into survivor
+      const dnaBlend = Math.min(1.0, gain / (m1 + 0.001));
+      for (let t = 0; t < 42; t++) {
+        const pv = buf[p1Ptr + S.DNA_CACHE_START + t] || 0;
+        const ov = buf[p2Ptr + S.DNA_CACHE_START + t] || 0;
+        buf[p1Ptr + S.DNA_CACHE_START + t] = pv + (ov - pv) * dnaBlend * 0.5;
+      }
+      // Color blending
+      const ratio = gain / (m1 + gain + 0.001);
+      buf[p1Ptr + S.COLOR_R] += (buf[p2Ptr + S.COLOR_R] - buf[p1Ptr + S.COLOR_R]) * ratio;
+      buf[p1Ptr + S.COLOR_G] += (buf[p2Ptr + S.COLOR_G] - buf[p1Ptr + S.COLOR_G]) * ratio;
+      buf[p1Ptr + S.COLOR_B] += (buf[p2Ptr + S.COLOR_B] - buf[p1Ptr + S.COLOR_B]) * ratio;
+
       buf[p1Ptr + S.MASS] += gain;
       buf[p2Ptr + S.MASS] = m2 - gain;
       if (buf[p2Ptr + S.MASS] <= 0.1) buf[p2Ptr + S.DEAD] = 1.0;
     }
   }
-
   return { ax: 0, ay: 0, az: 0 };
 }
 
@@ -171,6 +182,56 @@ export function applyTracking(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
     ay: nanGuard(dy * invDist * strength),
     az: nanGuard(dz * invDist * strength),
   };
+}
+
+// ============================================================================
+// 6b. PREDATION (Mass-difference based pursuit/flee + gene absorption on contact)
+// ============================================================================
+export function applyPredation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
+  const buf = buffer_global;
+  const mass1 = buf[p1Ptr + S.MASS];
+  const mass2 = buf[p2Ptr + S.MASS];
+  const massDiff = mass1 - mass2;
+  if (Math.abs(massDiff) < 0.5) return { ax: 0, ay: 0, az: 0 };
+
+  const r1 = buf[p1Ptr + S.RADIUS];
+  const r2 = buf[p2Ptr + S.RADIUS];
+  const invDist = 1.0 / Math.max(dist, 0.01);
+
+  if (massDiff > 0.5) {
+    // p1 is predator: pursue p2
+    const predBias = readDNA(p1Ptr, D.PREDATION_BIAS) || 0;
+    const strength = predBias * 0.1 * mass2 * invDist;
+    const force = {
+      ax: nanGuard(dx * invDist * strength),
+      ay: nanGuard(dy * invDist * strength),
+      az: nanGuard(dz * invDist * strength),
+    };
+    // Gene absorption on contact
+    if (dist < r1 + r2 && predBias > 0.1) {
+      const absorpRate = 0.05;
+      for (let t = 0; t < 5; t++) {
+        const trait = Math.floor(Math.random() * 42);
+        const preyVal = buf[p2Ptr + S.DNA_CACHE_START + trait] || 0;
+        const predVal = buf[p1Ptr + S.DNA_CACHE_START + trait] || 0;
+        buf[p1Ptr + S.DNA_CACHE_START + trait] = predVal + (preyVal - predVal) * absorpRate;
+      }
+      // Mass transfer
+      const transfer = Math.min(0.5, mass2 * 0.1);
+      buf[p1Ptr + S.MASS] += transfer * 0.5;
+      buf[p2Ptr + S.MASS] -= transfer;
+    }
+    return force;
+  } else {
+    // p1 is prey: flee from p2
+    const jitter = readDNA(p1Ptr, D.JITTER) || 0.1;
+    const strength = jitter * 0.2 * invDist;
+    return {
+      ax: nanGuard(-dx * invDist * strength),
+      ay: nanGuard(-dy * invDist * strength),
+      az: nanGuard(-dz * invDist * strength),
+    };
+  }
 }
 
 // ============================================================================
@@ -378,9 +439,35 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   }
   view[base + S.HUNGER] = hunger;
 
+  // === BIOLOGICAL VARIANCE ===
+  const ageNorm = Math.min(1.0, age / 5000);
+  const birthRate = Math.abs(dnaParams[10] || 0.5); // BIRTH_RATE=10
+  const mutRate = Math.abs(dnaParams[12] || 0.5); // MUTATION=12
+
+  // Age-based color drift (biological fading)
+  view[base + S.COLOR_R] += (Math.sin(age * 0.001) * 0.001 * mutRate);
+  view[base + S.COLOR_G] += (Math.cos(age * 0.0007) * 0.001 * mutRate);
+  view[base + S.COLOR_B] += (Math.sin(age * 0.0013 + 1.0) * 0.001 * mutRate);
+
+  // Mass fluctuation from metabolism
+  const mass = view[base + S.MASS] || 1.0;
+  const massFluctuation = (energy - 50) * 0.0001 * birthRate;
+  view[base + S.MASS] += massFluctuation * dt;
+
+  // Bio-rhythm energy pulse
+  const bioPulse = Math.sin(age * 0.01 * birthRate) * 0.5 * mutRate;
+  view[base + S.ENERGY] += bioPulse * dt * 0.1;
+
+  // Clamp values
+  view[base + S.COLOR_R] = Math.max(0, Math.min(1, view[base + S.COLOR_R] || 0));
+  view[base + S.COLOR_G] = Math.max(0, Math.min(1, view[base + S.COLOR_G] || 0));
+  view[base + S.COLOR_B] = Math.max(0, Math.min(1, view[base + S.COLOR_B] || 0));
+  view[base + S.MASS] = Math.max(0.1, Math.min(50, view[base + S.MASS] || 1));
+  // === END BIOLOGICAL VARIANCE ===
+
   // Senescence (LAW_INDEXES.SENESCENCE = 12)
   if (isSet(lawState, 12)) {
-    const deathRate = dnaParams[11] * 0.001; // DEATH_RATE=11
+    const deathRate = dnaParams[11] * 0.001 * (1.0 + ageNorm * 0.5); // Older = higher death chance
     if (age > 500 && prng() < deathRate * dt) {
       view[base + S.DEAD] = 1.0;
       return;
@@ -451,7 +538,7 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
 // ============================================================================
 // 18. REPRODUCTION
 // ============================================================================
-export function applyReproduction(lawState, view, base, dnaParams, prng, synergy) {
+export function applyReproduction(lawState, view, base, dnaParams, prng, synergy, dnaBuffer) {
   if (!isSet(lawState, 10)) return null; // REPRO=10
 
   const energy = view[base + S.ENERGY];
@@ -468,10 +555,99 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
   const pz = view[base + S.POS_Z];
   const speciesId = view[base + S.SPECIES_ID];
 
+  // Helper: decode a packed uint16 DNA buffer value to float
+  function readDNAParam(buf, sp, idx) {
+    if (!buf) return 0;
+    const raw = buf[sp * 64 + idx];
+    if (idx < DNA_RANGES.length) {
+      const { min, max } = DNA_RANGES[idx];
+      return min + (raw / 65535) * (max - min);
+    }
+    return raw / 65535;
+  }
+
+  // Genetics params (indices 42-47) come from the species DNA buffer,
+  // NOT from the per-particle stride cache (which only holds 0-41).
+  const dominance = readDNAParam(dnaBuffer, speciesId, 42);
+  const crossoverRate = readDNAParam(dnaBuffer, speciesId, 43);
+  const epigeneticDrift = readDNAParam(dnaBuffer, speciesId, 44);
+  const heterozygosity = readDNAParam(dnaBuffer, speciesId, 45);
+  const geneFlow = readDNAParam(dnaBuffer, speciesId, 46);
+  const repressor = readDNAParam(dnaBuffer, speciesId, 47);
+
   const mutationRate = dnaParams[12] * 0.1; // MUTATION=12
-  const offspringDna = new Array(42);
-  for (let d = 0; d < 42; d++) {
-    const val = dnaParams[d] + (prng() - 0.5) * mutationRate * 10;
+  const offspringDna = new Array(48);
+
+  // --- Genetics: Crossover ---
+  // Check BOND_PARTNER_1 for a potential second parent
+  const partnerIdx = view[base + S.BOND_PARTNER_1];
+  let hasTwoParents = false;
+  const partnerDna = new Array(48);
+
+  if (partnerIdx >= 0 && prng() < crossoverRate) {
+    const partnerBase = partnerIdx * PARTICLE_STRIDE;
+    const partnerSpecies = view[partnerBase + S.SPECIES_ID];
+    if (partnerSpecies === speciesId) {
+      hasTwoParents = true;
+      // Read first 42 DNA values from partner's stride cache
+      for (let d = 0; d < 42; d++) {
+        partnerDna[d] = view[partnerBase + S.DNA_CACHE_START + d];
+      }
+      // Fill genetics params (42-47) from species DNA buffer
+      for (let d = 42; d < 48; d++) {
+        partnerDna[d] = readDNAParam(dnaBuffer, speciesId, d);
+      }
+    }
+  }
+
+  // --- Build offspring DNA with crossover, dominance, mutation ---
+  for (let d = 0; d < 48; d++) {
+    let parentA, parentB;
+
+    if (d < 42) {
+      // Core traits: use dnaParams (from stride cache)
+      parentA = dnaParams[d] || 0;
+      parentB = hasTwoParents ? (partnerDna[d] || 0) : parentA;
+    } else {
+      // Genetics params (42-47): read from species DNA buffer
+      parentA = readDNAParam(dnaBuffer, speciesId, d);
+      parentB = hasTwoParents ? readDNAParam(dnaBuffer, speciesId, d) : parentA;
+    }
+
+    let val;
+    if (hasTwoParents && prng() < 0.5) {
+      // Sexual reproduction with dominance
+      if (prng() < 0.3) {
+        // Crossover: blend both parents
+        val = (parentA + parentB) * 0.5;
+      } else if (prng() < dominance) {
+        // Dominant: favor higher magnitude
+        val = Math.abs(parentA) > Math.abs(parentB) ? parentA : parentB;
+      } else {
+        // Recessive: favor lower magnitude
+        val = Math.abs(parentA) < Math.abs(parentB) ? parentA : parentB;
+      }
+    } else {
+      // Asexual: clone parent
+      val = parentA;
+    }
+
+    // Apply mutation (scaled by repressor)
+    const effectiveMutation = mutationRate * (1 - repressor * 0.5);
+    val += (prng() - 0.5) * effectiveMutation * 10;
+
+    // Apply epigenetic drift (non-heritable noise)
+    val += (prng() - 0.5) * epigeneticDrift * 5;
+
+    // Gene flow: horizontal transfer from other species
+    if (prng() < geneFlow * 0.01) {
+      const otherSpecies = Math.floor(prng() * 5) % 64;
+      if (otherSpecies !== speciesId) {
+        const foreignGene = readDNAParam(dnaBuffer, otherSpecies, d);
+        val += (foreignGene - val) * 0.1;
+      }
+    }
+
     offspringDna[d] = Math.max(-100, Math.min(100, val));
   }
 
@@ -487,6 +663,8 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
   };
 }
 
+// ============================================================================
+// 19. CHEMISTRY MODIFIER
 // ============================================================================
 // 19. CHEMISTRY MODIFIER
 // ============================================================================

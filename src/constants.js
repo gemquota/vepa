@@ -71,7 +71,30 @@ export const DNA_INDEXES = {
     CATALYSIS: 38,
     HEAT_OUTPUT: 39,
     MEMORY_DECAY: 40,
-    SPECIES_AFFINITY: 41
+    SPECIES_AFFINITY: 41,
+    // Genetics Expansion (indices 42-63)
+    DOMINANCE: 42,
+    CROSSOVER_RATE: 43,
+    ALLELE_COUNT: 44,
+    HETEROZYGOTE: 45,
+    EPIGENETIC_RATE: 46,
+    HGT_RATE: 47,
+    REPAIR_EFFICIENCY: 48,
+    DRIFT_RATE: 49,
+    SELECTION_SENSITIVITY: 50,
+    SPECIATION_THRESHOLD: 51,
+    ADAPTATION_RATE: 52,
+    LAMARCKIAN: 53,
+    TRANSPOSON_RATE: 54,
+    GENE_SILENCING: 55,
+    RECOMBINATION_BIAS: 56,
+    MUTAGEN_SENSITIVITY: 57,
+    TELOMERE_LENGTH: 58,
+    PLOIDY_LEVEL: 59,
+    CODON_BIAS: 60,
+    REGULATORY_DEPTH: 61,
+    GENE_DUPLICATION: 62,
+    HETEROSIS: 63
 };
 
 export const DNA_META = [
@@ -117,6 +140,29 @@ export const DNA_META = [
     "Heat Output",
     "Memory Decay",
     "Species Affinity",
+    // Genetics Expansion (42-63)
+    "Dominance",
+    "Crossover Rate",
+    "Allele Count",
+    "Heterozygote",
+    "Epigenetic Rate",
+    "HGT Rate",
+    "Repair Efficiency",
+    "Drift Rate",
+    "Selection Sensitivity",
+    "Speciation Threshold",
+    "Adaptation Rate",
+    "Lamarckian",
+    "Transposon Rate",
+    "Gene Silencing",
+    "Recombination Bias",
+    "Mutagen Sensitivity",
+    "Telomere Length",
+    "Ploidy Level",
+    "Codon Bias",
+    "Regulatory Depth",
+    "Gene Duplication",
+    "Heterosis"
 ];
 
 export const DRONE_COMMENTS = {
@@ -865,6 +911,205 @@ export const HELP_DB = {
         },
         category: "Biology"
     },
+    "Dominance": {
+        layers: {
+            hint: "Controls allele dominance threshold.",
+            explanation: "Higher values increase dominance expression over recessive traits.",
+            system: "Modulates how strongly dominant alleles suppress recessive ones.",
+            advanced: "At 1.0, all dominant alleles fully suppress recessive ones. At 0.0, co-dominance."
+        },
+        category: "Genetics"
+    },
+    "Crossover Rate": {
+        layers: {
+            hint: "Controls genetic recombination frequency.",
+            explanation: "Higher values increase crossover events during reproduction.",
+            system: "Probability of allele exchange between chromosome pairs.",
+            advanced: "Drives genetic diversity. At 0, offspring are perfect clones."
+        },
+        category: "Genetics"
+    },
+    "Allele Count": {
+        layers: {
+            hint: "Number of chromosome pairs.",
+            explanation: "More pairs allow more complex genetic combinations.",
+            system: "Determines the resolution of genetic recombination.",
+            advanced: "Higher values increase potential diversity at computational cost."
+        },
+        category: "Genetics"
+    },
+    "Heterozygote": {
+        layers: {
+            hint: "Heterozygote advantage (hybrid vigor).",
+            explanation: "Mixed-allele individuals get a fitness bonus.",
+            system: "Modulates the survival advantage of heterozygous pairs.",
+            advanced: "Prevents genetic fixation. At 0, purebreds have no disadvantage."
+        },
+        category: "Genetics"
+    },
+    "Epigenetic Rate": {
+        layers: {
+            hint: "Epigenetic modification rate.",
+            explanation: "Controls how quickly environmental factors modify gene expression.",
+            system: "Heritable non-sequence modifications to DNA.",
+            advanced: "Lamarckian-adjacent: acquired traits can be passed down."
+        },
+        category: "Genetics"
+    },
+    "HGT Rate": {
+        layers: {
+            hint: "Horizontal gene transfer frequency.",
+            explanation: "Controls how often particles exchange genes directly.",
+            system: "Non-reproductive genetic exchange between nearby particles.",
+            advanced: "Bacterial-style conjugation. Speeds up evolution dramatically."
+        },
+        category: "Genetics"
+    },
+    "Repair Efficiency": {
+        layers: {
+            hint: "DNA repair efficiency.",
+            explanation: "Higher values reduce accumulated mutation damage.",
+            system: "Probability of repairing a mutation each frame.",
+            advanced: "At 0, mutations accumulate unchecked. At 1.0, perfect repair."
+        },
+        category: "Genetics"
+    },
+    "Drift Rate": {
+        layers: {
+            hint: "Neutral genetic drift rate.",
+            explanation: "Random fluctuations in allele frequencies over time.",
+            system: "Non-adaptive evolution through random sampling.",
+            advanced: "Even without selection pressure, populations diverge over time."
+        },
+        category: "Genetics"
+    },
+    "Selection Sensitivity": {
+        layers: {
+            hint: "Response to environmental selection pressure.",
+            explanation: "Higher values amplify the effect of fitness differences.",
+            system: "Modulates how strongly advantageous traits spread.",
+            advanced: "At 0, selection is neutral. At 2.0, strong directional selection."
+        },
+        category: "Genetics"
+    },
+    "Speciation Threshold": {
+        layers: {
+            hint: "Genetic divergence threshold for speciation.",
+            explanation: "When two populations diverge beyond this threshold, they become incompatible.",
+            system: "Reproductive isolation triggers when genetic distance exceeds this value.",
+            advanced: "Lower values = faster speciation. Higher values = panmictic populations."
+        },
+        category: "Genetics"
+    },
+    "Adaptation Rate": {
+        layers: {
+            hint: "Speed of adaptive evolution.",
+            explanation: "Controls how quickly populations adapt to changing conditions.",
+            system: "Multiplier on beneficial mutation fixation rate.",
+            advanced: "Higher values allow rapid niche colonization."
+        },
+        category: "Genetics"
+    },
+    "Lamarckian": {
+        layers: {
+            hint: "Lamarckian inheritance rate.",
+            explanation: "Controls how much of an individual's acquired changes are passed to offspring.",
+            system: "Experience-induced trait inheritance.",
+            advanced: "Non-Darwinian evolution. Changes during a lifetime become heritable."
+        },
+        category: "Genetics"
+    },
+    "Transposon Rate": {
+        layers: {
+            hint: "Transposon (jumping gene) activity.",
+            explanation: "Controls how often genetic elements move within the genome.",
+            system: "Random insertion and excision of genetic material.",
+            advanced: "Can cause rapid genome restructuring and evolutionary leaps."
+        },
+        category: "Genetics"
+    },
+    "Gene Silencing": {
+        layers: {
+            hint: "Rate of gene expression suppression.",
+            explanation: "Higher values cause more genes to be silenced.",
+            system: "Epigenetic-like suppression of specific traits.",
+            advanced: "Can create hidden genetic variation that emerges under stress."
+        },
+        category: "Genetics"
+    },
+    "Recombination Bias": {
+        layers: {
+            hint: "Bias in crossover location.",
+            explanation: "Controls which chromosome regions recombine more frequently.",
+            system: "Centromere-proximal vs distal recombination preference.",
+            advanced: "Shapes the genetic architecture of the species."
+        },
+        category: "Genetics"
+    },
+    "Mutagen Sensitivity": {
+        layers: {
+            hint: "Susceptibility to mutagenic effects.",
+            explanation: "Higher values increase mutation rate from radiation and chemicals.",
+            system: "Multiplier on all external mutation sources.",
+            advanced: "At 0, immune to radiation-induced mutations. At 2.0, hypermutable."
+        },
+        category: "Genetics"
+    },
+    "Telomere Length": {
+        layers: {
+            hint: "Maximum cellular age.",
+            explanation: "Controls how many divisions a cell can undergo.",
+            system: "Sets the maximum age limit for particles.",
+            advanced: "At 0, no aging limit. At 1.0, strict Hayflick limit."
+        },
+        category: "Genetics"
+    },
+    "Ploidy Level": {
+        layers: {
+            hint: "Number of chromosome sets.",
+            explanation: "More sets increase genetic redundancy and mutational robustness.",
+            system: "Diploid=2, Triploid=3, Tetraploid=4, etc.",
+            advanced: "Polyploid organisms have more genetic material to buffer mutations."
+        },
+        category: "Genetics"
+    },
+    "Codon Bias": {
+        layers: {
+            hint: "Codon usage bias.",
+            explanation: "Preference for specific codons affects translation efficiency.",
+            system: "Modulates protein expression levels.",
+            advanced: "Fine-tunes the proteome without changing protein sequences."
+        },
+        category: "Genetics"
+    },
+    "Regulatory Depth": {
+        layers: {
+            hint: "Gene regulatory network complexity.",
+            explanation: "Controls how many layers of gene regulation exist.",
+            system: "Higher depth creates more complex expression patterns.",
+            advanced: "Enables sophisticated developmental programs at computational cost."
+        },
+        category: "Genetics"
+    },
+    "Gene Duplication": {
+        layers: {
+            hint: "Rate of gene duplication events.",
+            explanation: "Controls how often genes are duplicated in the genome.",
+            system: "Creates paralogous gene copies that can diverge.",
+            advanced: "Primary source of new genetic material for evolutionary innovation."
+        },
+        category: "Genetics"
+    },
+    "Heterosis": {
+        layers: {
+            hint: "Hybrid vigor magnitude.",
+            explanation: "Controls the fitness boost from outcrossing.",
+            system: "Multiplied by heterozygosity level for final fitness effect.",
+            advanced: "At 0, no hybrid advantage. At 1.0, maximal heterosis."
+        },
+        category: "Genetics"
+    },
+
         "LIFE": {
         layers: {
             hint: "Toggles biological life cycle.",
@@ -1106,7 +1351,71 @@ export const HELP_DB = {
     "TELE": { layers: { hint: "Teleportation: Instantaneous spatial relocation at boundary edge.", explanation: "Instantaneous spatial relocation at boundary edge.", system: "Wormhole topology.", advanced: "Breaks continuous space assumptions." }, category: "Metaphysics" },
     "CLAI": { layers: { hint: "Clairvoyance: Reacts to collisions before they happen.", explanation: "Reacts to collisions before they happen.", system: "Look-ahead collision avoidance.", advanced: "Perfect evasion algorithms." }, category: "Metaphysics" },
     "PREO": { layers: { hint: "Precognition: Proactive evasion of high-density clusters.", explanation: "Proactive evasion of high-density clusters.", system: "Calculates density gradients in advance.", advanced: "Creates 'scared' matter that hides in the void." }, category: "Metaphysics" },
-    "ASTR": { layers: { hint: "Astral Projection: Ghost forms that influence matter remotely.", explanation: "Ghost forms that influence matter remotely.", system: "Separates physical body from interaction sphere.", advanced: "Spooky action at a distance." }, category: "Metaphysics" }
+    "ASTR": { layers: { hint: "Astral Projection: Ghost forms that influence matter remotely.", explanation: "Ghost forms that influence matter remotely.", system: "Separates physical body from interaction sphere.", advanced: "Spooky action at a distance." }, category: "Metaphysics" },
+    // --- GENETICS LAWS ---
+    "MENDEL": {
+        layers: {
+            hint: "Mendelian inheritance with dominant/recessive alleles.",
+            explanation: "Traits are controlled by paired alleles; dominant alleles mask recessive ones in heterozygotes.",
+            system: "Implements full Mendelian inheritance: each trait has two alleles, dominance determines expression.",
+            advanced: "Enables classic 3:1 segregation ratios and hidden recessive variation."
+        },
+        category: "Genetics"
+    },
+    "CROSSOVER": {
+        layers: {
+            hint: "Genetic recombination during reproduction.",
+            explanation: "Chromosome pairs exchange genetic material during gamete formation.",
+            system: "Homologous recombination: alleles shuffle between chromosome pairs.",
+            advanced: "Breaks linkage disequilibrium and creates new allele combinations."
+        },
+        category: "Genetics"
+    },
+    "HORIZ": {
+        layers: {
+            hint: "Horizontal gene transfer between particles.",
+            explanation: "Particles can exchange genetic material directly without reproduction.",
+            system: "Direct plasmid/bacterial-style conjugation when particles are in close contact.",
+            advanced: "Accelerates evolution by spreading beneficial alleles across species boundaries."
+        },
+        category: "Genetics"
+    },
+    "EPIGEN": {
+        layers: {
+            hint: "Epigenetic modifications to gene expression.",
+            explanation: "Environmental factors can modify gene expression without changing DNA sequence.",
+            system: "Heritable non-sequence modifications that modulate trait expression.",
+            advanced: "Enables rapid adaptation to environmental stress without genetic change."
+        },
+        category: "Genetics"
+    },
+    "DRIFT": {
+        layers: {
+            hint: "Neutral genetic drift.",
+            explanation: "Random fluctuations in allele frequencies due to stochastic sampling.",
+            system: "Non-adaptive evolutionary force: alleles fix or disappear by chance.",
+            advanced: "Even without selection, populations diverge genetically over time."
+        },
+        category: "Genetics"
+    },
+    "SPECIATE": {
+        layers: {
+            hint: "Speciation from genetic divergence.",
+            explanation: "When populations diverge beyond a threshold, they become reproductively isolated.",
+            system: "Genetic distance monitoring triggers new species creation at threshold.",
+            advanced: "Drives biodiversity: one species can split into multiple over time."
+        },
+        category: "Genetics"
+    },
+    "PLOIDY": {
+        layers: {
+            hint: "Polyploidy effects on genome and phenotype.",
+            explanation: "Multiple chromosome sets affect gene expression, cell size, and mutation buffering.",
+            system: "Ploidy level modulates trait expression noise and mutation robustness.",
+            advanced: "Polyploid organisms have greater genetic redundancy and evolutionary potential."
+        },
+        category: "Genetics"
+    },
 };
 
 export const DNA_RANGES = [
@@ -1154,4 +1463,28 @@ export const DNA_RANGES = [
     { min: 0, max: 1, default: 0.1 }, // Heat Output
     { min: 0.9, max: 1.0, default: 0.99 }, // Memory Decay
     { min: -1.0, max: 1.0, default: 0.0 }, // Species Affinity
+    // Genetics Expansion (indices 42-63)
+    { min: 0.0, max: 1.0, default: 0.7 }, // Dominance
+    { min: 0.0, max: 1.0, default: 0.1 }, // Crossover Rate
+    { min: 1, max: 16, default: 4 }, // Allele Count
+    { min: 0.0, max: 1.0, default: 0.3 }, // Heterozygote
+    { min: 0.0, max: 0.5, default: 0.01 }, // Epigenetic Rate
+    { min: 0.0, max: 0.1, default: 0.005 }, // HGT Rate
+    { min: 0.0, max: 1.0, default: 0.5 }, // Repair Efficiency
+    { min: 0.0, max: 0.1, default: 0.002 }, // Drift Rate
+    { min: 0.0, max: 2.0, default: 0.5 }, // Selection Sensitivity
+    { min: 0.0, max: 1.0, default: 0.3 }, // Speciation Threshold
+    { min: 0.0, max: 1.0, default: 0.1 }, // Adaptation Rate
+    { min: 0.0, max: 1.0, default: 0.05 }, // Lamarckian
+    { min: 0.0, max: 0.1, default: 0.005 }, // Transposon Rate
+    { min: 0.0, max: 1.0, default: 0.1 }, // Gene Silencing
+    { min: 0.0, max: 1.0, default: 0.5 }, // Recombination Bias
+    { min: 0.0, max: 2.0, default: 0.5 }, // Mutagen Sensitivity
+    { min: 0.0, max: 1.0, default: 0.7 }, // Telomere Length
+    { min: 1, max: 8, default: 2 }, // Ploidy Level
+    { min: 0.0, max: 1.0, default: 0.5 }, // Codon Bias
+    { min: 0.0, max: 1.0, default: 0.3 }, // Regulatory Depth
+    { min: 0.0, max: 0.1, default: 0.01 }, // Gene Duplication
+    { min: 0.0, max: 1.0, default: 0.2 }, // Heterosis
+
 ];
