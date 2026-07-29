@@ -222,23 +222,84 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Collision + Accretion ──
+      // ── Collision + Accretion + Fragmentation ──
 
       if (isSet(lawState, LAW_INDEXES.COLL)) {
-        const collision = applyCollision(iBase, jBase, stride, dx, dy, dz, dist);
-        if (collision) {
-          ax += collision.ax;
-          ay += collision.ay;
-          az += collision.az;
+        const m1 = view[iBase + S.MASS];
+        const m2 = view[jBase + S.MASS];
+        if (m1 <= 0 || m2 <= 0) continue;
+        const r1 = view[iBase + S.RADIUS];
+        const r2 = view[jBase + S.RADIUS];
+        const overlap = (r1 + r2) - dist;
 
-          // Accretion
-          if (isSet(lawState, LAW_INDEXES.ACCR)) {
-            const accretionSynergy = computeSynergy(lawState, LAW_INDEXES.ACCR);
-            const fusionVal = dnaI[9] || 1.0;
-            const fusionMom = dnaI[16] || 0.5;
-            applyAccretion(iBase, jBase, stride, fusionVal * accretionSynergy, fusionMom);
-            // Re-read mass after accretion (modified internally via buffer_global)
+        if (overlap > 0) {
+          // Relative velocity along collision normal
+          const invDist = 1.0 / Math.max(dist, 0.01);
+          const nx = dx * invDist;
+          const ny = dy * invDist;
+          const nz = dz * invDist;
+          const dvx = view[iBase + S.VEL_X] - view[jBase + S.VEL_X];
+          const dvy = view[iBase + S.VEL_Y] - view[jBase + S.VEL_Y];
+          const dvz = view[iBase + S.VEL_Z] - view[jBase + S.VEL_Z];
+          const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
+          const relVelN = dvx * nx + dvy * ny + dvz * nz;
+
+          // Determine collision type from approach angle
+          // cosAngle near -1 = head-on, near 0 = glancing, positive = separating
+          const cosAngle = relSpeed > 0.001 ? relVelN / relSpeed : 0;
+
+          if (isSet(lawState, LAW_INDEXES.ACCR) && cosAngle > -0.3 && relSpeed < 3.0) {
+            // ── ACCRETION: glancing/low-speed → merge mass ──
+            const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] || 0.5;
+            if (relSpeed < fusionMom * 3.0) {
+              const gain = m2 * 0.3;
+              view[iBase + S.MASS] += gain;
+              view[jBase + S.MASS] = m2 - gain;
+              if (view[jBase + S.MASS] <= 0.1) view[jBase + S.DEAD] = 1.0;
+              mass = view[iBase + S.MASS];
+            }
+          } else if (relVelN < 0 && cosAngle < -0.5 && relSpeed > 1.0) {
+            // ── FRAGMENTATION: head-on high-speed → smash apart ──
+            const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
+            const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
+            const fragForce = impulse * m2;
+            ax += fragForce * nx;
+            ay += fragForce * ny;
+            az += fragForce * nz;
+            // Mass loss from fragmentation
+            const massLoss = 0.3 * (relSpeed / 5.0);
+            view[iBase + S.MASS] = Math.max(0.1, m1 * (1 - massLoss));
+            view[jBase + S.MASS] = Math.max(0.1, m2 * (1 - massLoss));
+            // Perpendicular velocity kick (spray apart)
+            const perpX = dy * invDist;
+            const perpY = -dx * invDist;
+            view[iBase + S.VEL_X] += perpX * 0.5 * fragForce;
+            view[iBase + S.VEL_Y] += perpY * 0.5 * fragForce;
+            view[jBase + S.VEL_X] -= perpX * 0.5 * fragForce;
+            view[jBase + S.VEL_Y] -= perpY * 0.5 * fragForce;
             mass = view[iBase + S.MASS];
+          } else {
+            // ── BOUNCE: normal collision response ──
+            if (relVelN < 0) {
+              const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
+              const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
+              const bounceForce = impulse * m2;
+              ax += bounceForce * nx;
+              ay += bounceForce * ny;
+              az += bounceForce * nz;
+
+              // Accretion check for low-speed bounces
+              if (isSet(lawState, LAW_INDEXES.ACCR)) {
+                const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] || 0.5;
+                if (relSpeed < fusionMom * 0.5) {
+                  const gain = m2 * 0.2;
+                  view[iBase + S.MASS] += gain;
+                  view[jBase + S.MASS] = m2 - gain;
+                  if (view[jBase + S.MASS] <= 0.1) view[jBase + S.DEAD] = 1.0;
+                  mass = view[iBase + S.MASS];
+                }
+              }
+            }
           }
         }
       }

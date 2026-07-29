@@ -735,30 +735,33 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
 // ============================================================================
 export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy) {
   if (!isSet(lawState, 39)) return null;
-  if (dist < 0.1 || dist > 20) return null;
+  if (dist < 0.1 || dist > 30) return null;
   const stiffness = view[iBase + S.DNA_CACHE_START + 8]; // STIFFNESS
   if (!Number.isFinite(stiffness) || stiffness < 0.01) return null;
+  // Edge-to-edge rest length: particles touch at their radii
+  const r1 = view[iBase + S.RADIUS];
+  const r2 = view[jBase + S.RADIUS];
+  if (!Number.isFinite(r1) || !Number.isFinite(r2)) return null;
+  const restLength = (r1 + r2) * 1.1; // slight buffer to avoid overlap
   // Spring force: F = -k * (dist - restLength)
-  const restLength = 3.0;
   const displacement = dist - restLength;
   const forceMag = stiffness * displacement * 0.05 * synergy;
-  const invDist = 1.0 / dist;
+  const invDist = 1.0 / Math.max(dist, 0.01);
   const fx = dx * invDist * forceMag;
   const fy = dy * invDist * forceMag;
   const fz = dz * invDist * forceMag;
   if (!Number.isFinite(fx)) return null;
-  // Register bond bilaterally (both particles track each other)
+  // Register bond bilaterally
   const jIdx = jBase / stride;
   const iIdx = iBase / stride;
   // Check if already bonded
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
     if (view[iBase + slot] === jIdx || view[jBase + slot] === iIdx) {
-      // Already bonded — return spring force only
       return { ax: fx, ay: fy, az: fz };
     }
   }
   // Find empty slot on i
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
     if (view[iBase + slot] < 0) {
       view[iBase + slot] = jIdx;
       view[iBase + S.BOND_COUNT] += 1;
@@ -766,7 +769,7 @@ export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist
     }
   }
   // Find empty slot on j
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
     if (view[jBase + slot] < 0) {
       view[jBase + slot] = iIdx;
       view[jBase + S.BOND_COUNT] += 1;
