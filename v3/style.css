@@ -279,3 +279,232 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Panel Sections ───────────────────────────────────────────────── */
+.panel-section {
+    margin-bottom: 14px;
+}
+.panel-section h3 {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+/* ── Law Panel ────────────────────────────────────────────────────── */
+.law-category-header {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.law-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.law-btn {
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    color: var(--text-dim);
+    font-size: 9px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    text-transform: uppercase;
+}
+.law-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+.law-btn.active { font-weight: 700; }
+
+.law-state-indicator {
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+/* ── DNA Panel ────────────────────────────────────────────────────── */
+.dna-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
+.dna-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.dna-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    min-width: 100px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.dna-input {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+.dna-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    cursor: pointer;
+}
+.dna-input::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    cursor: pointer;
+    border: none;
+}
+
+.dna-value {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--accent-gold);
+    min-width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* ── Species Selector ─────────────────────────────────────────────── */
+.species-selector {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.species-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0;
+    box-sizing: border-box;
+}
+.species-dot.active { border-color: var(--accent-gold); box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+.species-dot:hover { transform: scale(1.1); }
+
+/* ── Preset Panel ─────────────────────────────────────────────────── */
+.preset-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.preset-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+
+.preset-input {
+    flex: 1;
+    padding: 4px 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    outline: none;
+}
+.preset-input:focus { border-color: var(--accent-blue); }
+
+.preset-select {
+    flex: 1;
+    padding: 4px 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    outline: none;
+    cursor: pointer;
+}
+.preset-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.preset-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.preset-btn:hover { background: rgba(74, 158, 255, 0.15); border-color: var(--accent-blue); }
+.preset-btn-danger:hover { background: rgba(255, 74, 74, 0.15); border-color: var(--accent-red); }
+
+/* ── Narrative Panel ──────────────────────────────────────────────── */
+#narrative-panel {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.narrative-entry {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+}
+.narrative-voice {
+    font-weight: 700;
+    margin-right: 6px;
+}
+.narrative-voice.stabilizer { color: var(--accent-blue); }
+.narrative-voice.diverger { color: var(--accent-red); }
+.narrative-voice.observer { color: var(--accent-green); }
+.narrative-voice.dissolver { color: var(--accent-purple); }
+
+/* ── HUD ──────────────────────────────────────────────────────────── */
+.hud {
+    display: flex;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+}
+.hud span { white-space: nowrap; }
