@@ -1,89 +1,67 @@
 /**
  * VEPA v3 — Main Bootstrap
- * Initializes EventBus, loads subsystems, starts render loop.
  * SharedArrayBuffer optional — falls back to ArrayBuffer + main-thread tick.
  */
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
-import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from './constants.js';
+import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet } from './state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
-import { createHUD } from './ui/hud.js';
 import { solve } from './physics/solver.js';
 
-/* ── Constants ────────────────────────────────────────────────────── */
 const SUBSTEPS = 4;
 const DT = 0.25;
 
-/* ── Global State ─────────────────────────────────────────────────── */
-let bus;
-let prng;
-let particleBuffer;
-let particleView;
-let lawState;
-let dnaBuffer;
-let renderer;
-let particleCount = 0;
-let speciesCount = 5;
-let tick = 0;
-let paused = false;
+let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
+let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-let useWorker = false;
-let isShared = false;
 
-/* ── Boot Sequence ────────────────────────────────────────────────── */
+/** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
+function rng() { return prng.next(); }
+
 async function boot() {
     console.log('[VEPA v3] Booting...');
     const t0 = performance.now();
 
-    // 1. Core infrastructure
     bus = new EventBus();
     prng = new PRNG(Date.now());
 
-    // 2. State (SharedArrayBuffer or ArrayBuffer fallback)
     const buf = createParticleBuffer(MAX_PARTICLES, PARTICLE_STRIDE);
     particleBuffer = buf.buffer;
     particleView = buf.view;
-    isShared = buf.isShared;
+    const isShared = buf.isShared;
+    console.log(`[VEPA v3] SharedArrayBuffer: ${isShared}`);
 
     lawState = createLawState();
     dnaBuffer = createDNABuffer();
     loadDefaults(dnaBuffer, DNA_RANGES);
 
-    // 3. Enable default laws
     const defaultLaws = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'LIFE', 'GLOW', 'REPRO', 'PHENOTYPE', 'GENOTYPE'];
     for (const name of defaultLaws) {
         if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
     }
 
-    // 4. Spawn default particles
     spawnDefaultPopulation();
 
-    // 5. Init renderer
     const canvas = document.getElementById('sim-canvas');
     renderer = createRenderer(canvas, MAX_PARTICLES);
     resizeRenderer(renderer);
 
-    // 6. Init UI
+    // Init UI (includes HUD, all panels, event wiring)
     initUI(bus, lawState, dnaBuffer);
-    createHUD(bus);
-
-    // 7. Wire events
     wireEvents();
 
-    // 8. Start render loop
     requestAnimationFrame(renderLoop);
 
     const dt = (performance.now() - t0).toFixed(1);
-    console.log(`[VEPA v3] Booted in ${dt}ms — ${particleCount} particles, ${speciesCount} species, SharedArrayBuffer: ${isShared}`);
+    console.log(`[VEPA v3] Booted in ${dt}ms — ${particleCount} particles, ${speciesCount} species`);
     bus.emit('boot:complete', { particleCount, speciesCount, dt });
 }
 
-/* ── Particle Spawning ────────────────────────────────────────────── */
 function spawnDefaultPopulation() {
     const profiles = [
         { name: 'Predator', color: [255, 80, 80], force: 1.2, viscosity: 0.95, birthRate: 0.3, predationBias: 0.8 },
@@ -129,27 +107,30 @@ function spawnDefaultPopulation() {
 }
 
 function setDNAFromProfile(species, profile) {
+    const MAP = {
+        force: 'FORCE', viscosity: 'VISCOSITY', birthRate: 'BIRTH_RATE',
+        predationBias: 'PREDATION_BIAS', fusion: 'FUSION', mutation: 'MUTATION',
+        signalResp: 'SIGNAL_RESP', pulseRate: 'PULSE_RATE', deathRate: 'DEATH_RATE',
+        hiddenMass: 'HIDDEN_MASS',
+    };
     for (const [key, value] of Object.entries(profile)) {
-        const paramIdx = DNA_INDEXES[key];
+        const dnaKey = MAP[key];
+        if (!dnaKey) continue;
+        const paramIdx = DNA_INDEXES[dnaKey];
         if (paramIdx === undefined) continue;
         const r = DNA_RANGES[paramIdx];
         const clamped = Math.max(r.min, Math.min(r.max, value));
         const normalized = (clamped - r.min) / (r.max - r.min);
         dnaBuffer[species * 64 + paramIdx] = Math.round(normalized * 65535);
     }
-}
-
-/* ── Event Wiring ─────────────────────────────────────────────────── */
-function wireEvents() {
+}function wireEvents() {
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', () => { tick = 0; });
+    bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
 }
 
-/* ── Render Loop ──────────────────────────────────────────────────── */
-let lastFrameTime = 0;
-let frameCount = 0;
-let fps = 0;
+let lastFrameTime = 0, frameCount = 0, fps = 0;
 
 function renderLoop(now) {
     requestAnimationFrame(renderLoop);
@@ -162,23 +143,17 @@ function renderLoop(now) {
 
     if (paused) return;
 
-    // Main-thread physics if SharedArrayBuffer unavailable
-    if (!useWorker && particleView) {
-        solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, prng);
+    // Main-thread physics
+    if (particleView) {
+        solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
         tick++;
-        bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount });
+        bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount, speciesCount });
     }
 
-    // Render particles
+    // Render
     if (renderer && particleBuffer) {
         syncSprites(renderer, particleBuffer, particleCount, PARTICLE_STRIDE, worldSize, lawState);
     }
 }
 
-/* ── Window Exports ───────────────────────────────────────────────── */
-window.togglePause = () => { paused = !paused; bus.emit(paused ? 'sim:pause' : 'sim:resume'); };
-window.restartSim = () => bus.emit('sim:restart');
-window.hardReset = () => bus.emit('sim:hardReset');
-
-/* ── Start ────────────────────────────────────────────────────────── */
 boot();
