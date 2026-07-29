@@ -4,14 +4,14 @@
  */
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
-import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from './constants.js';
+import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet, clear as lawClear } from './state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
-import { solve } from './physics/solver.js';
+import { solve, resetOffspringRing } from './physics/solver.js';
 
 const SUBSTEPS = 4;
 const DT = 0.25;
@@ -19,6 +19,7 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
+const DEFAULT_LAWS = [];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -40,10 +41,7 @@ async function boot() {
     dnaBuffer = createDNABuffer();
     loadDefaults(dnaBuffer, DNA_RANGES);
 
-    const defaultLaws = ['GRAV', 'DRAG', 'WRAP', 'COLL'];
-    for (const name of defaultLaws) {
-        if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
-    }
+    // No default laws — all behavior governed by toggled laws
 
     spawnDefaultPopulation();
 
@@ -143,7 +141,23 @@ function setDNAFromProfile(species, profile) {
 }function wireEvents() {
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
-    bus.on('sim:restart', () => { tick = 0; });
+    bus.on('sim:restart', () => {
+        // Full simulation reset: respawn particles, clear laws, reset state
+        prng = new PRNG(Date.now());
+        // Clear buffer by zeroing all data
+        particleView.fill(0);
+        // Fresh law state (all off)
+        lawState = createLawState();
+        // Reset offspring ring
+        resetOffspringRing();
+        // Respawn
+        spawnDefaultPopulation();
+        tick = 0;
+        paused = false;
+        console.log('[VEPA v3] Simulation restarted');
+        bus.emit('law:sync');
+        bus.emit('sim:paused', { paused: false });
+    });
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
     bus.on('sim:hardReset', () => {
         console.log('[VEPA v3] Hard reset requested');
@@ -151,7 +165,7 @@ function setDNAFromProfile(species, profile) {
     });
     bus.on('sim:chaos', () => {
         // Chaos mode: randomize some laws and DNA
-        for (let i = 0; i < 38; i++) {
+        for (let i = 0; i < LAW_COUNT; i++) {
             if (Math.random() > 0.7) {
                 if (Math.random() > 0.5) {
                     lawSet(lawState, i);
