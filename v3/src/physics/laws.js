@@ -142,11 +142,13 @@ export function applyAccretion(p1Ptr, p2Ptr, stride, fusion, fusionMomentum) {
     const dvz = buf[p2Ptr + S.VEL_Z] - buf[p1Ptr + S.VEL_Z];
     const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
 
-    if (relSpeed < fusionMomentum * 0.1) {
-      const gain = m2 * 0.1;
+    // Merge when particles are close and moving slowly
+    // fusionMomentum defines max relative speed for merging (higher = can merge faster collisions)
+    if (relSpeed < fusionMomentum * 2.0) {
+      const gain = m2 * 0.3;
       buf[p1Ptr + S.MASS] += gain;
       buf[p2Ptr + S.MASS] = m2 - gain;
-      if (buf[p2Ptr + S.MASS] <= 0) buf[p2Ptr + S.DEAD] = 1.0;
+      if (buf[p2Ptr + S.MASS] <= 0.1) buf[p2Ptr + S.DEAD] = 1.0;
     }
   }
 
@@ -515,22 +517,37 @@ export function applyChemistry(lawState, view, iBase, jBase, distSq, synergy) {
 // ============================================================================
 // 20. POLYMER (bond formation)
 // ============================================================================
-export function applyPolymer(lawState, view, iBase, jBase, dist, synergy) {
-  if (!isSet(lawState, 21)) return false; // POLYMER=21
-  if (dist > 30) return false;
+export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+  if (!isSet(lawState, 21)) return { ax: 0, ay: 0, az: 0 };
+  if (dist > 25) return { ax: 0, ay: 0, az: 0 };
 
   const bondCount = view[iBase + S.BOND_COUNT];
-  if (bondCount >= 6) return false;
-
-  if (dist < 15 * synergy) {
-    const partnerSlot = S.BOND_PARTNER_1 + Math.floor(bondCount);
-    if (partnerSlot <= S.BOND_PARTNER_2) {
-      view[iBase + partnerSlot] = jBase / 100;
-      view[iBase + S.BOND_COUNT] = bondCount + 1;
-      return true;
+  const jIdx = jBase / 100;
+  let alreadyBonded = false;
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
+    if (view[iBase + slot] === jIdx) { alreadyBonded = true; break; }
+  }
+  if (!alreadyBonded && bondCount < 2 && dist < 10 * synergy) {
+    for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
+      if (view[iBase + slot] < 0) {
+        view[iBase + slot] = jIdx;
+        view[iBase + S.BOND_COUNT] = bondCount + 1;
+        break;
+      }
     }
   }
-  return false;
+  // Spring force to maintain polymer chain
+  if (dist < 0.1) return { ax: 0, ay: 0, az: 0 };
+  const stiffness = 0.02 * synergy;
+  const restLen = 4.0;
+  const displacement = dist - restLen;
+  const forceMag = stiffness * displacement;
+  const invDist = 1.0 / dist;
+  return {
+    ax: dx * invDist * forceMag,
+    ay: dy * invDist * forceMag,
+    az: dz * invDist * forceMag,
+  };
 }
 
 // ============================================================================
@@ -717,28 +734,44 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
 // 32. BOND — Spring-like molecular bonding
 // ============================================================================
 export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy) {
-  if (!isSet(lawState, 39)) return;
+  if (!isSet(lawState, 39)) return null;
+  if (dist < 0.1 || dist > 20) return null;
   const stiffness = view[iBase + S.DNA_CACHE_START + 8]; // STIFFNESS
-  const bondCountI = view[iBase + S.BOND_COUNT];
-  if (bondCountI >= 2) return;
-  const bondRest = 5.0;
-  const displacement = dist - bondRest;
-  if (Math.abs(displacement) > bondRest * 2) return;
-  const forceMag = stiffness * displacement * 0.01 * synergy;
-  const invDist = 1.0 / Math.max(dist, 0.01);
+  if (!Number.isFinite(stiffness) || stiffness < 0.01) return null;
+  // Spring force: F = -k * (dist - restLength)
+  const restLength = 3.0;
+  const displacement = dist - restLength;
+  const forceMag = stiffness * displacement * 0.05 * synergy;
+  const invDist = 1.0 / dist;
   const fx = dx * invDist * forceMag;
   const fy = dy * invDist * forceMag;
   const fz = dz * invDist * forceMag;
-  if (!Number.isFinite(fx)) return;
-  // Store bond partner reference
-  const bp1 = view[iBase + S.BOND_PARTNER_1];
-  const bp2 = view[iBase + S.BOND_PARTNER_2];
-  if (bp1 < 0) {
-    view[iBase + S.BOND_PARTNER_1] = jBase / stride;
-    view[iBase + S.BOND_COUNT] = bondCountI + 1;
-  } else if (bp2 < 0 && bp1 !== jBase / stride) {
-    view[iBase + S.BOND_PARTNER_2] = jBase / stride;
-    view[iBase + S.BOND_COUNT] = bondCountI + 1;
+  if (!Number.isFinite(fx)) return null;
+  // Register bond bilaterally (both particles track each other)
+  const jIdx = jBase / stride;
+  const iIdx = iBase / stride;
+  // Check if already bonded
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+    if (view[iBase + slot] === jIdx || view[jBase + slot] === iIdx) {
+      // Already bonded — return spring force only
+      return { ax: fx, ay: fy, az: fz };
+    }
+  }
+  // Find empty slot on i
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+    if (view[iBase + slot] < 0) {
+      view[iBase + slot] = jIdx;
+      view[iBase + S.BOND_COUNT] += 1;
+      break;
+    }
+  }
+  // Find empty slot on j
+  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_2; slot++) {
+    if (view[jBase + slot] < 0) {
+      view[jBase + slot] = iIdx;
+      view[jBase + S.BOND_COUNT] += 1;
+      break;
+    }
   }
   return { ax: fx, ay: fy, az: fz };
 }

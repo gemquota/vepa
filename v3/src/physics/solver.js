@@ -267,7 +267,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       if (isSet(lawState, LAW_INDEXES.POLYMER)) {
         const polySynergy = computeSynergy(lawState, LAW_INDEXES.POLYMER);
-        applyPolymer(lawState, view, iBase, jBase, dist, polySynergy);
+        applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, polySynergy);
       }
 
 
@@ -339,6 +339,62 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         const mindEffect = applyMind(lawState, view, iBase, jBase, distSq, mindSynergy);
         if (mindEffect && mindEffect.signalBoost) {
           view[iBase + S.SIGNAL] += mindEffect.signalBoost;
+        }
+      }
+
+      // ── Energy Transfer ──
+      if (isSet(lawState, LAW_INDEXES.ENERGY)) {
+        const energySynergy = computeSynergy(lawState, LAW_INDEXES.ENERGY);
+        applyEnergyTransfer(lawState, view, iBase, jBase, distSq, energySynergy);
+      }
+
+      // ── Solvation ──
+      if (isSet(lawState, LAW_INDEXES.SOLVATION)) {
+        const solvSynergy = computeSynergy(lawState, LAW_INDEXES.SOLVATION);
+        const solvMult = applySolvationEffect(lawState, view, iBase, jBase, distSq, solvSynergy);
+        if (solvMult !== 1.0) {
+          ax *= solvMult;
+          ay *= solvMult;
+          az *= solvMult;
+        }
+      }
+
+      // ── Acidity ──
+      if (isSet(lawState, LAW_INDEXES.ACIDITY)) {
+        const acidSynergy = computeSynergy(lawState, LAW_INDEXES.ACIDITY);
+        applyAcidityEffect(lawState, view, iBase, jBase, localTimeStep, acidSynergy);
+      }
+
+      // ── Chirality ──
+      if (isSet(lawState, LAW_INDEXES.CHIRALITY)) {
+        const chirSynergy = computeSynergy(lawState, LAW_INDEXES.CHIRALITY);
+        const chirForce = applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, chirSynergy);
+        if (chirForce) {
+          ax += chirForce.ax;
+          ay += chirForce.ay;
+          az += chirForce.az;
+        }
+      }
+
+      // ── Crystallization ──
+      if (isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)) {
+        const crysSynergy = computeSynergy(lawState, LAW_INDEXES.CRYSTALLIZATION);
+        const crysForce = applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, dist, crysSynergy);
+        if (crysForce) {
+          ax += crysForce.ax;
+          ay += crysForce.ay;
+          az += crysForce.az;
+        }
+      }
+
+      // ── Track ──
+      if (isSet(lawState, LAW_INDEXES.TRACK)) {
+        const trackSynergy = computeSynergy(lawState, LAW_INDEXES.TRACK);
+        const trackForce = applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, dist, trackSynergy);
+        if (trackForce) {
+          ax += trackForce.ax;
+          ay += trackForce.ay;
+          az += trackForce.az;
         }
       }
 
