@@ -84,9 +84,19 @@ function spawnDefaultPopulation() {
 
         for (let i = 0; i < perSpecies && idx < MAX_PARTICLES; i++) {
             const ptr = idx * PARTICLE_STRIDE;
-            setX(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
-            setY(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
-            particleView[ptr + STRIDE_INDEXES.POS_Z] = prng.nextFloat(-worldSize * 0.3, worldSize * 0.3);
+            // Uniform grid distribution across the world
+            const totalParticles = speciesCount * perSpecies;
+            const gridCols = Math.ceil(Math.sqrt(totalParticles * (worldSize / worldSize)));
+            const gridColsAdj = Math.max(1, Math.ceil(Math.sqrt(totalParticles)));
+            const cols = gridColsAdj;
+            const rows = Math.ceil(totalParticles / cols);
+            const cellW = (worldSize - 10) / cols;
+            const cellH = (worldSize - 10) / rows;
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            setX(particleBuffer, idx, PARTICLE_STRIDE, 5 + col * cellW + cellW * 0.5);
+            setY(particleBuffer, idx, PARTICLE_STRIDE, 5 + row * cellH + cellH * 0.5);
+            particleView[ptr + STRIDE_INDEXES.POS_Z] = 0;
             setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
