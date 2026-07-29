@@ -10,6 +10,7 @@ import { createDNAAnalytics } from './dnaAnalytics.js';
 import { createLawPanel } from './lawPanel.js';
 import { createNarrativePanel } from './narrativePanel.js';
 import { createPresetPanel } from './presetPanel.js';
+import { initTooltip } from './tooltip.js';
 
 /**
  * Initialize the full UI layer.
@@ -26,6 +27,7 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   createLawPanel(bus, lawStateObj);
   createNarrativePanel(bus);
   createPresetPanel(bus);
+  initTooltip();
 }
 
 function setupTabSwitching() {

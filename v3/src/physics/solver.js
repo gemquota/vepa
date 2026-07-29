@@ -35,6 +35,19 @@ import {
   applyWill,
   applySoul,
   applyMind,
+  applyVoid,
+  applyBond,
+  applyReduction,
+  applyAlloy,
+  applyTelepathy,
+  applyClairvoyance,
+  applyPrecognition,
+  applyMelt,
+  applyBoil,
+  applyCondense,
+  applyDeposit,
+  applyExothermic,
+  applyAstral,
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
@@ -243,6 +256,34 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         applyPolymer(lawState, view, iBase, jBase, dist, polySynergy);
       }
 
+
+
+      // ── Bond ──
+
+      if (isSet(lawState, LAW_INDEXES.BOND)) {
+        const bondSynergy = computeSynergy(lawState, LAW_INDEXES.BOND);
+        const bondForce = applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, bondSynergy);
+        if (bondForce) {
+          ax += bondForce.ax;
+          ay += bondForce.ay;
+          az += bondForce.az;
+        }
+      }
+
+      // ── Reduction ──
+
+      if (isSet(lawState, LAW_INDEXES.REDUCTION)) {
+        const redSynergy = computeSynergy(lawState, LAW_INDEXES.REDUCTION);
+        applyReduction(iBase, jBase, stride, redSynergy);
+      }
+
+      // ── Alloy ──
+
+      if (isSet(lawState, LAW_INDEXES.ALLOY)) {
+        const alloySynergy = computeSynergy(lawState, LAW_INDEXES.ALLOY);
+        applyAlloy(lawState, view, iBase, jBase, stride, dist, alloySynergy);
+      }
+
       // ── Heat Transfer ──
 
       if (isSet(lawState, LAW_INDEXES.HEAT) || isSet(lawState, LAW_INDEXES.COLD)) {
@@ -286,6 +327,34 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           view[iBase + S.SIGNAL] += mindEffect.signalBoost;
         }
       }
+
+      // Telepathy
+      if (isSet(lawState, LAW_INDEXES.TELEPATHY)) {
+        const telepathySynergy = computeSynergy(lawState, LAW_INDEXES.TELEPATHY);
+        applyTelepathy(lawState, view, iBase, jBase, distSq, telepathySynergy);
+      }
+
+      // Clairvoyance
+      if (isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)) {
+        const clairvoyanceSynergy = computeSynergy(lawState, LAW_INDEXES.CLAIRVOYANCE);
+        const clairForce = applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, clairvoyanceSynergy);
+        if (clairForce) {
+          ax += clairForce.ax;
+          ay += clairForce.ay;
+          az += clairForce.az;
+        }
+      }
+
+      // Precognition
+      if (isSet(lawState, LAW_INDEXES.PRECOGNITION)) {
+        const precogSynergy = computeSynergy(lawState, LAW_INDEXES.PRECOGNITION);
+        const precogForce = applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, precogSynergy);
+        if (precogForce) {
+          ax += precogForce.ax;
+          ay += precogForce.ay;
+          az += precogForce.az;
+        }
+      }
     }
 
     // ── Non-pairwise laws ──
@@ -297,6 +366,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       ax += planetForce.ax;
       ay += planetForce.ay;
       az += planetForce.az;
+    }
+
+    // Void
+    const voidSynergy = computeSynergy(lawState, LAW_INDEXES.VOID);
+    const voidForce = applyVoid(lawState, view, iBase, px, py, pz, worldSize, voidSynergy);
+    if (voidForce) {
+      ax += voidForce.ax;
+      ay += voidForce.ay;
+      az += voidForce.az;
     }
 
     // Dimensionality
@@ -446,6 +524,30 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     const baseRadius = dnaI[DNA_INDEXES.BASE_RADIUS] || 2.0;
     view[iBase + S.RADIUS] = baseRadius * Math.pow(mass, 0.333) * 0.5;
+
+    // ── Melt ──
+    applyMelt(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.MELT));
+
+    // ── Boil ──
+    applyBoil(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.BOIL));
+
+    // ── Condense ──
+    applyCondense(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.CONDENSE));
+
+    // ── Deposit ──
+    applyDeposit(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.DEPOSIT));
+
+    // ── Exothermic ──
+    applyExothermic(lawState, view, iBase,
+      computeSynergy(lawState, LAW_INDEXES.EXOTHERMIC));
+
+    // ── Astral ──
+    applyAstral(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.ASTRAL));
   }
 }
 

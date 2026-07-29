@@ -246,9 +246,28 @@ export const LAW_INDEXES = {
   WILL:           35,
   SOUL_LAW:       36,
   MIND:           37,
+
+  // Added missing V2 laws
+  // Physics
+  VOID:           38,
+  BOND:           39,
+  // Chemistry
+  REDUCTION:      40,
+  ALLOY:          41,
+  // Thermodynamics
+  MELT:           42,
+  BOIL:           43,
+  CONDENSE:       44,
+  DEPOSIT:        45,
+  EXOTHERMIC:     46,
+  // Metaphysics
+  TELEPATHY:      47,
+  CLAIRVOYANCE:   48,
+  PRECOGNITION:   49,
+  ASTRAL:         50,
 };
 
-export const LAW_COUNT = 38;
+export const LAW_COUNT = 51;
 
 // --- Law Category Mapping ---
 
@@ -263,6 +282,8 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.COLL,
       LAW_INDEXES.ACCR,
       LAW_INDEXES.PLANETARY,
+      LAW_INDEXES.VOID,
+      LAW_INDEXES.BOND,
     ],
   },
   biology: {
@@ -291,6 +312,8 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.ISOMERIZATION,
       LAW_INDEXES.CHIRALITY,
       LAW_INDEXES.CRYSTALLIZATION,
+      LAW_INDEXES.REDUCTION,
+      LAW_INDEXES.ALLOY,
     ],
   },
   thermodynamics: {
@@ -301,6 +324,11 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.CONVECTION,
       LAW_INDEXES.PHASE_RADIATION,
       LAW_INDEXES.SUBLIMATION,
+      LAW_INDEXES.MELT,
+      LAW_INDEXES.BOIL,
+      LAW_INDEXES.CONDENSE,
+      LAW_INDEXES.DEPOSIT,
+      LAW_INDEXES.EXOTHERMIC,
     ],
   },
   metaphysics: {
@@ -314,6 +342,10 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.WILL,
       LAW_INDEXES.SOUL_LAW,
       LAW_INDEXES.MIND,
+      LAW_INDEXES.TELEPATHY,
+      LAW_INDEXES.CLAIRVOYANCE,
+      LAW_INDEXES.PRECOGNITION,
+      LAW_INDEXES.ASTRAL,
     ],
   },
 };
@@ -335,3 +367,265 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
     LAW_COLOR_BY_INDEX[idx] = cat.color;
   }
 }
+
+
+// --- Law HELP_DB (tooltip descriptions) ---
+// Mirrors v2 HELP_DB structure: each law has a hint + explanation + system + advanced tier.
+
+export const LAW_HELP_DB = {
+  GRAV: {
+    hint: "Universal gravitational attraction between all particles.",
+    explanation: "Newtonian gravity: F = G*m1*m2/r². Positive force collapses structures; negative force expands them.",
+    system: "Fundamental force driving cluster formation and orbital dynamics. Uses HIDDEN_MASS for dark-matter effects.",
+  },
+  DRAG: {
+    hint: "Velocity-dependent motion damping.",
+    explanation: "Slows particles proportional to their VISCOSITY DNA parameter. Higher viscosity = more damping.",
+    system: "Prevents runaway velocities. Combined with friction (always active) stabilizes the simulation.",
+  },
+  ENTR: {
+    hint: "Brownian jitter adds random thermal motion.",
+    explanation: "Particles receive random force kicks proportional to JITTER DNA, preventing static equilibrium.",
+    system: "Acts as thermal noise floor. In low-viscosity regimes it drives chaos; in high-viscosity it enables slow annealing.",
+  },
+  WRAP: {
+    hint: "Toroidal world wrapping (particles wrap around edges).",
+    explanation: "When enabled, particles leaving one edge reappear on the opposite edge. When disabled, soft walls reflect them.",
+    system: "Multi-state law: state 1-3 control wrap behavior. Essential for uniform spatial distribution.",
+  },
+  COLL: {
+    hint: "Physical collisions with momentum exchange.",
+    explanation: "Particles bounce off each other based on ELASTICITY DNA. Overlapping particles are pushed apart.",
+    system: "Impulse-based collision response with mass-weighted velocity exchange. ELASTICITY controls bounciness.",
+  },
+  ACCR: {
+    hint: "Mass accretion on collision.",
+    explanation: "When particles collide with sufficient force, they merge. FUSION and FUSION_MOMENTUM DNA control efficiency.",
+    system: "Hierarchical mass growth. High fusion leads to proto-celestial body formation.",
+  },
+  PLANETARY: {
+    hint: "Central gravity well at world center.",
+    explanation: "All particles experience a gentle pull toward the center of the world, creating a planetary gravity well.",
+    system: "Creates a central attractor. Unlike v2's floor bounce, this is a continuous central gravity field.",
+  },
+  VOID: {
+    hint: "Vacuum pressure: empty space pushes particles apart.",
+    explanation: "Creates an outward pressure gradient, opposing gravity. Prevents complete gravitational collapse.",
+    system: "Acts as cosmological constant / dark energy. Balances gravitational clustering with expansion.",
+  },
+  BOND: {
+    hint: "Molecular bonding between nearby particles.",
+    explanation: "Particles can form bonds when close. Bonded pairs experience spring-like restorative forces.",
+    system: "Bonds are tracked via BOND_COUNT and BOND_PARTNER slots. Spring force based on STIFFNESS DNA.",
+  },
+  LIFE: {
+    hint: "Biological lifecycle: energy cost, aging, death.",
+    explanation: "Particles consume energy over time (based on ENERGY_EFFICIENCY). When energy hits 0, they die.",
+    system: "Core ecosystem loop. Also includes hunger tracking and senescence (age-based death).",
+  },
+  GLOW: {
+    hint: "Signaling pulses: particles emit periodic signals.",
+    explanation: "Particles pulse with signal strength based on PULSE_RATE DNA. Signals propagate to neighbors.",
+    system: "Communication layer. SIGNAL_STRENGTH and SIGNAL_RESP DNA control emission and reception.",
+  },
+  AFFINITY: {
+    hint: "Species-based attraction or repulsion.",
+    explanation: "Same-species particles attract; different-species repel if SPECIES_AFFINITY is negative.",
+    system: "Uses SPECIES_AFFINITY DNA (index 41). Positive = gregarious, negative = xenophobic.",
+  },
+  REPRO: {
+    hint: "Asexual reproduction: particles spawn offspring.",
+    explanation: "When energy > 60 and age > 100, particles have a chance to spawn a child with mutated DNA.",
+    system: "MUTATION DNA controls offspring variation. Offspring inherit parent DNA with random perturbations.",
+  },
+  TRACK: {
+    hint: "Predation tracking: particles chase lower-mass prey.",
+    explanation: "Particles with high PREDATION_BIAS are attracted to particles with lower mass.",
+    system: "Creates predator-prey dynamics. Combines with LIFE and REPRO for full ecosystem simulation.",
+  },
+  SENESCENCE: {
+    hint: "Age-based death: old particles die off.",
+    explanation: "Particles past age 500 have increasing death probability based on DEATH_RATE DNA.",
+    system: "Prevents immortal particles. Enables generational turnover and evolutionary pressure.",
+  },
+  ENERGY: {
+    hint: "Energy conservation: particles exchange energy.",
+    explanation: "Nearby particles transfer energy toward equilibrium, like thermal conduction.",
+    system: "Balances energy distribution. Prevents energy hoarding by high-mass particles.",
+  },
+  RADIATION: {
+    hint: "Background radiation damages unprotected particles.",
+    explanation: "Particles with low ARMOR take energy damage from ambient radiation.",
+    system: "ARMOR DNA provides radiation shielding. Adds environmental pressure to ecosystem.",
+  },
+  GENOTYPE: {
+    hint: "Genetic drift: DNA mutates over time.",
+    explanation: "Particles' DNA parameters drift randomly over time, influenced by temperature.",
+    system: "Enables long-term evolution. Hotter particles mutate faster. MUTATION DNA controls rate.",
+  },
+  PHENOTYPE: {
+    hint: "Visual phenotype expression from DNA.",
+    explanation: "Particle appearance (color, size, opacity) is derived from DNA parameters.",
+    system: "POLARITY → hue, ALPHA → saturation, SYMMETRY → lightness. Energy and age modulate.",
+  },
+  CATALYSIS_LAW: {
+    hint: "Catalysis: reactions happen faster.",
+    explanation: "Increases the multiplier for all chemical interactions. Speeds up reactions.",
+    system: "CATALYSIS DNA (index 38) controls the multiplier. Higher = more reactive.",
+  },
+  SOLVATION: {
+    hint: "Solvation: particles dissolve each other.",
+    explanation: "Particles with charge differences exert solvation forces. Like charges repel, opposites attract.",
+    system: "Uses POLARITY DNA as charge. Combined with ACIDITY and OXIDATION for full chemistry.",
+  },
+  ACIDITY: {
+    hint: "Acidic charge transfer between particles.",
+    explanation: "Particles exchange charge when close, equalizing their electrical potential.",
+    system: "CONDUCTIVITY DNA controls transfer rate. Alters CHARGE field in the particle buffer.",
+  },
+  OXIDATION: {
+    hint: "Oxidation: charge transfer with energy release.",
+    explanation: "Like acidity but releases heat energy. Particles glow brighter after oxidation events.",
+    system: "HEAT_OUTPUT DNA controls energy release. Increases TEMPERATURE and ENERGY.",
+  },
+  POLYMER: {
+    hint: "Polymerization: particles form chain bonds.",
+    explanation: "Particles can link into polymer chains by establishing bond connections with neighbors.",
+    system: "Bond slots (BOND_PARTNER_1/2) track chain topology. Max 6 bonds per particle.",
+  },
+  ISOMERIZATION: {
+    hint: "Isomerization: bond topology rearrangement.",
+    explanation: "Particles with many bonds may release some, creating free fragments.",
+    system: "Random bond-breaking events for particles with 3+ bonds. Consumes energy.",
+  },
+  CHIRALITY: {
+    hint: "Chirality: rotational bias from torque.",
+    explanation: "Particles with TORQUE DNA receive perpendicular velocity components, inducing spin.",
+    system: "Creates rotational dynamics. Positive torque = clockwise, negative = counterclockwise.",
+  },
+  CRYSTALLIZATION: {
+    hint: "Crystallization: same-species rigid lattice formation.",
+    explanation: "Same-species particles damp relative velocity when close, forming rigid clusters.",
+    system: "Damps relative velocity between same-species neighbors. Creates crystalline structures.",
+  },
+  HEAT: {
+    hint: "Thermal motion: heat adds random jitter to hot particles.",
+    explanation: "Particles with high TEMPERATURE receive random velocity kicks proportional to temperature.",
+    system: "TEMPERATURE field drives thermal noise. Heat spreads through neighbor conduction.",
+  },
+  COLD: {
+    hint: "Cold slows particles down.",
+    explanation: "Particles with low TEMPERATURE have their velocity damped. Cold = less motion.",
+    system: "Slows particles below 0.5 temperature. Temperature trends toward equilibrium.",
+  },
+  CONVECTION: {
+    hint: "Convection: buoyant vertical motion from temperature.",
+    explanation: "Hot particles rise (positive Y velocity), creating convection currents.",
+    system: "Buoyancy = (temp - 0.5) * 0.001. Drives large-scale circulation patterns.",
+  },
+  PHASE_RADIATION: {
+    hint: "Blackbody radiation: hot particles emit energy.",
+    explanation: "Particles with energy above 50 radiate excess energy, cooling down.",
+    system: "Radiated energy boosts SIGNAL for visual glow. Prevents energy runaway.",
+  },
+  SUBLIMATION: {
+    hint: "Sublimation: low-mass hot particles turn to gas.",
+    explanation: "Particles with low mass and high energy may sublimate, losing mass and gaining velocity.",
+    system: "Direct solid→gas transition. Reduces mass and adds velocity burst.",
+  },
+  MELT: {
+    hint: "Melting: hot particles lose structural integrity.",
+    explanation: "High temperature softens particles, reducing their effective stiffness.",
+    system: "STIFFNESS DNA is reduced proportionally to temperature above threshold.",
+  },
+  BOIL: {
+    hint: "Boiling: very hot particles eject mass.",
+    explanation: "Particles above boiling temperature shed mass as energetic vapor.",
+    system: "Mass is converted to velocity for the ejected fraction. Consumes energy.",
+  },
+  CONDENSE: {
+    hint: "Condensation: cool particles gain mass from vapor.",
+    explanation: "Low-energy particles can absorb ambient energy and increase mass.",
+    system: "Opposite of boiling. Energy → mass conversion at low temperatures.",
+  },
+  DEPOSIT: {
+    hint: "Deposition: vapor directly solidifies on cold particles.",
+    explanation: "Skip the liquid phase: cold particles directly accrete mass from the environment.",
+    system: "Gas→solid phase transition. Rapid mass gain for cold, slow particles.",
+  },
+  EXOTHERMIC: {
+    hint: "Exothermic reactions release extra energy.",
+    explanation: "Chemical reactions produce more energy than they consume. Amplifies energy dynamics.",
+    system: "All interaction energy transfers are amplified by 1.5x. Net energy increase.",
+  },
+  TIME_DILATION: {
+    hint: "Time dilation: SOUL slows local time.",
+    explanation: "Particles with high SOUL experience slower local time, giving them more frames to react.",
+    system: "localDt = 1.0 - soul * 0.3. SOUL = 1.0 → 70% time speed. Enables bullet-time effects.",
+  },
+  DIMENSIONALITY: {
+    hint: "Dimensional drift: random Z-axis motion.",
+    explanation: "Particles receive small random forces in the Z dimension, exploring 3D space.",
+    system: "Subtle Z-axis perturbation. Prevents particles from settling into pure 2D planes.",
+  },
+  CHAOS: {
+    hint: "Chaos: strong random forces, system instability.",
+    explanation: "Large random forces applied to all particles. Destabilizes structures, creates turbulence.",
+    system: "Strong stochastic forcing. Amplified by CHAOS synergy with ORDER (mutual cancellation).",
+  },
+  ORDER: {
+    hint: "Order: velocity alignment, system convergence.",
+    explanation: "Particles align their velocity with nearby particles, creating coherent flow.",
+    system: "Like Vicsek model alignment. Counteracts CHAOS. Drives system toward ordered states.",
+  },
+  FATE: {
+    hint: "Fate: same-species long-range attraction.",
+    explanation: "Particles of the same species are gently attracted across long distances.",
+    system: "Long-range (dist² < 250k) same-species attraction. Creates species segregation.",
+  },
+  WILL: {
+    hint: "Will: self-propulsion along current velocity.",
+    explanation: "Particles boost their own velocity in the direction they're already moving.",
+    system: "Self-propulsion model. Energy-independent: any particle with velocity gets a boost.",
+  },
+  SOUL_LAW: {
+    hint: "Soul: ethereal energy shared between same-species.",
+    explanation: "Same-species particles share SOUL energy. Soul accumulates from neighbors.",
+    system: "Soul acts as a secondary energy field. Used by TIME_DILATION for local time control.",
+  },
+  MIND: {
+    hint: "Hivemind: collective consciousness signal boost.",
+    explanation: "Same-species particles share signal strength, amplifying communication.",
+    system: "Signal boost propagates through same-species networks. Creates emergent group behavior.",
+  },
+  TELEPATHY: {
+    hint: "Telepathy: instant information sharing across species.",
+    explanation: "All particles of the same species share their SIGNAL state instantly, regardless of distance.",
+    system: "Global signal synchronization within species. Bypasses physical propagation limits.",
+  },
+  CLAIRVOYANCE: {
+    hint: "Clairvoyance: particles sense future positions.",
+    explanation: "Particles adjust their velocity toward where neighbors will be, not where they are.",
+    system: "Predictive steering: uses velocity extrapolation for neighbor targeting.",
+  },
+  PRECOGNITION: {
+    hint: "Precognition: collision anticipation and avoidance.",
+    explanation: "Particles predict upcoming collisions and adjust course to avoid them.",
+    system: "Anticipatory collision avoidance. Reduces collision frequency at the cost of smoothness.",
+  },
+  ASTRAL: {
+    hint: "Astral projection: souls leave bodies on death.",
+    explanation: "When a particle dies, its SOUL persists as a ghost, continuing to influence nearby particles.",
+    system: "DEAD=0.5 soul state. Ghosts have reduced alpha but still exert forces on the living.",
+  },
+  REDUCTION: {
+    hint: "Reduction: charge is neutralized between particles.",
+    explanation: "Opposite charges cancel out when particles interact, reducing net charge differentials.",
+    system: "Chemical reduction. Opposite to OXIDATION. Lowers charge magnitude toward zero.",
+  },
+  ALLOY: {
+    hint: "Alloying: different-species particles fuse into composites.",
+    explanation: "Particles of different species can merge, creating hybrid particles with mixed DNA.",
+    system: "Cross-species fusion. Creates hybrid offspring with averaged DNA from both parents.",
+  },
+};

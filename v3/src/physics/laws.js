@@ -551,8 +551,10 @@ export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synerg
 
   if (isSet(lawState, 26) && tempJ > tempI) {
     const rate = 0.015 * dt * synergy;
-    view[jBase + S.TEMPERATURE] -= diff * rate;
-    view[iBase + S.TEMPERATURE] += diff * rate;
+    const tDec2 = diff * rate;
+    const tInc2 = diff * rate;
+    view[jBase + S.TEMPERATURE] -= (tDec2 !== tDec2) ? 0 : tDec2;
+    view[iBase + S.TEMPERATURE] += (tInc2 !== tInc2) ? 0 : tInc2;
   }
 }
 
@@ -564,7 +566,9 @@ export function applyConvection(lawState, view, base, dt, synergy) {
 
   const temp = view[base + S.TEMPERATURE];
   const buoyancy = (temp - 0.5) * 0.001 * dt * synergy;
-  view[base + S.VEL_Y] += buoyancy;
+  if (Number.isFinite(buoyancy)) {
+    view[base + S.VEL_Y] += buoyancy;
+  }
 }
 
 // ============================================================================
@@ -644,9 +648,12 @@ export function applyWill(lawState, view, base, dt, synergy) {
   if (speed < 0.01) return;
 
   const boost = 0.01 * dt * synergy;
-  view[base + S.VEL_X] += (vx / speed) * boost;
-  view[base + S.VEL_Y] += (vy / speed) * boost;
-  view[base + S.VEL_Z] += (vz / speed) * boost;
+  const boostX = (vx / speed) * boost;
+  const boostY = (vy / speed) * boost;
+  const boostZ = (vz / speed) * boost;
+  if (Number.isFinite(boostX)) view[base + S.VEL_X] += boostX;
+  if (Number.isFinite(boostY)) view[base + S.VEL_Y] += boostY;
+  if (Number.isFinite(boostZ)) view[base + S.VEL_Z] += boostZ;
 }
 
 // ============================================================================
@@ -661,7 +668,10 @@ export function applySoul(lawState, view, iBase, jBase, distSq, synergy) {
   if (speciesI !== speciesJ) return;
 
   const soulJ = view[jBase + S.SOUL];
-  view[iBase + S.SOUL] += soulJ * 0.001 * synergy;
+  const soulBoost = soulJ * 0.001 * synergy;
+  if (Number.isFinite(soulBoost)) {
+    view[iBase + S.SOUL] += soulBoost;
+  }
 }
 
 // ============================================================================
@@ -678,4 +688,248 @@ export function applyMind(lawState, view, iBase, jBase, distSq, synergy) {
   const strength = 0.01 * synergy;
   const invDist = 1 / Math.sqrt(distSq);
   return { ax: 0, ay: 0, az: 0, signalBoost: strength * invDist };
+}
+
+
+// ============================================================================
+// 31. VOID — Vacuum pressure / cosmological constant
+// ============================================================================
+export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) {
+  if (!isSet(lawState, 38)) return null;
+  const cx = worldSize * 0.5;
+  const cy = worldSize * 0.5;
+  const cz = worldSize * 0.5;
+  const dx = px - cx;
+  const dy = py - cy;
+  const dz = pz - cz;
+  const distSq = dx * dx + dy * dy + dz * dz;
+  if (distSq < 1) return null;
+  const strength = 0.0005 * synergy;
+  const invDist = 1 / Math.sqrt(distSq);
+  return {
+    ax: dx * invDist * strength,
+    ay: dy * invDist * strength,
+    az: dz * invDist * strength,
+  };
+}
+
+// ============================================================================
+// 32. BOND — Spring-like molecular bonding
+// ============================================================================
+export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy) {
+  if (!isSet(lawState, 39)) return;
+  const stiffness = view[iBase + S.DNA_CACHE_START + 8]; // STIFFNESS
+  const bondCountI = view[iBase + S.BOND_COUNT];
+  if (bondCountI >= 2) return;
+  const bondRest = 5.0;
+  const displacement = dist - bondRest;
+  if (Math.abs(displacement) > bondRest * 2) return;
+  const forceMag = stiffness * displacement * 0.01 * synergy;
+  const invDist = 1.0 / Math.max(dist, 0.01);
+  const fx = dx * invDist * forceMag;
+  const fy = dy * invDist * forceMag;
+  const fz = dz * invDist * forceMag;
+  if (!Number.isFinite(fx)) return;
+  // Store bond partner reference
+  const bp1 = view[iBase + S.BOND_PARTNER_1];
+  const bp2 = view[iBase + S.BOND_PARTNER_2];
+  if (bp1 < 0) {
+    view[iBase + S.BOND_PARTNER_1] = jBase / stride;
+    view[iBase + S.BOND_COUNT] = bondCountI + 1;
+  } else if (bp2 < 0 && bp1 !== jBase / stride) {
+    view[iBase + S.BOND_PARTNER_2] = jBase / stride;
+    view[iBase + S.BOND_COUNT] = bondCountI + 1;
+  }
+  return { ax: fx, ay: fy, az: fz };
+}
+
+// ============================================================================
+// 33. REDUCTION — Charge neutralization
+// ============================================================================
+export function applyReduction(b1Ptr, b2Ptr, stride, synergy) {
+  const buf = buffer_global;
+  const charge1 = buf[b1Ptr + S.CHARGE];
+  const charge2 = buf[b2Ptr + S.CHARGE];
+  if (!Number.isFinite(charge1) || !Number.isFinite(charge2)) return;
+  const diff = charge1 - charge2;
+  const neutralization = diff * 0.05 * synergy;
+  buf[b1Ptr + S.CHARGE] -= neutralization;
+  buf[b2Ptr + S.CHARGE] += neutralization;
+}
+
+// ============================================================================
+// 34. ALLOY — Cross-species fusion
+// ============================================================================
+export function applyAlloy(lawState, view, iBase, jBase, stride, dist, synergy) {
+  if (!isSet(lawState, 41)) return;
+  const speciesI = view[iBase + S.SPECIES_ID];
+  const speciesJ = view[jBase + S.SPECIES_ID];
+  if (speciesI === speciesJ) return;
+  const r1 = view[iBase + S.RADIUS];
+  const r2 = view[jBase + S.RADIUS];
+  if (dist > (r1 + r2) * 0.5) return;
+  // Merge j into i
+  const m2 = view[jBase + S.MASS];
+  view[iBase + S.MASS] += m2 * 0.1 * synergy;
+  view[jBase + S.DEAD] = 1.0;
+  // Blend colors
+  view[iBase + S.COLOR_R] = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
+  view[iBase + S.COLOR_G] = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
+  view[iBase + S.COLOR_B] = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
+}
+
+// ============================================================================
+// 35. MELT — High temp particles lose mass
+// ============================================================================
+export function applyMelt(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, 42)) return;
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp < 0.7) return;
+  const mass = view[base + S.MASS];
+  const meltRate = (temp - 0.7) * 0.01 * dt * synergy;
+  const newMass = mass - meltRate;
+  if (newMass > 0.1) {
+    view[base + S.MASS] = newMass;
+    view[base + S.TEMPERATURE] -= meltRate * 0.5;
+  }
+}
+
+// ============================================================================
+// 36. BOIL — Very hot particles eject mass as energetic vapor
+// ============================================================================
+export function applyBoil(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, 43)) return;
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp < 0.9) return;
+  const mass = view[base + S.MASS];
+  const boilRate = (temp - 0.9) * 0.02 * dt * synergy;
+  const ejectMass = mass * boilRate;
+  if (ejectMass > 0.01) {
+    view[base + S.MASS] -= ejectMass;
+    // Velocity boost from mass ejection
+    view[base + S.VEL_X] += (Math.random() - 0.5) * ejectMass * 10;
+    view[base + S.VEL_Y] += (Math.random() - 0.5) * ejectMass * 10;
+    view[base + S.VEL_Z] += (Math.random() - 0.5) * ejectMass * 5;
+    view[base + S.TEMPERATURE] -= boilRate * 0.3;
+  }
+}
+
+// ============================================================================
+// 37. CONDENSE — Cool particles gain mass
+// ============================================================================
+export function applyCondense(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, 44)) return;
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp > 0.3) return;
+  const mass = view[base + S.MASS];
+  const condenseRate = (0.3 - temp) * 0.005 * dt * synergy;
+  view[base + S.MASS] = mass + condenseRate;
+  view[base + S.TEMPERATURE] += condenseRate * 0.1;
+}
+
+// ============================================================================
+// 38. DEPOSIT — Gas directly solidifies on cold particles
+// ============================================================================
+export function applyDeposit(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, 45)) return;
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp > 0.2) return;
+  const mass = view[base + S.MASS];
+  const depositRate = (0.2 - temp) * 0.01 * dt * synergy;
+  view[base + S.MASS] = mass + depositRate * 3;
+  view[base + S.RADIUS] = view[base + S.RADIUS] + depositRate * 0.5;
+  view[base + S.TEMPERATURE] += depositRate * 0.05;
+}
+
+// ============================================================================
+// 39. EXOTHERMIC — Energy amplification for all reactions
+// ============================================================================
+export function applyExothermic(lawState, view, base, synergy) {
+  if (!isSet(lawState, 46)) return;
+  const energy = view[base + S.ENERGY];
+  if (!Number.isFinite(energy)) return;
+  const amp = 1.0 + 0.1 * synergy;
+  view[base + S.ENERGY] *= amp;
+}
+
+// ============================================================================
+// 40. TELEPATHY — Instant signal sharing within species
+// ============================================================================
+export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy) {
+  if (!isSet(lawState, 47)) return null;
+  const speciesI = view[iBase + S.SPECIES_ID];
+  const speciesJ = view[jBase + S.SPECIES_ID];
+  if (speciesI !== speciesJ) return null;
+  const signalJ = view[jBase + S.SIGNAL];
+  if (!Number.isFinite(signalJ)) return null;
+  const transfer = signalJ * 0.05 * synergy;
+  if (transfer > 0.001) {
+    view[iBase + S.SIGNAL] += transfer;
+  }
+  return null;
+}
+
+// ============================================================================
+// 41. CLAIRVOYANCE — Predictive steering toward future positions
+// ============================================================================
+export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+  if (!isSet(lawState, 48)) return null;
+  if (dist < 1) return null;
+  // Predict where neighbor will be based on its velocity
+  const vx_j = view[jBase + S.VEL_X];
+  const vy_j = view[jBase + S.VEL_Y];
+  const vz_j = view[jBase + S.VEL_Z];
+  const predDx = (dx + vx_j * 3) - dx;
+  const predDy = (dy + vy_j * 3) - dy;
+  const predDz = (dz + vz_j * 3) - dz;
+  const strength = 0.02 * synergy;
+  const invDist = 1.0 / dist;
+  return {
+    ax: predDx * invDist * strength,
+    ay: predDy * invDist * strength,
+    az: predDz * invDist * strength,
+  };
+}
+
+// ============================================================================
+// 42. PRECOGNITION — Collision anticipation and avoidance
+// ============================================================================
+export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+  if (!isSet(lawState, 49)) return null;
+  if (dist < 1 || dist > 50) return null;
+  // Check if on collision course
+  const vx_i = view[iBase + S.VEL_X];
+  const vy_i = view[iBase + S.VEL_Y];
+  const vz_i = view[iBase + S.VEL_Z];
+  const relVx = view[jBase + S.VEL_X] - vx_i;
+  const relVy = view[jBase + S.VEL_Y] - vy_i;
+  const relVz = view[jBase + S.VEL_Z] - vz_i;
+  const dot = dx * relVx + dy * relVy + dz * relVz;
+  if (dot > 0) return null; // Moving apart
+  const strength = 0.05 * synergy;
+  const invDist = 1.0 / dist;
+  // Avoid by steering perpendicular to approach
+  return {
+    ax: -(dy * invDist) * strength,
+    ay: (dx * invDist) * strength,
+    az: 0,
+  };
+}
+
+// ============================================================================
+// 43. ASTRAL — Soul persists as ghost after death
+// ============================================================================
+export function applyAstral(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, 50)) return;
+  if (view[base + S.DEAD] < 0.5) return; // Only affects dead/soul particles
+  const soul = view[base + S.SOUL];
+  if (!Number.isFinite(soul) || soul < 0.01) return;
+  // Ghost persists, gradually fading
+  view[base + S.ALPHA] = soul * 0.5;
+  view[base + S.MASS] = soul * 0.1;
+  // Ghost forces nearby living particles
+  view[base + S.SOUL] *= 0.999;
+  if (view[base + S.SOUL] < 0.001) {
+    view[base + S.DEAD] = 1.0; // Fully dead, remove
+  }
 }

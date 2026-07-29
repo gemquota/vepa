@@ -83,13 +83,30 @@ function spawnDefaultPopulation() {
             const ptr = idx * PARTICLE_STRIDE;
             setX(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
             setY(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
-            particleView[ptr + STRIDE_INDEXES.POS_Z] = prng.nextFloat(-10, 10);
-            setVelocity(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(-0.5, 0.5), prng.nextFloat(-0.5, 0.5), prng.nextFloat(-0.1, 0.1));
+            particleView[ptr + STRIDE_INDEXES.POS_Z] = 0;
+            setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
             setEnergy(particleBuffer, idx, PARTICLE_STRIDE, 50 + prng.nextFloat(0, 50));
             particleView[ptr + STRIDE_INDEXES.DEAD] = 0;
             particleView[ptr + STRIDE_INDEXES.AGE] = 0;
+            particleView[ptr + STRIDE_INDEXES.SIGNAL] = 0;
+            particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+            particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
+            particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
+            particleView[ptr + STRIDE_INDEXES.ARMOR] = prng.nextFloat(0, 0.5);
+            particleView[ptr + STRIDE_INDEXES.MITOSIS_TIMER] = 0;
+            particleView[ptr + STRIDE_INDEXES.PARTNER_ID] = -1;
+            particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
+            particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
+            particleView[ptr + STRIDE_INDEXES.PHASE_1] = 0;
+            particleView[ptr + STRIDE_INDEXES.PHASE_2] = 0;
+            particleView[ptr + STRIDE_INDEXES.SOUL] = 0;
+            particleView[ptr + STRIDE_INDEXES.TRAIL_X] = 0;
+            particleView[ptr + STRIDE_INDEXES.TRAIL_Y] = 0;
+            particleView[ptr + STRIDE_INDEXES.TRAIL_Z] = 0;
 
             for (let d = 0; d < 42; d++) {
                 particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = getDNAFloat(dnaBuffer, s, d, DNA_RANGES[d].min, DNA_RANGES[d].max);

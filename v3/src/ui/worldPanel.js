@@ -9,27 +9,33 @@ import { isSet, toggle as toggleLaw } from '../state/lawState.js';
 // Law icon symbols (matching v2 aesthetic)
 const LAW_ICONS = {
   GRAV: '⬡', DRAG: '≋', ENTR: '~', WRAP: '◯', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
+  VOID: '∅', BOND: '⛓',
   LIFE: '✦', GLOW: '☀', AFFINITY: '⇌', REPRO: '⚤', TRACK: '⌖', SENESCENCE: '☠',
   ENERGY: '⚡', RADIATION: '☢', GENOTYPE: '🧬', PHENOTYPE: '◈',
   CATALYSIS_LAW: '⚗', SOLVATION: '≈', ACIDITY: '∇', OXIDATION: '🔥', POLYMER: '⛓',
-  ISOMERIZATION: '⟳', CHIRALITY: '⇆', CRYSTALLIZATION: '◇',
+  ISOMERIZATION: '⟳', CHIRALITY: '⇆', CRYSTALLIZATION: '◇', REDUCTION: '▼', ALLOY: '◆',
   HEAT: '☀', COLD: '❄', CONVECTION: '↻', PHASE_RADIATION: '⟐', SUBLIMATION: '⟡',
+  MELT: '↕', BOIL: '♨', CONDENSE: '↓', DEPOSIT: '⬇', EXOTHERMIC: '★',
   TIME_DILATION: '⌛', DIMENSIONALITY: '◈', CHAOS: '☄', ORDER: '⊡', FATE: '⚖',
   WILL: '⚔', SOUL_LAW: '👁', MIND: '🧠',
+  TELEPATHY: '〰', CLAIRVOYANCE: '◎', PRECOGNITION: '◉', ASTRAL: '👻',
 };
 
 // Short names for law grid (max 4 chars)
 const LAW_SHORT = {
   GRAV: 'GRV', DRAG: 'DRG', ENTR: 'ENT', WRAP: 'WRP', COLL: 'COL', ACCR: 'ACR',
-  PLANETARY: 'PLN', LIFE: 'LIF', GLOW: 'GLW', AFFINITY: 'AFF', REPRO: 'REP',
+  PLANETARY: 'PLN', VOID: 'VID', BOND: 'BND',
+  LIFE: 'LIF', GLOW: 'GLW', AFFINITY: 'AFF', REPRO: 'REP',
   TRACK: 'TRK', SENESCENCE: 'SEN', ENERGY: 'NRG', RADIATION: 'RAD',
   GENOTYPE: 'GEN', PHENOTYPE: 'PHE',
   CATALYSIS_LAW: 'CAT', SOLVATION: 'SLV', ACIDITY: 'ACD', OXIDATION: 'OXD',
   POLYMER: 'PLY', ISOMERIZATION: 'ISM', CHIRALITY: 'CHR', CRYSTALLIZATION: 'CRY',
+  REDUCTION: 'RED', ALLOY: 'ALY',
   HEAT: 'HET', COLD: 'CLD', CONVECTION: 'CNV', PHASE_RADIATION: 'PHR',
-  SUBLIMATION: 'SBL',
+  SUBLIMATION: 'SBL', MELT: 'MLT', BOIL: 'BIL', CONDENSE: 'CND', DEPOSIT: 'DEP', EXOTHERMIC: 'EXO',
   TIME_DILATION: 'TME', DIMENSIONALITY: 'DIM', CHAOS: 'CHO', ORDER: 'ORD',
   FATE: 'FAT', WILL: 'WIL', SOUL_LAW: 'SOL', MIND: 'MND',
+  TELEPATHY: 'TLP', CLAIRVOYANCE: 'CLV', PRECOGNITION: 'PRC', ASTRAL: 'AST',
 };
 
 // Reverse: law index → name
