@@ -8,44 +8,88 @@
 </head>
 <body class="theme-sanguine">
     <div id="app">
+        <!-- CANVAS VIEWPORT -->
         <canvas id="sim-canvas"></canvas>
+
+        <!-- UI LAYER -->
         <div id="ui-layer">
-            <div id="top-bar">
-                <div class="playback-group">
-                    <button id="play-pause-btn" class="sq-btn" title="Play/Pause">⏸</button>
+            <!-- TOP TOOLBAR -->
+            <div id="top-toolbar">
+                <div class="toolbar-left">
+                    <button id="btn-rewind" class="sq-btn" title="Rewind">⏪</button>
+                    <button id="btn-reverse" class="sq-btn" title="Reverse">◀</button>
+                    <button id="play-pause-btn" class="sq-btn active" title="Play/Pause">⏸</button>
+                    <button id="btn-play" class="sq-btn" title="Play">▶</button>
+                    <button id="btn-fastforward" class="sq-btn" title="Fast Forward">⏩</button>
+                </div>
+                <div class="toolbar-center">
+                    <span id="hud-fps" class="hud-item">0 FPS</span>
+                    <span id="hud-particles" class="hud-item">0 particles</span>
+                    <span id="hud-species" class="hud-item">0 species</span>
+                    <span id="hud-tick" class="hud-item">tick 0</span>
+                </div>
+                <div class="toolbar-right">
+                    <button id="chaos-btn" class="sq-btn" title="Smart Chaos">☢️</button>
                     <button id="restart-btn" class="sq-btn" title="Restart">🔄</button>
                     <button id="hard-reset-btn" class="sq-btn" title="Hard Reset">🗑️</button>
-                </div>
-                <div id="hud" class="hud">
-                    <span id="hud-fps">0 FPS</span>
-                    <span id="hud-particles">0 particles</span>
-                    <span id="hud-species">0 species</span>
-                    <span id="hud-tick">tick 0</span>
+                    <button id="help-toggle" class="sq-btn" title="Help">?</button>
                 </div>
             </div>
 
-            <div id="side-panel">
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="tab-world">WORLD</button>
-                    <button class="tab-btn" data-tab="tab-species">SPECIES</button>
-                    <button class="tab-btn" data-tab="tab-dna">DNA</button>
-                    <button class="tab-btn" data-tab="tab-laws">LAWS</button>
-                    <button class="tab-btn" data-tab="tab-narrative">LOG</button>
-                </div>
-                <div id="tab-world" class="tab-content active">
-                    <div id="world-panel"></div>
-                </div>
-                <div id="tab-species" class="tab-content">
-                    <div id="species-panel"></div>
-                </div>
-                <div id="tab-dna" class="tab-content">
-                    <div id="dna-panel"></div>
-                </div>
-                <div id="tab-laws" class="tab-content">
-                    <div id="laws-panel"></div>
-                </div>
-                <div id="tab-narrative" class="tab-content">
-                    <div id="narrative-panel"></div>
+            <!-- BOTTOM DRAWER -->
+            <div id="drawer-container">
+                <div id="main-panel">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="tab-world">WORLD</button>
+                        <button class="tab-btn" data-tab="tab-species">SPECIES</button>
+                        <button class="tab-btn" data-tab="tab-dna">DNA</button>
+                        <button class="tab-btn" data-tab="tab-log">LOG</button>
+                        <button class="tab-btn" data-tab="tab-settings">SETTINGS</button>
+                    </div>
+
+                    <div id="tab-world" class="tab-content active">
+                        <div class="world-inner">
+                            <div class="category-filter-row">
+                                <button class="cat-tab active" data-cat="cat-phys">PHYS</button>
+                                <button class="cat-tab active" data-cat="cat-biol">BIOL</button>
+                                <button class="cat-tab active" data-cat="cat-chem">CHEM</button>
+                                <button class="cat-tab active" data-cat="cat-thermo">THERMO</button>
+                                <button class="cat-tab active" data-cat="cat-meta">META</button>
+                            </div>
+                            <div id="law-grid" class="law-icon-grid"></div>
+                            <div id="world-params" class="world-sliders"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-species" class="tab-content">
+                        <div class="species-controls-header">
+                            <button id="add-species-btn" class="btn tiny-btn">+ SPECIES</button>
+                        </div>
+                        <div id="species-list"></div>
+                        <div id="dna-accordion"></div>
+                    </div>
+
+                    <div id="tab-dna" class="tab-content">
+                        <div id="dna-analytics"></div>
+                        <div id="dna-charts">
+                            <div class="chart-section">
+                                <h3 class="chart-title">POPULATION_TRENDS</h3>
+                                <canvas id="pop-line-graph"></canvas>
+                            </div>
+                            <div class="chart-section">
+                                <h3 class="chart-title">STATE_SCATTER [MASS/NRG]</h3>
+                                <canvas id="mass-nrg-scatter"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-log" class="tab-content">
+                        <div id="narrative-log"></div>
+                    </div>
+
+                    <div id="tab-settings" class="tab-content">
+                        <div id="laws-panel"></div>
+                    </div>
                 </div>
             </div>
         </div>

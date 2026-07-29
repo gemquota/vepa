@@ -6,7 +6,7 @@ import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
-import { createLawState, set as lawSet } from './state/lawState.js';
+import { createLawState, set as lawSet, clear as lawClear } from './state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
@@ -128,6 +128,44 @@ function setDNAFromProfile(species, profile) {
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', () => { tick = 0; });
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
+    bus.on('sim:hardReset', () => {
+        console.log('[VEPA v3] Hard reset requested');
+        location.reload();
+    });
+    bus.on('sim:chaos', () => {
+        // Chaos mode: randomize some laws and DNA
+        for (let i = 0; i < 38; i++) {
+            if (Math.random() > 0.7) {
+                if (Math.random() > 0.5) {
+                    lawSet(lawState, i);
+                } else {
+                    lawClear(lawState, i);
+                    clear(lawState, i);
+                }
+            }
+        }
+        bus.emit('law:sync');
+        bus.emit('narrative:system', { text: 'Chaos invoked — laws randomized.' });
+    });
+    bus.on('sim:playbackMode', ({ mode }) => {
+        // Playback speed modes (just toggle pause for now, future: dt multiplier)
+        switch (mode) {
+            case 'rewind':
+            case 'reverse':
+                paused = true;
+                bus.emit('sim:paused', { paused: true });
+                break;
+            case 'forward':
+                paused = false;
+                bus.emit('sim:paused', { paused: false });
+                break;
+            case 'fastforward':
+                paused = false;
+                // Future: multiply DT by 3
+                bus.emit('sim:paused', { paused: false });
+                break;
+        }
+    });
 }
 
 let lastFrameTime = 0, frameCount = 0, fps = 0;
