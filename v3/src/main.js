@@ -129,7 +129,7 @@ function spawnDefaultPopulation() {
             particleView[ptr + STRIDE_INDEXES.COLOR_G] = p.color[1];
             particleView[ptr + STRIDE_INDEXES.COLOR_B] = p.color[2];
             particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
-            particleView[ptr + STRIDE_INDEXES.RADIUS] = 4.0;
+            particleView[ptr + STRIDE_INDEXES.RADIUS] = 1.5;
             idx++;
         }
     }
