@@ -6,7 +6,7 @@ import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
-import { createLawState, set as lawSet, clear as lawClear } from './state/lawState.js';
+import { createLawState, set as lawSet, clear as lawClear, getActiveCount as getLawCount } from './state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
@@ -20,7 +20,7 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-const DEFAULT_LAWS = ['COLL', 'BOND', 'GRAV', 'ENTR', 'DRAG', 'POLYMER', 'LIFE', 'GLOW', 'AFFINITY', 'REPRO', 'TRACK', 'SENESCENCE', 'ENERGY', 'RADIATION', 'GENOTYPE', 'PHENOTYPE'];
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'ACCR', 'PLANETARY', 'LIFE', 'GLOW', 'AFFINITY', 'REPRO', 'TRACK', 'SENESCENCE', 'ENERGY', 'RADIATION', 'GENOTYPE', 'PHENOTYPE', 'CATALYSIS_LAW', 'SOLVATION', 'ACIDITY', 'OXIDATION', 'POLYMER', 'ISOMERIZATION', 'CHIRALITY', 'CRYSTALLIZATION', 'HEAT', 'COLD', 'CONVECTION', 'PHASE_RADIATION', 'SUBLIMATION', 'TIME_DILATION', 'DIMENSIONALITY', 'CHAOS', 'ORDER', 'FATE', 'WILL', 'SOUL_LAW', 'MIND', 'VOID', 'BOND', 'REDUCTION', 'ALLOY', 'MELT', 'BOIL', 'CONDENSE', 'DEPOSIT', 'EXOTHERMIC', 'TELEPATHY', 'CLAIRVOYANCE', 'PRECOGNITION', 'ASTRAL'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -129,7 +129,7 @@ function spawnDefaultPopulation() {
             particleView[ptr + STRIDE_INDEXES.COLOR_G] = p.color[1];
             particleView[ptr + STRIDE_INDEXES.COLOR_B] = p.color[2];
             particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
-            particleView[ptr + STRIDE_INDEXES.RADIUS] = 2.0;
+            particleView[ptr + STRIDE_INDEXES.RADIUS] = 4.0;
             idx++;
         }
     }
@@ -184,18 +184,52 @@ function setDNAFromProfile(species, profile) {
         location.reload();
     });
     bus.on('sim:chaos', () => {
-        // Chaos mode: randomize all laws
-        for (let i = 0; i < LAW_COUNT; i++) {
-            if (Math.random() > 0.7) {
-                if (Math.random() > 0.5) {
-                    lawSet(lawState, i);
-                } else {
-                    lawClear(lawState, i);
+        // Chaos multiplexing: partition laws into groups with varying activation
+        // Shuffle law indices
+        const shuffled = [];
+        for (let i = 0; i < LAW_COUNT; i++) shuffled.push(i);
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        const groups = 3 + Math.floor(Math.random() * 3); // 3-5 groups
+        const groupSize = Math.ceil(LAW_COUNT / groups);
+        const intensity = 0.3 + Math.random() * 0.7;
+
+        // Clear all laws first
+        for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
+
+        // Apply group-based activation
+        for (let g = 0; g < groups; g++) {
+            const start = g * groupSize;
+            const end = Math.min(start + groupSize, LAW_COUNT);
+            const actProb = 0.4 + Math.random() * 0.6;
+            if (Math.random() > 0.3) { // 70% chance group activates
+                for (let j = start; j < end; j++) {
+                    if (Math.random() < actProb) {
+                        lawSet(lawState, shuffled[j]);
+                    }
                 }
             }
         }
+
+        // Randomize some DNA for extra variation
+        for (let s = 0; s < speciesCount; s++) {
+            for (let p = 0; p < 42; p++) {
+                if (Math.random() > 0.85) {
+                    const r = DNA_RANGES[p];
+                    const val = r.min + Math.random() * (r.max - r.min);
+                    const clamped = Math.max(r.min, Math.min(r.max, val));
+                    const normalized = (clamped - r.min) / (r.max - r.min);
+                    dnaBuffer[s * 64 + p] = Math.round(normalized * 65535);
+                }
+            }
+        }
+
+        const active = getLawCount(lawState);
         bus.emit('law:sync');
-        bus.emit('narrative:system', { text: 'Chaos invoked — laws randomized.' });
+        bus.emit('narrative:system', { text: `Chaos multiplexed: ${groups} groups, ${active} laws, ${Math.round(intensity*100)}% intensity` });
     });
 
     bus.on('sim:chaosClear', () => {
