@@ -19,7 +19,7 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-const DEFAULT_LAWS = [];
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
