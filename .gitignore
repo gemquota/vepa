@@ -21,3 +21,4 @@ worker_test.mjs
 preset_refinement_report.md
 codex/entries.json.restored
 vepa_server.log
+deploy_temp/
