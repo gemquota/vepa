@@ -181,7 +181,7 @@ export const DNA_RANGES = [
   { min: 0.1,   max: 2,    default: 1.0     },   // 26 INERTIA
   { min: 0,     max: 0.1,  default: 0.01    },   // 27 FRICTION
   { min: 1,     max: 50,   default: 20      },   // 28 MAX_VELOCITY
-  { min: 0.5,   max: 10,   default: 1.5     },   // 29 BASE_RADIUS
+  { min: 0.5,   max: 10,   default: 0.8     },   // 29 BASE_RADIUS
   { min: 0,     max: 1,    default: 0.5     },   // 30 ELASTICITY
   { min: 0,     max: 360,  default: 0       },   // 31 BOND_ANGLE
   { min: 0,     max: 1,    default: 0.1     },   // 32 CONDUCTIVITY

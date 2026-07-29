@@ -20,7 +20,7 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-const DEFAULT_LAWS = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'ACCR', 'PLANETARY', 'LIFE', 'GLOW', 'AFFINITY', 'REPRO', 'TRACK', 'SENESCENCE', 'ENERGY', 'RADIATION', 'GENOTYPE', 'PHENOTYPE', 'CATALYSIS_LAW', 'SOLVATION', 'ACIDITY', 'OXIDATION', 'POLYMER', 'ISOMERIZATION', 'CHIRALITY', 'CRYSTALLIZATION', 'HEAT', 'COLD', 'CONVECTION', 'PHASE_RADIATION', 'SUBLIMATION', 'TIME_DILATION', 'DIMENSIONALITY', 'CHAOS', 'ORDER', 'FATE', 'WILL', 'SOUL_LAW', 'MIND', 'VOID', 'BOND', 'REDUCTION', 'ALLOY', 'MELT', 'BOIL', 'CONDENSE', 'DEPOSIT', 'EXOTHERMIC', 'TELEPATHY', 'CLAIRVOYANCE', 'PRECOGNITION', 'ASTRAL'];
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'LIFE', 'REPRO', 'ENERGY', 'SENESCENCE', 'AFFINITY', 'FATE', 'GLOW', 'MIND', 'SOUL_LAW', 'ASTRAL', 'POLYMER', 'BOND', 'HEAT', 'CONVECTION'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -129,7 +129,7 @@ function spawnDefaultPopulation() {
             particleView[ptr + STRIDE_INDEXES.COLOR_G] = p.color[1];
             particleView[ptr + STRIDE_INDEXES.COLOR_B] = p.color[2];
             particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
-            particleView[ptr + STRIDE_INDEXES.RADIUS] = 1.5;
+            particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.8;
             idx++;
         }
     }
