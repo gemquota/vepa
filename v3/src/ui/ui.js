@@ -8,6 +8,7 @@ import { createLawPanel } from './lawPanel.js';
 import { createDNAPanel } from './dnaPanel.js';
 import { createPresetPanel } from './presetPanel.js';
 import { createNarrativePanel } from './narrativePanel.js';
+import { createSpeciesPanel } from './speciesPanel.js';
 import * as lawState from '../state/lawState.js';
 import { serialize } from '../state/lawState.js';
 import { getSpeciesDNA, setSpeciesDNA } from '../dna/dnaBuffer.js';
@@ -28,6 +29,7 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   createHUD(bus);
   createLawPanel(bus, lawStateObj);
   createDNAPanel(bus, dnaBuffer);
+  createSpeciesPanel(bus, dnaBuffer);
   createPresetPanel(bus);
   createNarrativePanel(bus);
 }

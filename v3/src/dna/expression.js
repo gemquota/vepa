@@ -95,46 +95,65 @@ function readDNANorm(particleView, base, dnaIndex) {
  * @param {number} stride              - Floats per particle
  * @returns {{ r: number, g: number, b: number }} RGB in [0, 255]
  */
+
+/**
+ * Convert RGB (0-255) to HSL.
+ * Returns {{ h: [0,360), s: [0,1], l: [0,1] }}.
+ */
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+        h = 0; s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) * 60; break;
+            case g: h = ((b - r) / d + 2) * 60; break;
+            case b: h = ((r - g) / d + 4) * 60; break;
+        }
+    }
+    return { h: ((h % 360) + 360) % 360, s: clamp(s, 0, 1), l: clamp(l, 0, 1) };
+}
 export function computeColor(particleBuffer, speciesId, particleIndex, stride) {
     const view = new Float32Array(particleBuffer);
     const base = particleIndex * stride;
 
-    // ── Read DNA parameters ──
+    // Read per-particle stored species color (set at spawn from profile)
+    const baseR = view[base + STRIDE_INDEXES.COLOR_R];  // 0..255
+    const baseG = view[base + STRIDE_INDEXES.COLOR_G];
+    const baseB = view[base + STRIDE_INDEXES.COLOR_B];
+
+    // Read DNA parameters for modulation
     const polarity = readDNAParam(view, base, DNA_INDEXES.POLARITY);     // -1..1
     const alphaDNA = readDNAParam(view, base, DNA_INDEXES.ALPHA);        // 0..1
     const symmetry = readDNAParam(view, base, DNA_INDEXES.SYMMETRY);     // -1..1
 
-    // ── Read runtime state ──
+    // Read runtime state
     const energy = view[base + STRIDE_INDEXES.ENERGY];   // 0..200
     const age    = view[base + STRIDE_INDEXES.AGE];       // frames
 
-    // ── HSL derivation ──
+    // Convert stored RGB to HSL for modulation
+    const { h: baseHue, s: baseSat, l: baseLit } = rgbToHsl(baseR, baseG, baseB);
 
-    // Hue: map polarity [-1, 1] → [240, 120, 0] (cool → mid → warm)
-    // We wrap around so negative polarity yields blue-cyan, positive yields red-orange
-    let hue;
-    if (polarity >= 0) {
-        hue = mapRange(polarity, 0, 1, 120, 0);          // green → red
-    } else {
-        hue = mapRange(polarity, -1, 0, 240, 120);        // blue → green
-    }
+    // Hue shift from polarity (-1..1 shifts hue by up to ±40°)
+    let hue = (baseHue + polarity * 40 + 360) % 360;
 
-    // Saturation: ALPHA DNA param controls base saturation [0.25 .. 1.0]
-    let sat = mapRange(alphaDNA, 0, 1, 0.25, 1.0);
+    // Saturation: ALPHA DNA modulates base saturation [0.5x .. 1.5x]
+    let sat = clamp(baseSat * (0.5 + alphaDNA), 0.1, 1.0);
 
-    // Lightness: SYMMETRY DNA param controls base lightness [0.35 .. 0.65]
-    let lit = mapRange(symmetry, -1, 1, 0.35, 0.65);
+    // Lightness: SYMMETRY DNA modulates base [0.7x .. 1.3x]
+    let lit = clamp(baseLit * (0.7 + symmetry * 0.3), 0.1, 0.85);
 
-    // ── Runtime modifiers ──
-
-    // Energy boost: higher energy → brighter (up to +0.15 lightness)
-    // Energy range is typically 0..200, normalize around 100
+    // Energy boost: higher energy → brighter (up to +0.10 lightness)
     const energyFactor = clamp(energy / 200, 0, 1);
-    lit += energyFactor * 0.15;
+    lit += energyFactor * 0.10;
 
-    // Age saturation boost: mature particles (age > 500 frames) → more vivid
+    // Age saturation boost: mature particles → more vivid
     const ageFactor = clamp(age / 1000, 0, 1);
-    sat += ageFactor * 0.2;
+    sat += ageFactor * 0.15;
 
     // Clamp final values
     sat = clamp(sat, 0, 1);
