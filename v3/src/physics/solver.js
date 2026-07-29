@@ -48,20 +48,6 @@ import {
   applyDeposit,
   applyExothermic,
   applyAstral,
-  applyGlowEffect,
-  applyEnergyTransfer,
-  applyRadiationDamage,
-  applyPhenotype,
-  applySolvationEffect,
-  applyAcidityEffect,
-  applyOxidationEffect,
-  applyIsomerization,
-  applyChirality,
-  applyCrystallization,
-  applyPhaseRadiation,
-  applySublimation,
-  applyTrackingBehavior,
-  applyGenotypeMutation,
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
@@ -251,17 +237,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         ax += affinityForce.ax;
         ay += affinityForce.ay;
         az += affinityForce.az;
-      }
-
-      // ── Track (Predation) ──
-      if (isSet(lawState, LAW_INDEXES.TRACK)) {
-        const trackSynergy = computeSynergy(lawState, LAW_INDEXES.TRACK);
-        const trackForce = applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, dist, trackSynergy);
-        if (trackForce) {
-          ax += trackForce.ax;
-          ay += trackForce.ay;
-          az += trackForce.az;
-        }
       }
 
       // ── Chemistry modifier ──
@@ -531,42 +506,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     applyLifeCycle(lawState, view, iBase, dnaI, localTimeStep, prng,
       computeSynergy(lawState, LAW_INDEXES.LIFE));
 
-    // ── Glow ──
-    applyGlowEffect(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.GLOW));
-
-    // ── Genotype ──
-    applyGenotypeMutation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.GENOTYPE));
-
     // ── Convection ──
 
     applyConvection(lawState, view, iBase, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.CONVECTION));
-
-    // ── Radiation ──
-    applyRadiationDamage(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.RADIATION));
-
-    // ── Phenotype ──
-    applyPhenotype(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.PHENOTYPE));
-
-    // ── Oxidation ──
-    applyOxidationEffect(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.OXIDATION));
-
-    // ── Isomerization ──
-    applyIsomerization(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION));
-
-    // ── Phase Radiation ──
-    applyPhaseRadiation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.PHASE_RADIATION));
-
-    // ── Sublimation ──
-    applySublimation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.SUBLIMATION));
 
     // ── Reproduction ──
 
