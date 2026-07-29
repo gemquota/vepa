@@ -63,8 +63,8 @@ function onPointerMove(e) {
   if (!ptr.mouseDown) return;
   const dx = e.clientX - ptr.mouseX;
   const dy = e.clientY - ptr.mouseY;
-  camera.rotY -= dx * 0.005;
-  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.005));
+  camera.rotY -= dx * 0.003;
+  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.003));
   ptr.mouseX = e.clientX;
   ptr.mouseY = e.clientY;
 }
@@ -89,13 +89,15 @@ function onTouchStart(e) {
   ptr.touchCount = Object.keys(ptr.touches).length;
 
   if (ptr.touchCount === 1) {
-    // 1 finger → start orbit
+    // 1 finger → start pan
     const t = e.touches[0];
     ptr.orbitLastX = t.clientX;
     ptr.orbitLastY = t.clientY;
+    ptr.panStartX = camera.x;
+    ptr.panStartY = camera.y;
   } else if (ptr.touchCount === 2) {
-    // 2 fingers → start pan + pinch
-    beginPanPinch();
+    // 2 fingers → start orbit + pinch
+    beginRotPinch();
   }
 }
 
@@ -109,17 +111,15 @@ function onTouchMove(e) {
   ptr.touchCount = Object.keys(ptr.touches).length;
 
   if (ptr.touchCount === 1) {
-    // 1 finger → orbit rotate
+    // 1 finger → pan
     const t = e.touches[0];
-    const dx = t.clientX - ptr.orbitLastX;
-    const dy = t.clientY - ptr.orbitLastY;
-    camera.rotY -= dx * 0.005;
-    camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.005));
-    ptr.orbitLastX = t.clientX;
-    ptr.orbitLastY = t.clientY;
+    const dx = (t.clientX - ptr.orbitLastX) / camera.zoom;
+    const dy = (t.clientY - ptr.orbitLastY) / camera.zoom;
+    camera.x = ptr.panStartX - dx;
+    camera.y = ptr.panStartY - dy;
   } else if (ptr.touchCount >= 2) {
-    // 2 fingers → pan + pinch zoom
-    doPanPinch();
+    // 2 fingers → orbit + pinch zoom
+    doRotPinch();
   }
 }
 
@@ -134,12 +134,14 @@ function onTouchEnd(e) {
     const t = e.touches[0];
     ptr.orbitLastX = t.clientX;
     ptr.orbitLastY = t.clientY;
+    ptr.panStartX = camera.x;
+    ptr.panStartY = camera.y;
   }
 }
 
 // ── 2-finger helpers ──
 
-function beginPanPinch() {
+function beginRotPinch() {
   const ids = Object.keys(ptr.touches);
   const t0 = ptr.touches[ids[0]];
   const t1 = ptr.touches[ids[1]];
@@ -148,11 +150,11 @@ function beginPanPinch() {
   ptr.pinchDist = Math.sqrt(dx * dx + dy * dy);
   ptr.panCenterX = (t0.x + t1.x) / 2;
   ptr.panCenterY = (t0.y + t1.y) / 2;
-  ptr.panStartX = camera.x;
-  ptr.panStartY = camera.y;
+  ptr.panStartX = camera.rotY;
+  ptr.panStartY = camera.rotX;
 }
 
-function doPanPinch() {
+function doRotPinch() {
   const ids = Object.keys(ptr.touches);
   const t0 = ptr.touches[ids[0]];
   const t1 = ptr.touches[ids[1]];
@@ -165,13 +167,13 @@ function doPanPinch() {
     camera.zoom = Math.max(0.1, Math.min(10, camera.zoom * (dist / ptr.pinchDist)));
   }
 
-  // Pan (screen pixels → world, divided by zoom)
+  // Rotation (relative to initial finger center)
   const centerX = (t0.x + t1.x) / 2;
   const centerY = (t0.y + t1.y) / 2;
-  const panDx = (centerX - ptr.panCenterX) / camera.zoom;
-  const panDy = (centerY - ptr.panCenterY) / camera.zoom;
-  camera.x = ptr.panStartX - panDx;
-  camera.y = ptr.panStartY - panDy;
+  const rotDx = (centerX - ptr.panCenterX) * 0.003;
+  const rotDy = (centerY - ptr.panCenterY) * 0.003;
+  camera.rotY = ptr.panStartX - rotDx;
+  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, ptr.panStartY + rotDy));
 }
 
 /**
