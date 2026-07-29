@@ -12,6 +12,7 @@ import {
     computeRadius,
     computeAlpha,
 } from '../dna/expression.js';
+import { projectPoint } from '../ui/camera.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -119,12 +120,7 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
     drawGrid(ctx, width, height);
 
     // ── 3. Particles ──
-    const scaleX = width  / worldSize;
-    const scaleY = height / worldSize;
-    const halfWorld = worldSize * 0.5;
-    const cx = width * 0.5;
-    const cy = height * 0.5;
-    const focalLength = worldSize * 3; // perspective strength
+    const uniformScale = Math.min(width, height) / worldSize;
 
     for (let i = 0; i < particleCount; i++) {
         const base = i * stride;
@@ -140,10 +136,8 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
         // NaN guard — never draw broken coordinates
         if (x !== x || y !== y) continue;
 
-        // 3D perspective projection
-        const perspective = focalLength / (focalLength + z);
-        const screenX = cx + (x * scaleX - cx) * perspective;
-        const screenY = cy + (y * scaleY - cy) * perspective;
+        // 3D camera projection (pan, zoom, orbit)
+        const { sx, sy, sr } = projectPoint(x, y, z, worldSize, width, height);
 
         // Phenotype expression
         const color  = computeColor(particleBuffer, speciesId, i, stride);
@@ -151,18 +145,16 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
         const alpha  = computeAlpha(particleBuffer, speciesId, i, stride);
 
         // Radius scaled by perspective (closer = bigger, further = smaller)
-        const baseR = radius * ((scaleX + scaleY) * 0.5);
-        const screenR = baseR * perspective;
+        const screenR = radius * uniformScale * sr;
 
         // Skip fully transparent particles
         if (alpha < 0.001) continue;
 
-        // Depth排序: particles further back (smaller perspective) drawn first
-        // We approximate by just adjusting alpha — closer = brighter
-        ctx.globalAlpha = alpha * (0.3 + 0.7 * perspective);
+        // Depth-adjusted alpha — closer = brighter
+        ctx.globalAlpha = alpha * (0.3 + 0.7 * sr);
         ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
         ctx.beginPath();
-        ctx.arc(screenX, screenY, Math.max(screenR, 0.5), 0, Math.PI * 2);
+        ctx.arc(sx, sy, Math.max(screenR, 0.5), 0, Math.PI * 2);
         ctx.fill();
     }
 

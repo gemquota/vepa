@@ -11,6 +11,7 @@ import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
+import { initCamera, resetCamera } from './ui/camera.js';
 import { solve, resetOffspringRing } from './physics/solver.js';
 
 const SUBSTEPS = 4;
@@ -51,6 +52,7 @@ async function boot() {
     const canvas = document.getElementById('sim-canvas');
     renderer = createRenderer(canvas, MAX_PARTICLES);
     resizeRenderer(renderer);
+    initCamera(canvas);
 
     // Init UI (includes HUD, all panels, event wiring)
     initUI(bus, lawState, dnaBuffer);
@@ -84,7 +86,7 @@ function spawnDefaultPopulation() {
             const ptr = idx * PARTICLE_STRIDE;
             setX(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
             setY(particleBuffer, idx, PARTICLE_STRIDE, prng.nextFloat(50, worldSize - 50));
-            particleView[ptr + STRIDE_INDEXES.POS_Z] = 0;
+            particleView[ptr + STRIDE_INDEXES.POS_Z] = prng.nextFloat(-worldSize * 0.3, worldSize * 0.3);
             setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
@@ -162,6 +164,7 @@ function setDNAFromProfile(species, profile) {
         tick = 0;
         paused = false;
         console.log('[VEPA v3] Simulation restarted');
+        resetCamera();
         bus.emit('law:sync');
         bus.emit('sim:paused', { paused: false });
     });
