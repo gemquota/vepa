@@ -368,16 +368,46 @@ function renderLoop(now) {
     if (particleView) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
         tick++;
-        // Diagnostic: log first frame particle state
-        if (tick === 1) {
-            let alive = 0, dead = 0;
-            for (let di = 0; di < Math.min(particleCount, 10); di++) {
-                const db = di * PARTICLE_STRIDE;
-                const d = particleView[db + STRIDE_INDEXES.DEAD];
-                if (d >= 0.5) dead++; else alive++;
-                console.log(`[VEPA DIAG] P${di}: pos=(${particleView[db].toFixed(1)},${particleView[db+1].toFixed(1)}) dead=${d.toFixed(2)} r=${particleView[db+STRIDE_INDEXES.COLOR_R]} g=${particleView[db+STRIDE_INDEXES.COLOR_G]} b=${particleView[db+STRIDE_INDEXES.COLOR_B]} alpha=${particleView[db+STRIDE_INDEXES.ALPHA]} mass=${particleView[db+6].toFixed(2)} energy=${particleView[db+50].toFixed(1)} hunger=${particleView[db+62].toFixed(2)} age=${particleView[db+51].toFixed(0)}`);
+        // On-screen debug overlay (shows first 2 seconds)
+        if (tick <= 120) {
+            const dbg = renderer.ctx;
+            if (dbg) {
+                dbg.save();
+                dbg.font = '10px monospace';
+                dbg.fillStyle = 'rgba(0,0,0,0.7)';
+                dbg.fillRect(4, 4, 310, tick === 1 ? 120 : 70);
+                dbg.fillStyle = '#0f0';
+                dbg.textAlign = 'left';
+                dbg.textBaseline = 'top';
+                let ly = 8;
+                if (tick === 1) {
+                    // Live particle count
+                    let aliveCount = 0, deadCount = 0, nanPos = 0;
+                    for (let di = 0; di < particleCount; di++) {
+                        const dbb = di * PARTICLE_STRIDE;
+                        const d = particleView[dbb + STRIDE_INDEXES.DEAD];
+                        const px = particleView[dbb], py = particleView[dbb + 1];
+                        if (d >= 0.5) deadCount++;
+                        else if (px !== px || py !== py) nanPos++;
+                        else aliveCount++;
+                    }
+                    dbg.fillStyle = '#ff0';
+                    dbg.fillText('PARTICLES: ' + particleCount + ' | Alive: ' + aliveCount + ' Dead: ' + deadCount + ' NaN: ' + nanPos, 8, ly); ly += 14;
+                    dbg.fillText('CANVAS: ' + renderer.width + 'x' + renderer.height + ' | Laws: ' + getLawCount(lawState), 8, ly); ly += 14;
+                    const p0 = particleView[0], p1 = particleView[1], p2 = particleView[2];
+                    const c0 = particleView[0 + STRIDE_INDEXES.COLOR_R], c1 = particleView[0 + STRIDE_INDEXES.COLOR_G], c2 = particleView[0 + STRIDE_INDEXES.COLOR_B];
+                    const a = particleView[0 + STRIDE_INDEXES.ALPHA];
+                    const d0 = particleView[0 + STRIDE_INDEXES.DEAD];
+                    dbg.fillStyle = '#0ff';
+                    dbg.fillText('POS: (' + p0.toFixed(1) + ',' + p1.toFixed(1) + ',' + p2.toFixed(1) + ') DEAD:' + d0.toFixed(2) + ' ALPHA:' + a.toFixed(2), 8, ly); ly += 14;
+                    dbg.fillText('COLOR: rgb(' + c0 + ',' + c1 + ',' + c2 + ') | MASS:' + particleView[6].toFixed(2) + ' NRG:' + particleView[50].toFixed(1), 8, ly); ly += 14;
+                    dbg.fillText('AGE:' + particleView[51].toFixed(0) + ' HUNGER:' + particleView[62].toFixed(2) + ' TEMP:' + particleView[66].toFixed(2), 8, ly); ly += 14;
+                }
+                // Always show FPS in debug
+                dbg.fillStyle = '#0f0';
+                dbg.fillText('FPS: ' + fps + ' TICK: ' + tick, 8, ly);
+                dbg.restore();
             }
-            console.log(`[VEPA DIAG] Canvas size: ${renderer.width}x${renderer.height} | Alive: ${alive} Dead: ${dead}`);
         }
         bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount, speciesCount });
     }
