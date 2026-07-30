@@ -14,6 +14,33 @@ import { initUI } from './ui/ui.js';
 import { initCamera, resetCamera } from './ui/camera.js';
 import { solve, resetOffspringRing } from './physics/solver.js';
 
+// === BOOT DIAGNOSTIC ===
+// This alert fires immediately when the module loads
+// If you see this, JavaScript is executing
+var _dbg = document.createElement('div');
+_dbg.id = 'js-boot-dbg';
+_dbg.style.cssText = 'position:fixed;top:4px;left:4px;background:#0f0;color:#000;padding:4px 8px;font:bold 14px monospace;z-index:99999;border-radius:4px';
+_dbg.textContent = 'JS LOADED ✓';
+document.body.prepend(_dbg);
+// Try to read canvas size immediately
+setTimeout(function() {
+    var c = document.getElementById('sim-canvas');
+    if (c) {
+        var r = c.getBoundingClientRect();
+        _dbg.textContent = 'CANVAS: ' + r.width + 'x' + r.height;
+    } else {
+        _dbg.textContent = 'CANVAS: NOT FOUND';
+    }
+}, 100);
+// Also check after 5 seconds for boot completion
+setTimeout(function() {
+    var h = document.getElementById('hud-particles');
+    if (h) _dbg.textContent = _dbg.textContent + ' | HUD:' + h.textContent;
+}, 5000);
+// === END DIAGNOSTIC ===
+
+
+
 const SUBSTEPS = 4;
 const DT = 0.25;
 
