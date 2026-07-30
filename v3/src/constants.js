@@ -51,6 +51,7 @@ export const STRIDE_INDEXES = {
   TRAIL_X:        71,
   TRAIL_Y:        72,
   TRAIL_Z:        73,
+  ALPHA:          74,
 };
 
 // --- DNA Indexes (42 parameters) ---

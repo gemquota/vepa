@@ -368,6 +368,17 @@ function renderLoop(now) {
     if (particleView) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
         tick++;
+        // Diagnostic: log first frame particle state
+        if (tick === 1) {
+            let alive = 0, dead = 0;
+            for (let di = 0; di < Math.min(particleCount, 10); di++) {
+                const db = di * PARTICLE_STRIDE;
+                const d = particleView[db + STRIDE_INDEXES.DEAD];
+                if (d >= 0.5) dead++; else alive++;
+                console.log(`[VEPA DIAG] P${di}: pos=(${particleView[db].toFixed(1)},${particleView[db+1].toFixed(1)}) dead=${d.toFixed(2)} r=${particleView[db+STRIDE_INDEXES.COLOR_R]} g=${particleView[db+STRIDE_INDEXES.COLOR_G]} b=${particleView[db+STRIDE_INDEXES.COLOR_B]} alpha=${particleView[db+STRIDE_INDEXES.ALPHA]} mass=${particleView[db+6].toFixed(2)} energy=${particleView[db+50].toFixed(1)} hunger=${particleView[db+62].toFixed(2)} age=${particleView[db+51].toFixed(0)}`);
+            }
+            console.log(`[VEPA DIAG] Canvas size: ${renderer.width}x${renderer.height} | Alive: ${alive} Dead: ${dead}`);
+        }
         bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount, speciesCount });
     }
 

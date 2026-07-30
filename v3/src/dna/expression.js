@@ -210,11 +210,13 @@ export function computeAlpha(particleBuffer, speciesId, particleIndex, stride) {
     const view = new Float32Array(particleBuffer);
     const base = particleIndex * stride;
 
+    // Use stride ALPHA if set (>0), otherwise fall back to DNA cache
+    const strideAlpha = view[base + STRIDE_INDEXES.ALPHA];
     const alphaDNA = readDNAParam(view, base, DNA_INDEXES.ALPHA);
     const signal   = view[base + STRIDE_INDEXES.SIGNAL];
     const dead     = view[base + STRIDE_INDEXES.DEAD];
 
-    let alpha = alphaDNA;
+    let alpha = (strideAlpha > 0.001) ? strideAlpha : alphaDNA;
 
     // Signal glow: boost alpha when the particle is emitting a pulse
     if (signal > 0.01) {
