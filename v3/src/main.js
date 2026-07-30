@@ -418,4 +418,25 @@ function renderLoop(now) {
     }
 }
 
-boot();
+boot().catch(e => {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
+    d.textContent = 'BOOT ERROR: ' + (e.stack || e.message || e);
+    document.body.prepend(d);
+});
+// Fallback timer: if no boot messages after 3s, show error
+setTimeout(() => {
+    const dbg = document.getElementById('sim-canvas');
+    if (dbg) {
+        const rect = dbg.getBoundingClientRect();
+        const d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#ff0;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
+        d.textContent = 'DEBUG: canvas=' + rect.width + 'x' + rect.height + ' found=' + (!!dbg);
+        document.body.prepend(d);
+    } else {
+        const d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#f00;padding:8px;font:12px monospace;z-index:9999';
+        d.textContent = 'DEBUG: canvas NOT FOUND in DOM';
+        document.body.prepend(d);
+    }
+}, 3000);
