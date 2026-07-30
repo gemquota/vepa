@@ -369,17 +369,17 @@ function renderLoop(now) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
         tick++;
         // On-screen debug overlay (shows first 2 seconds)
-        if (tick <= 120) {
+        if (tick <= 130) {
             const dbg = renderer.ctx;
             if (dbg) {
                 dbg.save();
                 dbg.font = '10px monospace';
                 dbg.fillStyle = 'rgba(0,0,0,0.7)';
-                dbg.fillRect(4, 4, 310, tick === 1 ? 120 : 70);
+                dbg.fillRect(4, 38, 320, tick === 1 ? 120 : 70);
                 dbg.fillStyle = '#0f0';
                 dbg.textAlign = 'left';
                 dbg.textBaseline = 'top';
-                let ly = 8;
+                let ly = 40;
                 if (tick === 1) {
                     // Live particle count
                     let aliveCount = 0, deadCount = 0, nanPos = 0;
