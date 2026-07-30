@@ -131,6 +131,16 @@
             </div>
         </div>
     </div>
+    <!-- Inline non-module script: proves JS executes even if modules fail -->
+    <script>
+    (function(){
+      var d = document.createElement('div');
+      d.id = 'inline-js-proof';
+      d.style.cssText = 'position:fixed;top:30px;left:4px;background:#ff0;color:#000;padding:4px 8px;font:bold 14px monospace;z-index:99999;border-radius:4px';
+      d.textContent = 'INLINE JS: OK';
+      document.body.prepend(d);
+    })();
+    </script>
     <script type="module" src="./src/main.js"></script>
 </body>
 </html>

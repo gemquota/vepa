@@ -47,7 +47,8 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-const DEFAULT_LAWS = ['GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL', 'LIFE', 'REPRO', 'ENERGY', 'SENESCENCE', 'AFFINITY', 'FATE', 'GLOW', 'MIND', 'SOUL_LAW', 'ASTRAL', 'POLYMER', 'BOND', 'HEAT', 'CONVECTION'];
+// Minimal default — only fundamental physics
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -389,8 +390,9 @@ function renderLoop(now) {
         lastFrameTime = now;
     }
 
-    if (paused) return;
-
+    // Always render (so paused state still shows particles)
+    // Physics only runs when not paused
+    if (!paused) {
     // Main-thread physics
     if (particleView) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
@@ -439,12 +441,26 @@ function renderLoop(now) {
         bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount, speciesCount });
     }
 
-    // Render
+    } // end if (!paused)
+
+    // Render (always, even when paused)
     if (renderer && particleBuffer) {
         syncSprites(renderer, particleBuffer, particleCount, PARTICLE_STRIDE, worldSize, lawState);
     }
 }
 
+window.addEventListener('error', function(e) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
+    d.textContent = 'GLOBAL ERROR: ' + (e.error ? (e.error.stack || e.error.message || e.error) : e.message || 'unknown');
+    document.body.prepend(d);
+});
+window.addEventListener('unhandledrejection', function(e) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#440;color:#ff0;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
+    d.textContent = 'UNHANDLED REJECTION: ' + (e.reason ? (e.reason.stack || e.reason.message || e.reason) : 'unknown');
+    document.body.prepend(d);
+});
 boot().catch(e => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';

@@ -5,6 +5,7 @@ export default defineConfig({
   root: '.',
   build: {
     outDir: '.dist',
+    crossorigin: false,
     rollupOptions: {
       input: './index.html',
     },
