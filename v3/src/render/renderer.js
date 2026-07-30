@@ -115,6 +115,16 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
     // ── 1. Clear ──
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, width, height);
+    
+    // ── TEST: Draw a diagnostic dot at center to prove rendering works ──
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath();
+    ctx.arc(width * 0.5, height * 0.5, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('particles=' + particleCount, width * 0.5, height * 0.5 + 20);
 
     // ── 2. Reference grid ──
     drawGrid(ctx, width, height);
