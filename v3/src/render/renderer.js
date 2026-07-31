@@ -6,7 +6,7 @@
 // either path without branching in hot loops.
 // ============================================================================
 
-import { STRIDE_INDEXES } from '../constants.js';
+import { STRIDE_INDEXES, STAR_MASS } from '../constants.js';
 import {
     computeColor,
     computeRadius,
@@ -162,10 +162,30 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
 
         // Depth-adjusted alpha — closer = brighter
         ctx.globalAlpha = alpha * (0.3 + 0.7 * sr);
-        ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, Math.max(screenR, 0.5), 0, Math.PI * 2);
-        ctx.fill();
+
+        // Gravitational collapse: stars render as glowing cores with a halo
+        const starMass = view[base + STRIDE_INDEXES.MASS];
+        if (starMass > STAR_MASS) {
+          const glowR = screenR * 2.6;
+          const grad = ctx.createRadialGradient(sx, sy, screenR * 0.2, sx, sy, glowR);
+          grad.addColorStop(0, `rgba(${color.r},${color.g},${color.b},0.9)`);
+          grad.addColorStop(0.4, `rgba(${color.r},${color.g},${color.b},0.35)`);
+          grad.addColorStop(1, `rgba(${color.r},${color.g},${color.b},0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
+          ctx.fill();
+          // Bright white-hot core
+          ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.min(0.5, (starMass - STAR_MASS) * 0.01)})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(screenR * 0.7, 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(screenR, 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        }
     }
 
     // Reset alpha for subsequent draws

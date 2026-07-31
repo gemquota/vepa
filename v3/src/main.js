@@ -55,7 +55,7 @@ import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
-import { initCamera, resetCamera } from './ui/camera.js';
+import { initCamera, resetCamera, setWorldSize } from './ui/camera.js';
 import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
 
 // === BOOT DIAGNOSTIC ===
@@ -140,7 +140,7 @@ async function boot() {
         });
         ro.observe(canvas);
     }
-    initCamera(canvas);
+    initCamera(canvas, worldSize);
 
     // Init UI (includes HUD, all panels, event wiring)
     initUI(bus, lawState, dnaBuffer);
@@ -233,7 +233,7 @@ function spawnDefaultPopulation() {
             particleView[ptr + STRIDE_INDEXES.COLOR_G] = p.color[1];
             particleView[ptr + STRIDE_INDEXES.COLOR_B] = p.color[2];
             particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
-            particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.8;
+            particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
             idx++;
         }
     }
@@ -285,7 +285,7 @@ function spawnOffspring() {
             particleView[ptr + STRIDE_INDEXES.COLOR_B] = 200;
         }
         particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
-        particleView[ptr + STRIDE_INDEXES.RADIUS] = 1.5;
+        particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
         particleCount++;
     }
 }
@@ -439,6 +439,7 @@ function setDNAFromProfile(species, profile) {
         switch (key) {
             case 'WORLD_SIZE':
                 worldSize = Math.max(50, Math.min(4000, value));
+                setWorldSize(worldSize);
                 console.log('[VEPA] World size set to', worldSize);
                 break;
             case 'GLOBAL_G':

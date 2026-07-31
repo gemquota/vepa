@@ -3,10 +3,14 @@
  * - 1 finger / mouse drag → orbit rotation
  * - 2 fingers → pan + pinch zoom
  * - Scroll wheel → zoom
+ *
+ * The camera orbits around its own pan target (the world point at screen
+ * center), so rotating never swings around a distant origin.
  */
 const camera = {
-  x: 0,
+  x: 0,        // world point at screen center (pan target)
   y: 0,
+  z: 0,
   zoom: 1.0,
   rotY: 0.6,     // horizontal orbit (radians) — tilt to show 3D depth
   rotX: -0.45,   // vertical orbit (radians)
@@ -15,27 +19,24 @@ const camera = {
 
 // ── Internal state ──
 let _canvas = null;
+let _worldSize = 120;
 const ptr = {
-  // Pointer (mouse) orbit
   mouseDown: false, mouseX: 0, mouseY: 0,
-  // Touch tracking
   touches: {},
   touchCount: 0,
-  // 1-finger orbit
   orbitLastX: 0, orbitLastY: 0,
-  // 2-finger pan + pinch
   pinchDist: 0,
   panCenterX: 0, panCenterY: 0,
   panStartX: 0, panStartY: 0,
-  panStartRotY: 0, panStartRotX: 0,
 };
 
 /**
  * Initialize camera controls on a canvas element.
  */
-export function initCamera(canvas) {
+export function initCamera(canvas, worldSize) {
   if (!canvas) return;
   _canvas = canvas;
+  if (typeof worldSize === 'number') _worldSize = worldSize;
   canvas.style.touchAction = 'none';
 
   canvas.addEventListener('pointerdown', onPointerDown);
@@ -48,6 +49,19 @@ export function initCamera(canvas) {
   canvas.addEventListener('touchmove', onTouchMove, { passive: false });
   canvas.addEventListener('touchend', onTouchEnd, { passive: false });
   canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
+}
+
+/** Update the world size used to convert screen pan deltas to world units. */
+export function setWorldSize(worldSize) {
+  if (typeof worldSize === 'number' && worldSize > 0) _worldSize = worldSize;
+}
+
+/** Screen px → world units at the current zoom level. */
+function screenToWorld(dx, dy) {
+  const w = _canvas ? _canvas.clientWidth : 360;
+  const h = _canvas ? _canvas.clientHeight : 640;
+  const scale = (Math.min(w, h) / _worldSize) * camera.zoom;
+  return { wx: dx / scale, wy: dy / scale };
 }
 
 // ── Mouse orbit (pointer events, touch-typed ignored) ──
@@ -89,12 +103,10 @@ function onTouchStart(e) {
   ptr.touchCount = Object.keys(ptr.touches).length;
 
   if (ptr.touchCount === 1) {
-    // 1 finger → orbit (rotation)
     const t = e.touches[0];
     ptr.orbitLastX = t.clientX;
     ptr.orbitLastY = t.clientY;
   } else if (ptr.touchCount === 2) {
-    // 2 fingers → start pan + pinch zoom
     beginPinchPan();
   }
 }
@@ -118,7 +130,6 @@ function onTouchMove(e) {
     ptr.orbitLastX = t.clientX;
     ptr.orbitLastY = t.clientY;
   } else if (ptr.touchCount >= 2) {
-    // 2 fingers → pan + pinch zoom
     doPinchPan();
   }
 }
@@ -165,13 +176,14 @@ function doPinchPan() {
     camera.zoom = Math.max(0.1, Math.min(10, camera.zoom * (dist / ptr.pinchDist)));
   }
 
-  // Pan (relative to initial finger center)
+  // Pan: move the camera target opposite to finger motion
   const centerX = (t0.x + t1.x) / 2;
   const centerY = (t0.y + t1.y) / 2;
-  const panDx = (centerX - ptr.panCenterX) / camera.zoom;
-  const panDy = (centerY - ptr.panCenterY) / camera.zoom;
-  camera.x = ptr.panStartX - panDx;
-  camera.y = ptr.panStartY - panDy;
+  const panDx = (centerX - ptr.panCenterX);
+  const panDy = (centerY - ptr.panCenterY);
+  const w = screenToWorld(panDx, panDy);
+  camera.x = ptr.panStartX - w.wx;
+  camera.y = ptr.panStartY - w.wy;
 }
 
 /**
@@ -184,12 +196,12 @@ export function projectPoint(x, y, z, worldSize, width, height) {
   const scale = Math.min(width, height) / worldSize;
   const halfWorld = worldSize * 0.5;
 
-  // Center the world at origin for rotation
-  let px = x - halfWorld;
-  let py = y - halfWorld;
-  let pz = z - halfWorld;
+  // Center the world at origin, then move the camera target to origin
+  let px = x - halfWorld - camera.x;
+  let py = y - halfWorld - camera.y;
+  let pz = z - halfWorld - camera.z;
 
-  // Rotate around Y axis (horizontal orbit)
+  // Rotate around Y axis (horizontal orbit) — orbits the camera target
   const cosY = Math.cos(camera.rotY);
   const sinY = Math.sin(camera.rotY);
   const rx1 = px * cosY - pz * sinY;
@@ -203,27 +215,23 @@ export function projectPoint(x, y, z, worldSize, width, height) {
   const ry2 = ry1 * cosX - rz1 * sinX;
   const rz2 = ry1 * sinX + rz1 * cosX;
 
-  // Apply pan (in world units, after rotation)
-  const tx = rx2 + camera.x;
-  const ty = ry2 + camera.y;
-  const tz = rz2;
-
   // Perspective projection
   const focal = camera.focalLength;
-  const persp = focal / (focal + tz * camera.zoom);
-  const screenX = cx + (tx * scale * camera.zoom) * persp;
-  const screenY = cy + (ty * scale * camera.zoom) * persp;
+  const persp = focal / (focal + rz2 * camera.zoom);
+  const screenX = cx + (rx2 * scale * camera.zoom) * persp;
+  const screenY = cy + (ry2 * scale * camera.zoom) * persp;
   const radiusScale = persp;
 
   return { sx: screenX, sy: screenY, sr: radiusScale };
 }
 
 /**
- * Reset camera to default view.
+ * Reset camera to the default 3D-friendly view.
  */
 export function resetCamera() {
   camera.x = 0;
   camera.y = 0;
+  camera.z = 0;
   camera.zoom = 1.0;
   camera.rotY = 0.6;
   camera.rotX = -0.45;

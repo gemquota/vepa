@@ -10,6 +10,7 @@ import {
   DNA_INDEXES,
   LAW_INDEXES,
   WORLD_SIZE,
+  STAR_MASS,
 } from '../constants.js';
 import { isAlive } from '../state/particleBuffer.js';
 import { isSet } from '../state/lawState.js';
@@ -74,6 +75,14 @@ const MAX_INTERACTIONS = 500;
 const MAX_VELOCITY = 10.0;
 const G = 0.5;
 const DEFAULT_DT = 1.0;
+
+/** Blend a neighbor's color into a subject particle (dissolution). */
+function blendColor(view, subjBase, nbBase, ratio) {
+  const si = STRIDE_INDEXES;
+  view[subjBase + si.COLOR_R] += (view[nbBase + si.COLOR_R] - view[subjBase + si.COLOR_R]) * ratio;
+  view[subjBase + si.COLOR_G] += (view[nbBase + si.COLOR_G] - view[subjBase + si.COLOR_G]) * ratio;
+  view[subjBase + si.COLOR_B] += (view[nbBase + si.COLOR_B] - view[subjBase + si.COLOR_B]) * ratio;
+}
 
 // Preallocated neighbor buffer (avoids GC during solve)
 const NEIGHBOR_BUF_SIZE = 2000;
@@ -224,9 +233,20 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
         const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, G * gravSynergy);
         if (gravForce) {
-          ax += gravForce.ax;
-          ay += gravForce.ay;
-          az += gravForce.az;
+          // Gravitational collapse: stars pull nearby matter much harder
+          const mI = view[iBase + S.MASS];
+          const mJ = view[jBase + S.MASS];
+          const bigM = Math.max(mI, mJ);
+          if (bigM > STAR_MASS) {
+            const collapseMult = 1.0 + (bigM - STAR_MASS) * 0.15;
+            ax += gravForce.ax * collapseMult;
+            ay += gravForce.ay * collapseMult;
+            az += gravForce.az * collapseMult;
+          } else {
+            ax += gravForce.ax;
+            ay += gravForce.ay;
+            az += gravForce.az;
+          }
         }
       }
 
@@ -247,8 +267,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const ny = dy * invDist;
           const nz = dz * invDist;
 
-          // Push apart to resolve overlap (position correction via local vars)
-          const push = overlap * 0.5;
+          // Softbody push: massive bodies squish instead of rigidly bouncing
+          const isStarI = m1 > STAR_MASS;
+          const isStarJ = m2 > STAR_MASS;
+          const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
           px -= nx * push;
           py -= ny * push;
           pz -= nz * push;
@@ -269,16 +291,57 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
             az += bounceForce * nz;
           }
 
-          // Accretion: merge on low-speed contact
+          // ── Softbody dissolution + gravitational collapse ──
           if (isSet(lawState, LAW_INDEXES.ACCR)) {
             const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
             const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] || 0.5;
             if (relSpeed < fusionMom * 2.0) {
-              const gain = m2 * 0.3;
-              view[iBase + S.MASS] += gain;
-              view[jBase + S.MASS] = m2 - gain;
-              if (view[jBase + S.MASS] <= 0.1) view[jBase + S.DEAD] = 1.0;
-              mass = view[iBase + S.MASS];
+              if (isStarI) {
+                // Collapse: star pulls overlapping matter in and dissolves it
+                const gain = m2 * 0.04 + 0.02 * (m1 / STAR_MASS);
+                view[iBase + S.MASS] += gain;
+                view[jBase + S.MASS] = Math.max(0, m2 - gain);
+                if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
+                blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
+                mass = view[iBase + S.MASS];
+              } else if (isStarJ) {
+                // Neighbor star dissolves this particle
+                const loss = m1 * 0.04;
+                view[iBase + S.MASS] = Math.max(0, m1 - loss);
+                view[jBase + S.MASS] += loss;
+                if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
+                mass = view[iBase + S.MASS];
+              } else if (m1 > m2 * 2.0) {
+                // Bigger body slowly absorbs the smaller (partial dissolution)
+                const gain = m2 * 0.04;
+                view[iBase + S.MASS] += gain;
+                view[jBase + S.MASS] = Math.max(0, m2 - gain);
+                if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
+                blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
+                mass = view[iBase + S.MASS];
+              } else if (m2 > m1 * 2.0) {
+                // This particle dissolves into the bigger neighbor
+                const loss = m1 * 0.04;
+                view[iBase + S.MASS] = Math.max(0, m1 - loss);
+                view[jBase + S.MASS] += loss;
+                if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
+                mass = view[iBase + S.MASS];
+              } else {
+                // Similar size: mutual dissolution — blend mass and color
+                const diff = (m2 - m1) * 0.02;
+                view[iBase + S.MASS] += diff;
+                view[jBase + S.MASS] -= diff;
+                mass = view[iBase + S.MASS];
+                const cR = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
+                const cG = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
+                const cB = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
+                view[iBase + S.COLOR_R] += (cR - view[iBase + S.COLOR_R]) * 0.1;
+                view[iBase + S.COLOR_G] += (cG - view[iBase + S.COLOR_G]) * 0.1;
+                view[iBase + S.COLOR_B] += (cB - view[iBase + S.COLOR_B]) * 0.1;
+                view[jBase + S.COLOR_R] += (cR - view[jBase + S.COLOR_R]) * 0.1;
+                view[jBase + S.COLOR_G] += (cG - view[jBase + S.COLOR_G]) * 0.1;
+                view[jBase + S.COLOR_B] += (cB - view[jBase + S.COLOR_B]) * 0.1;
+              }
             }
           }
         }
@@ -736,7 +799,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Update radius from mass ──
 
     const baseRadius = dnaI[DNA_INDEXES.BASE_RADIUS] || 2.0;
-    view[iBase + S.RADIUS] = baseRadius * Math.pow(mass, 0.333) * 0.5;
+    view[iBase + S.RADIUS] = baseRadius * Math.pow(mass, 0.333);
 
     // ── Melt ──
     applyMelt(lawState, view, iBase, localTimeStep,

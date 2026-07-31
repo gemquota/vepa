@@ -11,6 +11,7 @@ export const DEFAULT_DNA_STRIDE = 64;
 export const DNA_PACK_MAX = 65535;
 export const MAX_SPECIES = 64;
 export const MAX_PARTICLES = 2500;
+export const STAR_MASS = 12;   // mass threshold for gravitational collapse (star)
 export const DEFAULT_PARTICLES_PER_SPECIES = 200;
 export const WORLD_SIZE = 120;
 
@@ -194,7 +195,7 @@ export const DNA_RANGES = [
   { min: 0.1,   max: 2,    default: 1.0     },   // 26 INERTIA
   { min: 0,     max: 0.1,  default: 0.01    },   // 27 FRICTION
   { min: 1,     max: 50,   default: 20      },   // 28 MAX_VELOCITY
-  { min: 0.5,   max: 10,   default: 1.5     },   // 29 BASE_RADIUS
+  { min: 0.5,   max: 10,   default: 0.6     },   // 29 BASE_RADIUS
   { min: 0,     max: 1,    default: 0.5     },   // 30 ELASTICITY
   { min: 0,     max: 360,  default: 0       },   // 31 BOND_ANGLE
   { min: 0,     max: 1,    default: 0.1     },   // 32 CONDUCTIVITY

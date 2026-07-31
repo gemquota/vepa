@@ -181,8 +181,8 @@ export function computeRadius(particleBuffer, speciesId, particleIndex, stride) 
     const hiddenMass = readDNAParam(view, base, DNA_INDEXES.HIDDEN_MASS);
     const mass       = view[base + STRIDE_INDEXES.MASS];
 
-    // Mass scaling: each unit of mass adds 10% to radius
-    const massScale = 1 + mass * 0.1;
+    // Mass scaling: each unit of mass adds 4% to radius (gentle growth)
+    const massScale = 1 + mass * 0.04;
 
     // Hidden mass multiplier: HIDDEN_MASS ∈ [-5, 5] → multiplier ∈ [0, 2]
     const hiddenScale = 1 + hiddenMass * 0.2;
