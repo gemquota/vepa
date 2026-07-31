@@ -646,11 +646,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         if (isSet(lawState, LAW_INDEXES.BOND)) {
           const sI = view[iBase + S.SPECIES_ID];
           const sB = view[bPtr + S.SPECIES_ID];
-          const aff = dnaI[D.SPECIES_AFFINITY] || 0;
+          const aff = dnaI[DNA_INDEXES.SPECIES_AFFINITY] || 0;
           if ((sI === sB && aff >= 0) || (sI !== sB && aff < 0)) {
-            const eqDist = (dnaI[D.BASE_RADIUS] || 5) * 2.5 + (view[bPtr + S.DNA_CACHE_START + D.BASE_RADIUS] || 5) * 2.5;
+            const eqDist = (dnaI[DNA_INDEXES.BASE_RADIUS] || 5) * 2.5 + (view[bPtr + S.DNA_CACHE_START + DNA_INDEXES.BASE_RADIUS] || 5) * 2.5;
             if (bd > eqDist && bd > 0.1) {
-              const stiffness = dnaI[D.STIFFNESS] || 0.5;
+              const stiffness = dnaI[DNA_INDEXES.STIFFNESS] || 0.5;
               const pull = (bd - eqDist) * stiffness * 0.15;
               px += (bx/bd) * pull * 0.5;
               py += (by/bd) * pull * 0.5;
