@@ -8,9 +8,9 @@ const camera = {
   x: 0,
   y: 0,
   zoom: 1.0,
-  rotY: 0,       // horizontal orbit (radians)
-  rotX: 0,       // vertical orbit (radians)
-  focalLength: 1800,
+  rotY: 0.6,     // horizontal orbit (radians) — tilt to show 3D depth
+  rotX: -0.45,   // vertical orbit (radians)
+  focalLength: 1200,
 };
 
 // ── Internal state ──
@@ -187,7 +187,7 @@ export function projectPoint(x, y, z, worldSize, width, height) {
   // Center the world at origin for rotation
   let px = x - halfWorld;
   let py = y - halfWorld;
-  let pz = z;
+  let pz = z - halfWorld;
 
   // Rotate around Y axis (horizontal orbit)
   const cosY = Math.cos(camera.rotY);
@@ -225,8 +225,8 @@ export function resetCamera() {
   camera.x = 0;
   camera.y = 0;
   camera.zoom = 1.0;
-  camera.rotY = 0;
-  camera.rotX = 0;
+  camera.rotY = 0.6;
+  camera.rotX = -0.45;
 }
 
 export default camera;

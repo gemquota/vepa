@@ -123,19 +123,20 @@ function spawnDefaultPopulation() {
 
         for (let i = 0; i < perSpecies && idx < MAX_PARTICLES; i++) {
             const ptr = idx * PARTICLE_STRIDE;
-            // Uniform grid distribution across the world
+            // Uniform 3D grid distribution across the world
             const totalParticles = speciesCount * perSpecies;
-            const gridCols = Math.ceil(Math.sqrt(totalParticles * (worldSize / worldSize)));
-            const gridColsAdj = Math.max(1, Math.ceil(Math.sqrt(totalParticles)));
-            const cols = gridColsAdj;
-            const rows = Math.ceil(totalParticles / cols);
-            const cellW = (worldSize - 10) / cols;
-            const cellH = (worldSize - 10) / rows;
-            const col = idx % cols;
-            const row = Math.floor(idx / cols);
-            setX(particleBuffer, idx, PARTICLE_STRIDE, 5 + col * cellW + cellW * 0.5);
-            setY(particleBuffer, idx, PARTICLE_STRIDE, 5 + row * cellH + cellH * 0.5);
-            particleView[ptr + STRIDE_INDEXES.POS_Z] = 0;
+            const gridDim = Math.max(2, Math.ceil(Math.cbrt(totalParticles)));
+            const cellSize = (worldSize - 10) / gridDim;
+            const gx = idx % gridDim;
+            const gy = Math.floor(idx / gridDim) % gridDim;
+            const gz = Math.floor(idx / (gridDim * gridDim));
+            // Jitter within each cell for a natural look
+            const jx = (prng.nextFloat() - 0.5) * cellSize * 0.4;
+            const jy = (prng.nextFloat() - 0.5) * cellSize * 0.4;
+            const jz = (prng.nextFloat() - 0.5) * cellSize * 0.4;
+            setX(particleBuffer, idx, PARTICLE_STRIDE, 5 + gx * cellSize + cellSize * 0.5 + jx);
+            setY(particleBuffer, idx, PARTICLE_STRIDE, 5 + gy * cellSize + cellSize * 0.5 + jy);
+            particleView[ptr + STRIDE_INDEXES.POS_Z] = 5 + gz * cellSize + cellSize * 0.5 + jz;
             setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
