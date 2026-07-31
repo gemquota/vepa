@@ -174,6 +174,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     let vz = view[iBase + S.VEL_Z];
     let mass = view[iBase + S.MASS];
     if (mass <= 0) mass = 0.001;
+    // Defensive: reset any corrupted position before grid lookups
+    if (!Number.isFinite(px) || !Number.isFinite(py) || !Number.isFinite(pz)) {
+      px = worldSize * 0.5 + (prng() - 0.5) * 10;
+      py = worldSize * 0.5 + (prng() - 0.5) * 10;
+      pz = worldSize * 0.5 + (prng() - 0.5) * 10;
+      vx = 0; vy = 0; vz = 0;
+    }
 
     // Accumulated force
     let ax = 0;
@@ -654,6 +661,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
     }
 
+    // Final NaN guard — the bond/polymer block runs after the first guard
+    if (
+      !Number.isFinite(px) || !Number.isFinite(py) || !Number.isFinite(pz) ||
+      !Number.isFinite(vx) || !Number.isFinite(vy) || !Number.isFinite(vz) ||
+      !Number.isFinite(mass)
+    ) {
+      px = worldSize * 0.5; py = worldSize * 0.5; pz = worldSize * 0.5;
+      vx = 0; vy = 0; vz = 0; mass = 1.0;
+    }
     view[iBase + S.POS_X] = px;
     view[iBase + S.POS_Y] = py;
     view[iBase + S.POS_Z] = pz;

@@ -40,6 +40,7 @@ export function clear(grid) {
  * Map a world coordinate to a cell index (toroidal).
  */
 function toCell(coord, cellSize) {
+  if (!Number.isFinite(coord) || !Number.isFinite(cellSize) || cellSize <= 0) return 0;
   let c = Math.floor(coord / cellSize);
   c = ((c % GRID_DIM) + GRID_DIM) % GRID_DIM;
   return c;
@@ -67,6 +68,7 @@ export function insert(grid, index, px, py, pz, worldSize) {
   const cz = toCell(pz, grid.cellSize);
   const ci = cellIndex(cx, cy, cz);
   const cell = grid.cells[ci];
+  if (!cell) return;
   if (cell.length < 100) {
     cell.push(index);
     grid.counts[ci]++;
@@ -99,6 +101,7 @@ export function getNeighbors(grid, px, py, pz, worldSize, out) {
         const nx = ((cx + dx) % GRID_DIM + GRID_DIM) % GRID_DIM;
         const ci = cellIndex(nx, ny, nz);
         const cell = grid.cells[ci];
+        if (!cell) continue;
         for (let k = 0; k < cell.length; k++) {
           out[count++] = cell[k];
         }
