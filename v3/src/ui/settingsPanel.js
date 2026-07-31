@@ -1,16 +1,24 @@
 /**
  * VEPA v3 — Settings Panel
  * Camera configuration (focal distance, orthographic blend, rotate/pan
- * sensitivity) plus the full law toggle panel.
+ * sensitivity), meta/render tunables, plus the full law toggle panel.
  */
 import { setCameraConfig, resetCamera } from './camera.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
 import { createLawPanel } from './lawPanel.js';
 
 const CAMERA_FIELDS = [
-  { key: 'focalLength',       label: 'FOCAL DISTANCE',    min: 400,  max: 4000, step: 50,   value: 1200 },
-  { key: 'ortho',             label: 'ORTHOGRAPHIC',      min: 0,    max: 1,    step: 0.05, value: 0 },
-  { key: 'rotateSensitivity', label: 'ROTATE SENSITIVITY', min: 0.1, max: 5,    step: 0.1,  value: 1 },
-  { key: 'panSensitivity',    label: 'PAN SENSITIVITY',   min: 0.1,  max: 5,    step: 0.1,  value: 1 },
+  { key: 'focalLength',       label: 'FOCAL DISTANCE',     min: 400,  max: 4000, step: 50,   value: 1200 },
+  { key: 'ortho',             label: 'ORTHOGRAPHIC',       min: 0,    max: 1,    step: 0.05, value: 0 },
+  { key: 'rotateSensitivity', label: 'ROTATE SENSITIVITY', min: 0.1,  max: 5,    step: 0.1,  value: 1 },
+  { key: 'panSensitivity',    label: 'PAN SENSITIVITY',    min: 0.1,  max: 5,    step: 0.1,  value: 1 },
+];
+
+const META_FIELDS = [
+  { key: 'visualScale', label: 'BASE SIZE',     min: 0.1, max: 5, step: 0.1,  value: 1.0,  set: (v) => runtimeConfig.visualScale = v },
+  { key: 'globalAlpha', label: 'PARTICLE ALPHA', min: 0.1, max: 1, step: 0.05, value: 1.0, set: (v) => runtimeConfig.globalAlpha = v },
+  { key: 'starMass',    label: 'STAR MASS',      min: 4,   max: 100, step: 1,  value: 12,   set: (v) => runtimeConfig.starMass = v },
+  { key: 'simSpeed',    label: 'SIM SPEED',      min: 0.1, max: 10, step: 0.1, value: 1.0,  set: (v) => runtimeConfig.simSpeed = v },
 ];
 
 /**
@@ -22,9 +30,11 @@ export function createSettingsPanel(bus, lawStateObj) {
   const panel = document.getElementById('laws-panel');
   if (!panel) return;
 
-  let html = '<div class="panel-section">';
-  html += '<h3 class="law-category-header" style="color:#0ff">CAMERA</h3>';
+  let html = '';
 
+  // ── Camera section ──
+  html += '<div class="panel-section">';
+  html += '<h3 class="law-category-header" style="color:#0ff">CAMERA</h3>';
   for (const f of CAMERA_FIELDS) {
     html += `<div class="setting-row">`;
     html += `<label class="setting-label" for="cam-${f.key}">${f.label}</label>`;
@@ -33,22 +43,46 @@ export function createSettingsPanel(bus, lawStateObj) {
     html += `<span class="setting-value" id="cam-val-${f.key}">${f.value}</span>`;
     html += '</div>';
   }
-
   html += '<div class="setting-row">';
   html += '<button id="cam-reset" class="btn tiny-btn" type="button">RESET CAMERA</button>';
   html += '</div>';
   html += '</div>';
 
+  // ── Meta / render section ──
+  html += '<div class="panel-section">';
+  html += '<h3 class="law-category-header" style="color:#f8c">META</h3>';
+  for (const f of META_FIELDS) {
+    html += `<div class="setting-row">`;
+    html += `<label class="setting-label" for="meta-${f.key}">${f.label}</label>`;
+    html += `<input id="meta-${f.key}" class="setting-slider" type="range" `;
+    html += `min="${f.min}" max="${f.max}" step="${f.step}" value="${f.value}" data-meta-key="${f.key}">`;
+    html += `<span class="setting-value" id="meta-val-${f.key}">${f.value}</span>`;
+    html += '</div>';
+  }
+  html += '</div>';
+
   panel.innerHTML = html;
 
-  // Wire sliders
-  for (const input of panel.querySelectorAll('.setting-slider')) {
+  // Wire camera sliders
+  for (const input of panel.querySelectorAll('.setting-slider[data-cam-key]')) {
     const key = input.dataset.camKey;
     const valEl = document.getElementById(`cam-val-${key}`);
     input.addEventListener('input', () => {
       const value = parseFloat(input.value);
       if (valEl) valEl.textContent = value;
       setCameraConfig({ [key]: value });
+    });
+  }
+
+  // Wire meta sliders
+  for (const input of panel.querySelectorAll('.setting-slider[data-meta-key]')) {
+    const key = input.dataset.metaKey;
+    const valEl = document.getElementById(`meta-val-${key}`);
+    const field = META_FIELDS.find((f) => f.key === key);
+    input.addEventListener('input', () => {
+      const value = parseFloat(input.value);
+      if (valEl) valEl.textContent = value;
+      if (field) field.set(value);
     });
   }
 
@@ -65,6 +99,6 @@ export function createSettingsPanel(bus, lawStateObj) {
     });
   }
 
-  // Law toggles below the camera section
+  // Law toggles below the settings sections
   createLawPanel(bus, lawStateObj);
 }

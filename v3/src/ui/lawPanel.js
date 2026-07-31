@@ -109,7 +109,8 @@ export function createLawPanel(bus, lawStateObj) {
     html += `</div></div>`;
   }
 
-  panel.innerHTML = html;
+  // Append (settingsPanel renders camera/meta sections into the same panel first)
+  panel.insertAdjacentHTML('beforeend', html);
 
   // Wire up click handlers
   for (const btn of panel.querySelectorAll('.law-btn')) {

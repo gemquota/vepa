@@ -1180,9 +1180,21 @@ body {
   text-overflow: ellipsis;
 }
 #law-grid.word-mode {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 6px;
+}
+#law-grid.word-mode .law-btn {
+  width: 100%;
+  padding: 5px 4px;
+  font-size: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  #law-grid.word-mode { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* ── Responsive ── */

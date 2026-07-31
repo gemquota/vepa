@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES } from '../constants.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -187,7 +188,7 @@ export function computeRadius(particleBuffer, speciesId, particleIndex, stride) 
     // Hidden mass multiplier: HIDDEN_MASS ∈ [-5, 5] → multiplier ∈ [0, 2]
     const hiddenScale = 1 + hiddenMass * 0.2;
 
-    const radius = baseRadius * massScale * Math.max(hiddenScale, 0);
+    const radius = baseRadius * massScale * Math.max(hiddenScale, 0) * runtimeConfig.visualScale;
 
     // Floor at 0.3 so dead/zero-mass particles remain visible
     return Math.max(radius, 0.3);
@@ -232,7 +233,7 @@ export function computeAlpha(particleBuffer, speciesId, particleIndex, stride) {
         alpha *= 0.4;
     }
 
-    return clamp(alpha, 0, 1);
+    return clamp(alpha * runtimeConfig.globalAlpha, 0, 1);
 }
 
 /**

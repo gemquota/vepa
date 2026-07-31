@@ -10,8 +10,8 @@ import {
   DNA_INDEXES,
   LAW_INDEXES,
   WORLD_SIZE,
-  STAR_MASS,
 } from '../constants.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
 import { isAlive } from '../state/particleBuffer.js';
 import { isSet } from '../state/lawState.js';
 import { createGrid, clear, insert, getNeighbors } from './spatialGrid.js';
@@ -237,8 +237,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const mI = view[iBase + S.MASS];
           const mJ = view[jBase + S.MASS];
           const bigM = Math.max(mI, mJ);
-          if (bigM > STAR_MASS) {
-            const collapseMult = 1.0 + (bigM - STAR_MASS) * 0.08;
+          if (bigM > runtimeConfig.starMass) {
+            const collapseMult = 1.0 + (bigM - runtimeConfig.starMass) * 0.08;
             ax += gravForce.ax * collapseMult;
             ay += gravForce.ay * collapseMult;
             az += gravForce.az * collapseMult;
@@ -268,8 +268,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const nz = dz * invDist;
 
           // Softbody push: massive bodies squish instead of rigidly bouncing
-          const isStarI = m1 > STAR_MASS;
-          const isStarJ = m2 > STAR_MASS;
+          const isStarI = m1 > runtimeConfig.starMass;
+          const isStarJ = m2 > runtimeConfig.starMass;
           const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
           px -= nx * push;
           py -= ny * push;
@@ -298,7 +298,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
             if (relSpeed < fusionMom * 2.0) {
               if (isStarI) {
                 // Collapse: star pulls overlapping matter in and dissolves it
-                const gain = m2 * 0.04 + 0.02 * (m1 / STAR_MASS);
+                const gain = m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass);
                 view[iBase + S.MASS] += gain;
                 view[jBase + S.MASS] = Math.max(0, m2 - gain);
                 if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;

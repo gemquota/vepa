@@ -51,6 +51,7 @@ import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
 import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet, clear as lawClear, getActiveCount as getLawCount } from './state/lawState.js';
+import { runtimeConfig } from './state/runtimeConfig.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
@@ -453,7 +454,17 @@ function setDNAFromProfile(species, profile) {
                 // Would be used by an auto-spawn system
                 break;
             case 'BASE_SIZE':
-                // Applied per-particle via DNA
+            case 'VISUAL_SCALE':
+                runtimeConfig.visualScale = Math.max(0.1, Math.min(5, value));
+                break;
+            case 'GLOBAL_ALPHA':
+                runtimeConfig.globalAlpha = Math.max(0.1, Math.min(1, value));
+                break;
+            case 'SIM_SPEED':
+                runtimeConfig.simSpeed = Math.max(0.1, Math.min(10, value));
+                break;
+            case 'STAR_MASS':
+                runtimeConfig.starMass = Math.max(4, Math.min(100, value));
                 break;
             case 'ENTROPY':
                 // Entropy law intensity
@@ -498,7 +509,7 @@ function renderLoop(now) {
     if (!paused) {
     // Main-thread physics
     if (particleView) {
-        solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
+        solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT * runtimeConfig.simSpeed, rng);
         spawnOffspring();
         tick++;
         // On-screen debug overlay (shows first 2 seconds)
