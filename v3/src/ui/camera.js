@@ -14,7 +14,10 @@ const camera = {
   zoom: 1.0,
   rotY: 0.6,     // horizontal orbit (radians) — tilt to show 3D depth
   rotX: -0.45,   // vertical orbit (radians)
-  focalLength: 1200,
+  focalLength: 1200,   // perspective distance (focal point distance)
+  ortho: 0,            // 0 = full perspective, 1 = fully orthographic
+  rotateSensitivity: 1.0,  // multiplier for orbit gestures
+  panSensitivity: 1.0,     // multiplier for pan gestures
 };
 
 // ── Internal state ──
@@ -51,6 +54,19 @@ export function initCamera(canvas, worldSize) {
   canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
 }
 
+/**
+ * Apply camera config overrides (from settings panel).
+ * Accepts any subset of: focalLength, ortho, rotateSensitivity, panSensitivity.
+ */
+export function setCameraConfig(config) {
+  if (!config) return;
+  for (const key of ['focalLength', 'ortho', 'rotateSensitivity', 'panSensitivity']) {
+    if (typeof config[key] === 'number' && Number.isFinite(config[key])) {
+      camera[key] = config[key];
+    }
+  }
+}
+
 /** Update the world size used to convert screen pan deltas to world units. */
 export function setWorldSize(worldSize) {
   if (typeof worldSize === 'number' && worldSize > 0) _worldSize = worldSize;
@@ -77,8 +93,8 @@ function onPointerMove(e) {
   if (!ptr.mouseDown) return;
   const dx = e.clientX - ptr.mouseX;
   const dy = e.clientY - ptr.mouseY;
-  camera.rotY -= dx * 0.003;
-  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.003));
+  camera.rotY -= dx * 0.003 * camera.rotateSensitivity;
+  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * 0.003 * camera.rotateSensitivity));
   ptr.mouseX = e.clientX;
   ptr.mouseY = e.clientY;
 }
@@ -123,8 +139,8 @@ function onTouchMove(e) {
   if (ptr.touchCount === 1) {
     // 1 finger → orbit rotation
     const t = e.touches[0];
-    const dx = (t.clientX - ptr.orbitLastX) * 0.005;
-    const dy = (t.clientY - ptr.orbitLastY) * 0.005;
+    const dx = (t.clientX - ptr.orbitLastX) * 0.005 * camera.rotateSensitivity;
+    const dy = (t.clientY - ptr.orbitLastY) * 0.005 * camera.rotateSensitivity;
     camera.rotY -= dx;
     camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy));
     ptr.orbitLastX = t.clientX;
@@ -179,11 +195,11 @@ function doPinchPan() {
   // Pan: move the camera target opposite to finger motion
   const centerX = (t0.x + t1.x) / 2;
   const centerY = (t0.y + t1.y) / 2;
-  const panDx = (centerX - ptr.panCenterX);
-  const panDy = (centerY - ptr.panCenterY);
+  const panDx = centerX - ptr.panCenterX;
+  const panDy = centerY - ptr.panCenterY;
   const w = screenToWorld(panDx, panDy);
-  camera.x = ptr.panStartX - w.wx;
-  camera.y = ptr.panStartY - w.wy;
+  camera.x = ptr.panStartX - w.wx * camera.panSensitivity;
+  camera.y = ptr.panStartY - w.wy * camera.panSensitivity;
 }
 
 /**
@@ -215,12 +231,13 @@ export function projectPoint(x, y, z, worldSize, width, height) {
   const ry2 = ry1 * cosX - rz1 * sinX;
   const rz2 = ry1 * sinX + rz1 * cosX;
 
-  // Perspective projection
+  // Perspective projection (blended toward orthographic by camera.ortho)
   const focal = camera.focalLength;
   const persp = focal / (focal + rz2 * camera.zoom);
-  const screenX = cx + (rx2 * scale * camera.zoom) * persp;
-  const screenY = cy + (ry2 * scale * camera.zoom) * persp;
-  const radiusScale = persp;
+  const effPersp = persp + (1.0 - persp) * camera.ortho;
+  const screenX = cx + (rx2 * scale * camera.zoom) * effPersp;
+  const screenY = cy + (ry2 * scale * camera.zoom) * effPersp;
+  const radiusScale = effPersp;
 
   return { sx: screenX, sy: screenY, sr: radiusScale };
 }

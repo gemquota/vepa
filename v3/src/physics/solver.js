@@ -73,7 +73,7 @@ import { computeSynergy } from './synergy.js';
 const MAX_FORCE = 50.0;
 const MAX_INTERACTIONS = 500;
 const MAX_VELOCITY = 10.0;
-const G = 0.5;
+const G = 0.2;   // lower gravity so particles don't instantly clump
 const DEFAULT_DT = 1.0;
 
 /** Blend a neighbor's color into a subject particle (dissolution). */
@@ -238,7 +238,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const mJ = view[jBase + S.MASS];
           const bigM = Math.max(mI, mJ);
           if (bigM > STAR_MASS) {
-            const collapseMult = 1.0 + (bigM - STAR_MASS) * 0.15;
+            const collapseMult = 1.0 + (bigM - STAR_MASS) * 0.08;
             ax += gravForce.ax * collapseMult;
             ay += gravForce.ay * collapseMult;
             az += gravForce.az * collapseMult;
