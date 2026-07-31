@@ -2,6 +2,50 @@
  * VEPA v3 — Main Bootstrap
  * SharedArrayBuffer optional — falls back to ArrayBuffer + main-thread tick.
  */
+// === TAP-TO-COPY DIAGNOSTIC BANNERS ===
+function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(function () {
+            fallbackCopyText(text);
+        });
+    } else {
+        fallbackCopyText(text);
+    }
+}
+function fallbackCopyText(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+}
+function flashCopied(el) {
+    var origBg = el.style.background;
+    var origText = el.getAttribute('data-copy-text') || el.textContent;
+    el.style.background = '#060';
+    el.textContent = '\u2713 Copied to clipboard';
+    setTimeout(function () {
+        el.style.background = origBg;
+        el.textContent = origText;
+    }, 1500);
+}
+function makeCopyable(el) {
+    if (!el) return;
+    el.setAttribute('data-copyable', '1');
+    el.setAttribute('data-copy-text', el.textContent);
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        copyTextToClipboard(el.getAttribute('data-copy-text') || el.textContent);
+        flashCopied(el);
+    });
+}
+// === END TAP-TO-COPY ===
+
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
@@ -20,8 +64,12 @@ import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
 var _dbg = document.createElement('div');
 _dbg.id = 'js-boot-dbg';
 _dbg.style.cssText = 'position:fixed;top:4px;left:4px;background:#0f0;color:#000;padding:4px 8px;font:bold 14px monospace;z-index:99999;border-radius:4px';
-_dbg.textContent = 'JS LOADED ✓';
+_dbg.textContent = 'JS LOADED ✓ (tap to copy)';
+makeCopyable(_dbg);
 document.body.prepend(_dbg);
+// Also make the inline proof banner copyable if present
+var _inlineProof = document.getElementById('inline-js-proof');
+if (_inlineProof) makeCopyable(_inlineProof);
 // Try to read canvas size immediately
 setTimeout(function() {
     var c = document.getElementById('sim-canvas');
@@ -508,18 +556,21 @@ window.addEventListener('error', function(e) {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
     d.textContent = 'GLOBAL ERROR: ' + (e.error ? (e.error.stack || e.error.message || e.error) : e.message || 'unknown');
+    makeCopyable(d);
     document.body.prepend(d);
 });
 window.addEventListener('unhandledrejection', function(e) {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#440;color:#ff0;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
     d.textContent = 'UNHANDLED REJECTION: ' + (e.reason ? (e.reason.stack || e.reason.message || e.reason) : 'unknown');
+    makeCopyable(d);
     document.body.prepend(d);
 });
 boot().catch(e => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
     d.textContent = 'BOOT ERROR: ' + (e.stack || e.message || e);
+    makeCopyable(d);
     document.body.prepend(d);
 });
 // Fallback timer: if no boot messages after 3s, show error
@@ -530,11 +581,13 @@ setTimeout(() => {
         const d = document.createElement('div');
         d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#ff0;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
         d.textContent = 'DEBUG: canvas=' + rect.width + 'x' + rect.height + ' found=' + (!!dbg);
+        makeCopyable(d);
         document.body.prepend(d);
     } else {
         const d = document.createElement('div');
         d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#f00;padding:8px;font:12px monospace;z-index:9999';
         d.textContent = 'DEBUG: canvas NOT FOUND in DOM';
+        makeCopyable(d);
         document.body.prepend(d);
     }
 }, 3000);
