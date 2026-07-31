@@ -12,7 +12,7 @@ import { createRenderer, resize as resizeRenderer, renderFrame } from './render/
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
 import { initCamera, resetCamera } from './ui/camera.js';
-import { solve, resetOffspringRing } from './physics/solver.js';
+import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
 
 // === BOOT DIAGNOSTIC ===
 // This alert fires immediately when the module loads
@@ -48,7 +48,8 @@ let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
 // Minimal default — only fundamental physics
-const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL'];
+// Curated combo: physics core + ecosystem + structures + thermodynamics
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL', 'ACCR', 'LIFE', 'REPRO', 'AFFINITY', 'GLOW', 'ENERGY', 'BOND', 'POLYMER', 'HEAT', 'CONVECTION'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -104,14 +105,16 @@ async function boot() {
     bus.emit('boot:complete', { particleCount, speciesCount, dt });
 }
 
+const SPECIES_PROFILES = [
+    { name: 'Predator', color: [255, 80, 80], force: 1.2, viscosity: 0.95, birthRate: 0.3, predationBias: 0.8 },
+    { name: 'Sol', color: [255, 200, 50], force: 0.8, viscosity: 0.97, birthRate: 0.1, fusion: 2.0 },
+    { name: 'Life', color: [80, 255, 120], force: 1.0, viscosity: 0.98, birthRate: 0.5, mutation: 0.3 },
+    { name: 'Aether', color: [120, 160, 255], force: 0.5, viscosity: 0.99, signalResp: 2.0, pulseRate: 0.3 },
+    { name: 'Void', color: [100, 60, 140], force: -0.5, viscosity: 0.96, deathRate: 0.2, hiddenMass: 3.0 },
+];
+
 function spawnDefaultPopulation() {
-    const profiles = [
-        { name: 'Predator', color: [255, 80, 80], force: 1.2, viscosity: 0.95, birthRate: 0.3, predationBias: 0.8 },
-        { name: 'Sol', color: [255, 200, 50], force: 0.8, viscosity: 0.97, birthRate: 0.1, fusion: 2.0 },
-        { name: 'Life', color: [80, 255, 120], force: 1.0, viscosity: 0.98, birthRate: 0.5, mutation: 0.3 },
-        { name: 'Aether', color: [120, 160, 255], force: 0.5, viscosity: 0.99, signalResp: 2.0, pulseRate: 0.3 },
-        { name: 'Void', color: [100, 60, 140], force: -0.5, viscosity: 0.96, deathRate: 0.2, hiddenMass: 3.0 },
-    ];
+    const profiles = SPECIES_PROFILES;
 
     speciesCount = Math.min(profiles.length, MAX_SPECIES);
     let idx = 0;
@@ -187,6 +190,56 @@ function spawnDefaultPopulation() {
         }
     }
     particleCount = idx;
+}
+
+/** Spawn offspring produced by REPRO law into the particle buffer. */
+function spawnOffspring() {
+    const list = drainOffspring();
+    if (!list.length) return;
+    for (const off of list) {
+        if (particleCount >= MAX_PARTICLES) break;
+        const ptr = particleCount * PARTICLE_STRIDE;
+        setX(particleBuffer, particleCount, PARTICLE_STRIDE, off.x);
+        setY(particleBuffer, particleCount, PARTICLE_STRIDE, off.y);
+        particleView[ptr + STRIDE_INDEXES.POS_Z] = off.z || 0;
+        setVelocity(particleBuffer, particleCount, PARTICLE_STRIDE, off.vx || 0, off.vy || 0, off.vz || 0);
+        setMass(particleBuffer, particleCount, PARTICLE_STRIDE, off.mass || 1.0);
+        setSpeciesId(particleBuffer, particleCount, PARTICLE_STRIDE, off.speciesId);
+        setEnergy(particleBuffer, particleCount, PARTICLE_STRIDE, off.energy || 60);
+        if (off.dna && off.dna.length) {
+            for (let d = 0; d < 42 && d < off.dna.length; d++) {
+                particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = off.dna[d];
+            }
+        }
+        particleView[ptr + STRIDE_INDEXES.DEAD] = 0;
+        particleView[ptr + STRIDE_INDEXES.AGE] = 0;
+        particleView[ptr + STRIDE_INDEXES.SIGNAL] = 0;
+        particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+        particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
+        particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
+        particleView[ptr + STRIDE_INDEXES.ARMOR] = 0.2;
+        particleView[ptr + STRIDE_INDEXES.MITOSIS_TIMER] = 0;
+        particleView[ptr + STRIDE_INDEXES.PARTNER_ID] = -1;
+        particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
+        particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
+        particleView[ptr + STRIDE_INDEXES.SOUL] = 0;
+        // Inherit parent species base color
+        const sp = SPECIES_PROFILES[off.speciesId] || SPECIES_PROFILES[0];
+        if (sp) {
+            particleView[ptr + STRIDE_INDEXES.COLOR_R] = sp.color[0];
+            particleView[ptr + STRIDE_INDEXES.COLOR_G] = sp.color[1];
+            particleView[ptr + STRIDE_INDEXES.COLOR_B] = sp.color[2];
+        } else {
+            particleView[ptr + STRIDE_INDEXES.COLOR_R] = 200;
+            particleView[ptr + STRIDE_INDEXES.COLOR_G] = 200;
+            particleView[ptr + STRIDE_INDEXES.COLOR_B] = 200;
+        }
+        particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
+        particleView[ptr + STRIDE_INDEXES.RADIUS] = 1.5;
+        particleCount++;
+    }
 }
 
 function setDNAFromProfile(species, profile) {
@@ -397,6 +450,7 @@ function renderLoop(now) {
     // Main-thread physics
     if (particleView) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT, rng);
+        spawnOffspring();
         tick++;
         // On-screen debug overlay (shows first 2 seconds)
         if (tick <= 130) {
