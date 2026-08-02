@@ -176,6 +176,7 @@ export function computeColor(particleBuffer, speciesId, particleIndex, stride) {
  * @returns {number} Visual radius in world units (≥ 0.3)
  */
 export function computeRadius(particleBuffer, speciesId, particleIndex, stride) {
+    // Accept either a raw ArrayBuffer or an existing Float32Array view (hot path)
     const view = particleBuffer instanceof Float32Array ? particleBuffer : new Float32Array(particleBuffer);
     const base = particleIndex * stride;
 
@@ -209,6 +210,7 @@ export function computeRadius(particleBuffer, speciesId, particleIndex, stride) 
  * @returns {number} Alpha ∈ [0, 1]
  */
 export function computeAlpha(particleBuffer, speciesId, particleIndex, stride) {
+    // Accept either a raw ArrayBuffer or an existing Float32Array view (hot path)
     const view = particleBuffer instanceof Float32Array ? particleBuffer : new Float32Array(particleBuffer);
     const base = particleIndex * stride;
 

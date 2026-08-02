@@ -1,0 +1,192 @@
+/**
+ * VEPA v3 — DNA Parameter Panel
+ * Species selector + 42 DNA sliders grouped by category.
+ * Live-updates the shared DNA buffer on slider change.
+ */
+import { DNA_META, DNA_RANGES, DNA_INDEXES, DNA_COUNT, MAX_SPECIES } from '../constants.js';
+import { setDNAFloat, getDNAFloat } from '../dna/dnaBuffer.js';
+
+/**
+ * DNA parameter groups with display labels and member indices.
+ */
+const DNA_GROUPS = [
+  {
+    name: 'Motion',
+    indices: [DNA_INDEXES.FORCE, DNA_INDEXES.VISCOSITY, DNA_INDEXES.TORQUE, DNA_INDEXES.JITTER,
+              DNA_INDEXES.TIDAL, DNA_INDEXES.INERTIA, DNA_INDEXES.FRICTION, DNA_INDEXES.MAX_VELOCITY],
+  },
+  {
+    name: 'Matter',
+    indices: [DNA_INDEXES.SYMMETRY, DNA_INDEXES.HIDDEN_MASS, DNA_INDEXES.STIFFNESS, DNA_INDEXES.FUSION,
+              DNA_INDEXES.FUSION_MOMENTUM, DNA_INDEXES.FUSION_TIME, DNA_INDEXES.BASE_RADIUS,
+              DNA_INDEXES.ELASTICITY, DNA_INDEXES.BOND_ANGLE],
+  },
+  {
+    name: 'Electromagnetism',
+    indices: [DNA_INDEXES.POLARITY, DNA_INDEXES.ALPHA, DNA_INDEXES.CONDUCTIVITY,
+              DNA_INDEXES.MAGNETIC_MOMENT, DNA_INDEXES.REACTION_THRESHOLD,
+              DNA_INDEXES.CATALYSIS, DNA_INDEXES.HEAT_OUTPUT],
+  },
+  {
+    name: 'Biology',
+    indices: [DNA_INDEXES.BIRTH_RATE, DNA_INDEXES.DEATH_RATE, DNA_INDEXES.MUTATION,
+              DNA_INDEXES.ENERGY_EFFICIENCY, DNA_INDEXES.SEX_CHANCE,
+              DNA_INDEXES.PREDATION_BIAS, DNA_INDEXES.SPECIES_AFFINITY],
+  },
+  {
+    name: 'Communication',
+    indices: [DNA_INDEXES.SIGNAL_RESP, DNA_INDEXES.PULSE_RATE, DNA_INDEXES.NEIGHBORHOOD_RADIUS,
+              DNA_INDEXES.SIGNAL_STRENGTH, DNA_INDEXES.SIGNAL_DECAY,
+              DNA_INDEXES.PROPAGATION_SPEED, DNA_INDEXES.TUNING_CH1, DNA_INDEXES.TUNING_CH2,
+              DNA_INDEXES.TUNING_CH3, DNA_INDEXES.TUNING_CH4, DNA_INDEXES.MEMORY_DECAY],
+  },
+];
+
+/**
+ * Default species colors for the selector circles.
+ */
+const DEFAULT_SPECIES_COLORS = [
+  '#ff5050', // Predator — Red
+  '#ffc832', // Sol — Yellow
+  '#50ff78', // Life — Green
+  '#78a0ff', // Aether — Blue
+  '#643c8c', // Void — Purple
+];
+
+let selectedSpecies = 0;
+let speciesColors = [...DEFAULT_SPECIES_COLORS];
+let sliders = [];
+
+/**
+ * Rebuild all slider values to reflect the current DNA buffer state.
+ */
+function refreshSliders(dnaBuffer, rangeInfo) {
+  for (const s of sliders) {
+    const val = getDNAFloat(dnaBuffer, selectedSpecies, s.index, rangeInfo[s.index].min, rangeInfo[s.index].max);
+    s.input.value = val;
+    s.display.textContent = val.toFixed(s.precision);
+  }
+}
+
+/**
+ * Compute display precision based on param range span.
+ */
+function getPrecision(range) {
+  const span = range.max - range.min;
+  if (span > 100) return 0;
+  if (span > 10) return 1;
+  return 2;
+}
+
+/**
+ * Create the DNA parameter panel in #dna-panel.
+ *
+ * @param {import('../core/eventBus.js').EventBus} bus
+ * @param {Uint16Array} dnaBuffer
+ */
+export function createDNAPanel(bus, dnaBuffer) {
+  const panel = document.getElementById('dna-panel');
+  if (!panel) return;
+
+  let html = '';
+
+  // ── Species Selector ──
+  html += '<div class="panel-section">';
+  html += '<h3 class="dna-section-title">Species</h3>';
+  html += '<div class="species-selector">';
+  for (let i = 0; i < MAX_SPECIES; i++) {
+    const color = speciesColors[i] || '#444';
+    const active = i === selectedSpecies ? 'active' : '';
+    html += `<button class="species-dot ${active}" data-species="${i}" `
+          + `style="background:${color}" title="Species ${i}"></button>`;
+  }
+  html += '</div></div>';
+
+  // ── DNA Sliders by Group ──
+  for (const group of DNA_GROUPS) {
+    html += `<div class="panel-section">`;
+    html += `<h3 class="dna-section-title">${group.name}</h3>`;
+
+    for (const idx of group.indices) {
+      if (idx >= DNA_COUNT) continue;
+      const range = DNA_RANGES[idx];
+      const name = DNA_META[idx] || `DNA_${idx}`;
+      const precision = getPrecision(range);
+
+      html += `<div class="dna-slider-row">`;
+      html += `<label class="dna-label" data-param="${idx}">${name}</label>`;
+      html += `<input type="range" class="dna-input" data-param="${idx}" `
+            + `min="${range.min}" max="${range.max}" step="${(range.max - range.min) / 1000}" `
+            + `value="${range.default}">`;
+      html += `<span class="dna-value" data-param="${idx}">${range.default.toFixed(precision)}</span>`;
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  panel.innerHTML = html;
+
+  // ── Collect slider references ──
+  sliders = [];
+  for (const input of panel.querySelectorAll('.dna-input')) {
+    const idx = parseInt(input.dataset.param, 10);
+    const range = DNA_RANGES[idx];
+    const precision = getPrecision(range);
+    const display = panel.querySelector(`.dna-value[data-param="${idx}"]`);
+    sliders.push({ index: idx, input, display, precision });
+  }
+
+  // ── Initialize slider values from current DNA buffer ──
+  refreshSliders(dnaBuffer, DNA_RANGES);
+
+  // ── Wire up species selector ──
+  for (const dot of panel.querySelectorAll('.species-dot')) {
+    dot.addEventListener('click', () => {
+      // Update selected species
+      panel.querySelector('.species-dot.active')?.classList.remove('active');
+      selectedSpecies = parseInt(dot.dataset.species, 10);
+      dot.classList.add('active');
+
+      // Refresh sliders to show selected species' DNA
+      refreshSliders(dnaBuffer, DNA_RANGES);
+      bus.emit('dna:speciesChanged', { species: selectedSpecies });
+    });
+  }
+
+  // ── Wire up slider inputs ──
+  for (const s of sliders) {
+    s.input.addEventListener('input', () => {
+      const val = parseFloat(s.input.value);
+      const range = DNA_RANGES[s.index];
+      setDNAFloat(dnaBuffer, selectedSpecies, s.index, val, range.min, range.max);
+      s.display.textContent = val.toFixed(s.precision);
+
+      bus.emit('dna:changed', {
+        species: selectedSpecies,
+        param: s.index,
+        value: val,
+        paramName: DNA_META[s.index],
+      });
+    });
+  }
+
+  // ── Listen for external DNA changes (e.g., preset load, reset) ──
+  bus.on('dna:sync', ({ species } = {}) => {
+    const targetSpecies = species !== undefined ? species : selectedSpecies;
+    if (targetSpecies === selectedSpecies) {
+      refreshSliders(dnaBuffer, DNA_RANGES);
+    }
+  });
+
+  // ── Listen for species list updates ──
+  bus.on('species:info', ({ colors } = {}) => {
+    if (colors) {
+      speciesColors = [...colors];
+      const dots = panel.querySelectorAll('.species-dot');
+      for (let i = 0; i < dots.length; i++) {
+        dots[i].style.background = speciesColors[i] || '#444';
+      }
+    }
+  });
+}

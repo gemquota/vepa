@@ -7,6 +7,7 @@
 // ============================================================================
 
 import { STRIDE_INDEXES } from '../constants.js';
+import { SplitMix32 } from '../core/prng.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
 import {
     computeColor,
@@ -20,6 +21,9 @@ import { projectPoint } from '../ui/camera.js';
 const BG_COLOR     = '#0a0a0f';
 const GRID_COLOR   = 'rgba(40, 50, 70, 0.25)';
 const GRID_DIVISIONS = 8;   // grid lines per axis
+// Per-frame trail fade: how much of the previous frame survives (0..1).
+// Lower = longer glowing motion trails.
+const TRAIL_FADE = 0.22;
 
 // ── Canvas2D Renderer ──────────────────────────────────────────────────────
 
@@ -113,19 +117,16 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
 
     const view = new Float32Array(particleBuffer);
 
-    // ── 1. Clear ──
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, width, height);
-    
-    // ── TEST: Draw a diagnostic dot at center to prove rendering works ──
-    ctx.fillStyle = '#ff0000';
-    ctx.beginPath();
-    ctx.arc(width * 0.5, height * 0.5, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '12px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('particles=' + particleCount, width * 0.5, height * 0.5 + 20);
+    // ── 1. Trail fade ──
+    // Erase toward transparency so the background layer shows through and the
+    // previous frame's particles linger briefly as motion trails. Skipped while
+    // paused so the frozen scene stays crisp.
+    if (!renderer.paused) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = `rgba(0, 0, 0, ${TRAIL_FADE})`;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalCompositeOperation = 'source-over';
+    }
 
     // ── 2. Reference grid ──
     drawGrid(ctx, width, height);
@@ -155,14 +156,18 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
         const radius = computeRadius(view, speciesId, i, stride);
         const alpha  = computeAlpha(view, speciesId, i, stride);
 
-        // Radius scaled by perspective (closer = bigger, further = smaller)
-        const screenR = radius * uniformScale * sr;
+        // Radius scaled by perspective (closer = bigger, further = smaller).
+        // Clamp to a minimum screen size so particles stay visible even when
+        // the whole world is in view (otherwise sub-pixel dots disappear).
+        const MIN_PARTICLE_RADIUS_PX = 1.5;
+        const screenR = Math.max(radius * uniformScale * sr, MIN_PARTICLE_RADIUS_PX);
 
         // Skip fully transparent particles
         if (alpha < 0.001) continue;
 
         // Depth-adjusted alpha — closer = brighter
-        ctx.globalAlpha = alpha * (0.3 + 0.7 * sr);
+        const depthAlpha = alpha * (0.3 + 0.7 * sr);
+        ctx.globalAlpha = depthAlpha;
 
         // Gravitational collapse: stars render as glowing cores with a halo
         const starMass = view[base + STRIDE_INDEXES.MASS];
@@ -182,6 +187,14 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
           ctx.arc(sx, sy, Math.max(screenR * 0.7, 0.5), 0, Math.PI * 2);
           ctx.fill();
         } else {
+          // Soft glow halo — bloom under the crisp core
+          ctx.globalAlpha = depthAlpha * 0.3;
+          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, screenR * 2.4, 0, Math.PI * 2);
+          ctx.fill();
+          // Crisp core
+          ctx.globalAlpha = depthAlpha;
           ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
           ctx.beginPath();
           ctx.arc(sx, sy, Math.max(screenR, 0.5), 0, Math.PI * 2);
@@ -218,4 +231,74 @@ function drawGrid(ctx, width, height) {
         ctx.lineTo(width, y);
     }
     ctx.stroke();
+}
+
+// ── Background Layer ────────────────────────────────────────────────────────
+
+/**
+ * Paint the atmospheric backdrop — deep-space gradient, nebula blobs,
+ * deterministic starfield, and a cinematic vignette. Drawn to a canvas that
+ * sits behind the simulation canvas; motion trails erase toward it.
+ *
+ * @param {HTMLCanvasElement} canvas - Target background canvas
+ */
+export function paintBackground(canvas) {
+    if (!canvas) return;
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Deep-space radial base
+    const base = ctx.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.42, Math.max(w, h) * 0.75);
+    base.addColorStop(0, '#10101c');
+    base.addColorStop(0.55, '#0a0a14');
+    base.addColorStop(1, '#05050a');
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+
+    // Nebula blobs in the accent hues
+    paintNebula(ctx, w, h, w * 0.22, h * 0.35, Math.max(w, h) * 0.5, '74, 158, 255', 0.055);
+    paintNebula(ctx, w, h, w * 0.82, h * 0.62, Math.max(w, h) * 0.55, '180, 74, 255', 0.045);
+    paintNebula(ctx, w, h, w * 0.55, h * 0.15, Math.max(w, h) * 0.4, '74, 255, 138', 0.035);
+
+    // Deterministic starfield (same field every load)
+    const rng = new SplitMix32(0x5eed);
+    const starCount = Math.round((w * h) / 9000);
+    for (let st = 0; st < starCount; st++) {
+        const x = rng.nextFloat(0, w);
+        const y = rng.nextFloat(0, h);
+        const r = rng.nextFloat(0.3, 1.3);
+        const a = rng.nextFloat(0.15, 0.9);
+        const tint = rng.nextFloat(0, 1);
+        let col = '255, 255, 255';
+        if (tint < 0.12) col = '180, 200, 255';
+        else if (tint < 0.2) col = '255, 200, 170';
+        ctx.globalAlpha = a * 0.9;
+        ctx.fillStyle = `rgb(${col})`;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Cinematic vignette
+    const vg = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.35, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
+    vg.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vg.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, w, h);
+}
+
+/** Soft radial color blob for the background. */
+function paintNebula(ctx, w, h, x, y, radius, rgb, alpha) {
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    grad.addColorStop(0, `rgba(${rgb}, ${alpha})`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
 }

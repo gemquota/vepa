@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VEPA v4 — Integrated Intelligence</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="theme-sanguine">
+    <div id="app">
+        <!-- CANVAS VIEWPORT -->
+        <canvas id="bg-canvas"></canvas>
+        <canvas id="sim-canvas"></canvas>
+
+        <!-- UI LAYER -->
+        <div id="ui-layer">
+            <!-- TOP TOOLBAR -->
+            <div id="top-toolbar">
+                <div class="toolbar-left">
+                    <button id="btn-rewind" class="sq-btn" title="Rewind">⏪</button>
+                    <button id="btn-reverse" class="sq-btn" title="Reverse">◀</button>
+                    <button id="play-pause-btn" class="sq-btn active" title="Play/Pause">⏸</button>
+                    <button id="btn-play" class="sq-btn" title="Play">▶</button>
+                    <button id="btn-fastforward" class="sq-btn" title="Fast Forward">⏩</button>
+                </div>
+                <div class="toolbar-center">
+                    <span id="hud-fps" class="hud-item">0 FPS</span>
+                    <span id="hud-particles" class="hud-item">0 particles</span>
+                    <span id="hud-species" class="hud-item">0 species</span>
+                    <span id="hud-tick" class="hud-item">tick 0</span>
+                </div>
+                <div class="toolbar-right">
+                    <button id="chaos-btn" class="sq-btn" title="Smart Chaos">☢️</button>
+                    <button id="restart-btn" class="sq-btn" title="Restart">🔄</button>
+                    <button id="hard-reset-btn" class="sq-btn" title="Hard Reset">🗑️</button>
+                    <button id="help-toggle" class="sq-btn" title="Help">?</button>
+                </div>
+            </div>
+
+            <!-- BOTTOM DRAWER -->
+            <div id="drawer-container">
+                <div id="main-panel">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="tab-world">WORLD</button>
+                        <button class="tab-btn" data-tab="tab-species">SPECIES</button>
+                        <button class="tab-btn" data-tab="tab-dna">DNA</button>
+                        <button class="tab-btn" data-tab="tab-log">LOG</button>
+                        <button class="tab-btn" data-tab="tab-settings">SETTINGS</button>
+                        <button id="drawer-hide-btn" class="tab-btn drawer-hide-btn" title="Hide drawer" aria-label="Hide drawer">▼</button>
+                        <button id="drawer-minimize-btn" class="tab-btn drawer-minimize-btn" title="Minimize drawer" aria-expanded="true">▁</button>
+                    </div>
+
+                    <div id="tab-world" class="tab-content active">
+                        <div class="world-inner">
+                            <div class="category-filter-row">
+                                <button class="cat-tab active" data-cat="cat-physics">PHYS</button>
+                                <button class="cat-tab active" data-cat="cat-biology">BIOL</button>
+                                <button class="cat-tab active" data-cat="cat-chemistry">CHEM</button>
+                                <button class="cat-tab active" data-cat="cat-thermodynamics">THERMO</button>
+                                <button class="cat-tab active" data-cat="cat-metaphysics">META</button>
+                            </div>
+                            <div id="law-info-module" class="law-info-module hidden"></div>
+                            <div id="law-grid" class="law-icon-grid"></div>
+                            <div id="world-params" class="world-sliders"></div>
+                            <div id="world-intel" class="world-intel"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-species" class="tab-content">
+                        <div class="species-controls-header">
+                            <button id="add-species-btn" class="btn tiny-btn">+ SPECIES</button>
+                        </div>
+                        <div id="species-list"></div>
+                        <div id="dna-accordion"></div>
+                    </div>
+
+                    <div id="tab-dna" class="tab-content">
+                        <div id="dna-analytics"></div>
+                        <div id="dna-charts">
+                            <div class="chart-row">
+                                <div class="chart-section">
+                                    <h3 class="chart-title">POPULATION_TRENDS</h3>
+                                    <canvas id="pop-line-graph"></canvas>
+                                </div>
+                                <div class="chart-section">
+                                    <h3 class="chart-title">DIVERSITY_TREND</h3>
+                                    <canvas id="diversity-trend-graph"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-section">
+                                <h3 class="chart-title">STATE_SCATTER [MASS/NRG]</h3>
+                                <canvas id="mass-nrg-scatter"></canvas>
+                            </div>
+                            <div class="chart-row">
+                                <div class="chart-section">
+                                    <h3 class="chart-title">MASS_HISTOGRAM</h3>
+                                    <canvas id="mass-histogram"></canvas>
+                                </div>
+                                <div class="chart-section">
+                                    <h3 class="chart-title">ENERGY_DISTRIBUTION</h3>
+                                    <canvas id="energy-distribution"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-row">
+                                <div class="chart-section">
+                                    <h3 class="chart-title">AGE_DEMOGRAPHICS</h3>
+                                    <canvas id="age-demographics"></canvas>
+                                </div>
+                                <div class="chart-section">
+                                    <h3 class="chart-title">VELOCITY_DISTRIBUTION</h3>
+                                    <canvas id="velocity-distribution"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-row">
+                                <div class="chart-section">
+                                    <h3 class="chart-title">NRG_TREND</h3>
+                                    <canvas id="nrg-trend-graph"></canvas>
+                                </div>
+                                <div class="chart-section">
+                                    <h3 class="chart-title">MASS_TREND</h3>
+                                    <canvas id="mass-trend-graph"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-log" class="tab-content">
+                        <div id="narrative-log"></div>
+                    </div>
+
+                    <div id="tab-settings" class="tab-content">
+                        <div id="laws-panel"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FLOATING DRAWER SHOW BUTTON (visible when drawer is hidden) -->
+            <button id="drawer-show-btn" class="drawer-show-btn" hidden title="Show drawer" aria-label="Show drawer">▲</button>
+        </div>
+    </div>
+    <!-- Inline non-module probe: records debug messages before ES modules
+         load. src/debug.js adopts the buffer; if the module bundle never
+         activates, a fallback banner surfaces the log after 3s. -->
+    <script>
+    (function(){
+      window.__VEPA_DEBUG__ = window.__VEPA_DEBUG__ || { messages: [] };
+      window.__VEPA_DEBUG__.messages.push({ t: Date.now(), level: 'info', text: 'INLINE JS: OK' });
+      window.addEventListener('error', function (e) {
+        var msg = e.message || 'script error';
+        if (e.error && (e.error.stack || e.error.message)) msg = e.error.stack || e.error.message;
+        window.__VEPA_DEBUG__.messages.push({ t: Date.now(), level: 'error', text: 'INLINE ERROR: ' + msg });
+      });
+      setTimeout(function () {
+        var d = window.__VEPA_DEBUG__;
+        if (d && d._active) return;               // module overlay took over
+        if (document.getElementById('vepa-debug')) return;
+        var b = document.createElement('div');
+        b.id = 'vepa-debug';
+        b.className = 'vepa-debug';
+        b.style.cssText = 'position:fixed;top:4px;left:4px;right:4px;z-index:99999;background:#222;color:#ff0;border:1px solid #555;padding:6px;font:11px monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';
+        b.textContent = (d ? d.messages.map(function (m) {
+          return '[' + new Date(m.t).toLocaleTimeString() + '] ' + (m.level || 'info').toUpperCase() + ' ' + m.text;
+        }).join('\n') : 'MODULE LOAD FAILED');
+        document.body.prepend(b);
+      }, 3000);
+    })();
+    </script>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>

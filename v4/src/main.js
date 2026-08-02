@@ -2,91 +2,29 @@
  * VEPA v3 — Main Bootstrap
  * SharedArrayBuffer optional — falls back to ArrayBuffer + main-thread tick.
  */
-// === TAP-TO-COPY DIAGNOSTIC BANNERS ===
-function copyTextToClipboard(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(function () {
-            fallbackCopyText(text);
-        });
-    } else {
-        fallbackCopyText(text);
-    }
-}
-function fallbackCopyText(text) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
-    document.body.removeChild(ta);
-}
-function flashCopied(el) {
-    var origBg = el.style.background;
-    var origText = el.getAttribute('data-copy-text') || el.textContent;
-    el.style.background = '#060';
-    el.textContent = '\u2713 Copied to clipboard';
-    setTimeout(function () {
-        el.style.background = origBg;
-        el.textContent = origText;
-    }, 1500);
-}
-function makeCopyable(el) {
-    if (!el) return;
-    el.setAttribute('data-copyable', '1');
-    el.setAttribute('data-copy-text', el.textContent);
-    el.style.cursor = 'pointer';
-    el.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        copyTextToClipboard(el.getAttribute('data-copy-text') || el.textContent);
-        flashCopied(el);
-    });
-}
-// === END TAP-TO-COPY ===
-
+// === DEBUG OVERLAY ===
+// One collapsible overlay collects every debug message since page start.
+// Tap its header to copy the whole log as JSON; toggle in SETTINGS → DEBUG.
+import { initDebug, logDebug, isDebugVisible, updateLiveStats } from './debug.js';
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
-import { createParticleBuffer, getX, getY, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
+import { createParticleBuffer, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet, clear as lawClear, getActiveCount as getLawCount } from './state/lawState.js';
 import { runtimeConfig } from './state/runtimeConfig.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
-import { createRenderer, resize as resizeRenderer, renderFrame } from './render/renderer.js';
+import { createRenderer, resize as resizeRenderer, paintBackground } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
 import { initCamera, resetCamera, setWorldSize } from './ui/camera.js';
 import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
-
-// === BOOT DIAGNOSTIC ===
-// This alert fires immediately when the module loads
-// If you see this, JavaScript is executing
-var _dbg = document.createElement('div');
-_dbg.id = 'js-boot-dbg';
-_dbg.style.cssText = 'position:fixed;top:4px;left:4px;background:#0f0;color:#000;padding:4px 8px;font:bold 14px monospace;z-index:99999;border-radius:4px';
-_dbg.textContent = 'JS LOADED ✓ (tap to copy)';
-makeCopyable(_dbg);
-document.body.prepend(_dbg);
-// Also make the inline proof banner copyable if present
-var _inlineProof = document.getElementById('inline-js-proof');
-if (_inlineProof) makeCopyable(_inlineProof);
-// Try to read canvas size immediately
-setTimeout(function() {
-    var c = document.getElementById('sim-canvas');
-    if (c) {
-        var r = c.getBoundingClientRect();
-        _dbg.textContent = 'CANVAS: ' + r.width + 'x' + r.height;
-    } else {
-        _dbg.textContent = 'CANVAS: NOT FOUND';
-    }
-}, 100);
-// Also check after 5 seconds for boot completion
-setTimeout(function() {
-    var h = document.getElementById('hud-particles');
-    if (h) _dbg.textContent = _dbg.textContent + ' | HUD:' + h.textContent;
-}, 5000);
-// === END DIAGNOSTIC ===
+import { createInsightEngine, update as updateInsight } from './engines/insightEngine.js';
+import { createNarrativeEngine, update as updateNarrative } from './engines/narrativeEngine.js';
+import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageTracker.js';
+import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
+import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
+initDebug();
+logDebug('main module loaded');
 
 
 
@@ -94,6 +32,11 @@ const SUBSTEPS = 4;
 const DT = 0.25;
 
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
+// v4 — intelligence engines
+let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
+let prevDead = new Uint8Array(0);
+let timelineRecording = false;
+const TIMELINE_SNAPSHOT_INTERVAL = 150;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
 // Minimal default — only fundamental physics
@@ -105,6 +48,7 @@ function rng() { return prng.next(); }
 
 async function boot() {
     console.log('[VEPA v3] Booting...');
+    logDebug('boot: starting');
     const t0 = performance.now();
 
     bus = new EventBus();
@@ -115,6 +59,7 @@ async function boot() {
     particleView = buf.view;
     const isShared = buf.isShared;
     console.log(`[VEPA v3] SharedArrayBuffer: ${isShared}`);
+    logDebug('SharedArrayBuffer: ' + isShared);
 
     lawState = createLawState();
     dnaBuffer = createDNABuffer();
@@ -130,9 +75,11 @@ async function boot() {
     const canvas = document.getElementById('sim-canvas');
     renderer = createRenderer(canvas, MAX_PARTICLES);
     resizeRenderer(renderer);
+    refreshBackground();
     // Re-render on window resize
     window.addEventListener('resize', () => {
         if (renderer) resizeRenderer(renderer);
+        refreshBackground();
     });
     // Also observe the canvas for layout changes
     if (window.ResizeObserver) {
@@ -147,10 +94,26 @@ async function boot() {
     initUI(bus, lawState, dnaBuffer);
     wireEvents();
 
+    // v4 — intelligence engine wiring
+    insightEngine = createInsightEngine(bus, { scanInterval: 90, clusterRadius: 60, minClusterSize: 5 });
+    narrativeEngine = createNarrativeEngine(bus);
+    lineageEngine = createLineageTracker(bus);
+    goalEngine = createGoalEngine(bus);
+    timelineEngine = createTimelineEngine(bus, { autoSnapshotInterval: 0, maxSnapshots: 20 });
+    setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
+    setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
+    setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
+    setGoalValue(goalEngine, 'drag', runtimeConfig.dragMultiplier);
+    setGoalValue(goalEngine, 'birthRate', runtimeConfig.birthRate);
+    setGoalValue(goalEngine, 'deathRate', runtimeConfig.deathRate);
+    wireGoalEvents();
+    prevDead = new Uint8Array(particleCount);
+
     requestAnimationFrame(renderLoop);
 
     const dt = (performance.now() - t0).toFixed(1);
     console.log(`[VEPA v3] Booted in ${dt}ms — ${particleCount} particles, ${speciesCount} species`);
+    logDebug(`booted in ${dt}ms — ${particleCount} particles, ${speciesCount} species`);
     bus.emit('boot:complete', { particleCount, speciesCount, dt });
 }
 
@@ -173,15 +136,16 @@ function spawnDefaultPopulation() {
         const p = profiles[s];
         setDNAFromProfile(s, p);
 
+        // Per-species 3D grid spanning the full world volume — populations
+        // start interleaved across the dish instead of clumped in depth slabs.
+        const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
+        const cellSize = (worldSize - 10) / gridDim;
+
         for (let i = 0; i < perSpecies && idx < MAX_PARTICLES; i++) {
             const ptr = idx * PARTICLE_STRIDE;
-            // Uniform 3D grid distribution across the world
-            const totalParticles = speciesCount * perSpecies;
-            const gridDim = Math.max(2, Math.ceil(Math.cbrt(totalParticles)));
-            const cellSize = (worldSize - 10) / gridDim;
-            const gx = idx % gridDim;
-            const gy = Math.floor(idx / gridDim) % gridDim;
-            const gz = Math.floor(idx / (gridDim * gridDim));
+            const gx = i % gridDim;
+            const gy = Math.floor(i / gridDim) % gridDim;
+            const gz = Math.floor(i / (gridDim * gridDim));
             // Jitter within each cell for a natural look
             const jx = (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
             const jy = (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
@@ -241,6 +205,12 @@ function spawnDefaultPopulation() {
     particleCount = idx;
 }
 
+/** Repaint the atmospheric backdrop canvas (sized to the viewport). */
+function refreshBackground() {
+    const bg = document.getElementById('bg-canvas');
+    if (bg) paintBackground(bg);
+}
+
 /** Spawn offspring produced by REPRO law into the particle buffer. */
 function spawnOffspring() {
     const list = drainOffspring();
@@ -288,6 +258,10 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
         particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
         particleCount++;
+        // v4 — lineage birth tracking
+        if (lineageEngine) {
+            trackBirth(lineageEngine, off.parentId != null ? off.parentId : -1, particleCount - 1, off.speciesId, 0);
+        }
     }
 }
 
@@ -328,6 +302,8 @@ function setDNAFromProfile(species, profile) {
         spawnDefaultPopulation();
         tick = 0;
         paused = false;
+        resetIntelligence();
+        logDebug('simulation restarted');
         console.log('[VEPA v3] Simulation restarted');
         resetCamera();
         bus.emit('law:sync');
@@ -336,6 +312,7 @@ function setDNAFromProfile(species, profile) {
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
     bus.on('sim:hardReset', () => {
         console.log('[VEPA v3] Hard reset requested');
+        logDebug('hard reset requested', 'warn');
         location.reload();
     });
     bus.on('sim:chaos', () => {
@@ -383,6 +360,7 @@ function setDNAFromProfile(species, profile) {
         }
 
         const active = getLawCount(lawState);
+        logDebug(`chaos multiplexed: ${groups} groups, ${active} laws, ${Math.round(intensity*100)}% intensity`, 'warn');
         bus.emit('law:sync');
         bus.emit('narrative:system', { text: `Chaos multiplexed: ${groups} groups, ${active} laws, ${Math.round(intensity*100)}% intensity` });
     });
@@ -392,6 +370,7 @@ function setDNAFromProfile(species, profile) {
         for (let i = 0; i < LAW_COUNT; i++) {
             lawClear(lawState, i);
         }
+        logDebug('all laws cleared', 'warn');
         bus.emit('law:sync');
         bus.emit('narrative:system', { text: 'All laws cleared.' });
     });
@@ -439,9 +418,10 @@ function setDNAFromProfile(species, profile) {
     bus.on('world:paramChanged', ({ key, value }) => {
         switch (key) {
             case 'WORLD_SIZE':
-                worldSize = Math.max(50, Math.min(4000, value));
+                worldSize = Math.max(50, Math.min(20000, value));
                 setWorldSize(worldSize);
                 console.log('[VEPA] World size set to', worldSize);
+                logDebug('world size set to ' + worldSize);
                 break;
             case 'GLOBAL_G':
                 // Passed to solver via config — would need dynamic G integration
@@ -495,6 +475,123 @@ function setDNAFromProfile(species, profile) {
 
 let lastFrameTime = 0, frameCount = 0, fps = 0;
 
+// ── v4: Intelligence engine orchestration ────────────────────────────────
+
+/** Wire goal-adjustment application + timeline scrub/record bus handlers. */
+function wireGoalEvents() {
+    bus.on('goal:adjusted', (adj) => {
+        switch (adj.parameter) {
+            case 'scanInterval': if (insightEngine) insightEngine.cfg.scanInterval = adj.newValue; break;
+            case 'clusterRadius': if (insightEngine) insightEngine.cfg.clusterRadius = adj.newValue; break;
+            case 'maxForce': runtimeConfig.maxForce = adj.newValue; break;
+            case 'drag': runtimeConfig.dragMultiplier = adj.newValue; break;
+            case 'birthRate': runtimeConfig.birthRate = adj.newValue; break;
+            case 'deathRate': runtimeConfig.deathRate = adj.newValue; break;
+        }
+        bus.emit('goal:applied', adj);
+    });
+    bus.on('timeline:scrubTo', (tickIndex) => {
+        const entry = timelineScrub(timelineEngine, tickIndex);
+        if (!entry || !entry.data) return;
+        particleView.set(entry.data);
+        if (entry.metadata && entry.metadata.particleCount) particleCount = entry.metadata.particleCount;
+        prevDead = new Uint8Array(particleCount);
+        tick = entry.tick;
+        bus.emit('timeline:restored', { index: entry.index, tick: entry.tick });
+    });
+    bus.on('timeline:record', ({ enabled }) => {
+        timelineRecording = !!enabled;
+        bus.emit('timeline:recording', { enabled: timelineRecording, count: getTimelineList(timelineEngine).length });
+    });
+    bus.on('timeline:clear', () => {
+        clearTimelineEngine(timelineEngine);
+        bus.emit('timeline:cleared');
+    });
+}
+
+/** Collect current simulation metrics for the goal engine + dashboard. */
+function computeMetrics() {
+    let alive = 0, energySum = 0;
+    const speciesAlive = new Set();
+    for (let i = 0; i < particleCount; i++) {
+        const base = i * PARTICLE_STRIDE;
+        if (particleView[base + STRIDE_INDEXES.DEAD] < 0.5 && (particleView[base + STRIDE_INDEXES.MASS] || 0) > 0) {
+            alive++;
+            energySum += particleView[base + STRIDE_INDEXES.ENERGY] || 0;
+            speciesAlive.add(particleView[base + STRIDE_INDEXES.SPECIES_ID]);
+        }
+    }
+    const clusterCount = insightEngine && insightEngine.lastClusters
+        ? insightEngine.lastClusters.clusters.length : 0;
+    return {
+        populationAlive: alive,
+        speciesAlive: speciesAlive.size,
+        clusterCount,
+        avgEnergy: alive ? energySum / alive : 0,
+        frameDelta: fps,
+        lawActiveCount: getLawCount(lawState),
+    };
+}
+
+/** Run insight, narrative, lineage, timeline, and goal engines each tick. */
+function updateIntelligence() {
+    if (!particleView || !particleCount) return;
+
+    // Insight — spatio-temporal cluster detection
+    if (insightEngine) {
+        updateInsight(insightEngine, particleView, particleCount, PARTICLE_STRIDE, worldSize);
+    }
+
+    // Narrative — paced multi-voice commentary on engine events
+    if (narrativeEngine) {
+        updateNarrative(narrativeEngine, particleView, particleCount, PARTICLE_STRIDE);
+    }
+
+    // Lineage — death transitions (births are tracked in spawnOffspring)
+    if (lineageEngine) {
+        if (prevDead.length < particleCount) {
+            const grown = new Uint8Array(particleCount);
+            grown.set(prevDead);
+            prevDead = grown;
+        }
+        for (let i = 0; i < particleCount; i++) {
+            const base = i * PARTICLE_STRIDE;
+            const dead = particleView[base + STRIDE_INDEXES.DEAD] >= 0.5 ? 1 : 0;
+            if (dead && !prevDead[i]) {
+                let cause = 'unknown';
+                if ((particleView[base + STRIDE_INDEXES.HUNGER] || 0) >= 100) cause = 'starvation';
+                else if ((particleView[base + STRIDE_INDEXES.ENERGY] || 0) <= 0) cause = 'energy-depletion';
+                trackDeath(lineageEngine, i, cause);
+            }
+            prevDead[i] = dead;
+        }
+    }
+
+    // Timeline — recording snapshots on a fixed cadence
+    if (timelineEngine && timelineRecording && tick % TIMELINE_SNAPSHOT_INTERVAL === 0) {
+        const data = new Float32Array(particleView.buffer.slice(0));
+        timelineSnapshot(timelineEngine, data, { tick, particleCount });
+        bus.emit('timeline:snapshot', { count: getTimelineList(timelineEngine).length });
+    }
+
+    // Goal engine — evaluate and self-tune world constraints
+    const metrics = computeMetrics();
+    if (goalEngine) {
+        updateGoal(goalEngine, metrics);
+    }
+    if (tick % 30 === 0) {
+        bus.emit('sim:metrics', metrics);
+    }
+}
+
+/** Reset intelligence state on simulation restart. */
+function resetIntelligence() {
+    prevDead = new Uint8Array(particleCount);
+    if (insightEngine) { insightEngine.frame = 0; insightEngine.history = []; insightEngine.lastClusters = null; }
+    if (goalEngine) { goalEngine.frame = 0; goalEngine.history = []; }
+    if (timelineEngine) clearTimelineEngine(timelineEngine);
+}
+
 function renderLoop(now) {
     requestAnimationFrame(renderLoop);
     frameCount++;
@@ -512,8 +609,10 @@ function renderLoop(now) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT * runtimeConfig.simSpeed, rng);
         spawnOffspring();
         tick++;
-        // On-screen debug overlay (shows first 2 seconds)
-        if (tick <= 130) {
+        updateIntelligence();
+        updateLiveStats({ fps, tick, particles: particleCount, species: speciesCount, laws: getLawCount(lawState) });
+        // On-screen canvas debug overlay (first 2 seconds, debug overlay only)
+        if (isDebugVisible() && tick <= 130) {
             const dbg = renderer.ctx;
             if (dbg) {
                 dbg.save();
@@ -560,46 +659,14 @@ function renderLoop(now) {
 
     // Render (always, even when paused)
     if (renderer && particleBuffer) {
+        renderer.paused = paused;
         syncSprites(renderer, particleBuffer, particleCount, PARTICLE_STRIDE, worldSize, lawState);
     }
 }
 
-window.addEventListener('error', function(e) {
-    const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
-    d.textContent = 'GLOBAL ERROR: ' + (e.error ? (e.error.stack || e.error.message || e.error) : e.message || 'unknown');
-    makeCopyable(d);
-    document.body.prepend(d);
-});
-window.addEventListener('unhandledrejection', function(e) {
-    const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#440;color:#ff0;padding:8px;font:14px monospace;z-index:99999;white-space:pre-wrap';
-    d.textContent = 'UNHANDLED REJECTION: ' + (e.reason ? (e.reason.stack || e.reason.message || e.reason) : 'unknown');
-    makeCopyable(d);
-    document.body.prepend(d);
-});
+// Global errors and unhandled rejections are captured by src/debug.js into
+// the debug overlay (single message log for the whole page session).
 boot().catch(e => {
-    const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:40px;left:0;right:0;background:#400;color:#f44;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
-    d.textContent = 'BOOT ERROR: ' + (e.stack || e.message || e);
-    makeCopyable(d);
-    document.body.prepend(d);
+    console.error('BOOT ERROR:', e);
+    logDebug('BOOT ERROR: ' + (e.stack || e.message || e), 'error');
 });
-// Fallback timer: if no boot messages after 3s, show error
-setTimeout(() => {
-    const dbg = document.getElementById('sim-canvas');
-    if (dbg) {
-        const rect = dbg.getBoundingClientRect();
-        const d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#ff0;padding:8px;font:12px monospace;z-index:9999;white-space:pre-wrap';
-        d.textContent = 'DEBUG: canvas=' + rect.width + 'x' + rect.height + ' found=' + (!!dbg);
-        makeCopyable(d);
-        document.body.prepend(d);
-    } else {
-        const d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:80px;left:0;right:0;background:#222;color:#f00;padding:8px;font:12px monospace;z-index:9999';
-        d.textContent = 'DEBUG: canvas NOT FOUND in DOM';
-        makeCopyable(d);
-        document.body.prepend(d);
-    }
-}, 3000);

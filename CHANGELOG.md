@@ -1,3 +1,8 @@
+# CHANGELOG — VEPA
+
+## 4.0.0 — 2026-08-01
+VEPA v4 (Integrated Intelligence) shipped in `v4/`. See `v4/CHANGELOG.md`. 
+
 
 
 ## [2.6.0] - 2026-07-29

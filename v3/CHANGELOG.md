@@ -1,6 +1,16 @@
 # Changelog: VEPA v3
 
 
+## [Unreleased]
+
+### Fixed
+- **Spawn Jitter NaN Bug**: Initial particle positions called `prng.nextFloat()` with no arguments, producing NaN jitter and collapsing the whole population to the world center. Now uses `nextFloat(0, 1)`.
+
+### Changed
+- **Sparser Initial Distribution**: `DEFAULT_PARTICLES_PER_SPECIES` reduced 100 → 50 (5 species × 50 = 250 initial particles).
+- **Larger World**: `WORLD_SIZE` increased 120 → 240, spreading the initial population over 8× the volume.
+
+
 ## [3.1.0] - 2026-07-29
 
 ### Added

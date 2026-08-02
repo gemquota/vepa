@@ -64,6 +64,7 @@ import {
   applyCrystallization,
   applyPhaseRadiation,
   applySublimation,
+  applySignalExchange,
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
@@ -132,6 +133,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
+  const _dnaJ = new Array(42);
 
   // ── Phase 1: Build spatial grid from alive particles ──
 
@@ -493,6 +495,17 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
+      // ── Signal exchange (communication DNA, always-on when pulsed) ──
+      if ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01) {
+        readDNAFromCache(view, jBase, _dnaJ);
+        const sigForce = applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, dist, dnaI, _dnaJ, localTimeStep);
+        if (sigForce) {
+          ax += sigForce.ax;
+          ay += sigForce.ay;
+          az += sigForce.az;
+        }
+      }
+
       // ── Track ──
       if (isSet(lawState, LAW_INDEXES.TRACK)) {
         const trackSynergy = computeSynergy(lawState, LAW_INDEXES.TRACK);
@@ -505,7 +518,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Predation (mass-difference pursuit + gene absorption) ──
-      if (isSet(lawState, LAW_INDEXES.TRACK)) {
+      if (isSet(lawState, LAW_INDEXES.PREDATION)) {
         const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist);
         if (predForce) {
           ax += predForce.ax;
@@ -596,11 +609,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       az += (prng() - 0.5) * jitter * jitterMult * 0.3 * localTimeStep;
     }
 
-    // ── Force clamping ──
+    // ── Force clamping (goal-engine tunable ceiling + global force scale) ──
 
+    ax *= runtimeConfig.forceScale;
+    ay *= runtimeConfig.forceScale;
+    az *= runtimeConfig.forceScale;
     const forceMag = Math.sqrt(ax * ax + ay * ay + az * az);
-    if (forceMag > MAX_FORCE) {
-      const scale = MAX_FORCE / forceMag;
+    const forceCap = Math.min(MAX_FORCE, Math.max(0.1, runtimeConfig.maxForce));
+    if (forceMag > forceCap) {
+      const scale = forceCap / forceMag;
       ax *= scale;
       ay *= scale;
       az *= scale;
@@ -622,6 +639,12 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     vx = view[iBase + S.VEL_X] + (vx - view[iBase + S.VEL_X]);
     vy = view[iBase + S.VEL_Y] + (vy - view[iBase + S.VEL_Y]);
     vz = view[iBase + S.VEL_Z] + (vz - view[iBase + S.VEL_Z]);
+
+    // ── Global drag multiplier (goal-engine tunable) ──
+
+    vx *= runtimeConfig.dragMultiplier;
+    vy *= runtimeConfig.dragMultiplier;
+    vz *= runtimeConfig.dragMultiplier;
 
     // ── Velocity clamping ──
 
@@ -750,7 +773,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Life cycle ──
 
     applyLifeCycle(lawState, view, iBase, dnaI, localTimeStep, prng,
-      computeSynergy(lawState, LAW_INDEXES.LIFE));
+      computeSynergy(lawState, LAW_INDEXES.LIFE) * runtimeConfig.deathRate);
 
     // ── Glow ──
     applyGlowEffect(lawState, view, iBase, localTimeStep,
@@ -792,7 +815,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Reproduction ──
 
     const offspring = applyReproduction(lawState, view, iBase, dnaI, prng,
-      computeSynergy(lawState, LAW_INDEXES.REPRO), dnaBuffer);
+      computeSynergy(lawState, LAW_INDEXES.REPRO) * runtimeConfig.birthRate, dnaBuffer);
     if (offspring) {
       _offspringRing[_ringWrite] = offspring;
       _ringWrite = (_ringWrite + 1) % OFFSPRING_RING_SIZE;

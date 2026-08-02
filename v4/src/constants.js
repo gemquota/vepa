@@ -12,7 +12,7 @@ export const DNA_PACK_MAX = 65535;
 export const MAX_SPECIES = 64;
 export const MAX_PARTICLES = 2500;
 export const STAR_MASS = 12;   // mass threshold for gravitational collapse (star)
-export const DEFAULT_PARTICLES_PER_SPECIES = 50;
+export const DEFAULT_PARTICLES_PER_SPECIES = 250;
 export const WORLD_SIZE = 2000;
 
 // --- Particle Stride Layout (100 floats per particle) ---
@@ -285,9 +285,10 @@ export const LAW_INDEXES = {
   CLAIRVOYANCE:   48,
   PRECOGNITION:   49,
   ASTRAL:         50,
+  PREDATION:     51,
 };
 
-export const LAW_COUNT = 51;
+export const LAW_COUNT = 52;
 
 // --- Law Category Mapping ---
 
@@ -319,6 +320,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.RADIATION,
       LAW_INDEXES.GENOTYPE,
       LAW_INDEXES.PHENOTYPE,
+      LAW_INDEXES.PREDATION,
     ],
   },
   chemistry: {
@@ -462,6 +464,12 @@ export const LAW_HELP_DB = {
     hint: "Predation tracking: particles chase lower-mass prey.",
     explanation: "Particles with high PREDATION_BIAS are attracted to particles with lower mass.",
     system: "Creates predator-prey dynamics. Combines with LIFE and REPRO for full ecosystem simulation.",
+  },
+  PREDATION: {
+    hint: "Predation: mass-difference pursuit and gene absorption.",
+    explanation: "Larger particles pursue smaller ones based on PREDATION_BIAS DNA, absorbing DNA traits and mass on contact.",
+    system: "Predator chases prey when mass difference > 0.5; prey flee with jitter-based repulsion. On contact, 5 random DNA traits blend toward the prey at 5% plus mass transfer.",
+    advanced: "Pairs with TRACK and REPRO for full ecosystem cycles. High PREDATION_BIAS species act as apex predators; prey species benefit from JITTER for escape.",
   },
   SENESCENCE: {
     hint: "Age-based death: old particles die off.",

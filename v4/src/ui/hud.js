@@ -21,6 +21,11 @@ function readEl() {
   el.particles = document.getElementById('hud-particles');
   el.species = document.getElementById('hud-species');
   el.tick = document.getElementById('hud-tick');
+  // Color-coded accents (FPS green, population blue, species purple, tick dim)
+  if (el.fps) el.fps.classList.add('hud-fps');
+  if (el.particles) el.particles.classList.add('hud-particles');
+  if (el.species) el.species.classList.add('hud-species');
+  if (el.tick) el.tick.classList.add('hud-tick');
 }
 
 function tick(now) {

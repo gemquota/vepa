@@ -127,3 +127,12 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ---
 
 ### "In the beginning, there was the Vector. Then, there was the Emergence."
+
+---
+
+## VEPA v4
+
+The current major version lives in [`v4/`](v4/README.md) — Integrated Intelligence release (4.0.0).
+
+Run it from anywhere: `./vepa4 dev` (see `v4/README.md` for all subcommands).
+
