@@ -1,6 +1,14 @@
 # Changelog: VEPA v4
 
 
+## [4.1.1] - 2026-08-03
+
+### Render
+- **Motion trails removed**: the simulation canvas now fully clears each frame
+  so the atmospheric backdrop shows through cleanly; the previous
+  `destination-out` fade is gone.
+
+
 ## [4.1.0] - 2026-08-02
 
 ### PIZZAZ — Atmosphere & Micro-Interactions

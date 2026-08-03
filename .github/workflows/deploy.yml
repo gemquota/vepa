@@ -28,9 +28,9 @@ jobs:
       - run: npx vite build
       - run: cp -r .dist v2-dist
 
-      # Build vepar
-      - run: cd v3 && npm ci && npm run build
-      - run: cp -r v3/.dist vepar-dist
+      # Build vepar (v4 replaces v3 at /vepa/vepar/)
+      - run: cd v4 && npm ci && npm run build
+      - run: cp -r v4/.dist vepar-dist
 
       # Combine into single deploy directory
       - run: mkdir -p deploy

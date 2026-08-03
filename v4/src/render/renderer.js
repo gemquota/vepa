@@ -21,9 +21,6 @@ import { projectPoint } from '../ui/camera.js';
 const BG_COLOR     = '#0a0a0f';
 const GRID_COLOR   = 'rgba(40, 50, 70, 0.25)';
 const GRID_DIVISIONS = 8;   // grid lines per axis
-// Per-frame trail fade: how much of the previous frame survives (0..1).
-// Lower = longer glowing motion trails.
-const TRAIL_FADE = 0.22;
 
 // ── Canvas2D Renderer ──────────────────────────────────────────────────────
 
@@ -117,16 +114,11 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
 
     const view = new Float32Array(particleBuffer);
 
-    // ── 1. Trail fade ──
-    // Erase toward transparency so the background layer shows through and the
-    // previous frame's particles linger briefly as motion trails. Skipped while
-    // paused so the frozen scene stays crisp.
-    if (!renderer.paused) {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = `rgba(0, 0, 0, ${TRAIL_FADE})`;
-        ctx.fillRect(0, 0, width, height);
-        ctx.globalCompositeOperation = 'source-over';
-    }
+    // ── 1. Clear frame ──
+    // The simulation canvas is transparent and sits above the atmospheric
+    // #bg-canvas layer, so a full clear each frame shows the backdrop through
+    // cleanly — no motion trails.
+    ctx.clearRect(0, 0, width, height);
 
     // ── 2. Reference grid ──
     drawGrid(ctx, width, height);
@@ -238,7 +230,7 @@ function drawGrid(ctx, width, height) {
 /**
  * Paint the atmospheric backdrop — deep-space gradient, nebula blobs,
  * deterministic starfield, and a cinematic vignette. Drawn to a canvas that
- * sits behind the simulation canvas; motion trails erase toward it.
+ * sits behind the transparent simulation canvas.
  *
  * @param {HTMLCanvasElement} canvas - Target background canvas
  */
