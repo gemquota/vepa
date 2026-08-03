@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/vepa/vepar/',
+  // Vercel builds serve at the root; GitHub Pages at /vepa/vepar/
+  base: process.env.VERCEL === '1' ? '/' : '/vepa/vepar/',
   root: '.',
   build: {
     outDir: '.dist',
