@@ -12,10 +12,10 @@ let recording = false;
 let goalLog = [];
 
 /**
- * Create the intelligence dashboard inside #world-intel.
+ * Create the intelligence dashboard inside #intel-dashboard.
  */
 export function createIntelPanel(bus) {
-  const target = document.getElementById('world-intel');
+  const target = document.getElementById('intel-dashboard');
   if (!target) return;
   host = target;
 

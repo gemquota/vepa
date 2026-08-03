@@ -39,9 +39,9 @@ let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
-// Minimal default — only fundamental physics
-// Curated combo: physics core + ecosystem + structures + thermodynamics
-const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL', 'ACCR', 'LIFE', 'REPRO', 'AFFINITY', 'GLOW', 'ENERGY', 'BOND', 'POLYMER', 'HEAT', 'CONVECTION', 'COMMS'];
+// Begin with all laws disabled — movement and interaction only exist once
+// a law is enabled. Presets (and the user) turn laws on explicitly.
+const DEFAULT_LAWS = [];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
@@ -303,12 +303,18 @@ function setDNAFromProfile(species, profile) {
         tick = 0;
         paused = false;
         resetIntelligence();
+        bus.emit('species:sync', { count: speciesCount });
         logDebug('simulation restarted');
         console.log('[VEPA v3] Simulation restarted');
         resetCamera();
         bus.emit('law:sync');
         bus.emit('sim:paused', { paused: false });
     });
+    // Species roster changes from the UI (add/remove species)
+    bus.on('species:changed', ({ count }) => {
+        speciesCount = Math.max(1, Math.min(count || 1, MAX_SPECIES));
+    });
+
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
     bus.on('sim:hardReset', () => {
         console.log('[VEPA v3] Hard reset requested');

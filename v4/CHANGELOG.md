@@ -1,6 +1,25 @@
 # Changelog: VEPA v4
 
 
+## [4.1.4] - 2026-08-03
+
+### Startup
+- **Begin with all laws disabled**: `DEFAULT_LAWS` is empty, so the sim boots
+  (and restarts) with zero laws — particles are completely static until a law
+  is enabled. Presets and manual toggles turn laws on.
+
+### UI
+- **Tabs restructured**: top-level `DATA` (sub-tabs INTELLIGENCE | DNA | LOGS)
+  and `CONFIG` (sub-tabs WORLD | SPECIES | SETTINGS). The intelligence
+  dashboard is the primary DATA subtab; world (law grid + params) and species
+  panels now live under CONFIG.
+- **LOGS subtab fixed**: the narrative log panel (`#narrative-panel`) now
+  actually renders — previously it targeted a container that didn't exist.
+- **+ SPECIES works**: clones species 0's DNA into the next free slot (up to
+  64) and selects it.
+- **− SPECIES + per-card ✕**: remove the last species or any card; the DNA
+  roster compacts, selection clamps, and the HUD species count syncs (min 1).
+
 ## [4.1.3] - 2026-08-03
 
 ### Law Gating (complete)

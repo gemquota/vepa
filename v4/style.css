@@ -695,6 +695,33 @@ body {
 }
 #main-panel .tab-content.active { display: block; }
 
+/* ── Sub-tabs (DATA > INTELLIGENCE|DNA|LOGS, CONFIG > WORLD|SPECIES|SETTINGS) ── */
+#main-panel .sub-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    flex-shrink: 0;
+}
+#main-panel .sub-tab-btn {
+    flex: 1;
+    padding: 6px 4px;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+}
+#main-panel .sub-tab-btn:hover { color: var(--text-secondary); }
+#main-panel .sub-tab-btn.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+#main-panel .sub-tab-content { display: none; padding: 4px 0; }
+#main-panel .sub-tab-content.active { display: block; }
+
+
 /* ── Minimized Drawer ── */
 #drawer-container.minimized {
     max-height: none;
@@ -820,6 +847,34 @@ body {
     cursor: pointer;
 }
 #add-species-btn:hover { background: rgba(74,255,138,0.1); }
+#remove-species-btn {
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 1px;
+    background: transparent;
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+#remove-species-btn:hover { background: rgba(255,80,80,0.1); }
+.species-remove {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.species-remove:hover { color: var(--accent-red); border-color: var(--accent-red); }
+.species-remove.disabled { opacity: 0.25; pointer-events: none; }
 
 #species-list { padding: 4px; }
 .species-card {

@@ -45,6 +45,19 @@ function setupTabSwitching() {
       if (target) target.classList.add('active');
     });
   });
+
+  // Sub-tabs (e.g. DATA > INTELLIGENCE | DNA | LOGS)
+  document.querySelectorAll('#main-panel .sub-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const parent = btn.closest('.tab-content');
+      if (!parent) return;
+      parent.querySelectorAll('.sub-tab-btn').forEach((b) => b.classList.remove('active'));
+      parent.querySelectorAll('.sub-tab-content').forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      const target = document.getElementById(btn.dataset.sub);
+      if (target) target.classList.add('active');
+    });
+  });
 }
 
 export function setupDrawerMinimize() {

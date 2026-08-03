@@ -31,8 +31,11 @@ export function createDNAAnalytics(bus) {
     // Skip collection entirely when the DNA tab is hidden — this loop runs
     // every frame and was allocating full-buffer copies + canvas renders
     // even while the user was on another tab.
-    const tab = document.getElementById('tab-dna');
-    if (!tab || !tab.classList.contains('active')) {
+    const dataTab = document.getElementById('tab-data');
+    const dnaSub = document.getElementById('data-dna');
+    const visible = dataTab && dataTab.classList.contains('active')
+      && dnaSub && dnaSub.classList.contains('active');
+    if (!visible) {
       tickAccum = 0;
       return;
     }

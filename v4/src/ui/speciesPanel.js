@@ -42,6 +42,7 @@ const ACCORDION_GROUPS = [
 ];
 
 let selectedSpecies = 0;
+let speciesCount = 5; // default roster size (matches spawnDefaultPopulation)
 
 export function createSpeciesPanel(bus, dnaBuffer) {
   const list = document.getElementById('species-list');
@@ -51,11 +52,26 @@ export function createSpeciesPanel(bus, dnaBuffer) {
   renderSpeciesList(list, dnaBuffer);
   renderAccordion(accordion, dnaBuffer, bus);
 
+  const removeBtn = document.getElementById('remove-species-btn');
+
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      bus.emit('narrative:system', { text: 'Add species — not yet implemented in v3.' });
+      addSpecies(dnaBuffer, bus, list, accordion);
     });
   }
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      removeLastSpecies(dnaBuffer, bus, list, accordion);
+    });
+  }
+
+  // Stay in sync with restarts (roster resets to the default 5)
+  bus.on('species:sync', ({ count }) => {
+    speciesCount = Math.max(1, Math.min(count || 5, MAX_SPECIES));
+    selectedSpecies = Math.min(selectedSpecies, speciesCount - 1);
+    renderSpeciesList(list, dnaBuffer);
+    renderAccordion(accordion, dnaBuffer, bus);
+  });
 
   bus.on('dna:sync', () => {
     renderSpeciesList(list, dnaBuffer);
@@ -69,33 +85,101 @@ export function createSpeciesPanel(bus, dnaBuffer) {
   });
 }
 
+function speciesColor(s) {
+  if (s < SPECIES_COLORS.length) return SPECIES_COLORS[s];
+  return `hsl(${(s * 47) % 360}, 80%, 60%)`;
+}
+
+function speciesName(s) {
+  return SPECIES_NAMES[s] || `Species ${s}`;
+}
+
 function renderSpeciesList(container, dnaBuffer) {
   if (!container) return;
   let html = '';
-  const count = Math.min(SPECIES_NAMES.length, MAX_SPECIES);
+  const count = Math.min(speciesCount, MAX_SPECIES);
   for (let s = 0; s < count; s++) {
-    const color = SPECIES_COLORS[s] || '#444';
-    const name = SPECIES_NAMES[s] || `Species ${s}`;
+    const color = speciesColor(s);
+    const name = speciesName(s);
     const selected = s === selectedSpecies ? ' selected' : '';
+    const removable = count > 1 ? '' : ' disabled';
     html += `<div class="species-card${selected}" data-species="${s}">`
           + `<span class="species-swatch" style="background:${color}"></span>`
           + `<span class="species-name">${name}</span>`
+          + `<button class="species-remove${removable}" data-remove="${s}" title="Remove ${name}">✕</button>`
           + `</div>`;
   }
   container.innerHTML = html;
 
   container.querySelectorAll('.species-card').forEach((card) => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (ev) => {
+      if (ev.target.closest('.species-remove')) return;
       container.querySelectorAll('.species-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       selectedSpecies = parseInt(card.dataset.species, 10);
       const accordion = document.getElementById('dna-accordion');
-      const dnaBuffer = window.__dnaBuffer;
-      if (accordion && dnaBuffer) {
-        renderAccordion(accordion, dnaBuffer, null);
+      const buf = window.__dnaBuffer;
+      if (accordion && buf) {
+        renderAccordion(accordion, buf, null);
       }
     });
   });
+
+  container.querySelectorAll('.species-remove:not(.disabled)').forEach((btn) => {
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      removeSpeciesAt(parseInt(btn.dataset.remove, 10), dnaBuffer, window.__bus || null);
+      const accordion = document.getElementById('dna-accordion');
+      const buf = window.__dnaBuffer;
+      renderSpeciesList(container, buf);
+      if (accordion && buf) renderAccordion(accordion, buf, null);
+    });
+  });
+}
+
+/** Add a new species by cloning species 0's DNA into the next free slot. */
+function addSpecies(dnaBuffer, bus, list, accordion) {
+  if (speciesCount >= MAX_SPECIES) {
+    if (bus) bus.emit('narrative:system', { text: 'Species roster full (64 max).' });
+    return;
+  }
+  const template = getSpeciesDNA(dnaBuffer, 0);
+  setSpeciesDNA(dnaBuffer, speciesCount, template);
+  speciesCount++;
+  selectedSpecies = speciesCount - 1;
+  renderSpeciesList(list, dnaBuffer);
+  renderAccordion(accordion, dnaBuffer, bus);
+  if (bus) {
+    bus.emit('dna:sync');
+    bus.emit('species:changed', { count: speciesCount });
+    bus.emit('narrative:system', { text: `Species added: ${speciesName(selectedSpecies)} (${speciesCount} total).` });
+  }
+}
+
+/** Remove the species at index `idx`, compacting the roster. */
+function removeSpeciesAt(idx, dnaBuffer, bus) {
+  if (speciesCount <= 1) return;
+  if (idx < 0 || idx >= speciesCount) return;
+  for (let s = idx; s < speciesCount - 1; s++) {
+    const from = getSpeciesDNA(dnaBuffer, s + 1);
+    setSpeciesDNA(dnaBuffer, s, from);
+  }
+  setSpeciesDNA(dnaBuffer, speciesCount - 1, new Float32Array(64));
+  speciesCount--;
+  if (selectedSpecies >= speciesCount) selectedSpecies = speciesCount - 1;
+  if (bus) {
+    bus.emit('dna:sync');
+    bus.emit('species:changed', { count: speciesCount });
+    bus.emit('narrative:system', { text: `Species removed: ${speciesName(idx)} (${speciesCount} remain).` });
+  }
+}
+
+/** Remove the last species (header − button). */
+function removeLastSpecies(dnaBuffer, bus, list, accordion) {
+  removeSpeciesAt(speciesCount - 1, dnaBuffer, bus);
+  const buf = window.__dnaBuffer;
+  renderSpeciesList(list, buf);
+  renderAccordion(accordion, buf, bus);
 }
 
 function renderAccordion(container, dnaBuffer, bus) {
@@ -148,6 +232,7 @@ function renderAccordion(container, dnaBuffer, bus) {
     });
   });
 
-  // Store ref for species list click handler
+  // Store refs for species list click handler
   window.__dnaBuffer = dnaBuffer;
+  window.__bus = bus;
 }
