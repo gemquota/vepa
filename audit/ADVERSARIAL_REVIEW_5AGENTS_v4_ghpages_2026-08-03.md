@@ -271,3 +271,27 @@ Claims independently re-checked by the synthesizer before finalizing:
 ---
 
 *Synthesis compiled 2026-08-03 from 5 independent agent reviews. Individual reviews were run read-only; no files were modified by reviewers. Synthesizer spot-verification in §6.*
+
+---
+
+## 7. Follow-up — v4.1.2 (2026-08-03)
+
+The next commit (`0e57edc v4.1.2: COMMS law gates all communication; zero-laws hard freeze`) addressed the user-reported physics bug plus several findings from this review:
+
+| Finding | Status in 4.1.2 |
+|---------|-----------------|
+| C1 — `vaa/` (61 MB) untracked/unignored | **Fixed** — `vaa/` added to `.gitignore` along with `v4-server.log`, `.chromium.log`, `.tmp_*.mjs`, `v4/.shots/` |
+| M1 — `v4/node_modules` symlink unignored | **Fixed** — explicit `v4/node_modules` rule (trailing-slash rules don't match symlinks) |
+| M2 — `v4-server.log` unignored | **Fixed** |
+| H1 — version drift (`4.1.1`/`4.1.0`/`4.0.0`) | **Fixed** — all bumped to `4.1.2`: `package.json`, `package-lock.json`, `src/debug.js`, `CHANGELOG.md` |
+| C2 — no COOP/COEP on GitHub Pages | **Not addressed** — inherent GitHub Pages limitation; dev server still sends the headers (SharedArrayBuffer works in dev only) |
+| H3/H5/H6/H7, M3-M9 | **Not addressed** — pre-existing debt, out of scope for the physics fix |
+
+### Physics fix (user-reported, not from review)
+
+- **New COMMS law** (biology, index 52) is the sole gate for signal emission, decay, and pairwise exchange. With COMMS off, `SIGNAL`/`MEMORY` freeze and no comms forces exist.
+- **Zero-laws hard freeze**: `solve()` returns immediately when no laws are active — no movement, friction, signals, lifecycle, or reproduction.
+- **AGE moved to solver core** as a frame counter so oscillator phase and lifecycle gating progress with or without `LIFE`.
+- Verification: 42/42 vitest pass (`lawGating.test.js` added); headless-Chromium end-to-end check shows continuous motion with default laws and byte-identical particle cores across 18 s after UI "CLEAR ALL".
+- Deployed to live: `https://gemquota.github.io/vepa/vepar/` serves `4.1.2` (bundle `index-B6VbQ-dW.js`).
+
