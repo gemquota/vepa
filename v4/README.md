@@ -19,6 +19,17 @@ npm run build  # Production build
 npm test       # Unit tests (39 tests)
 ```
 
+## Deployments
+
+| Platform | URL | Notes |
+|----------|-----|-------|
+| Vercel (production) | https://vepa-v4.vercel.app/ | COOP/COEP headers served — `SharedArrayBuffer` enabled; true memory model |
+| GitHub Pages | https://gemquota.github.io/vepa/vepar/ | No COOP/COEP on Pages — runs ArrayBuffer fallback |
+
+Vercel deploys from `v4/` using `v4/vercel.json` (static build, root base,
+COOP/COEP headers). GitHub Pages deploys via the `.github/workflows/deploy.yml`
+workflow (base `/vepa/vepar/`). The vite base switches on `VERCEL=1`.
+
 ### Run from anywhere
 
 The repo-root launcher `./vepa4` works from any directory (no `cd` needed):

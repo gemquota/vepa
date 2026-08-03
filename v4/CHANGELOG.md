@@ -3,6 +3,12 @@
 
 ## [4.1.2] - 2026-08-03
 
+### Deployment
+- **Vercel**: new production deployment at https://vepa-v4.vercel.app/ —
+  serves COOP/COEP headers so `SharedArrayBuffer` (the true memory model) is
+  enabled in production, which GitHub Pages cannot provide. Config in
+  `vercel.json` (root base when `VERCEL=1`, immutable cache).
+
 ### Laws & Gating
 - **NEW COMMS law** (biology, index 52): the single gate for the entire
   communication DNA group. While active, oscillator pulses (PULSE_RATE x

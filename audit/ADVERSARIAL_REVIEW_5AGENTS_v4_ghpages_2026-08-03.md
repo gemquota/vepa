@@ -295,3 +295,17 @@ The next commit (`0e57edc v4.1.2: COMMS law gates all communication; zero-laws h
 - Verification: 42/42 vitest pass (`lawGating.test.js` added); headless-Chromium end-to-end check shows continuous motion with default laws and byte-identical particle cores across 18 s after UI "CLEAR ALL".
 - Deployed to live: `https://gemquota.github.io/vepa/vepar/` serves `4.1.2` (bundle `index-B6VbQ-dW.js`).
 
+
+---
+
+## 8. Follow-up — Vercel deployment (2026-08-03)
+
+Finding **C2** from this review ("COOP/COEP never delivered on GitHub Pages → SharedArrayBuffer always disabled") is now resolved on a parallel platform:
+
+- **Production:** https://vepa-v4.vercel.app/ (project `gemquotas-projects/vepa-v4`)
+- `vercel.json` serves `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp` on every route.
+- Verified in headless Chromium against the live URL: `crossOriginIsolated: true`, app logs `SharedArrayBuffer: true`, 1250 particles running.
+- Deployment-config commit: `21fcd0b` (conditional vite base: `/` on Vercel, `/vepa/vepar/` on GitHub Pages).
+- Project SSO protection was disabled at project level to make the URL public (team default protects `.vercel.app` URLs).
+
+GitHub Pages remains the fallback deployment at `https://gemquota.github.io/vepa/vepar/` (ArrayBuffer mode).
