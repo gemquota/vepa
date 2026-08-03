@@ -19,6 +19,7 @@ const LAW_ICONS = {
   TIME_DILATION: '⌛', DIMENSIONALITY: '◈', CHAOS: '☄', ORDER: '⊡', FATE: '⚖',
   WILL: '⚔', SOUL_LAW: '👁', MIND: '🧠',
   TELEPATHY: '〰', CLAIRVOYANCE: '◎', PRECOGNITION: '◉', ASTRAL: '👻',
+  COMMS: '◍',
 };
 
 // Reverse: law index → name

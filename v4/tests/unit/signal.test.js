@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES } from '../../src/constants.js';
-import { createLawState } from '../../src/state/lawState.js';
+import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, LAW_INDEXES } from '../../src/constants.js';
+import { createLawState, set } from '../../src/state/lawState.js';
 import { setBuffer, applySignalDecay, applySignalExchange } from '../../src/physics/laws.js';
 
 const S = STRIDE_INDEXES;
@@ -31,6 +31,7 @@ describe('VEPA v4 Signal System', () => {
         const view = new Float32Array(1 * PARTICLE_STRIDE);
         makeParticle(view, 0, { PULSE_RATE: 0.5, SIGNAL_STRENGTH: 1.0, SIGNAL_DECAY: 0.95 });
         const lawState = createLawState();
+        set(lawState, LAW_INDEXES.COMMS);
         setBuffer(view);
 
         const dna = [];
@@ -52,6 +53,7 @@ describe('VEPA v4 Signal System', () => {
         makeParticle(view, 0, { SIGNAL_STRENGTH: 1.0 });        // sender
         makeParticle(view, 1, { SIGNAL_RESP: 2.0, PROPAGATION_SPEED: 0.5 }); // receiver
         const lawState = createLawState();
+        set(lawState, LAW_INDEXES.COMMS);
         setBuffer(view);
 
         view[0 * PARTICLE_STRIDE + S.SIGNAL] = 0.8; // sender emits
@@ -77,6 +79,7 @@ describe('VEPA v4 Signal System', () => {
         makeParticle(view, 0, { SIGNAL_STRENGTH: 1.0, TUNING_CH1: 0, TUNING_CH2: 1, TUNING_CH3: 1, TUNING_CH4: 1 });
         makeParticle(view, 1, { SIGNAL_RESP: 2.0, PROPAGATION_SPEED: 0.5, TUNING_CH1: 1, TUNING_CH2: 0, TUNING_CH3: 0, TUNING_CH4: 0 });
         const lawState = createLawState();
+        set(lawState, LAW_INDEXES.COMMS);
         setBuffer(view);
 
         view[0 * PARTICLE_STRIDE + S.SIGNAL] = 0.8;

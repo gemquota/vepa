@@ -1,6 +1,29 @@
 # Changelog: VEPA v4
 
 
+## [4.1.2] - 2026-08-03
+
+### Laws & Gating
+- **NEW COMMS law** (biology, index 52): the single gate for the entire
+  communication DNA group. While active, oscillator pulses (PULSE_RATE x
+  SIGNAL_STRENGTH) build the SIGNAL field, neighbors within
+  NEIGHBORHOOD_RADIUS exchange channel-filtered signals (TUNING_CH1-4), and
+  delivery converts into response forces, energy, and memory. While off, no
+  signal emits, decays, or exchanges — SIGNAL/MEMORY freeze and no comms
+  forces exist. Enabled by default.
+- **Zero-laws hard freeze**: the solver returns immediately when no laws are
+  active — no integration, friction, signals, lifecycle, or reproduction.
+  Movement and interaction only exist while a law governs them.
+- **AGE moved to solver core**: age is now advanced by the solver each tick as
+  a frame counter (not inside the LIFE law), so oscillator phase and lifecycle
+  gating progress consistently with or without LIFE, and freeze only under the
+  zero-laws gate.
+
+### Tests
+- **New lawGating.test.js**: zero-laws no-op, COMMS-off immobility, COMMS-on
+  emission accumulation.
+- **signal.test.js** updated to enable COMMS where signal behavior is asserted.
+
 ## [4.1.1] - 2026-08-03
 
 ### Render

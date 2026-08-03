@@ -286,9 +286,10 @@ export const LAW_INDEXES = {
   PRECOGNITION:   49,
   ASTRAL:         50,
   PREDATION:     51,
+  COMMS:         52,
 };
 
-export const LAW_COUNT = 52;
+export const LAW_COUNT = 53;
 
 // --- Law Category Mapping ---
 
@@ -321,6 +322,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.GENOTYPE,
       LAW_INDEXES.PHENOTYPE,
       LAW_INDEXES.PREDATION,
+      LAW_INDEXES.COMMS,
     ],
   },
   chemistry: {
@@ -470,6 +472,12 @@ export const LAW_HELP_DB = {
     explanation: "Larger particles pursue smaller ones based on PREDATION_BIAS DNA, absorbing DNA traits and mass on contact.",
     system: "Predator chases prey when mass difference > 0.5; prey flee with jitter-based repulsion. On contact, 5 random DNA traits blend toward the prey at 5% plus mass transfer.",
     advanced: "Pairs with TRACK and REPRO for full ecosystem cycles. High PREDATION_BIAS species act as apex predators; prey species benefit from JITTER for escape.",
+  },
+  COMMS: {
+    hint: "Communication: particles emit and exchange channel-filtered signals.",
+    explanation: "Oscillator pulses (PULSE_RATE × SIGNAL_STRENGTH DNA) build a SIGNAL field each tick; neighbors within NEIGHBORHOOD_RADIUS exchange signal filtered by TUNING_CH1-4, converting delivery into response forces, energy, and memory.",
+    system: "The only law that drives signal emission, decay, and pairwise signal exchange. With COMMS off, SIGNAL and MEMORY fields freeze and no communication forces exist — nothing moves or interacts through the comms channel.",
+    advanced: "Receiver sensitivity is SIGNAL_RESP, range is NEIGHBORHOOD_RADIUS, persistence is SIGNAL_DECAY, and channel tuning is TUNING_CH1-4. Because COMMS is the sole gate for the communication DNA group, toggling it off guarantees zero signal-driven movement even when other laws are active.",
   },
   SENESCENCE: {
     hint: "Age-based death: old particles die off.",

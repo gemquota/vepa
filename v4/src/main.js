@@ -41,7 +41,7 @@ let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let worldSize = WORLD_SIZE;
 // Minimal default — only fundamental physics
 // Curated combo: physics core + ecosystem + structures + thermodynamics
-const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL', 'ACCR', 'LIFE', 'REPRO', 'AFFINITY', 'GLOW', 'ENERGY', 'BOND', 'POLYMER', 'HEAT', 'CONVECTION'];
+const DEFAULT_LAWS = ['GRAV', 'DRAG', 'WRAP', 'COLL', 'ACCR', 'LIFE', 'REPRO', 'AFFINITY', 'GLOW', 'ENERGY', 'BOND', 'POLYMER', 'HEAT', 'CONVECTION', 'COMMS'];
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }

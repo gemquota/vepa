@@ -131,6 +131,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   const halfWorld = worldSize * 0.5;
   dt = dt || DEFAULT_DT;
 
+  // Zero laws active → hard freeze. Nothing moves, decays, reproduces, or
+  // interacts: no integration, no friction, no signal emission/exchange, no
+  // lifecycle. Movement and interaction only exist while a law governs them.
+  if (lawState.lowFlags[0] === 0 && lawState.highFlags[0] === 0) return;
+
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
   const _dnaJ = new Array(42);
@@ -495,8 +500,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Signal exchange (communication DNA, always-on when pulsed) ──
-      if ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01) {
+      // ── Signal exchange (communication DNA, gated by COMMS law) ──
+      if (isSet(lawState, LAW_INDEXES.COMMS) && ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01)) {
         readDNAFromCache(view, jBase, _dnaJ);
         const sigForce = applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, dist, dnaI, _dnaJ, localTimeStep);
         if (sigForce) {
@@ -765,10 +770,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     view[iBase + S.VEL_Y] = vy;
     view[iBase + S.VEL_Z] = vz;
     view[iBase + S.MASS] = mass;
+    // Age is the particle's own time coordinate (frame count since birth),
+    // advanced here so oscillator phases and lifecycle gating progress with
+    // or without the LIFE law. Frozen entirely when no laws are active.
+    view[iBase + S.AGE] = (view[iBase + S.AGE] || 0) + localTimeStep;
 
-    // ── Signal decay ──
+    // ── Signal decay (emission + decay, gated by COMMS law) ──
 
-    applySignalDecay(lawState, view, iBase, dnaI, localTimeStep);
+    if (isSet(lawState, LAW_INDEXES.COMMS)) {
+      applySignalDecay(lawState, view, iBase, dnaI, localTimeStep);
+    }
 
     // ── Life cycle ──
 

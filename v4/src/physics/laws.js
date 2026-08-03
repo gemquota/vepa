@@ -424,8 +424,8 @@ export function applyPlanetary(lawState, view, base, px, py, pz, worldSize, syne
 export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synergy) {
   if (!isSet(lawState, LAW_INDEXES.LIFE)) return; // LAW_INDEXES.LIFE = 7
 
-  const age = view[base + S.AGE] + dt;
-  view[base + S.AGE] = age;
+  // AGE is advanced by the solver core each tick (frame count), not here.
+  const age = view[base + S.AGE];
 
   let energy = view[base + S.ENERGY];
   const decayRate = 0.01 * (1 - dnaParams[34] * synergy); // ENERGY_EFFICIENCY=34
@@ -490,7 +490,8 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
 // 16. SIGNAL DECAY
 // ============================================================================
 export function applySignalDecay(lawState, view, base, dnaParams, dt) {
-  // v4 — communication DNA is always active: oscillator emission + decay.
+  if (!isSet(lawState, LAW_INDEXES.COMMS)) return; // COMMS=52
+  // v4 — communication DNA, gated by the COMMS law: oscillator emission + decay.
   const decay = dnaParams[20]; // SIGNAL_DECAY=20 (0.1–0.99)
   const pulseRate = dnaParams[14]; // PULSE_RATE=14 (0–1)
   const strength = dnaParams[19]; // SIGNAL_STRENGTH=19 (0–1)
@@ -534,6 +535,7 @@ function channelMatch(receiverDna, senderDna) {
  * @returns {{ax:number,ay:number,az:number}|null} response force (or null)
  */
 export function applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, dist, dnaI, dnaJ, dt) {
+  if (!isSet(lawState, LAW_INDEXES.COMMS)) return null; // COMMS=52
   const sI = view[iBase + S.SIGNAL] || 0;
   const sJ = view[jBase + S.SIGNAL] || 0;
   if (sI < 0.01 && sJ < 0.01) return null;

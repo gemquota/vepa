@@ -22,3 +22,12 @@ preset_refinement_report.md
 codex/entries.json.restored
 vepa_server.log
 deploy_temp/
+
+# Agent/session scratch & audit leftovers (see audit/ADVERSARIAL_REVIEW_5AGENTS_v4_ghpages_2026-08-03.md)
+vaa/
+v4-server.log
+.chromium.log
+.tmp_*.mjs
+v4/.shots/
+v4/node_modules
+.cdp-profile/
