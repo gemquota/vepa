@@ -597,13 +597,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       ax -= vx * (1 - dragFactor) * 10;
       ay -= vy * (1 - dragFactor) * 10;
       az -= vz * (1 - dragFactor) * 10;
-    }
 
-    // Friction
-    const friction = dnaI[DNA_INDEXES.FRICTION] || 0.01;
-    ax -= vx * friction;
-    ay -= vy * friction;
-    az -= vz * friction;
+      // FRICTION DNA = velocity-dependent drag — same law family (kinetic
+      // dampening). Gated with DRAG so no movement effect runs lawless.
+      const friction = dnaI[DNA_INDEXES.FRICTION] || 0.01;
+      ax -= vx * friction;
+      ay -= vy * friction;
+      az -= vz * friction;
+    }
 
     // Entropy (jitter)
     if (isSet(lawState, LAW_INDEXES.ENTR)) {
@@ -645,11 +646,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     vy = view[iBase + S.VEL_Y] + (vy - view[iBase + S.VEL_Y]);
     vz = view[iBase + S.VEL_Z] + (vz - view[iBase + S.VEL_Z]);
 
-    // ── Global drag multiplier (goal-engine tunable) ──
+    // ── Global drag multiplier (goal-engine tunable) — gated by DRAG ──
 
-    vx *= runtimeConfig.dragMultiplier;
-    vy *= runtimeConfig.dragMultiplier;
-    vz *= runtimeConfig.dragMultiplier;
+    if (isSet(lawState, LAW_INDEXES.DRAG)) {
+      vx *= runtimeConfig.dragMultiplier;
+      vy *= runtimeConfig.dragMultiplier;
+      vz *= runtimeConfig.dragMultiplier;
+    }
 
     // ── Velocity clamping ──
 

@@ -1,6 +1,24 @@
 # Changelog: VEPA v4
 
 
+## [4.1.3] - 2026-08-03
+
+### Law Gating (complete)
+- **FRICTION now gated by DRAG**: velocity-dependent damping (FRICTION DNA)
+  previously ran unconditionally whenever any law was active — a movement
+  effect with no law governing it. It now lives inside the DRAG (kinetic
+  dampening) block, so with DRAG off, velocity is preserved exactly.
+- **dragMultiplier tunable gated by DRAG**: the goal-engine's global damping
+  multiplier only applies while the DRAG law is active (default 1.0, inert).
+- Full solver audit: every force, interaction, lifecycle effect, and signal
+  path is now individually law-gated (verified in `apply*` bodies + call
+  sites), with the zero-laws hard freeze as the outer invariant: no laws →
+  no movement, no interaction, no state change of any kind.
+
+### Tests
+- lawGating.test.js: +2 tests — DRAG-off preserves velocity exactly;
+  DRAG-on decays velocity.
+
 ## [4.1.2] - 2026-08-03
 
 ### Deployment

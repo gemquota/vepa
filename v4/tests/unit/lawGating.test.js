@@ -91,6 +91,45 @@ describe('Law gating — movement and interaction require laws', () => {
     }
   });
 
+  it('with DRAG off, velocity is preserved exactly — friction is law-gated', () => {
+    const { view, dna } = makeWorld();
+    const laws = createLawState();
+    set(laws, LAW_INDEXES.WRAP); // only containment; no force, no damping
+    const vx0 = [], vy0 = [];
+    for (let i = 0; i < COUNT; i++) {
+      vx0.push(view[i * PARTICLE_STRIDE + S.VEL_X]);
+      vy0.push(view[i * PARTICLE_STRIDE + S.VEL_Y]);
+    }
+    for (let t = 0; t < 40; t++) {
+      solve(view, COUNT, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    }
+    for (let i = 0; i < COUNT; i++) {
+      const b = i * PARTICLE_STRIDE;
+      expect(view[b + S.VEL_X]).toBeCloseTo(vx0[i], 5);
+      expect(view[b + S.VEL_Y]).toBeCloseTo(vy0[i], 5);
+    }
+  });
+
+  it('with DRAG on, velocity decays (viscosity + friction damping active)', () => {
+    const { view, dna } = makeWorld();
+    const laws = createLawState();
+    set(laws, LAW_INDEXES.WRAP);
+    set(laws, LAW_INDEXES.DRAG);
+    const speed0 = [];
+    for (let i = 0; i < COUNT; i++) {
+      const b = i * PARTICLE_STRIDE;
+      speed0.push(Math.hypot(view[b + S.VEL_X], view[b + S.VEL_Y], view[b + S.VEL_Z]));
+    }
+    for (let t = 0; t < 40; t++) {
+      solve(view, COUNT, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    }
+    for (let i = 0; i < COUNT; i++) {
+      const b = i * PARTICLE_STRIDE;
+      const speed = Math.hypot(view[b + S.VEL_X], view[b + S.VEL_Y], view[b + S.VEL_Z]);
+      expect(speed).toBeLessThan(speed0[i]);
+    }
+  });
+
   it('with COMMS on, signal emission accumulates (SIGNAL grows over time)', () => {
     const { view, dna } = makeWorld();
     const laws = createLawState();
