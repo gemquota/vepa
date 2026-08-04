@@ -41,13 +41,13 @@
             <div id="drawer-container">
                 <div id="main-panel">
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="tab-data">DATA</button>
-                        <button class="tab-btn" data-tab="tab-config">CONFIG</button>
+                        <button class="tab-btn active" data-tab="tab-setup">SETUP</button>
+                        <button class="tab-btn" data-tab="tab-data">DATA</button>
                         <button id="drawer-hide-btn" class="tab-btn drawer-hide-btn" title="Hide drawer" aria-label="Hide drawer">▼</button>
                         <button id="drawer-minimize-btn" class="tab-btn drawer-minimize-btn" title="Minimize drawer" aria-expanded="true">▁</button>
                     </div>
 
-                    <div id="tab-data" class="tab-content active">
+                    <div id="tab-data" class="tab-content">
                         <div class="sub-tabs">
                             <button class="sub-tab-btn active" data-sub="data-intel">INTELLIGENCE</button>
                             <button class="sub-tab-btn" data-sub="data-dna">DNA</button>
@@ -110,13 +110,13 @@
                         </div>
                     </div>
 
-                    <div id="tab-config" class="tab-content">
+                    <div id="tab-setup" class="tab-content active">
                         <div class="sub-tabs">
-                            <button class="sub-tab-btn active" data-sub="config-world">WORLD</button>
-                            <button class="sub-tab-btn" data-sub="config-species">SPECIES</button>
-                            <button class="sub-tab-btn" data-sub="config-settings">SETTINGS</button>
+                            <button class="sub-tab-btn active" data-sub="setup-world">WORLD</button>
+                            <button class="sub-tab-btn" data-sub="setup-species">SPECIES</button>
+                            <button class="sub-tab-btn" data-sub="setup-settings">SETTINGS</button>
                         </div>
-                        <div id="config-world" class="sub-tab-content active">
+                        <div id="setup-world" class="sub-tab-content active">
                             <div class="world-inner">
                                 <div class="category-filter-row">
                                     <button class="cat-tab active" data-cat="cat-physics">PHYS</button>
@@ -130,7 +130,7 @@
                                 <div id="world-params" class="world-sliders"></div>
                             </div>
                         </div>
-                        <div id="config-species" class="sub-tab-content">
+                        <div id="setup-species" class="sub-tab-content">
                             <div class="species-controls-header">
                                 <button id="add-species-btn" class="btn tiny-btn">+ SPECIES</button>
                                 <button id="remove-species-btn" class="btn tiny-btn" title="Remove last species">− SPECIES</button>
@@ -138,7 +138,7 @@
                             <div id="species-list"></div>
                             <div id="dna-accordion"></div>
                         </div>
-                        <div id="config-settings" class="sub-tab-content">
+                        <div id="setup-settings" class="sub-tab-content">
                             <div id="laws-panel"></div>
                         </div>
                     </div>

@@ -1,6 +1,12 @@
 # Changelog: VEPA v4
 
 
+## [4.1.6] - 2026-08-04
+
+### UI
+- **Setup is the first tab**: the CONFIG tab is renamed SETUP and moved to
+  position 1 (default open, WORLD subtab active); DATA is second.
+
 ## [4.1.5] - 2026-08-03
 
 ### Toolbar
