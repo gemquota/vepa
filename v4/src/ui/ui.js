@@ -121,7 +121,8 @@ function setupToolbarControls(bus) {
       if (chaosPressTimer) {
         clearTimeout(chaosPressTimer);
         chaosPressTimer = null;
-        // Short click = instant chaos
+        // Short click = restart + instant chaos
+        bus.emit('sim:restart');
         bus.emit('sim:chaos');
       }
     });

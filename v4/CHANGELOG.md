@@ -1,6 +1,32 @@
 # Changelog: VEPA v4
 
 
+## [4.1.5] - 2026-08-03
+
+### Toolbar
+- **Randomize (Chaos) ☢️ now restarts first**: short-click emits restart then
+  chaos, so randomness applies to a fresh population.
+- **Readme (Help) ? now works**: opens the v4 README (`help:toggle` was
+  emitted but never handled).
+- Toolbar right is exactly four buttons with current icons:
+  Randomize (Chaos) ☢️, Restart 🔄, Reset 🗑️, Readme (Help) ?.
+
+### Fixes
+- **Restart desync fixed**: `sim:restart` created a *new* lawState object while
+  the UI panels held the old reference — after restart the sim ran laws the
+  toggles didn't show (and vice versa). Restart now clears the object in
+  place, keeping UI and engine on the same state.
+- **Narrative crash fixed**: `cluster:detected` payloads are
+  `{timestamp, clusters[]}` but the narrative templates read `count` /
+  `avgEnergy` directly off the payload, throwing `undefined.toFixed` at
+  random intervals. The engine now narrates the largest cluster with the
+  correct shape.
+
+### Startup (confirmed)
+- Initial state is all laws disabled (`DEFAULT_LAWS` empty, boot + restart).
+  If the drawer still shows the old WORLD/SPECIES/DNA/LOG tabs, hard-refresh:
+  4.1.4+ ships the DATA/CONFIG tab restructure with a new bundle hash.
+
 ## [4.1.4] - 2026-08-03
 
 ### Startup

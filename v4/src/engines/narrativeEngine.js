@@ -133,7 +133,15 @@ export function createNarrativeEngine(bus, config = {}) {
   };
 
   // Wire up event subscriptions
-  bus.on('cluster:detected', (data) => pushEvent(engine, 'cluster', data));
+  bus.on('cluster:detected', (data) => {
+    // Templates expect a single cluster payload ({count, speciesId,
+    // avgEnergy, center}); the insight engine emits {timestamp, clusters[]},
+    // so narrate the largest cluster.
+    if (data && Array.isArray(data.clusters) && data.clusters.length > 0) {
+      const biggest = data.clusters.reduce((a, b) => (b.count > a.count ? b : a));
+      pushEvent(engine, 'cluster', { ...biggest, timestamp: data.timestamp });
+    }
+  });
   bus.on('law:toggled',      (data) => pushEvent(engine, 'law',     data));
   bus.on('lineage:branch',   (data) => pushEvent(engine, 'lineage', data));
   bus.on('goal:adjusted',    (data) => pushEvent(engine, 'goal',    data));

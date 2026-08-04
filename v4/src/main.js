@@ -290,9 +290,9 @@ function setDNAFromProfile(species, profile) {
         prng = new PRNG(Date.now());
         // Clear buffer by zeroing all data
         particleView.fill(0);
-        // Fresh law state (all off)
-        lawState = createLawState();
-        // Re-apply default laws
+        // Reset laws in place (all off by default) — the UI panels hold a
+        // reference to this object, so replacing it would desync the toggles.
+        for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
         for (const name of DEFAULT_LAWS) {
             if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
         }
@@ -321,6 +321,11 @@ function setDNAFromProfile(species, profile) {
         logDebug('hard reset requested', 'warn');
         location.reload();
     });
+    // Readme (Help) button — open the v4 README
+    bus.on('help:toggle', () => {
+        window.open('https://github.com/gemquota/vepa/blob/new/v4/README.md', '_blank', 'noopener');
+    });
+
     bus.on('sim:chaos', () => {
         // Chaos multiplexing: partition laws into groups with varying activation
         // Shuffle law indices
