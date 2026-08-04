@@ -1,6 +1,18 @@
 # Changelog: VEPA v4
 
 
+## [4.4.2] - 2026-08-04
+
+### Law-type synergy + icon parity pass
+- **SINGULARITY** synergies: ×1.5 with ACCR (collapse accelerates), ×1.4 with
+  GRAV (the hole bends space itself).
+- **ENTANGLEMENT** synergies: ×1.6 with TELEPATHY, ×1.5 with COMMS (entangled
+  signals need no channel).
+- **HISTORY** synergies: ×1.6 with MEMORY (collective memory deepens the
+  field), ×1.5 with PATTERN (remembered geometry aligns drift).
+- World-panel law grid now shows icons for FEEDBACK / LANGUAGE / CULTURE
+  (matching the tooltip module) — no more '?' placeholders for info laws.
+
 ## [4.4.1] - 2026-08-04
 
 ### Restart vs Reset semantics

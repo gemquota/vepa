@@ -212,6 +212,56 @@ export function computeSynergy(lawState, lawIndex) {
     mult *= 1.4;
   }
 
+  // ── New law type synergies ──
+
+  // SINGULARITY + ACCR → mass concentrates until collapse ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.SINGULARITY || lawIndex === LAW_INDEXES.ACCR) &&
+    isSet(lawState, LAW_INDEXES.SINGULARITY) && isSet(lawState, LAW_INDEXES.ACCR)
+  ) {
+    mult *= 1.5;
+  }
+
+  // SINGULARITY + GRAV → the hole bends space itself ×1.4
+  if (
+    (lawIndex === LAW_INDEXES.SINGULARITY || lawIndex === LAW_INDEXES.GRAV) &&
+    isSet(lawState, LAW_INDEXES.SINGULARITY) && isSet(lawState, LAW_INDEXES.GRAV)
+  ) {
+    mult *= 1.4;
+  }
+
+  // ENTANGLEMENT + TELEPATHY → minds linked across any distance ×1.6
+  if (
+    (lawIndex === LAW_INDEXES.ENTANGLEMENT || lawIndex === LAW_INDEXES.TELEPATHY) &&
+    isSet(lawState, LAW_INDEXES.ENTANGLEMENT) && isSet(lawState, LAW_INDEXES.TELEPATHY)
+  ) {
+    mult *= 1.6;
+  }
+
+  // ENTANGLEMENT + COMMS → entangled signals need no channel ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.ENTANGLEMENT || lawIndex === LAW_INDEXES.COMMS) &&
+    isSet(lawState, LAW_INDEXES.ENTANGLEMENT) && isSet(lawState, LAW_INDEXES.COMMS)
+  ) {
+    mult *= 1.5;
+  }
+
+  // HISTORY + MEMORY → collective memory deepens the field ×1.6
+  if (
+    (lawIndex === LAW_INDEXES.HISTORY || lawIndex === LAW_INDEXES.MEMORY) &&
+    isSet(lawState, LAW_INDEXES.HISTORY) && isSet(lawState, LAW_INDEXES.MEMORY)
+  ) {
+    mult *= 1.6;
+  }
+
+  // HISTORY + PATTERN → remembered geometry aligns drift ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.HISTORY || lawIndex === LAW_INDEXES.PATTERN) &&
+    isSet(lawState, LAW_INDEXES.HISTORY) && isSet(lawState, LAW_INDEXES.PATTERN)
+  ) {
+    mult *= 1.5;
+  }
+
   // Clamp to [0.0, 2.0]
   if (mult < 0.0) mult = 0.0;
   if (mult > 2.0) mult = 2.0;
