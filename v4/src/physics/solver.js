@@ -65,6 +65,35 @@ import {
   applyPhaseRadiation,
   applySublimation,
   applySignalExchange,
+  applyChargeForce,
+  applyFieldDrift,
+  applyCurrentTransfer,
+  applyResistance,
+  applyCapacitanceStore,
+  applyStoredChargeForce,
+  applyInductance,
+  applyMagneticForce,
+  applyResonanceForce,
+  applyFluxForce,
+  applyIonization,
+  applyDischarge,
+  applyPlasma,
+  applySuperconductivity,
+  applyMemoryRefresh,
+  applyMemoryDecay,
+  applyPatternForce,
+  applyTrailWrite,
+  applyStigmergyForce,
+  applySignalBoost,
+  applyLearnAlign,
+  applySymbolForce,
+  applyMetricForce,
+  applyPredictForce,
+  applyCodeBlend,
+  applyProtocolSync,
+  applyFeedback,
+  applyLanguage,
+  applyCulture,
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
@@ -117,7 +146,7 @@ function readDNAFromCache(view, base, dnaOut) {
  * @param {Float32Array} particleBuffer - Particle state buffer (writable directly)
  * @param {number} particleCount - Number of particles in the buffer
  * @param {number} stride - Floats per particle (PARTICLE_STRIDE)
- * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array }} lawState - Active laws
+ * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array }} lawState - Active laws
  * @param {Uint16Array} dnaBuffer - Species DNA buffer [64 × 64] (unused — DNA read from stride cache)
  * @param {number} worldSize - World boundary size
  * @param {number} dt - Time step (default 1.0)
@@ -134,7 +163,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // Zero laws active → hard freeze. Nothing moves, decays, reproduces, or
   // interacts: no integration, no friction, no signal emission/exchange, no
   // lifecycle. Movement and interaction only exist while a law governs them.
-  if (lawState.lowFlags[0] === 0 && lawState.highFlags[0] === 0) return;
+  if (
+    lawState.lowFlags[0] === 0 &&
+    lawState.highFlags[0] === 0 &&
+    (lawState.extFlags ? lawState.extFlags[0] === 0 : true)
+  ) return;
 
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
@@ -559,6 +592,115 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += precogForce.az;
         }
       }
+
+      // ── Electromagnetism (pairwise) ──
+      if (isSet(lawState, LAW_INDEXES.CHARGE_LAW)) {
+        const chargeForce = applyChargeForce(iBase, jBase, dx, dy, dz, dist, 0.8 * computeSynergy(lawState, LAW_INDEXES.CHARGE_LAW));
+        if (chargeForce) {
+          ax += chargeForce.ax;
+          ay += chargeForce.ay;
+          az += chargeForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.CAPACITANCE)) {
+        const capForce = applyStoredChargeForce(iBase, jBase, dx, dy, dz, dist, 0.4);
+        if (capForce) {
+          ax += capForce.ax;
+          ay += capForce.ay;
+          az += capForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.MAGNETISM)) {
+        const magForce = applyMagneticForce(iBase, jBase, dx, dy, dz, dist, 0.4 * computeSynergy(lawState, LAW_INDEXES.MAGNETISM));
+        if (magForce) {
+          ax += magForce.ax;
+          ay += magForce.ay;
+          az += magForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.RESONANCE)) {
+        const resForce = applyResonanceForce(iBase, jBase, dx, dy, dz, dist, 0.2);
+        if (resForce) {
+          ax += resForce.ax;
+          ay += resForce.ay;
+          az += resForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.FLUX)) {
+        const fluxForce = applyFluxForce(iBase, jBase, dx, dy, dz, dist, 0.4);
+        if (fluxForce) {
+          ax += fluxForce.ax;
+          ay += fluxForce.ay;
+          az += fluxForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.INDUCTANCE)) applyInductance(iBase, jBase, 0.05);
+      if (isSet(lawState, LAW_INDEXES.CURRENT)) applyCurrentTransfer(iBase, jBase, distSq, 0.05 * computeSynergy(lawState, LAW_INDEXES.CURRENT));
+      if (isSet(lawState, LAW_INDEXES.IONIZATION)) {
+        const relSpeed = Math.sqrt(
+          (view[iBase + S.VEL_X] - view[jBase + S.VEL_X]) ** 2 +
+          (view[iBase + S.VEL_Y] - view[jBase + S.VEL_Y]) ** 2 +
+          (view[iBase + S.VEL_Z] - view[jBase + S.VEL_Z]) ** 2,
+        );
+        applyIonization(iBase, jBase, dist, relSpeed, 0.6 * computeSynergy(lawState, LAW_INDEXES.IONIZATION));
+      }
+
+      // ── Information (pairwise) ──
+      if (isSet(lawState, LAW_INDEXES.SYMBOL)) {
+        const symForce = applySymbolForce(iBase, jBase, dx, dy, dz, dist, 0.3 * computeSynergy(lawState, LAW_INDEXES.SYMBOL));
+        if (symForce) {
+          ax += symForce.ax;
+          ay += symForce.ay;
+          az += symForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.METRIC)) {
+        const metForce = applyMetricForce(iBase, jBase, dx, dy, dz, dist, 0.2);
+        if (metForce) {
+          ax += metForce.ax;
+          ay += metForce.ay;
+          az += metForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.PREDICT)) {
+        const predForce = applyPredictForce(iBase, jBase, dx, dy, dz, dist, 0.3 * computeSynergy(lawState, LAW_INDEXES.PREDICT));
+        if (predForce) {
+          ax += predForce.ax;
+          ay += predForce.ay;
+          az += predForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.PATTERN)) {
+        const patForce = applyPatternForce(iBase, jBase, dx, dy, dz, dist, 0.2);
+        if (patForce) {
+          ax += patForce.ax;
+          ay += patForce.ay;
+          az += patForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.STIGMERGY)) {
+        const stigForce = applyStigmergyForce(iBase, jBase, 0.3 * computeSynergy(lawState, LAW_INDEXES.STIGMERGY));
+        if (stigForce) {
+          ax += stigForce.ax;
+          ay += stigForce.ay;
+          az += stigForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.LEARN)) applyLearnAlign(iBase, jBase, 0.05 * computeSynergy(lawState, LAW_INDEXES.LEARN));
+      if (isSet(lawState, LAW_INDEXES.MEMORY)) applyMemoryRefresh(iBase, jBase);
+      if (isSet(lawState, LAW_INDEXES.CODE)) applyCodeBlend(iBase, jBase, distSq, 0.05 * computeSynergy(lawState, LAW_INDEXES.CODE));
+      if (isSet(lawState, LAW_INDEXES.PROTOCOL)) applyProtocolSync(iBase, jBase, 0.1 * computeSynergy(lawState, LAW_INDEXES.PROTOCOL));
+      if (isSet(lawState, LAW_INDEXES.SIGNAL_BOOST)) applySignalBoost(iBase, jBase, 0.08 * computeSynergy(lawState, LAW_INDEXES.SIGNAL_BOOST));
+      if (isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY)) {
+        const scForce = applySuperconductivity(iBase, jBase, 0.05 * computeSynergy(lawState, LAW_INDEXES.SUPERCONDUCTIVITY));
+        if (scForce) {
+          ax += scForce.ax;
+          ay += scForce.ay;
+          az += scForce.az;
+        }
+      }
+      if (isSet(lawState, LAW_INDEXES.LANGUAGE)) applyLanguage(iBase, jBase, 0.25 * computeSynergy(lawState, LAW_INDEXES.LANGUAGE));
+      if (isSet(lawState, LAW_INDEXES.CULTURE)) applyCulture(iBase, jBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.CULTURE));
     }
 
     // ── Non-pairwise laws ──
@@ -588,6 +730,54 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // Chaos
     applyChaos(lawState, view, iBase, prng, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.CHAOS));
+
+    // ── Electromagnetism (per-particle) ──
+    if (isSet(lawState, LAW_INDEXES.FIELD)) {
+      const fieldForce = applyFieldDrift(iBase, 0.3 * computeSynergy(lawState, LAW_INDEXES.FIELD));
+      if (fieldForce) {
+        ax += fieldForce.ax;
+        ay += fieldForce.ay;
+        az += fieldForce.az;
+      }
+    }
+    if (isSet(lawState, LAW_INDEXES.RESISTANCE)) {
+      const resForce = applyResistance(iBase, vx, vy, vz, 0.03 * computeSynergy(lawState, LAW_INDEXES.RESISTANCE));
+      if (resForce) {
+        ax += resForce.ax;
+        ay += resForce.ay;
+        az += resForce.az;
+      }
+    }
+    if (isSet(lawState, LAW_INDEXES.CAPACITANCE)) {
+      applyCapacitanceStore(iBase, 0.002);
+    }
+    if (isSet(lawState, LAW_INDEXES.DISCHARGE)) {
+      const discForce = applyDischarge(iBase, prng, 0.8 * computeSynergy(lawState, LAW_INDEXES.DISCHARGE));
+      if (discForce) {
+        ax += discForce.ax;
+        ay += discForce.ay;
+        az += discForce.az;
+      }
+    }
+    if (isSet(lawState, LAW_INDEXES.PLASMA)) {
+      applyPlasma(iBase, 0.02 * computeSynergy(lawState, LAW_INDEXES.PLASMA));
+    }
+
+    // ── Information (per-particle) ──
+    if (isSet(lawState, LAW_INDEXES.STIGMERGY)) {
+      applyTrailWrite(iBase, px, py, pz, vx, vy, vz);
+    }
+    if (isSet(lawState, LAW_INDEXES.MEMORY)) {
+      applyMemoryDecay(iBase, 0.995, 0.5);
+    }
+    if (isSet(lawState, LAW_INDEXES.FEEDBACK)) {
+      const fbForce = applyFeedback(iBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.FEEDBACK));
+      if (fbForce) {
+        ax += fbForce.ax;
+        ay += fbForce.ay;
+        az += fbForce.az;
+      }
+    }
 
     // ── Drag ──
 

@@ -450,10 +450,13 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   view[base + S.COLOR_G] += (Math.cos(age * 0.0007) * 2.0 * mutRate);
   view[base + S.COLOR_B] += (Math.sin(age * 0.0013 + 1.0) * 2.0 * mutRate);
 
-  // Mass fluctuation from metabolism
-  const mass = view[base + S.MASS] || 1.0;
-  const massFluctuation = (energy - 50) * 0.0001 * birthRate;
-  view[base + S.MASS] += massFluctuation * dt;
+  // Mass fluctuation from metabolism — accretion-style mass gain/loss only
+  // while the ACCR law governs it (LIFE alone must not grow/shrink mass).
+  if (isSet(lawState, LAW_INDEXES.ACCR)) {
+    const mass = view[base + S.MASS] || 1.0;
+    const massFluctuation = (energy - 50) * 0.0001 * birthRate;
+    view[base + S.MASS] += massFluctuation * dt;
+  }
 
   // Bio-rhythm energy pulse
   const bioPulse = Math.sin(age * 0.01 * birthRate) * 0.5 * mutRate;
@@ -735,6 +738,22 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
     offspringDna[d] = Math.max(-100, Math.min(100, val));
   }
 
+  // Offspring colour = the parents' intermediate colour. Two parents blend
+  // 50/50; a single parent clones its own colour, with slight mutation.
+  let colorR = view[base + S.COLOR_R];
+  let colorG = view[base + S.COLOR_G];
+  let colorB = view[base + S.COLOR_B];
+  if (hasTwoParents) {
+    const partnerBase = partnerIdx * PARTICLE_STRIDE;
+    colorR = (colorR + view[partnerBase + S.COLOR_R]) * 0.5;
+    colorG = (colorG + view[partnerBase + S.COLOR_G]) * 0.5;
+    colorB = (colorB + view[partnerBase + S.COLOR_B]) * 0.5;
+  }
+  const colorMut = Math.abs(mutationRate) * 12;
+  colorR = Math.max(0, Math.min(255, colorR + (prng() - 0.5) * colorMut));
+  colorG = Math.max(0, Math.min(255, colorG + (prng() - 0.5) * colorMut));
+  colorB = Math.max(0, Math.min(255, colorB + (prng() - 0.5) * colorMut));
+
   return {
     parentId: Math.floor(base / PARTICLE_STRIDE),
     x: px + (prng() - 0.5) * 20,
@@ -745,6 +764,7 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
     mass: view[base + S.MASS] * 0.8,
     energy: 60,
     dna: offspringDna,
+    colorR, colorG, colorB,
   };
 }
 
@@ -1470,5 +1490,391 @@ export function applySublimation(lawState, view, base, dt, synergy) {
     view[base + S.VEL_X] += (Math.random() - 0.5) * sublRate * 5;
     view[base + S.VEL_Y] += (Math.random() - 0.5) * sublRate * 5;
     view[base + S.TEMPERATURE] -= sublRate * 0.5;
+  }
+}
+
+// ============================================================================
+// 11. ELECTROMAGNETISM (cyan)
+// ============================================================================
+
+/** CHARGE_LAW — Coulomb force from POLARITY DNA + stored stride CHARGE. */
+export function applyChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const q1 = readDNA(p1Ptr, D.POLARITY) || 0;
+  const q2 = readDNA(p2Ptr, D.POLARITY) || 0;
+  const c1 = buf[p1Ptr + S.CHARGE] || 0;
+  const c2 = buf[p2Ptr + S.CHARGE] || 0;
+  const qq = q1 * q2 + c1 * c2 * 0.5;
+  if (qq === 0) return null;
+  const force = k * qq / (dist * dist + 0.5);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** FIELD — uniform drift along POLARITY sign (per-particle). */
+export function applyFieldDrift(p1Ptr, k) {
+  const q = readDNA(p1Ptr, D.POLARITY) || 0;
+  if (q === 0) return null;
+  return { ax: q * k * 0.7, ay: q * k, az: 0 };
+}
+
+/** CURRENT — charge diffusion between conductive neighbors. */
+export function applyCurrentTransfer(p1Ptr, p2Ptr, distSq, k) {
+  const buf = buffer_global;
+  if (distSq > 300) return;
+  const cond = Math.max(readDNA(p1Ptr, D.CONDUCTIVITY) || 0, readDNA(p2Ptr, D.CONDUCTIVITY) || 0);
+  if (cond <= 0) return;
+  const dq = (buf[p2Ptr + S.CHARGE] - buf[p1Ptr + S.CHARGE]) * cond * k;
+  if (dq === 0) return;
+  buf[p1Ptr + S.CHARGE] += dq;
+  buf[p2Ptr + S.CHARGE] -= dq;
+}
+
+/** RESISTANCE — kinetic energy → heat + velocity damping (per-particle). */
+export function applyResistance(p1Ptr, vx, vy, vz, k) {
+  const buf = buffer_global;
+  const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  if (speed < 0.01) return null;
+  buf[p1Ptr + S.TEMPERATURE] = Math.min(1, (buf[p1Ptr + S.TEMPERATURE] || 0) + speed * k * 0.5);
+  const damp = speed * k;
+  return { ax: -vx * damp, ay: -vy * damp, az: -vz * damp };
+}
+
+/** CAPACITANCE — store surplus energy as charge (per-particle). */
+export function applyCapacitanceStore(p1Ptr, k) {
+  const buf = buffer_global;
+  const energy = buf[p1Ptr + S.ENERGY] || 50;
+  const delta = (energy - 50) * k;
+  buf[p1Ptr + S.CHARGE] = clamp((buf[p1Ptr + S.CHARGE] || 0) + delta, -2, 2);
+}
+
+/** CAPACITANCE — pairwise force from stored charge. */
+export function applyStoredChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const c1 = buf[p1Ptr + S.CHARGE] || 0;
+  const c2 = buf[p2Ptr + S.CHARGE] || 0;
+  const qq = c1 * c2;
+  if (qq === 0) return null;
+  const force = k * qq / (dist * dist + 0.5);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** INDUCTANCE — velocity alignment (magnetic coupling), in-place. */
+export function applyInductance(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  for (const slot of [S.VEL_X, S.VEL_Y, S.VEL_Z]) {
+    const dv = (buf[p2Ptr + slot] - buf[p1Ptr + slot]) * k;
+    buf[p1Ptr + slot] += dv;
+    buf[p2Ptr + slot] -= dv;
+  }
+}
+
+/** MAGNETISM — aligned moments attract, opposing repel. */
+export function applyMagneticForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const m1 = readDNA(p1Ptr, D.MAGNETIC_MOMENT) || 0;
+  const m2 = readDNA(p2Ptr, D.MAGNETIC_MOMENT) || 0;
+  const mm = m1 * m2;
+  if (mm === 0) return null;
+  const force = k * mm / (dist * dist + 0.5);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** RESONANCE — pulsing particles with similar PULSE_RATE attract. */
+export function applyResonanceForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const s1 = buf[p1Ptr + S.SIGNAL] || 0;
+  const s2 = buf[p2Ptr + S.SIGNAL] || 0;
+  if (s1 <= 0.01 || s2 <= 0.01) return null;
+  const sync = 1.0 - Math.abs((readDNA(p1Ptr, D.PULSE_RATE) || 0.5) - (readDNA(p2Ptr, D.PULSE_RATE) || 0.5));
+  const sig = s1 * s2 * Math.max(0, sync);
+  if (sig <= 0.001) return null;
+  const force = k * sig / (dist + 1.0);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** FLUX — push along the stored-charge gradient. */
+export function applyFluxForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const dq = (buf[p2Ptr + S.CHARGE] || 0) - (buf[p1Ptr + S.CHARGE] || 0);
+  if (dq === 0) return null;
+  const force = k * dq / (dist + 1.0);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** IONIZATION — hard contacts strip charge onto particles. */
+export function applyIonization(p1Ptr, p2Ptr, dist, relSpeed, k) {
+  const buf = buffer_global;
+  if (dist > 3.0) return;
+  const impact = Math.min(1, relSpeed * k);
+  if (impact <= 0.01) return;
+  if ((buf[p1Ptr + S.CHARGE] || 0) === 0) {
+    buf[p1Ptr + S.CHARGE] = (readDNA(p1Ptr, D.POLARITY) || 0) * impact;
+  }
+  if ((buf[p2Ptr + S.CHARGE] || 0) === 0) {
+    buf[p2Ptr + S.CHARGE] = (readDNA(p2Ptr, D.POLARITY) || 0) * impact;
+  }
+}
+
+/** DISCHARGE — stored charge bursts into motion + heat (per-particle). */
+export function applyDischarge(p1Ptr, prng, k) {
+  const buf = buffer_global;
+  const c = buf[p1Ptr + S.CHARGE] || 0;
+  if (Math.abs(c) < 0.5) return null;
+  const kick = c * k;
+  const dir = prng ? (prng() - 0.5) * 2 : 0;
+  buf[p1Ptr + S.TEMPERATURE] = Math.min(1, (buf[p1Ptr + S.TEMPERATURE] || 0) + Math.abs(c) * 0.08);
+  buf[p1Ptr + S.CHARGE] = 0;
+  return {
+    ax: nanGuard(kick * 0.6),
+    ay: nanGuard(kick * dir),
+    az: nanGuard(kick * 0.2),
+  };
+}
+
+/** PLASMA — hot particles ionize: surplus heat becomes stored charge. */
+export function applyPlasma(p1Ptr, k) {
+  const buf = buffer_global;
+  const temp = buf[p1Ptr + S.TEMPERATURE] || 0;
+  const excess = temp - 0.6;
+  if (excess <= 0) return;
+  const conv = excess * k;
+  buf[p1Ptr + S.CHARGE] = clamp((buf[p1Ptr + S.CHARGE] || 0) + conv, -2, 2);
+  buf[p1Ptr + S.TEMPERATURE] = temp - conv * 0.5;
+}
+
+/** SUPERCONDUCTIVITY — cold pairs couple: relative motion damped + charge equalized. */
+export function applySuperconductivity(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const t1 = buf[p1Ptr + S.TEMPERATURE] || 0;
+  const t2 = buf[p2Ptr + S.TEMPERATURE] || 0;
+  if (t1 > 0.35 || t2 > 0.35) return null;
+  const dq = ((buf[p2Ptr + S.CHARGE] || 0) - (buf[p1Ptr + S.CHARGE] || 0)) * k * 0.4;
+  buf[p1Ptr + S.CHARGE] = (buf[p1Ptr + S.CHARGE] || 0) + dq;
+  buf[p2Ptr + S.CHARGE] = (buf[p2Ptr + S.CHARGE] || 0) - dq;
+  // Coupling force: damps the subject's motion toward the neighbor's velocity
+  return {
+    ax: nanGuard((buf[p2Ptr + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * k),
+    ay: nanGuard((buf[p2Ptr + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * k),
+    az: nanGuard((buf[p2Ptr + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * k),
+  };
+}
+
+// ============================================================================
+// 12. INFORMATION (gold)
+// ============================================================================
+
+/** MEMORY — refresh the trace on contact. */
+export function applyMemoryRefresh(p1Ptr, p2Ptr) {
+  const buf = buffer_global;
+  buf[p1Ptr + S.MEMORY] = Math.min(1, (buf[p1Ptr + S.MEMORY] || 0) + 0.05);
+  buf[p2Ptr + S.MEMORY] = Math.min(1, (buf[p2Ptr + S.MEMORY] || 0) + 0.05);
+}
+
+/** MEMORY — decay + momentum persistence (per-particle). */
+export function applyMemoryDecay(p1Ptr, decay, k) {
+  const buf = buffer_global;
+  const mem = buf[p1Ptr + S.MEMORY] || 0;
+  if (mem <= 0) return;
+  buf[p1Ptr + S.MEMORY] = mem * decay;
+  buf[p1Ptr + S.VEL_X] *= 1.0 + mem * k * 0.02;
+  buf[p1Ptr + S.VEL_Y] *= 1.0 + mem * k * 0.02;
+  buf[p1Ptr + S.VEL_Z] *= 1.0 + mem * k * 0.02;
+}
+
+/** PATTERN — cohesion: dense regions pull particles together. */
+export function applyPatternForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  if (dist < 1.0) return null;
+  const force = k / (dist + 1.0);
+  const invDist = 1.0 / dist;
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** STIGMERGY — write a predicted-path trail marker (per-particle). */
+export function applyTrailWrite(p1Ptr, px, py, pz, vx, vy, vz) {
+  const buf = buffer_global;
+  buf[p1Ptr + S.TRAIL_X] = px + vx * 8.0;
+  buf[p1Ptr + S.TRAIL_Y] = py + vy * 8.0;
+  buf[p1Ptr + S.TRAIL_Z] = pz + vz * 8.0;
+}
+
+/** STIGMERGY — follow a neighbor's trail marker. */
+export function applyStigmergyForce(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const tx = buf[p2Ptr + S.TRAIL_X] || 0;
+  const ty = buf[p2Ptr + S.TRAIL_Y] || 0;
+  const tz = buf[p2Ptr + S.TRAIL_Z] || 0;
+  const ddx = tx - buf[p1Ptr + S.POS_X];
+  const ddy = ty - buf[p1Ptr + S.POS_Y];
+  const ddz = tz - buf[p1Ptr + S.POS_Z];
+  const dd = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz) + 1.0;
+  return {
+    ax: nanGuard((ddx / dd) * k),
+    ay: nanGuard((ddy / dd) * k),
+    az: nanGuard((ddz / dd) * k),
+  };
+}
+
+/** SIGNAL_BOOST — relay signal to a neighbor on contact. */
+export function applySignalBoost(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const s1 = buf[p1Ptr + S.SIGNAL] || 0;
+  if (s1 > 0.01) {
+    buf[p2Ptr + S.SIGNAL] = Math.min(1, (buf[p2Ptr + S.SIGNAL] || 0) + s1 * k);
+  }
+}
+
+/** LEARN — velocity matching (boids alignment), in-place. */
+export function applyLearnAlign(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const kk = k * 0.1;
+  for (const slot of [S.VEL_X, S.VEL_Y, S.VEL_Z]) {
+    buf[p1Ptr + slot] += (buf[p2Ptr + slot] - buf[p1Ptr + slot]) * kk;
+  }
+}
+
+/** SYMBOL — species affinity social force. */
+export function applySymbolForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const same = buf[p1Ptr + S.SPECIES_ID] === buf[p2Ptr + S.SPECIES_ID];
+  let affinity = readDNA(p1Ptr, D.SPECIES_AFFINITY) || 0;
+  if (!same) affinity = -affinity * 0.5;
+  if (affinity === 0) return null;
+  const force = k * affinity / (dist + 1.0);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** METRIC — climb the energy gradient. */
+export function applyMetricForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const dE = (buf[p2Ptr + S.ENERGY] || 50) - (buf[p1Ptr + S.ENERGY] || 50);
+  if (dE === 0) return null;
+  const force = k * dE / (dist + 1.0);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/** PREDICT — aim at the neighbor's extrapolated position. */
+export function applyPredictForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const t = 3.0;
+  const pdx = dx + (buf[p2Ptr + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * t;
+  const pdy = dy + (buf[p2Ptr + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * t;
+  const pdz = dz + (buf[p2Ptr + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * t;
+  const pd = Math.sqrt(pdx * pdx + pdy * pdy + pdz * pdz) + 0.001;
+  const force = k / (dist + 1.0);
+  return {
+    ax: nanGuard((pdx / pd) * force),
+    ay: nanGuard((pdy / pd) * force),
+    az: nanGuard((pdz / pd) * force),
+  };
+}
+
+/** CODE — blend DNA cache loci between contacting particles. */
+export function applyCodeBlend(p1Ptr, p2Ptr, distSq, k) {
+  const buf = buffer_global;
+  if (distSq > 16.0) return;
+  const rate = k * 0.01;
+  for (let d = 0; d < 42; d += 6) {
+    const base = S.DNA_CACHE_START + d;
+    const v1 = buf[p1Ptr + base];
+    const v2 = buf[p2Ptr + base];
+    buf[p1Ptr + base] = v1 + (v2 - v1) * rate;
+    buf[p2Ptr + base] = v2 + (v1 - v2) * rate;
+  }
+}
+
+/** PROTOCOL — entrain signal phase between neighbors. */
+export function applyProtocolSync(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const s1 = buf[p1Ptr + S.SIGNAL] || 0;
+  const s2 = buf[p2Ptr + S.SIGNAL] || 0;
+  const d1 = (s2 - s1) * k;
+  buf[p1Ptr + S.SIGNAL] = Math.max(0, Math.min(1, s1 + d1));
+  buf[p2Ptr + S.SIGNAL] = Math.max(0, Math.min(1, s2 - d1));
+}
+
+/** FEEDBACK — memory amplifies motion and motion refreshes memory. */
+export function applyFeedback(p1Ptr, k) {
+  const buf = buffer_global;
+  const mem = buf[p1Ptr + S.MEMORY] || 0;
+  const vx = buf[p1Ptr + S.VEL_X] || 0;
+  const vy = buf[p1Ptr + S.VEL_Y] || 0;
+  const vz = buf[p1Ptr + S.VEL_Z] || 0;
+  const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  buf[p1Ptr + S.MEMORY] = Math.min(1, mem + speed * k * 0.02);
+  if (mem <= 0 || speed < 0.001) return null;
+  // Self-propulsion along current velocity, scaled by the memory trace
+  const boost = mem * k * 0.1;
+  return {
+    ax: nanGuard(vx * boost),
+    ay: nanGuard(vy * boost),
+    az: nanGuard(vz * boost),
+  };
+}
+
+/** LANGUAGE — signaling pairs exchange memory traces (shared words). */
+export function applyLanguage(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  const s1 = buf[p1Ptr + S.SIGNAL] || 0;
+  const s2 = buf[p2Ptr + S.SIGNAL] || 0;
+  if (s1 <= 0.01 && s2 <= 0.01) return;
+  const m1 = buf[p1Ptr + S.MEMORY] || 0;
+  const m2 = buf[p2Ptr + S.MEMORY] || 0;
+  const avg = (m1 + m2) * 0.5;
+  buf[p1Ptr + S.MEMORY] = m1 + (avg - m1) * k;
+  buf[p2Ptr + S.MEMORY] = m2 + (avg - m2) * k;
+  if (s1 > 0.01) {
+    buf[p2Ptr + S.SIGNAL] = Math.min(1, (buf[p2Ptr + S.SIGNAL] || 0) + s1 * k * 0.1);
+  }
+}
+
+/** CULTURE — same-species contacts converge their DNA cache. */
+export function applyCulture(p1Ptr, p2Ptr, k) {
+  const buf = buffer_global;
+  if (buf[p1Ptr + S.SPECIES_ID] !== buf[p2Ptr + S.SPECIES_ID]) return;
+  const rate = k * 0.02;
+  for (let d = 0; d < 42; d += 3) {
+    const base = S.DNA_CACHE_START + d;
+    const v1 = buf[p1Ptr + base];
+    const v2 = buf[p2Ptr + base];
+    buf[p1Ptr + base] = v1 + (v2 - v1) * rate;
+    buf[p2Ptr + base] = v2 + (v1 - v2) * rate;
   }
 }

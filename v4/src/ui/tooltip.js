@@ -30,6 +30,12 @@ const LAW_ICONS = {
   TIME_DILATION: '⌛', DIMENSIONALITY: '◈', CHAOS: '☄', ORDER: '⊡', FATE: '⚖',
   WILL: '⚔', SOUL_LAW: '👁', MIND: '🧠',
   TELEPATHY: '〰', CLAIRVOYANCE: '◎', PRECOGNITION: '◉', ASTRAL: '👻',
+  CHARGE_LAW: '±', FIELD: '✺', CURRENT: '⇥', RESISTANCE: 'Ω', CAPACITANCE: '∥',
+  INDUCTANCE: '∿', MAGNETISM: '🧲', RESONANCE: '♫', FLUX: '⇄', IONIZATION: '⚛',
+  DISCHARGE: '✸', PLASMA: '🌋', SUPERCONDUCTIVITY: '∞',
+  MEMORY: '💾', PATTERN: '▦', STIGMERGY: '🐜', SIGNAL_BOOST: '📶', LEARN: '🎓',
+  SYMBOL: '☯', METRIC: '📏', PREDICT: '🔮', CODE: '✜', PROTOCOL: '📡',
+  FEEDBACK: '↺', LANGUAGE: '💬', CULTURE: '🎭',
 };
 
 /**

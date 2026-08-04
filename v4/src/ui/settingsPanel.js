@@ -25,7 +25,7 @@ const META_FIELDS = [
 /**
  * Build the settings panel into #laws-panel.
  * @param {import('../core/eventBus.js').EventBus} bus
- * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array }} lawStateObj
+ * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array }} lawStateObj
  */
 export function createSettingsPanel(bus, lawStateObj) {
   const panel = document.getElementById('laws-panel');

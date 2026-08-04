@@ -149,3 +149,37 @@ describe('Law gating — movement and interaction require laws', () => {
     expect(emitted).toBeGreaterThan(0);
   });
 });
+
+describe('Accretion law gating', () => {
+  it('LIFE alone must not grow particle mass (accretion stays off)', async () => {
+    const { solve } = await import('../../src/physics/solver.js');
+    const { LAW_INDEXES, STRIDE_INDEXES } = await import('../../src/constants.js');
+    const { createParticleBuffer } = await import('../../src/state/particleBuffer.js');
+    const { createDNABuffer } = await import('../../src/dna/dnaBuffer.js');
+    const { createLawState, set } = await import('../../src/state/lawState.js');
+
+    const { view } = createParticleBuffer(3, 100);
+    view.fill(0);
+    // Two particles with high energy (energy > 50 would grow mass under LIFE)
+    for (let i = 0; i < 2; i++) {
+      const b = i * 100;
+      view[b + STRIDE_INDEXES.POS_X] = 100 + i * 50;
+      view[b + STRIDE_INDEXES.POS_Y] = 100;
+      view[b + STRIDE_INDEXES.POS_Z] = 100;
+      view[b + STRIDE_INDEXES.MASS] = 1.0;
+      view[b + STRIDE_INDEXES.ENERGY] = 100;
+      view[b + STRIDE_INDEXES.DEAD] = 0;
+    }
+    const dna = createDNABuffer();
+    const laws = createLawState();
+    set(laws, LAW_INDEXES.LIFE);
+
+    const before = view[0 + STRIDE_INDEXES.MASS] + view[100 + STRIDE_INDEXES.MASS];
+    for (let t = 0; t < 60; t++) {
+      solve(view, 2, 100, laws, dna, 2000, 0.25, () => 0.5);
+    }
+    const after = view[0 + STRIDE_INDEXES.MASS] + view[100 + STRIDE_INDEXES.MASS];
+    // Small tolerance: energy decay/other LIFE effects must not grow mass
+    expect(after).toBeLessThanOrEqual(before + 0.01);
+  });
+});

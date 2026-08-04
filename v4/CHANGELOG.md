@@ -1,6 +1,157 @@
 # Changelog: VEPA v4
 
 
+## [4.3.0] - 2026-08-04
+
+### Law categories completed — Electromagnetism + Information (26 laws)
+- **Electromagnetism (cyan) now has 13 laws**: CHARGE_LAW, FIELD, CURRENT,
+  RESISTANCE, CAPACITANCE, INDUCTANCE, MAGNETISM, RESONANCE, FLUX, IONIZATION
+  + **DISCHARGE** (stored charge bursts into motion/heat), **PLASMA** (hot
+  particles ionize — heat becomes charge), **SUPERCONDUCTIVITY** (cold pairs
+  couple into lossless velocity-aligned streams).
+- **Information (gold) now has 13 laws**: MEMORY, PATTERN, STIGMERGY,
+  SIGNAL_BOOST, LEARN, SYMBOL, METRIC, PREDICT, CODE, PROTOCOL + **FEEDBACK**
+  (memory amplifies motion, motion refreshes memory), **LANGUAGE** (signaling
+  pairs exchange memory traces), **CULTURE** (same-species contacts converge
+  their DNA cache).
+- **96-bit law bitmask**: `lawState` now uses three `Uint32Array` words
+  (0-31 / 32-63 / 64-95) instead of two — laws 64+ previously collided with
+  lower bits and could not be toggled. `getStateVector`/`fromVector` and
+  `serialize`/`deserialize` extended (legacy `{low, high}` payloads still load).
+- **Multiplex shards** copy and randomize the third law word (extended-range
+  laws now survive shard derivation and variation).
+- **New synergies** for both categories: CHARGE_LAW+MAGNETISM, SUPERCONDUCTIVITY
+  +COLD, SUPERCONDUCTIVITY+RESISTANCE, DISCHARGE+IONIZATION, PLASMA+HEAT,
+  CURRENT+RESISTANCE, MEMORY+FEEDBACK, SIGNAL_BOOST+PROTOCOL, LANGUAGE+CODE,
+  CULTURE+GENOTYPE, PREDICT+TRACK, STIGMERGY+LEARN, LEARN+SYMBOL — all consumed
+  by the solver as multipliers.
+- SUPERCONDUCTOR law-set preset now includes SUPERCONDUCTIVITY.
+- Law grid / tooltips updated with icons and HELP_DB entries for all six new
+  laws.
+
+### Law set bar (SETUP > WORLD)
+- **3-button bar**: a dropdown selector (shows the applied set) + icon-only
+  LOAD (📂) and SAVE (💾) buttons.
+- **Select-then-load flow**: tapping a row in the dropdown only selects it
+  (✓ highlight); LOAD applies it to the sim, SAVE overwrites it with the
+  current laws. Saving without a selection opens the inline name editor for a
+  brand-new set.
+- **User sets override built-ins**: saved sets with the same name as a
+  built-in now take precedence.
+- **3 new presets** (23 total): ELECTRIC STORM (charge/field/current/
+  ionization/discharge/plasma), NEURAL WEB (memory/learn/symbol/language/
+  feedback/culture), CRYO CURRENT (superconductivity/cold/current/
+  resistance/flux/condense).
+
+## [4.2.1] - 2026-08-04
+
+### Fixes
+- **Accretion now requires ACCR**: the LIFE law's metabolism no longer grows or
+  shrinks particle mass on its own — mass fluctuation is gated behind the ACCR
+  law, so particles stop "accreting" unless accretion is enabled.
+
+### Reproduction
+- **Offspring inherit the parents' intermediate colour**: two-parent breeding
+  blends the parents' colours 50/50 (with mutation); single-parent clones carry
+  the parent colour instead of snapping back to the species base. Shard
+  populations (multiplex) now spawn with per-species colours too.
+
+### Population
+- **REGULAR SPAWN /S setting** (SETUP > WORLD > ENVIRONMENT > POPULATION):
+  spawns N particles per second at random positions drawn from the configured
+  initial distribution (shape / centres / centre bias). Default 5/s.
+
+## [4.2.0] - 2026-08-04
+
+### Law grid (SETUP > WORLD)
+- **5-colour law coding**: every law is tinted by its category (blue physics,
+  green biology, purple chemistry, orange thermodynamics, red metaphysics) in
+  both icon and list modes — dull when disabled, bright when enabled.
+- **One row per law type**: each category renders as its own labelled row.
+- **Exclusive view-mode group**: [◈ icon] [ABC list] [✕ hide] — only one mode
+  selected at a time; tapping the selected mode again hides the law grid, and
+  the ✕ button toggles visibility.
+
+### Law set system
+- **SAVE / LOAD + dropdown** of presets; each dropdown row shows 1/4-size law
+  icons in a single line + preset name. Clicking a row applies that law set.
+- **20 theorycrafted presets** (PRIME DIRECTIVE … CHAOS THEORY).
+- **Inline save editor**: SAVE opens a name input prefilled with the last
+  loaded/saved preset name, with ✓ / ✕ to confirm or cancel. Saving upserts
+  into the dropdown and persists to localStorage (`vepa.lawsets.v1`);
+  loading a preset then saving renames it.
+- Manual law toggles return the label to CUSTOM.
+
+### Drawer (already present, confirmed working)
+- Swipe tabs up to open / down to close the drawer; the top edge handle can be
+  held (highlighted) and dragged to resize; − / + zoom buttons scale drawer
+  content.
+
+## [4.2.0] - 2026-08-04
+
+### Laws
+- **5-category colour coding in both views**: law tiles and list rows are
+  tinted by type (blue/green/purple/orange/red) even when inactive, bright
+  when active.
+- **Mode buttons**: ▦ (icon) and ABC (list) sit side by side, mutually
+  exclusive; tapping the already-active button hides the law grid, tapping
+  it again restores it.
+
+### Drawer
+- **Swipe up/down** on the drawer tabs opens/closes the drawer.
+- **Resize handle** on the drawer's top edge — hold/drag to resize, glows
+  blue while hovered/dragged.
+- **− / + zoom buttons** in the drawer tabs scale the drawer content
+  (0.6×–1.6×).
+
+## [4.1.9] - 2026-08-04
+
+### World params
+- **Grouped params**: SETUP > WORLD sliders now nest in sub-accordions per
+  group — SPACE > WORLD / POPULATION / DISTRIBUTION, PHYSICS > FORCES / MOTION,
+  ENVIRONMENT > THERMAL / POPULATION, BIOLOGY > INTERACTION / LIFE CYCLE.
+
+## [4.1.8] - 2026-08-04
+
+### Camera
+- **Straight-on default view**: the camera now starts flat against one side of
+  the dish (no rotation/tilt); drag to orbit, 2-finger drag rotates.
+- Zoom remains clamped (min 0.05, max 100) via wheel/pinch.
+
+### Initial distribution controls (SETUP > WORLD > SPACE)
+- **DISTRIBUTION**: 0 = perfectly even grid, 1 = fully random positions
+  (replaces the inert SPAWN SHAPE slider).
+- **CENTRES**: number of cluster centres, 1-64.
+- **CENTRE SCATTER**: centre placement — 0 = evenly spaced, 1 = random.
+- **CENTRE BIAS**: how strongly particles are pulled toward the centre(s),
+  0 = uniform, 1 = pinned to centres.
+- Values apply on the next Restart / Chaos respawn.
+
+## [4.1.7] - 2026-08-04
+
+### Chaos Multiplex (guided evolution grid)
+- **Long-press Chaos ☢️ opens the Chaos Multiplex config modal**: X×Y concurrent
+  simulations rendered in a grid (up to 16 shards), with checkbox toggles for
+  which aspects to randomize (Laws / DNA / Population), a variation slider
+  between shards, and derivation mode (clone the selected simulation vs.
+  spawn a fresh population).
+- **Right-edge multiplex drawer**: minimizable/expandable; while minimized it
+  still shows an icon-only ⚡ iterate button. Iterate regenerates every shard
+  from the currently selected shard with fresh seeds.
+- **Shard selection**: tapping any concurrent simulation renders a selection
+  box around it; the selected shard becomes the source for the next iteration.
+- **Shared camera**: all shards share one camera, so any drag/pinch/zoom
+  applies the same camera movement to every shard simultaneously.
+- **Chaos button order**: short click randomizes laws/DNA first, then restarts
+  on a fresh population that preserves the randomized configuration.
+
+### Camera
+- **1-finger drag pans, 2-finger drag rotates** (two-finger rotation orbits +
+  pinch zooms); mouse drag pans.
+
+### Toolbar
+- Buttons named Chaos, Restart, Reset, Help (icons unchanged).
+
 ## [4.1.6] - 2026-08-04
 
 ### UI

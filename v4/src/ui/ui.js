@@ -21,6 +21,9 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   setupTabSwitching();
   setupDrawerMinimize();
   setupDrawerHideShow();
+  setupDrawerResize();
+  setupDrawerZoom();
+  setupDrawerSwipe();
   setupToolbarControls(bus);
   setupKeyboardShortcuts(bus);
 
@@ -69,7 +72,100 @@ export function setupDrawerMinimize() {
     btn.textContent = minimized ? '▔' : '▁';
     btn.title = minimized ? 'Expand drawer' : 'Minimize drawer';
     btn.setAttribute('aria-expanded', String(!minimized));
+    // Clear the custom resize height while minimized, restore it on expand
+    if (minimized) {
+      drawer.dataset.prevHeight = drawer.style.height || '';
+      drawer.style.height = '';
+      drawer.style.maxHeight = '';
+    } else if (drawer.dataset.prevHeight) {
+      drawer.style.height = drawer.dataset.prevHeight;
+      drawer.style.maxHeight = drawer.dataset.prevHeight;
+    }
   });
+}
+
+/** Drag the top edge handle to resize the drawer height. */
+function setupDrawerResize() {
+  const drawer = document.getElementById('drawer-container');
+  const handle = document.getElementById('drawer-resize-handle');
+  if (!drawer || !handle) return;
+  let dragging = false;
+  let startY = 0;
+  let startH = 0;
+  handle.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startH = drawer.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const h = Math.max(90, Math.min(window.innerHeight * 0.92, startH + (startY - e.clientY)));
+    drawer.style.height = h + 'px';
+    drawer.style.maxHeight = h + 'px';
+  });
+  window.addEventListener('pointerup', () => {
+    dragging = false;
+    handle.classList.remove('dragging');
+  });
+}
+
+/** − / + buttons in the drawer tabs scale the drawer content. */
+function setupDrawerZoom() {
+  const panel = document.getElementById('main-panel');
+  const minus = document.getElementById('drawer-zoom-out');
+  const plus = document.getElementById('drawer-zoom-in');
+  if (!panel || !minus || !plus) return;
+  let zoom = 1.0;
+  const apply = () => { panel.style.zoom = zoom.toFixed(2); };
+  minus.addEventListener('click', () => { zoom = Math.max(0.6, zoom - 0.1); apply(); });
+  plus.addEventListener('click', () => { zoom = Math.min(1.6, zoom + 0.1); apply(); });
+}
+
+/** Swipe the drawer tabs up to open, down to close (touch + mouse drag). */
+function setupDrawerSwipe() {
+  const drawer = document.getElementById('drawer-container');
+  const tabs = document.querySelector('#main-panel .tabs');
+  if (!drawer || !tabs) return;
+  let startY = null;
+  let startX = null;
+  let dragging = false;
+  tabs.addEventListener('pointerdown', (e) => {
+    startY = e.clientY;
+    startX = e.clientX;
+    dragging = false;
+  });
+  tabs.addEventListener('pointermove', (e) => {
+    if (startY == null) return;
+    if (Math.abs(e.clientY - startY) > 12) dragging = true;
+  });
+  tabs.addEventListener('pointerup', (e) => {
+    if (startY == null) return;
+    const dy = e.clientY - startY;
+    const dx = e.clientX - startX;
+    startY = null;
+    if (!dragging || Math.abs(dy) < 24 || Math.abs(dy) < Math.abs(dx)) return;
+    if (dy < 0) openDrawer(drawer); else closeDrawer(drawer);
+  });
+}
+
+function openDrawer(drawer) {
+  drawer.classList.remove('hidden', 'minimized');
+  const minBtn = document.getElementById('drawer-minimize-btn');
+  const showBtn = document.getElementById('drawer-show-btn');
+  if (minBtn) {
+    minBtn.textContent = '▁';
+    minBtn.title = 'Minimize drawer';
+    minBtn.setAttribute('aria-expanded', 'true');
+  }
+  if (showBtn) showBtn.hidden = true;
+}
+
+function closeDrawer(drawer) {
+  drawer.classList.add('hidden');
+  const showBtn = document.getElementById('drawer-show-btn');
+  if (showBtn) showBtn.hidden = false;
 }
 
 export function setupDrawerHideShow() {
@@ -114,16 +210,17 @@ function setupToolbarControls(bus) {
     chaosBtn.addEventListener('pointerdown', () => {
       chaosPressTimer = setTimeout(() => {
         chaosPressTimer = null;
-        showChaosMenu(bus);
+        if (typeof window.openChaosMultiplex === 'function') window.openChaosMultiplex();
       }, 600);
     });
     chaosBtn.addEventListener('pointerup', () => {
       if (chaosPressTimer) {
         clearTimeout(chaosPressTimer);
         chaosPressTimer = null;
-        // Short click = restart + instant chaos
-        bus.emit('sim:restart');
+        // Short click = randomize first, then restart on a fresh population
+        // (restart preserves the randomized laws + DNA)
         bus.emit('sim:chaos');
+        bus.emit('sim:restart', { preserveLaws: true, preserveDNA: true });
       }
     });
     chaosBtn.addEventListener('pointerleave', () => {

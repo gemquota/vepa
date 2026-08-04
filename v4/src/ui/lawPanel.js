@@ -12,6 +12,8 @@ const CATEGORY_COLORS = {
   PURPLE: { active: 'var(--accent-purple)', glow: 'var(--glow-purple)', label: 'Chemistry' },
   ORANGE: { active: 'var(--accent-orange)', glow: 'none',               label: 'Thermodynamics' },
   RED:    { active: 'var(--accent-red)',    glow: 'none',               label: 'Metaphysics' },
+  CYAN:   { active: 'var(--accent-cyan)',   glow: 'none',               label: 'Electromagnetism' },
+  GOLD:   { active: 'var(--accent-gold)',   glow: 'none',               label: 'Information' },
 };
 
 // Laws that have multi-state behavior and their max states
@@ -76,7 +78,7 @@ function applyButtonState(btn, active, colorName) {
  * Create the law toggle panel in #laws-panel.
  *
  * @param {import('../core/eventBus.js').EventBus} bus
- * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array }} lawStateObj
+ * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array }} lawStateObj
  */
 export function createLawPanel(bus, lawStateObj) {
   const panel = document.getElementById('laws-panel');
@@ -89,6 +91,8 @@ export function createLawPanel(bus, lawStateObj) {
     { key: 'chemistry',     cat: LAW_CATEGORIES.chemistry },
     { key: 'thermodynamics', cat: LAW_CATEGORIES.thermodynamics },
     { key: 'metaphysics',   cat: LAW_CATEGORIES.metaphysics },
+    { key: 'electromagnetism', cat: LAW_CATEGORIES.electromagnetism },
+    { key: 'information',   cat: LAW_CATEGORIES.information },
   ];
 
   let html = '';

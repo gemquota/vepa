@@ -30,28 +30,31 @@
                     <span id="hud-tick" class="hud-item">tick 0</span>
                 </div>
                 <div class="toolbar-right">
-                    <button id="chaos-btn" class="sq-btn" title="Randomize (Chaos)">☢️</button>
+                    <button id="chaos-btn" class="sq-btn" title="Chaos">☢️</button>
                     <button id="restart-btn" class="sq-btn" title="Restart">🔄</button>
                     <button id="hard-reset-btn" class="sq-btn" title="Reset">🗑️</button>
-                    <button id="help-toggle" class="sq-btn" title="Readme (Help)">?</button>
+                    <button id="help-toggle" class="sq-btn" title="Help">?</button>
                 </div>
             </div>
 
             <!-- BOTTOM DRAWER -->
             <div id="drawer-container">
+                <div id="drawer-resize-handle" title="Drag to resize drawer" aria-label="Resize drawer"></div>
                 <div id="main-panel">
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="tab-setup">SETUP</button>
-                        <button class="tab-btn" data-tab="tab-data">DATA</button>
+                        <button id="drawer-zoom-out" class="tab-btn drawer-zoom-btn" title="Zoom out" aria-label="Zoom out">−</button>
+                        <button class="tab-btn active" data-tab="tab-setup" title="Setup" aria-label="Setup">⚙️</button>
+                        <button class="tab-btn" data-tab="tab-data" title="Data" aria-label="Data">📊</button>
+                        <button id="drawer-zoom-in" class="tab-btn drawer-zoom-btn" title="Zoom in" aria-label="Zoom in">+</button>
                         <button id="drawer-hide-btn" class="tab-btn drawer-hide-btn" title="Hide drawer" aria-label="Hide drawer">▼</button>
                         <button id="drawer-minimize-btn" class="tab-btn drawer-minimize-btn" title="Minimize drawer" aria-expanded="true">▁</button>
                     </div>
 
                     <div id="tab-data" class="tab-content">
                         <div class="sub-tabs">
-                            <button class="sub-tab-btn active" data-sub="data-intel">INTELLIGENCE</button>
-                            <button class="sub-tab-btn" data-sub="data-dna">DNA</button>
-                            <button class="sub-tab-btn" data-sub="data-logs">LOGS</button>
+                            <button class="sub-tab-btn active" data-sub="data-intel" title="Intelligence" aria-label="Intelligence">🧠</button>
+                            <button class="sub-tab-btn" data-sub="data-dna" title="DNA" aria-label="DNA">🧬</button>
+                            <button class="sub-tab-btn" data-sub="data-logs" title="Logs" aria-label="Logs">📜</button>
                         </div>
                         <div id="data-intel" class="sub-tab-content active">
                             <div id="intel-dashboard"></div>
@@ -112,9 +115,9 @@
 
                     <div id="tab-setup" class="tab-content active">
                         <div class="sub-tabs">
-                            <button class="sub-tab-btn active" data-sub="setup-world">WORLD</button>
-                            <button class="sub-tab-btn" data-sub="setup-species">SPECIES</button>
-                            <button class="sub-tab-btn" data-sub="setup-settings">SETTINGS</button>
+                            <button class="sub-tab-btn active" data-sub="setup-world" title="World" aria-label="World">🌍</button>
+                            <button class="sub-tab-btn" data-sub="setup-species" title="Species" aria-label="Species">🦠</button>
+                            <button class="sub-tab-btn" data-sub="setup-settings" title="Settings" aria-label="Settings">🎛️</button>
                         </div>
                         <div id="setup-world" class="sub-tab-content active">
                             <div class="world-inner">
@@ -124,6 +127,8 @@
                                     <button class="cat-tab active" data-cat="cat-chemistry">CHEM</button>
                                     <button class="cat-tab active" data-cat="cat-thermodynamics">THERMO</button>
                                     <button class="cat-tab active" data-cat="cat-metaphysics">META</button>
+                                    <button class="cat-tab active" data-cat="cat-electromagnetism">ELEC</button>
+                                    <button class="cat-tab active" data-cat="cat-information">INFO</button>
                                 </div>
                                 <div id="law-info-module" class="law-info-module hidden"></div>
                                 <div id="law-grid" class="law-icon-grid"></div>

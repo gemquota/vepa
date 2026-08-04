@@ -25,6 +25,20 @@ describe('LawState', () => {
         expect(getActiveCount(state)).toBe(2);
     });
 
+    it('set and isSet work for extended-range laws (64-95) without collisions', () => {
+        const state = createLawState();
+        set(state, 64);
+        set(state, 78);
+        expect(isSet(state, 64)).toBe(true);
+        expect(isSet(state, 78)).toBe(true);
+        expect(isSet(state, 32)).toBe(false); // no overlap with the old high word
+        expect(isSet(state, 46)).toBe(false);
+        expect(getActiveCount(state)).toBe(2);
+        clear(state, 64);
+        expect(isSet(state, 64)).toBe(false);
+        expect(isSet(state, 78)).toBe(true);
+    });
+
     it('toggle flips state', () => {
         const state = createLawState();
         toggle(state, 5);
@@ -46,10 +60,13 @@ describe('LawState', () => {
         set(state, 0);
         set(state, 35);
         const vec = getStateVector(state);
-        expect(vec).toHaveLength(64);
+        expect(vec).toHaveLength(96);
         expect(vec[0]).toBe(true);
         expect(vec[35]).toBe(true);
         expect(vec[1]).toBe(false);
+        set(state, 78);
+        const vec2 = getStateVector(state);
+        expect(vec2[78]).toBe(true);
     });
 
     it('serialize/deserialize round-trip', () => {
@@ -57,11 +74,19 @@ describe('LawState', () => {
         set(state, 0);
         set(state, 35);
         set(state, 63);
+        set(state, 78);
         const data = serialize(state);
+        expect(data.ext).toBeGreaterThan(0);
         const restored = deserialize(data);
         expect(isSet(restored, 0)).toBe(true);
         expect(isSet(restored, 35)).toBe(true);
         expect(isSet(restored, 63)).toBe(true);
+        expect(isSet(restored, 78)).toBe(true);
         expect(isSet(restored, 1)).toBe(false);
+
+        // legacy {low, high} payloads (saved before the third word) still load
+        const legacy = deserialize({ low: data.low, high: data.high });
+        expect(isSet(legacy, 0)).toBe(true);
+        expect(isSet(legacy, 78)).toBe(false);
     });
 });

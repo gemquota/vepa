@@ -12,6 +12,7 @@
     --accent-orange: #ff8a4a;
     --accent-red: #ff4a4a;
     --accent-gold: #ffd700;
+    --accent-cyan: #4ae8ff;
     --border: rgba(255, 255, 255, 0.08);
     --glow-blue: 0 0 8px rgba(74, 158, 255, 0.3);
     --glow-green: 0 0 8px rgba(74, 255, 138, 0.3);
@@ -580,6 +581,50 @@ body {
 }
 #chaos-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
 
+/* ── Drawer resize handle (top edge) ── */
+#drawer-resize-handle {
+  flex: 0 0 8px;
+  height: 8px;
+  position: relative;
+  z-index: 2;
+  cursor: row-resize;
+  background: rgba(255,255,255,0.03);
+  touch-action: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+#drawer-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.15s ease;
+}
+#drawer-resize-handle:hover,
+#drawer-resize-handle.dragging {
+  background: rgba(74,158,255,0.14);
+  box-shadow: 0 -1px 10px rgba(74,158,255,0.3);
+}
+#drawer-resize-handle:hover::after,
+#drawer-resize-handle.dragging::after {
+  background: var(--accent-blue);
+}
+
+/* ── Drawer zoom buttons ── */
+#main-panel .drawer-zoom-btn {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--text-dim);
+}
+#main-panel .drawer-zoom-btn:hover { color: var(--accent-blue); background: rgba(74,158,255,0.08); }
+
 /* ── Bottom Drawer ── */
 #drawer-container {
     position: absolute;
@@ -611,8 +656,9 @@ body {
     flex: 1;
     padding: 8px 4px;
     font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 2px;
+    font-size: 15px;
+    line-height: 1;
+    letter-spacing: 0;
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
@@ -706,8 +752,9 @@ body {
     flex: 1;
     padding: 6px 4px;
     font-family: var(--font-mono);
-    font-size: 8px;
-    letter-spacing: 1.5px;
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0;
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
@@ -753,9 +800,25 @@ body {
     transition: all 0.15s ease;
 }
 .cat-tab:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
-.cat-tab.active { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(74,158,255,0.08); }
+/* Category filter buttons carry their own colour (dull off, bright on) */
+.cat-tab[data-cat="cat-physics"] { color: rgba(130,180,255,0.7); border-color: rgba(74,158,255,0.35); }
+.cat-tab[data-cat="cat-biology"] { color: rgba(130,255,175,0.7); border-color: rgba(74,255,138,0.35); }
+.cat-tab[data-cat="cat-chemistry"] { color: rgba(200,140,255,0.7); border-color: rgba(180,74,255,0.35); }
+.cat-tab[data-cat="cat-thermodynamics"] { color: rgba(255,175,120,0.7); border-color: rgba(255,138,74,0.35); }
+.cat-tab[data-cat="cat-metaphysics"] { color: rgba(255,130,130,0.7); border-color: rgba(255,74,74,0.35); }
+.cat-tab[data-cat="cat-electromagnetism"] { color: rgba(120,235,255,0.7); border-color: rgba(74,232,255,0.35); }
+.cat-tab[data-cat="cat-information"] { color: rgba(255,215,0,0.7); border-color: rgba(255,215,0,0.35); }
+.cat-tab[data-cat="cat-physics"].active { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(74,158,255,0.12); }
+.cat-tab[data-cat="cat-biology"].active { border-color: var(--accent-green); color: var(--accent-green); background: rgba(74,255,138,0.12); }
+.cat-tab[data-cat="cat-chemistry"].active { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(180,74,255,0.12); }
+.cat-tab[data-cat="cat-thermodynamics"].active { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(255,138,74,0.12); }
+.cat-tab[data-cat="cat-metaphysics"].active { border-color: var(--accent-red); color: var(--accent-red); background: rgba(255,74,74,0.12); }
+.cat-tab[data-cat="cat-electromagnetism"].active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(74,232,255,0.12); }
+.cat-tab[data-cat="cat-information"].active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.12); }
 
 /* ── Law Icon Grid (World tab) ── */
+#law-grid.hidden { display: none !important; }
+
 .law-icon-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
@@ -777,6 +840,12 @@ body {
     min-height: 28px;
     color: var(--text-dim);
 }
+/* Category colour visible even when the law is off (bright when active) */
+.law-icon-grid .sq-toggle.cat-physics { color: rgba(74,158,255,0.65); border-color: rgba(74,158,255,0.3); }
+.law-icon-grid .sq-toggle.cat-biology { color: rgba(74,255,138,0.65); border-color: rgba(74,255,138,0.3); }
+.law-icon-grid .sq-toggle.cat-chemistry { color: rgba(180,74,255,0.65); border-color: rgba(180,74,255,0.3); }
+.law-icon-grid .sq-toggle.cat-thermodynamics { color: rgba(255,138,74,0.65); border-color: rgba(255,138,74,0.3); }
+.law-icon-grid .sq-toggle.cat-metaphysics { color: rgba(255,74,74,0.65); border-color: rgba(255,74,74,0.3); }
 .law-icon-grid .sq-toggle.active.cat-physics { border-color: var(--accent-blue); background: rgba(74,158,255,0.15); box-shadow: 0 0 6px rgba(74,158,255,0.2); color: #8cf; }
 .law-icon-grid .sq-toggle.active.cat-biology { border-color: var(--accent-green); background: rgba(74,255,138,0.15); box-shadow: 0 0 6px rgba(74,255,138,0.2); color: #8f8; }
 .law-icon-grid .sq-toggle.active.cat-chemistry { border-color: var(--accent-purple); background: rgba(180,74,255,0.15); box-shadow: 0 0 6px rgba(180,74,255,0.2); color: #c8f; }
@@ -918,6 +987,32 @@ body {
 .accordion-section.open .accordion-header { border-bottom: 1px solid var(--border); }
 .accordion-body { display: none; padding: 4px 8px; }
 .accordion-section.open .accordion-body { display: block; }
+
+/* ── Sub-group accordions (grouped world params) ── */
+.sub-accordion-section {
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 3px;
+    margin-bottom: 2px;
+    overflow: hidden;
+}
+.sub-accordion-section.open .sub-accordion-body { display: block; }
+.sub-accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 1.5px;
+    color: var(--accent-gold);
+    opacity: 0.75;
+    transition: all 0.15s;
+}
+.sub-accordion-header:hover { opacity: 1; background: rgba(255,255,255,0.03); }
+.sub-accordion-header .arrow { transition: transform 0.2s; font-size: 7px; }
+.sub-accordion-section.open .sub-accordion-header .arrow { transform: rotate(90deg); }
+.sub-accordion-body { display: none; padding: 2px 4px 4px; }
 .accordion-slider-row {
     display: flex;
     align-items: center;
@@ -1295,6 +1390,20 @@ body {
   border-color: var(--accent-blue);
   color: var(--accent-blue);
 }
+.view-mode-toggle.active {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(74,158,255,0.10);
+  box-shadow: 0 0 6px rgba(74,158,255,0.2);
+}
+.law-mode-icon {
+  min-width: 22px;
+  text-align: center;
+  margin-left: auto;
+}
+.view-mode-toggle.law-mode-abc {
+  margin-left: 0;
+}
 
 /* Word-mode law grid items */
 .sq-toggle-word {
@@ -1324,12 +1433,44 @@ body {
 }
 #law-grid.word-mode .law-btn {
   width: 100%;
-  padding: 5px 4px;
+  padding: 5px 6px;
   font-size: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-align: left;
 }
+#law-grid.word-mode .law-btn .tog-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+#law-grid.word-mode .law-btn .tog-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+/* Category-coloured icons in list mode (dim when inactive, bright when active) */
+#law-grid.word-mode .law-btn.cat-physics .tog-icon { color: #6ab0ff; }
+#law-grid.word-mode .law-btn.cat-biology .tog-icon { color: #6aff9c; }
+#law-grid.word-mode .law-btn.cat-chemistry .tog-icon { color: #c77bff; }
+#law-grid.word-mode .law-btn.cat-thermodynamics .tog-icon { color: #ffa066; }
+#law-grid.word-mode .law-btn.cat-metaphysics .tog-icon { color: #ff7070; }
+/* Active list-mode laws get the full category accent (matches icon mode) */
+#law-grid.word-mode .law-btn.active.cat-physics { border-color: var(--accent-blue); background: rgba(74,158,255,0.15); box-shadow: 0 0 6px rgba(74,158,255,0.2); color: #8cf; }
+#law-grid.word-mode .law-btn.active.cat-biology { border-color: var(--accent-green); background: rgba(74,255,138,0.15); box-shadow: 0 0 6px rgba(74,255,138,0.2); color: #8f8; }
+#law-grid.word-mode .law-btn.active.cat-chemistry { border-color: var(--accent-purple); background: rgba(180,74,255,0.15); box-shadow: 0 0 6px rgba(180,74,255,0.2); color: #c8f; }
+#law-grid.word-mode .law-btn.active.cat-thermodynamics { border-color: var(--accent-orange); background: rgba(255,138,74,0.15); color: #fca; }
+#law-grid.word-mode .law-btn.active.cat-metaphysics { border-color: var(--accent-red); background: rgba(255,74,74,0.15); color: #f88; }
+#law-grid.word-mode .law-btn.cat-physics { border-color: rgba(74,158,255,0.28); }
+#law-grid.word-mode .law-btn.cat-biology { border-color: rgba(74,255,138,0.28); }
+#law-grid.word-mode .law-btn.cat-chemistry { border-color: rgba(180,74,255,0.28); }
+#law-grid.word-mode .law-btn.cat-thermodynamics { border-color: rgba(255,138,74,0.28); }
+#law-grid.word-mode .law-btn.cat-metaphysics { border-color: rgba(255,74,74,0.28); }
 @media (max-width: 480px) {
   #law-grid.word-mode { grid-template-columns: repeat(3, 1fr); }
 }
@@ -1697,3 +1838,495 @@ body {
 #main-panel .drawer-hide-btn {
     font-weight: 700;
 }
+
+/* ── Chaos Multiplex ─────────────────────────────────────────────── */
+#multiplex-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  padding: 10px;
+  background: radial-gradient(ellipse at center, rgba(20,20,35,0.9), rgba(5,5,12,0.97));
+}
+#multiplex-overlay.active { display: flex; }
+#multiplex-grid {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  gap: 8px;
+}
+.shard-cell {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #07070d;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.shard-cell::after {
+  content: attr(data-shard-label);
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.45);
+  pointer-events: none;
+  text-shadow: 0 1px 3px #000;
+}
+.shard-cell.selected {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 14px rgba(255,74,74,0.55), inset 0 0 22px rgba(255,74,74,0.10);
+}
+.shard-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* Right-edge multiplex drawer */
+#multiplex-drawer {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  font-family: var(--font-mono);
+}
+#multiplex-drawer.hidden { display: none; }
+
+/* Minimized: slim strip — icon-only iterate button stays visible */
+#multiplex-drawer .mpx-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+  transition: border-color 0.15s ease;
+}
+#multiplex-drawer .mpx-strip:hover { border-color: var(--accent-red); }
+#multiplex-drawer .mpx-chevron {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0;
+}
+#multiplex-drawer.expanded .mpx-strip { display: none; }
+
+/* Expanded body */
+#multiplex-drawer .mpx-body {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 190px;
+  padding: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 18px rgba(255,74,74,0.18);
+}
+#multiplex-drawer.expanded .mpx-body { display: flex; }
+.mpx-body-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.mpx-title {
+  color: var(--accent-red);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.mpx-stat {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+.mpx-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mpx-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mpx-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
+.mpx-icon {
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mpx-action {
+  padding: 8px 10px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  background: rgba(255,74,74,0.10);
+  border-color: rgba(255,74,74,0.5);
+  color: var(--accent-red);
+}
+.mpx-action:hover { background: rgba(255,74,74,0.22); }
+.mpx-danger { background: rgba(255,74,74,0.16); }
+
+/* Chaos Multiplex settings modal */
+#chaos-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+}
+#chaos-modal.open { display: flex; }
+.chaos-modal-panel {
+  width: 400px;
+  max-width: 94vw;
+  max-height: 92vh;
+  overflow: auto;
+  background: rgba(8,8,16,0.98);
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  padding: 18px;
+  font-family: var(--font-mono);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 26px rgba(255,74,74,0.22);
+}
+.chaos-modal-title {
+  color: var(--accent-red);
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.chaos-modal-sub {
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.chaos-modal-section {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+.chaos-modal-label {
+  color: var(--accent-gold);
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.chaos-grid-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chaos-grid-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+.chaos-grid-row input[type="number"] {
+  width: 52px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 6px;
+}
+.chaos-grid-row input[type="number"]:focus { border-color: var(--accent-red); outline: none; }
+.chaos-grid-count {
+  margin-left: auto;
+  color: var(--accent-red);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.chaos-check,
+.chaos-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.chaos-check input[type="checkbox"],
+.chaos-radio input[type="radio"] {
+  accent-color: var(--accent-red);
+}
+.chaos-check:hover,
+.chaos-radio:hover { color: var(--text-primary); }
+#mpx-variation {
+  width: 100%;
+  accent-color: var(--accent-red);
+  cursor: pointer;
+}
+.chaos-variation-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 8px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+#mpx-variation-value { color: var(--accent-red); }
+.chaos-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.chaos-modal-actions .mpx-action { flex: 1; }
+
+/* ── Law category rows (one row per law type) ─────────────────── */
+.law-icon-grid,
+#law-grid.word-mode { display: block; padding: 4px; }
+.law-cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.law-cat-row:last-child { border-bottom: none; }
+.law-cat-label {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  opacity: 0.75;
+  margin-bottom: 2px;
+}
+.law-cat-row .sq-toggle {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  font-size: 11px;
+}
+#law-grid.word-mode .law-cat-row .law-btn {
+  width: auto;
+  flex: 1 1 82px;
+}
+#law-grid.hidden { display: none; }
+
+/* ── Dull category tint when a law is OFF (icon mode) ── */
+.law-icon-grid .sq-toggle.cat-physics { border-color: rgba(74,158,255,0.30); color: rgba(130,180,255,0.55); background: rgba(74,158,255,0.05); }
+.law-icon-grid .sq-toggle.cat-biology { border-color: rgba(74,255,138,0.30); color: rgba(130,255,175,0.55); background: rgba(74,255,138,0.05); }
+.law-icon-grid .sq-toggle.cat-chemistry { border-color: rgba(180,74,255,0.30); color: rgba(200,140,255,0.55); background: rgba(180,74,255,0.05); }
+.law-icon-grid .sq-toggle.cat-thermodynamics { border-color: rgba(255,138,74,0.30); color: rgba(255,175,120,0.55); background: rgba(255,138,74,0.05); }
+.law-icon-grid .sq-toggle.cat-metaphysics { border-color: rgba(255,74,74,0.30); color: rgba(255,130,130,0.55); background: rgba(255,74,74,0.05); }
+
+/* ── Dull category tint when a law is OFF (list mode) ── */
+#law-grid.word-mode .law-btn.cat-physics { color: rgba(130,180,255,0.60); }
+#law-grid.word-mode .law-btn.cat-biology { color: rgba(130,255,175,0.60); }
+#law-grid.word-mode .law-btn.cat-chemistry { color: rgba(200,140,255,0.60); }
+#law-grid.word-mode .law-btn.cat-thermodynamics { color: rgba(255,175,120,0.60); }
+#law-grid.word-mode .law-btn.cat-metaphysics { color: rgba(255,130,130,0.60); }
+/* Active list-mode icons inherit the bright button colour */
+#law-grid.word-mode .law-btn.active .tog-icon { color: inherit; }
+
+/* ── Exclusive view-mode group ── */
+.view-mode-group { display: inline-flex; gap: 2px; margin-left: auto; }
+.view-mode-group .view-mode-toggle { margin-left: 0; }
+.view-mode-toggle.law-mode-icon { min-width: 24px; text-align: center; }
+.view-mode-toggle.law-mode-hide { min-width: 20px; text-align: center; }
+.view-mode-toggle.law-mode-hide.active {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background: rgba(255,74,74,0.10);
+  box-shadow: 0 0 6px rgba(255,74,74,0.2);
+}
+
+/* ── Law set bar (save / load presets) ── */
+.law-set-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  position: relative;
+  flex-wrap: wrap;
+}
+.law-set-btn {
+  background: rgba(8,8,16,0.6);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.law-set-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.law-set-selector {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent-gold);
+  font-size: 8px;
+}
+.law-set-selector:hover { border-color: var(--accent-blue); color: var(--accent-gold); }
+.law-set-icon {
+  width: 26px;
+  padding: 3px 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0;
+  flex: none;
+}
+.law-set-dropdown {
+  display: none;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% - 4px);
+  z-index: 50;
+  background: rgba(8,8,16,0.99);
+  border: 1px solid var(--accent-blue);
+  border-radius: 4px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+.law-set-dropdown.open { display: block; }
+.law-set-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.law-set-row:hover { background: rgba(74,158,255,0.12); }
+.law-set-row.selected { background: rgba(255,215,0,0.10); }
+.law-set-check {
+  width: 10px;
+  flex: none;
+  color: var(--accent-gold);
+  font-size: 9px;
+  line-height: 1;
+  text-align: center;
+}
+.law-set-mini-row {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+  padding: 1px;
+}
+.law-set-mini-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  font-size: 8px;
+  line-height: 13px;
+  text-align: center;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+}
+.law-set-mini-icon.cat-physics { color: rgba(130,180,255,0.95); border-color: rgba(74,158,255,0.5); }
+.law-set-mini-icon.cat-biology { color: rgba(130,255,175,0.95); border-color: rgba(74,255,138,0.5); }
+.law-set-mini-icon.cat-chemistry { color: rgba(200,140,255,0.95); border-color: rgba(180,74,255,0.5); }
+.law-set-mini-icon.cat-thermodynamics { color: rgba(255,175,120,0.95); border-color: rgba(255,138,74,0.5); }
+.law-set-mini-icon.cat-metaphysics { color: rgba(255,130,130,0.95); border-color: rgba(255,74,74,0.5); }
+.law-set-row-name {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.law-set-editor {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex: 1 1 100%;
+}
+.law-set-editor.hidden { display: none; }
+.law-set-editor input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--accent-blue);
+  border-radius: 2px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 3px 6px;
+}
+.law-set-editor button {
+  background: rgba(74,158,255,0.12);
+  border: 1px solid var(--accent-blue);
+  border-radius: 2px;
+  color: var(--accent-blue);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.law-set-editor button:hover { background: rgba(74,158,255,0.25); }
+
+/* ── Compact category rows (labels removed — filters carry the colour) ── */
+.law-cat-label { display: none; }
+.law-cat-row {
+  padding: 2px 0;
+  gap: 2px;
+  border-bottom: none;
+}
+
+/* ── Electromagnetism (cyan) — dull off, bright on ── */
+.law-icon-grid .sq-toggle.cat-electromagnetism { border-color: rgba(74,232,255,0.30); color: rgba(120,235,255,0.55); background: rgba(74,232,255,0.05); }
+.law-icon-grid .sq-toggle.active.cat-electromagnetism { border-color: var(--accent-cyan); background: rgba(74,232,255,0.15); box-shadow: 0 0 6px rgba(74,232,255,0.25); color: #9ff; }
+#law-grid.word-mode .law-btn.cat-electromagnetism { color: rgba(120,235,255,0.60); }
+#law-grid.word-mode .law-btn.active.cat-electromagnetism { border-color: var(--accent-cyan); background: rgba(74,232,255,0.15); box-shadow: 0 0 6px rgba(74,232,255,0.2); color: #9ff; }
+.law-set-mini-icon.cat-electromagnetism { color: rgba(120,235,255,0.95); border-color: rgba(74,232,255,0.5); }
+
+/* ── Information (gold) — dull off, bright on ── */
+.law-icon-grid .sq-toggle.cat-information { border-color: rgba(255,215,0,0.30); color: rgba(255,225,110,0.55); background: rgba(255,215,0,0.05); }
+.law-icon-grid .sq-toggle.active.cat-information { border-color: var(--accent-gold); background: rgba(255,215,0,0.15); box-shadow: 0 0 6px rgba(255,215,0,0.25); color: #fea; }
+#law-grid.word-mode .law-btn.cat-information { color: rgba(255,225,110,0.60); }
+#law-grid.word-mode .law-btn.active.cat-information { border-color: var(--accent-gold); background: rgba(255,215,0,0.15); box-shadow: 0 0 6px rgba(255,215,0,0.2); color: #fea; }
+.law-set-mini-icon.cat-information { color: rgba(255,225,110,0.95); border-color: rgba(255,215,0,0.5); }

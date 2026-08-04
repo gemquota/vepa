@@ -11,7 +11,7 @@ import { isSet } from '../state/lawState.js';
  * Compute the synergy multiplier for a given law based on which
  * other laws are currently active.
  *
- * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array }} lawState
+ * @param {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array }} lawState
  * @param {number} lawIndex - The law to compute synergy for
  * @returns {number} Multiplier in [0.0, 2.0]
  */
@@ -102,6 +102,114 @@ export function computeSynergy(lawState, lawIndex) {
   }
   if (lawIndex === LAW_INDEXES.WILL && isSet(lawState, LAW_INDEXES.FATE)) {
     mult *= 1.8;
+  }
+
+  // ── Electromagnetism synergies ──
+
+  // CHARGE_LAW + MAGNETISM → unified electromagnetic force ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.CHARGE_LAW || lawIndex === LAW_INDEXES.MAGNETISM) &&
+    isSet(lawState, LAW_INDEXES.CHARGE_LAW) && isSet(lawState, LAW_INDEXES.MAGNETISM)
+  ) {
+    mult *= 1.5;
+  }
+
+  // SUPERCONDUCTIVITY + COLD → true superconducting state ×1.8
+  if (
+    (lawIndex === LAW_INDEXES.SUPERCONDUCTIVITY || lawIndex === LAW_INDEXES.COLD) &&
+    isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY) && isSet(lawState, LAW_INDEXES.COLD)
+  ) {
+    mult *= 1.8;
+  }
+
+  // SUPERCONDUCTIVITY + RESISTANCE → lossless flow cancels Ohmic damping ×0.2
+  if (
+    (lawIndex === LAW_INDEXES.SUPERCONDUCTIVITY || lawIndex === LAW_INDEXES.RESISTANCE) &&
+    isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY) && isSet(lawState, LAW_INDEXES.RESISTANCE)
+  ) {
+    mult *= 0.2;
+  }
+
+  // DISCHARGE + IONIZATION → sparks strip charge harder ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.DISCHARGE || lawIndex === LAW_INDEXES.IONIZATION) &&
+    isSet(lawState, LAW_INDEXES.DISCHARGE) && isSet(lawState, LAW_INDEXES.IONIZATION)
+  ) {
+    mult *= 1.5;
+  }
+
+  // PLASMA + HEAT → hotter gas ionizes more ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.PLASMA || lawIndex === LAW_INDEXES.HEAT) &&
+    isSet(lawState, LAW_INDEXES.PLASMA) && isSet(lawState, LAW_INDEXES.HEAT)
+  ) {
+    mult *= 1.5;
+  }
+
+  // CURRENT + RESISTANCE → ohmic heating ×1.4
+  if (
+    (lawIndex === LAW_INDEXES.CURRENT || lawIndex === LAW_INDEXES.RESISTANCE) &&
+    isSet(lawState, LAW_INDEXES.CURRENT) && isSet(lawState, LAW_INDEXES.RESISTANCE)
+  ) {
+    mult *= 1.4;
+  }
+
+  // ── Information synergies ──
+
+  // MEMORY + FEEDBACK → amplified memory loop ×1.6
+  if (
+    (lawIndex === LAW_INDEXES.MEMORY || lawIndex === LAW_INDEXES.FEEDBACK) &&
+    isSet(lawState, LAW_INDEXES.MEMORY) && isSet(lawState, LAW_INDEXES.FEEDBACK)
+  ) {
+    mult *= 1.6;
+  }
+
+  // SIGNAL_BOOST + PROTOCOL → relayed synchronization ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.SIGNAL_BOOST || lawIndex === LAW_INDEXES.PROTOCOL) &&
+    isSet(lawState, LAW_INDEXES.SIGNAL_BOOST) && isSet(lawState, LAW_INDEXES.PROTOCOL)
+  ) {
+    mult *= 1.5;
+  }
+
+  // LANGUAGE + CODE → words spread genes ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.LANGUAGE || lawIndex === LAW_INDEXES.CODE) &&
+    isSet(lawState, LAW_INDEXES.LANGUAGE) && isSet(lawState, LAW_INDEXES.CODE)
+  ) {
+    mult *= 1.5;
+  }
+
+  // CULTURE + GENOTYPE → soft heredity ×1.4
+  if (
+    (lawIndex === LAW_INDEXES.CULTURE || lawIndex === LAW_INDEXES.GENOTYPE) &&
+    isSet(lawState, LAW_INDEXES.CULTURE) && isSet(lawState, LAW_INDEXES.GENOTYPE)
+  ) {
+    mult *= 1.4;
+  }
+
+  // PREDICT + TRACK → interception ×1.5
+  if (
+    (lawIndex === LAW_INDEXES.PREDICT || lawIndex === LAW_INDEXES.TRACK) &&
+    isSet(lawState, LAW_INDEXES.PREDICT) && isSet(lawState, LAW_INDEXES.TRACK)
+  ) {
+    mult *= 1.5;
+  }
+
+  // STIGMERGY + LEARN → learned trail following ×1.3
+  if (
+    (lawIndex === LAW_INDEXES.STIGMERGY || lawIndex === LAW_INDEXES.LEARN) &&
+    isSet(lawState, LAW_INDEXES.STIGMERGY) && isSet(lawState, LAW_INDEXES.LEARN)
+  ) {
+    mult *= 1.3;
+  }
+
+  // LEARN + SYMBOL → species schooling ×1.4
+  if (
+    (lawIndex === LAW_INDEXES.LEARN || lawIndex === LAW_INDEXES.SYMBOL) &&
+    isSet(lawState, LAW_INDEXES.LEARN) && isSet(lawState, LAW_INDEXES.SYMBOL)
+  ) {
+    mult *= 1.4;
   }
 
   // Clamp to [0.0, 2.0]

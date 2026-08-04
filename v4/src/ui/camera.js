@@ -1,7 +1,7 @@
 /**
  * VEPA v3 — 3D Camera + Touch/Mouse Controls
- * - 1 finger / mouse drag → orbit rotation
- * - 2 fingers → pan + pinch zoom
+ * - 1 finger / mouse drag → pan
+ * - 2 fingers → orbit rotation + pinch zoom
  * - Scroll wheel → zoom
  *
  * The camera orbits around its own pan target (the world point at screen
@@ -12,8 +12,8 @@ const camera = {
   y: 0,
   z: 0,
   zoom: 1.0,
-  rotY: 0.6,     // horizontal orbit (radians) — tilt to show 3D depth
-  rotX: -0.45,   // vertical orbit (radians)
+  rotY: 0,       // horizontal orbit (radians) — straight on
+  rotX: 0,       // vertical orbit (radians) — no tilt
   focalLength: 1200,   // perspective distance (focal point distance)
   ortho: 0,            // 0 = full perspective, 1 = fully orthographic
   rotateSensitivity: 1.0,  // multiplier for orbit gestures
@@ -109,6 +109,12 @@ function screenToWorld(dx, dy) {
 
 // ── Mouse orbit (pointer events, touch-typed ignored) ──
 
+function panBy(dx, dy) {
+  const { wx, wy } = screenToWorld(dx, dy);
+  camera.x -= wx * camera.panSensitivity;
+  camera.y -= wy * camera.panSensitivity;
+}
+
 function onPointerDown(e) {
   if (e.pointerType === 'touch') return;
   ptr.mouseDown = true;
@@ -120,8 +126,7 @@ function onPointerMove(e) {
   if (!ptr.mouseDown) return;
   const dx = e.clientX - ptr.mouseX;
   const dy = e.clientY - ptr.mouseY;
-  camera.rotY -= dx * ROTATE_SCALE_MOUSE * camera.rotateSensitivity;
-  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy * ROTATE_SCALE_MOUSE * camera.rotateSensitivity));
+  panBy(dx, dy);
   ptr.mouseX = e.clientX;
   ptr.mouseY = e.clientY;
 }
@@ -164,16 +169,15 @@ function onTouchMove(e) {
   ptr.touchCount = Object.keys(ptr.touches).length;
 
   if (ptr.touchCount === 1) {
-    // 1 finger → orbit rotation
+    // 1 finger → pan
     const t = e.touches[0];
-    const dx = (t.clientX - ptr.orbitLastX) * ROTATE_SCALE_TOUCH * camera.rotateSensitivity;
-    const dy = (t.clientY - ptr.orbitLastY) * ROTATE_SCALE_TOUCH * camera.rotateSensitivity;
-    camera.rotY -= dx;
-    camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + dy));
+    const dx = t.clientX - ptr.orbitLastX;
+    const dy = t.clientY - ptr.orbitLastY;
+    panBy(dx, dy);
     ptr.orbitLastX = t.clientX;
     ptr.orbitLastY = t.clientY;
   } else if (ptr.touchCount >= 2) {
-    doPinchPan();
+    doPinchRotate();
   }
 }
 
@@ -200,36 +204,37 @@ function beginPinchPan() {
   const dx = t1.x - t0.x;
   const dy = t1.y - t0.y;
   ptr.pinchDist = Math.sqrt(dx * dx + dy * dy);
+  ptr.pinchAngle = Math.atan2(dy, dx);
   ptr.panCenterX = (t0.x + t1.x) / 2;
   ptr.panCenterY = (t0.y + t1.y) / 2;
-  ptr.panStartX = camera.x;
-  ptr.panStartY = camera.y;
 }
 
-function doPinchPan() {
+function doPinchRotate() {
   const ids = Object.keys(ptr.touches);
   const t0 = ptr.touches[ids[0]];
   const t1 = ptr.touches[ids[1]];
   const dx = t1.x - t0.x;
   const dy = t1.y - t0.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
 
   // Pinch zoom
   if (ptr.pinchDist > 0) {
     camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, camera.zoom * (dist / ptr.pinchDist)));
   }
 
-  // Pan: the view follows the fingers (world shifts opposite the drag).
-  const centerX = (t0.x + t1.x) / 2;
+  // Two-finger rotation → orbit (horizontal), centroid drift → vertical orbit
+  let dAngle = angle - ptr.pinchAngle;
+  if (dAngle > Math.PI) dAngle -= Math.PI * 2;
+  else if (dAngle < -Math.PI) dAngle += Math.PI * 2;
+  camera.rotY -= dAngle * 2.2;
   const centerY = (t0.y + t1.y) / 2;
-  const panDx = centerX - ptr.panCenterX;
-  const panDy = centerY - ptr.panCenterY;
-  // Dead zone: ignore small centroid drift so pinch-zoom doesn't pan.
-  if (Math.abs(panDx) >= PAN_DEADZONE_PX || Math.abs(panDy) >= PAN_DEADZONE_PX) {
-    const w = screenToWorld(panDx, panDy);
-    camera.x = ptr.panStartX + w.wx * camera.panSensitivity;
-    camera.y = ptr.panStartY + w.wy * camera.panSensitivity;
-  }
+  const driftY = centerY - ptr.panCenterY;
+  camera.rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, camera.rotX + driftY * ROTATE_SCALE_TOUCH * 0.5));
+
+  ptr.pinchDist = dist;
+  ptr.pinchAngle = angle;
+  ptr.panCenterY = centerY;
 }
 
 /**
@@ -283,8 +288,8 @@ export function resetCamera() {
   camera.y = 0;
   camera.z = 0;
   fitZoomForWorld();
-  camera.rotY = 0.6;
-  camera.rotX = -0.45;
+  camera.rotY = 0;
+  camera.rotX = 0;
 }
 
 export default camera;

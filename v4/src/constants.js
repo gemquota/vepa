@@ -287,9 +287,39 @@ export const LAW_INDEXES = {
   ASTRAL:         50,
   PREDATION:     51,
   COMMS:         52,
+
+  // Electromagnetism (Cyan) — indices 53-65
+  CHARGE_LAW:    53,
+  FIELD:         54,
+  CURRENT:       55,
+  RESISTANCE:    56,
+  CAPACITANCE:   57,
+  INDUCTANCE:    58,
+  MAGNETISM:     59,
+  RESONANCE:     60,
+  FLUX:          61,
+  IONIZATION:    62,
+  DISCHARGE:     63,
+  PLASMA:        64,
+  SUPERCONDUCTIVITY: 65,
+
+  // Information (Gold) — indices 66-78
+  MEMORY:        66,
+  PATTERN:       67,
+  STIGMERGY:     68,
+  SIGNAL_BOOST:  69,
+  LEARN:         70,
+  SYMBOL:        71,
+  METRIC:        72,
+  PREDICT:       73,
+  CODE:          74,
+  PROTOCOL:      75,
+  FEEDBACK:      76,
+  LANGUAGE:      77,
+  CULTURE:       78,
 };
 
-export const LAW_COUNT = 53;
+export const LAW_COUNT = 79;
 
 // --- Law Category Mapping ---
 
@@ -372,6 +402,42 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.ASTRAL,
     ],
   },
+  electromagnetism: {
+    color: 'CYAN',
+    laws: [
+      LAW_INDEXES.CHARGE_LAW,
+      LAW_INDEXES.FIELD,
+      LAW_INDEXES.CURRENT,
+      LAW_INDEXES.RESISTANCE,
+      LAW_INDEXES.CAPACITANCE,
+      LAW_INDEXES.INDUCTANCE,
+      LAW_INDEXES.MAGNETISM,
+      LAW_INDEXES.RESONANCE,
+      LAW_INDEXES.FLUX,
+      LAW_INDEXES.IONIZATION,
+      LAW_INDEXES.DISCHARGE,
+      LAW_INDEXES.PLASMA,
+      LAW_INDEXES.SUPERCONDUCTIVITY,
+    ],
+  },
+  information: {
+    color: 'GOLD',
+    laws: [
+      LAW_INDEXES.MEMORY,
+      LAW_INDEXES.PATTERN,
+      LAW_INDEXES.STIGMERGY,
+      LAW_INDEXES.SIGNAL_BOOST,
+      LAW_INDEXES.LEARN,
+      LAW_INDEXES.SYMBOL,
+      LAW_INDEXES.METRIC,
+      LAW_INDEXES.PREDICT,
+      LAW_INDEXES.CODE,
+      LAW_INDEXES.PROTOCOL,
+      LAW_INDEXES.FEEDBACK,
+      LAW_INDEXES.LANGUAGE,
+      LAW_INDEXES.CULTURE,
+    ],
+  },
 };
 
 // --- Reverse lookup: law index → category name ---
@@ -397,6 +463,140 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 // Mirrors v2 HELP_DB structure: each law has a hint + explanation + system + advanced tier.
 
 export const LAW_HELP_DB = {
+  // Electromagnetism (Cyan)
+  CHARGE_LAW: {
+    hint: "Coulomb force: charged particles attract or repel by POLARITY.",
+    explanation: "Inverse-square electrostatic force between particles using POLARITY (C1) plus stored stride CHARGE. Opposite charges attract, like charges repel.",
+    system: "Uses POLARITY DNA and the CHARGE stride slot (filled by IONIZATION and CAPACITANCE). Zero charge particles feel no force.",
+  },
+  FIELD: {
+    hint: "Uniform electric field drift along the particle's polarity.",
+    explanation: "Every charged particle receives a constant acceleration along its POLARITY sign — positive charge drifts one way, negative the other.",
+    system: "Acts as a global E-field. Combined with CHARGE_LAW it separates species by polarity into opposing drift lanes.",
+  },
+  CURRENT: {
+    hint: "Charge transport: charge diffuses between conductive particles.",
+    explanation: "Neighboring particles exchange stored charge proportionally to CONDUCTIVITY DNA, smoothing charge gradients like electric current through a conductor.",
+    system: "Charge flows from high to low. Pairs with CAPACITANCE and IONIZATION to build charge dynamics over time.",
+  },
+  RESISTANCE: {
+    hint: "Electrical resistance: fast motion converts kinetic energy into heat.",
+    explanation: "Moving particles experience velocity-dependent damping and their TEMPERATURE rises with speed — kinetic energy dissipates as heat.",
+    system: "A thermal-Ohmic bridge: the hotter they get the more they slow, preventing runaway charge-driven velocities.",
+  },
+  CAPACITANCE: {
+    hint: "Capacitance: particles store energy as charge.",
+    explanation: "Particles accumulate stored CHARGE from surplus ENERGY and feel a pairwise force from stored charge — energy storage that later drives electrostatic motion.",
+    system: "Charge accrues when ENERGY exceeds 50 and bleeds off when below. Stored charge feeds CHARGE_LAW and FLUX.",
+  },
+  INDUCTANCE: {
+    hint: "Inductance: neighbors align their motion magnetically.",
+    explanation: "Velocities of nearby particles are pulled toward each other — magnetic coupling that damps relative motion and shepherds streams.",
+    system: "Smooths velocity fields like an inductor opposing current change. Helps form coherent flow lanes.",
+  },
+  MAGNETISM: {
+    hint: "Magnetic moment alignment: aligned moments attract.",
+    explanation: "Particles with matching MAGNETIC_MOMENT DNA signs attract; opposing signs repel, scaled by the product of their moments.",
+    system: "Creates magnetic chains and filaments along moment direction. Complements CHARGE_LAW for full electromagnetic structure.",
+  },
+  RESONANCE: {
+    hint: "Resonance: pulsing particles attract when their pulse rates match.",
+    explanation: "Particles with similar PULSE_RATE DNA that are actively signaling attract each other — sympathetic vibration.",
+    system: "Uses SIGNAL and PULSE_RATE. In a hive-mind setup it tightens synchronized swarms.",
+  },
+  FLUX: {
+    hint: "Charge flux: particles are pushed along the charge gradient.",
+    explanation: "Each particle feels a force toward higher stored charge — charge flows like field lines, dragging particles along the gradient.",
+    system: "Works with CURRENT and CAPACITANCE. Turns stored charge into directed motion.",
+  },
+  IONIZATION: {
+    hint: "Ionization: hard contacts strip charge onto particles.",
+    explanation: "On close contact, particles acquire stored CHARGE proportional to their POLARITY and impact speed, seeding electrostatic effects.",
+    system: "Writes the CHARGE stride slot so CHARGE_LAW, FLUX, and CURRENT have something to act on.",
+  },
+  DISCHARGE: {
+    hint: "Discharge: stored charge bursts into motion and heat.",
+    explanation: "Particles holding strong stored CHARGE suddenly release it — a velocity kick proportional to the charge plus a heat spike, then the charge resets to zero.",
+    system: "Capacitance builds charge, discharge converts it into kinetic energy. Creates spark-like impulse events that re-seed electrostatic dynamics.",
+  },
+  PLASMA: {
+    hint: "Plasma: hot particles ionize — heat becomes charge.",
+    explanation: "Particles above a temperature threshold convert surplus heat into stored CHARGE, cooling themselves as they ionize.",
+    system: "The thermal-EM bridge: HEAT feeds PLASMA feeds CHARGE_LAW/FLUX. Hot dense gas turns into an electrically active plasma state.",
+  },
+  SUPERCONDUCTIVITY: {
+    hint: "Superconductivity: cold pairs couple into lossless streams.",
+    explanation: "Pairs of particles below a temperature threshold lock together — velocities align and stored charge equalizes with far less damping than normal.",
+    system: "Requires COLD temperatures; RESISTANCE damping is suppressed while coupled. Forms coherent, near-frictionless flow lanes.",
+  },
+
+  // Information (Gold)
+  MEMORY: {
+    hint: "Memory: particles retain momentum and remember recent contacts.",
+    explanation: "Interacting particles refresh a MEMORY trace; remembered motion persists — velocity slowly grows while the trace decays over time.",
+    system: "Uses the MEMORY stride slot. Encourages inertial motion and historical continuity in particle behavior.",
+  },
+  PATTERN: {
+    hint: "Pattern: dense regions attract more particles (cohesion).",
+    explanation: "Nearby particles are pulled together by a distance-scaled cohesion force, reinforcing whatever structure already exists.",
+    system: "Positive feedback — clumps thicken. Pair with ORDER for crystallization or CHAOS for pattern turbulence.",
+  },
+  STIGMERGY: {
+    hint: "Stigmergy: particles leave trails and follow the trails of others.",
+    explanation: "Every particle writes a predicted-path trail marker; neighbors are attracted toward those markers, creating emergent traffic lanes.",
+    system: "Uses the TRAIL stride slots. Produces ant-like foraging streams without any global coordination.",
+  },
+  SIGNAL_BOOST: {
+    hint: "Signal boost: contact amplifies and relays signals.",
+    explanation: "A signaling particle shares its SIGNAL with neighbors on contact, propagating pulses further than normal communication range.",
+    system: "Extends the COMMS layer — signals hop from particle to particle like a relay chain.",
+  },
+  LEARN: {
+    hint: "Learning: particles match the velocity of their neighbors.",
+    explanation: "Velocity alignment (boids-style): each particle steers toward the average motion of nearby particles.",
+    system: "Creates schooling/flocking. Combine with SYMBOL for species-specific flocks.",
+  },
+  SYMBOL: {
+    hint: "Symbol: species affinity drives social grouping.",
+    explanation: "Same-species particles attract by SPECIES_AFFINITY DNA; different species feel the opposite bias.",
+    system: "Species segregation force. Positive affinity = gregarious swarms, negative = territorial dispersal.",
+  },
+  METRIC: {
+    hint: "Metric: particles climb the energy gradient.",
+    explanation: "Particles are attracted toward higher-ENERGY neighbors, flowing from poor to rich regions like value-seeking agents.",
+    system: "An information-theoretic gradient: energy acts as a fitness landscape.",
+  },
+  PREDICT: {
+    hint: "Predict: particles aim where the neighbor will be.",
+    explanation: "Attraction is computed toward the neighbor's extrapolated future position (velocity × prediction window), producing interception and pursuit curves.",
+    system: "Anticipation makes pursuit smooth — useful with TRACK/PREDATION for clever predators.",
+  },
+  CODE: {
+    hint: "Code: close contact blends DNA between particles.",
+    explanation: "On contact, particles exchange DNA cache values at sampled loci — horizontal information transfer.",
+    system: "Moves traits through the population. Works alongside GENOTYPE/PHENOTYPE for cultural evolution.",
+  },
+  PROTOCOL: {
+    hint: "Protocol: neighbors entrain their signal phase.",
+    explanation: "Signals of nearby particles converge toward the average — synchronization like metronomes coupling on a table.",
+    system: "Phase-locking. With RESONANCE it creates global pulse waves across the whole simulation.",
+  },
+  FEEDBACK: {
+    hint: "Feedback: memory amplifies motion, motion refreshes memory.",
+    explanation: "Particles with a MEMORY trace accelerate along their existing velocity, and fast motion recharges the trace — a self-reinforcing inertial loop.",
+    system: "Positive feedback loop. With MEMORY it produces persistent, history-driven motion; can destabilize into runaway or lock into orbits.",
+  },
+  LANGUAGE: {
+    hint: "Language: signaling pairs exchange memory traces.",
+    explanation: "When two particles are actively signaling, their MEMORY states converge and the signal relays between them — shared words carried between minds.",
+    system: "Distinct from PROTOCOL (signal phase) — LANGUAGE moves stored memory state. With SIGNAL_BOOST it builds distributed shared knowledge.",
+  },
+  CULTURE: {
+    hint: "Culture: same-species contacts converge their traits.",
+    explanation: "Contacts between particles of the same species blend their DNA cache — norms spread within the group while leaving other species untouched.",
+    system: "In-group trait convergence. With GENOTYPE it acts as soft heredity; with SYMBOL it sharpens species identity over time.",
+  },
+
   GRAV: {
     hint: "Universal gravitational attraction between all particles.",
     explanation: "Newtonian gravity: F = G*m1*m2/r². Positive force collapses structures; negative force expands them.",

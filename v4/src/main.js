@@ -23,6 +23,7 @@ import { createNarrativeEngine, update as updateNarrative } from './engines/narr
 import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageTracker.js';
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
+import { createMultiplexController } from './multiplex/multiplexUI.js';
 initDebug();
 logDebug('main module loaded');
 
@@ -38,7 +39,24 @@ let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
+let multiplexController = null;
 let worldSize = WORLD_SIZE;
+// Initial population layout — driven by the SETUP > WORLD sliders.
+// shape: 0 = perfectly even grid, 1 = fully random positions
+// centres: number of cluster centres (1-64)
+// centreRandom: centre placement — 0 = even grid, 1 = random
+// centreBias: 0 = uniform, 1 = particles pinned to the centres
+// Regular population feed — SPAWN_RATE particles per second, placed inside
+// the same initial distribution (shape / centres / bias).
+let spawnRate = 5;
+let spawnAccumulator = 0;
+
+const spawnConfig = {
+    shape: 0,
+    centres: 1,
+    centreRandom: 0.5,
+    centreBias: 0,
+};
 // Begin with all laws disabled — movement and interaction only exist once
 // a law is enabled. Presets (and the user) turn laws on explicitly.
 const DEFAULT_LAWS = [];
@@ -94,6 +112,25 @@ async function boot() {
     initUI(bus, lawState, dnaBuffer);
     wireEvents();
 
+    // Chaos Multiplex — long-press the Chaos button opens the guided-evolution
+    // grid; while active, the main sim freezes and shards take over the loop.
+    multiplexController = createMultiplexController(bus, () => ({
+        view: particleView,
+        count: particleCount,
+        dna: dnaBuffer,
+        laws: lawState,
+        speciesCount,
+    }));
+    window.openChaosMultiplex = () => { if (multiplexController) multiplexController.openModal(); };
+    bus.on('multiplex:started', () => {
+        paused = true;
+        bus.emit('sim:paused', { paused: true });
+    });
+    bus.on('multiplex:exited', () => {
+        paused = false;
+        bus.emit('sim:paused', { paused: false });
+    });
+
     // v4 — intelligence engine wiring
     insightEngine = createInsightEngine(bus, { scanInterval: 90, clusterRadius: 60, minClusterSize: 5 });
     narrativeEngine = createNarrativeEngine(bus);
@@ -125,7 +162,114 @@ const SPECIES_PROFILES = [
     { name: 'Void', color: [100, 60, 140], force: -0.5, viscosity: 0.96, deathRate: 0.2, hiddenMass: 3.0 },
 ];
 
-function spawnDefaultPopulation() {
+/**
+ * Sample a random spawn point from the configured initial distribution:
+ * shape (even grid ↔ random), cluster centres, and centre bias.
+ */
+function sampleSpawnPosition() {
+    const cfg = spawnConfig;
+    const perSpecies = DEFAULT_PARTICLES_PER_SPECIES;
+    const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
+    const cellSize = (worldSize - 10) / gridDim;
+    const cell = Math.floor(prng.nextFloat(0, gridDim * gridDim * gridDim));
+    const gx = cell % gridDim;
+    const gy = Math.floor(cell / gridDim) % gridDim;
+    const gz = Math.floor(cell / (gridDim * gridDim));
+    let px = 5 + gx * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+    let py = 5 + gy * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+    let pz = 5 + gz * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+    if (cfg.shape > 0) {
+        px = px + (prng.nextFloat(0, worldSize) - px) * cfg.shape;
+        py = py + (prng.nextFloat(0, worldSize) - py) * cfg.shape;
+        pz = pz + (prng.nextFloat(0, worldSize) - pz) * cfg.shape;
+    }
+    if (cfg.centreBias > 0) {
+        const centres = buildSpawnCentres(
+            Math.max(1, Math.min(64, Math.round(cfg.centres) || 1)),
+            cfg.centreRandom,
+        );
+        if (centres.length) {
+            const c = centres[Math.floor(prng.nextFloat(0, centres.length))];
+            px = px + (c.x - px) * cfg.centreBias;
+            py = py + (c.y - py) * cfg.centreBias;
+            pz = pz + (c.z - pz) * cfg.centreBias;
+        }
+    }
+    return { x: px, y: py, z: pz };
+}
+
+/** Append one freshly spawned particle at `pos` with the given species. */
+function spawnSingleParticle(species, pos) {
+    if (particleCount >= MAX_PARTICLES) return;
+    const idx = particleCount;
+    const ptr = idx * PARTICLE_STRIDE;
+    setX(particleBuffer, idx, PARTICLE_STRIDE, pos.x);
+    setY(particleBuffer, idx, PARTICLE_STRIDE, pos.y);
+    particleView[ptr + STRIDE_INDEXES.POS_Z] = pos.z;
+    setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
+    setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
+    setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, species);
+    setEnergy(particleBuffer, idx, PARTICLE_STRIDE, 50 + prng.nextFloat(0, 50));
+    for (let d = 0; d < 42; d++) {
+        const r = DNA_RANGES[d] || { min: -1, max: 1 };
+        particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = getDNAFloat(dnaBuffer, species, d, r.min, r.max);
+    }
+    const sp = SPECIES_PROFILES[species] || SPECIES_PROFILES[0];
+    particleView[ptr + STRIDE_INDEXES.COLOR_R] = sp.color[0];
+    particleView[ptr + STRIDE_INDEXES.COLOR_G] = sp.color[1];
+    particleView[ptr + STRIDE_INDEXES.COLOR_B] = sp.color[2];
+    particleView[ptr + STRIDE_INDEXES.DEAD] = 0;
+    particleView[ptr + STRIDE_INDEXES.AGE] = 0;
+    particleView[ptr + STRIDE_INDEXES.SIGNAL] = 0;
+    particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+    particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
+    particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
+    particleView[ptr + STRIDE_INDEXES.ARMOR] = prng.nextFloat(0, 0.5);
+    particleView[ptr + STRIDE_INDEXES.MITOSIS_TIMER] = 0;
+    particleView[ptr + STRIDE_INDEXES.PARTNER_ID] = -1;
+    particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
+    particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
+    particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
+    particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
+    particleCount++;
+}
+
+/**
+ * Compute spawn cluster centres across the world volume.
+ * count 1 → single centre at the middle of the dish.
+ * random 0 → centres evenly spaced on a grid; 1 → random placement.
+ */
+function buildSpawnCentres(count, random) {
+    const r = Math.max(0, Math.min(1, random));
+    const centres = [];
+    if (count <= 1) {
+        centres.push({ x: worldSize * 0.5, y: worldSize * 0.5, z: worldSize * 0.5 });
+        return centres;
+    }
+    const gridDim = Math.max(2, Math.ceil(Math.cbrt(count)));
+    const cellSize = (worldSize - 20) / gridDim;
+    for (let c = 0; c < count; c++) {
+        const gx = c % gridDim;
+        const gy = Math.floor(c / gridDim) % gridDim;
+        const gz = Math.floor(c / (gridDim * gridDim));
+        const bx = 10 + gx * cellSize + cellSize * 0.5;
+        const by = 10 + gy * cellSize + cellSize * 0.5;
+        const bz = 10 + gz * cellSize + cellSize * 0.5;
+        const rx = prng.nextFloat(0, worldSize);
+        const ry = prng.nextFloat(0, worldSize);
+        const rz = prng.nextFloat(0, worldSize);
+        centres.push({
+            x: bx + (rx - bx) * r,
+            y: by + (ry - by) * r,
+            z: bz + (rz - bz) * r,
+        });
+    }
+    return centres;
+}
+
+function spawnDefaultPopulation(preserveDNA = false) {
     const profiles = SPECIES_PROFILES;
 
     speciesCount = Math.min(profiles.length, MAX_SPECIES);
@@ -134,25 +278,43 @@ function spawnDefaultPopulation() {
 
     for (let s = 0; s < speciesCount; s++) {
         const p = profiles[s];
-        setDNAFromProfile(s, p);
+        if (!preserveDNA) setDNAFromProfile(s, p);
 
         // Per-species 3D grid spanning the full world volume — populations
         // start interleaved across the dish instead of clumped in depth slabs.
         const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
         const cellSize = (worldSize - 10) / gridDim;
 
+        const centres = buildSpawnCentres(
+            Math.max(1, Math.min(64, Math.round(spawnConfig.centres) || 1)),
+            spawnConfig.centreRandom,
+        );
+
         for (let i = 0; i < perSpecies && idx < MAX_PARTICLES; i++) {
             const ptr = idx * PARTICLE_STRIDE;
             const gx = i % gridDim;
             const gy = Math.floor(i / gridDim) % gridDim;
             const gz = Math.floor(i / (gridDim * gridDim));
-            // Jitter within each cell for a natural look
-            const jx = (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-            const jy = (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-            const jz = (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-            setX(particleBuffer, idx, PARTICLE_STRIDE, 5 + gx * cellSize + cellSize * 0.5 + jx);
-            setY(particleBuffer, idx, PARTICLE_STRIDE, 5 + gy * cellSize + cellSize * 0.5 + jy);
-            particleView[ptr + STRIDE_INDEXES.POS_Z] = 5 + gz * cellSize + cellSize * 0.5 + jz;
+            // Even-grid anchor with per-cell jitter for a natural look
+            let px = 5 + gx * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+            let py = 5 + gy * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+            let pz = 5 + gz * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
+            // Distribution: shape 0 = perfectly even grid, 1 = fully random
+            if (spawnConfig.shape > 0) {
+                px = px + (prng.nextFloat(0, worldSize) - px) * spawnConfig.shape;
+                py = py + (prng.nextFloat(0, worldSize) - py) * spawnConfig.shape;
+                pz = pz + (prng.nextFloat(0, worldSize) - pz) * spawnConfig.shape;
+            }
+            // Centre bias: pull the particle toward a cluster centre
+            if (spawnConfig.centreBias > 0 && centres.length > 0) {
+                const c = centres[Math.floor(prng.nextFloat(0, centres.length))];
+                px = px + (c.x - px) * spawnConfig.centreBias;
+                py = py + (c.y - py) * spawnConfig.centreBias;
+                pz = pz + (c.z - pz) * spawnConfig.centreBias;
+            }
+            setX(particleBuffer, idx, PARTICLE_STRIDE, px);
+            setY(particleBuffer, idx, PARTICLE_STRIDE, py);
+            particleView[ptr + STRIDE_INDEXES.POS_Z] = pz;
             setVelocity(particleBuffer, idx, PARTICLE_STRIDE, 0, 0, 0);
             setMass(particleBuffer, idx, PARTICLE_STRIDE, 1.0 + prng.nextFloat(0, 1.0));
             setSpeciesId(particleBuffer, idx, PARTICLE_STRIDE, s);
@@ -244,17 +406,15 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
         particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
         particleView[ptr + STRIDE_INDEXES.SOUL] = 0;
-        // Inherit parent species base color
+        // Inherit the parents' intermediate colour when reproduction carried
+        // one; otherwise fall back to the species base colour.
         const sp = SPECIES_PROFILES[off.speciesId] || SPECIES_PROFILES[0];
-        if (sp) {
-            particleView[ptr + STRIDE_INDEXES.COLOR_R] = sp.color[0];
-            particleView[ptr + STRIDE_INDEXES.COLOR_G] = sp.color[1];
-            particleView[ptr + STRIDE_INDEXES.COLOR_B] = sp.color[2];
-        } else {
-            particleView[ptr + STRIDE_INDEXES.COLOR_R] = 200;
-            particleView[ptr + STRIDE_INDEXES.COLOR_G] = 200;
-            particleView[ptr + STRIDE_INDEXES.COLOR_B] = 200;
-        }
+        const defR = sp ? sp.color[0] : 200;
+        const defG = sp ? sp.color[1] : 200;
+        const defB = sp ? sp.color[2] : 200;
+        particleView[ptr + STRIDE_INDEXES.COLOR_R] = off.colorR != null ? Math.max(0, Math.min(255, off.colorR)) : defR;
+        particleView[ptr + STRIDE_INDEXES.COLOR_G] = off.colorG != null ? Math.max(0, Math.min(255, off.colorG)) : defG;
+        particleView[ptr + STRIDE_INDEXES.COLOR_B] = off.colorB != null ? Math.max(0, Math.min(255, off.colorB)) : defB;
         particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
         particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
         particleCount++;
@@ -285,21 +445,25 @@ function setDNAFromProfile(species, profile) {
 }function wireEvents() {
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
-    bus.on('sim:restart', () => {
+    bus.on('sim:restart', (opts = {}) => {
         // Full simulation reset: respawn particles, clear laws, reset state
+        // opts: { preserveLaws, preserveDNA } — used by Chaos (randomize
+        // first, then restart a fresh population with the randomized laws/DNA).
         prng = new PRNG(Date.now());
         // Clear buffer by zeroing all data
         particleView.fill(0);
-        // Reset laws in place (all off by default) — the UI panels hold a
-        // reference to this object, so replacing it would desync the toggles.
-        for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
-        for (const name of DEFAULT_LAWS) {
-            if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
+        if (!opts.preserveLaws) {
+            // Reset laws in place (all off by default) — the UI panels hold a
+            // reference to this object, so replacing it would desync the toggles.
+            for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
+            for (const name of DEFAULT_LAWS) {
+                if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
+            }
         }
         // Reset offspring ring
         resetOffspringRing();
         // Respawn
-        spawnDefaultPopulation();
+        spawnDefaultPopulation(opts.preserveDNA);
         tick = 0;
         paused = false;
         resetIntelligence();
@@ -442,7 +606,19 @@ function setDNAFromProfile(species, profile) {
                 // Applied in solver via drag law — stored for reference
                 break;
             case 'SPAWN_RATE':
-                // Would be used by an auto-spawn system
+                spawnRate = Math.max(0, Math.min(100, value));
+                break;
+            case 'SHAPE':
+                spawnConfig.shape = Math.max(0, Math.min(1, value));
+                break;
+            case 'SPAWN_CENTRES':
+                spawnConfig.centres = Math.max(1, Math.min(64, Math.round(value) || 1));
+                break;
+            case 'SPAWN_CENTRE_RANDOM':
+                spawnConfig.centreRandom = Math.max(0, Math.min(1, value));
+                break;
+            case 'SPAWN_CENTRE_BIAS':
+                spawnConfig.centreBias = Math.max(0, Math.min(1, value));
                 break;
             case 'BASE_SIZE':
             case 'VISUAL_SCALE':
@@ -612,6 +788,13 @@ function renderLoop(now) {
         lastFrameTime = now;
     }
 
+    // Chaos Multiplex mode — step + render every shard, shared camera.
+    if (multiplexController && multiplexController.isActive()) {
+        multiplexController.step(DT, runtimeConfig.simSpeed, worldSize);
+        multiplexController.render(worldSize);
+        return;
+    }
+
     // Always render (so paused state still shows particles)
     // Physics only runs when not paused
     if (!paused) {
@@ -619,6 +802,18 @@ function renderLoop(now) {
     if (particleView) {
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT * runtimeConfig.simSpeed, rng);
         spawnOffspring();
+        // Regular population feed — SPAWN_RATE particles per second, placed
+        // randomly within the configured initial spawn distribution.
+        if (spawnRate > 0 && particleCount < MAX_PARTICLES) {
+            spawnAccumulator += spawnRate * (DT * runtimeConfig.simSpeed);
+            while (spawnAccumulator >= 1 && particleCount < MAX_PARTICLES) {
+                spawnAccumulator -= 1;
+                spawnSingleParticle(
+                    Math.floor(prng.nextFloat(0, speciesCount)),
+                    sampleSpawnPosition(),
+                );
+            }
+        }
         tick++;
         updateIntelligence();
         updateLiveStats({ fps, tick, particles: particleCount, species: speciesCount, laws: getLawCount(lawState) });
