@@ -1,6 +1,18 @@
 # Changelog: VEPA v4
 
 
+## [4.4.1] - 2026-08-04
+
+### Restart vs Reset semantics
+- **Restart** (↻) now only respawns the population at tick 0 — laws, world
+  params (spawn/distribution/thermal/force sliders, spawn rate) and species
+  params (roster + DNA) are all preserved. Chaos still randomizes first, then
+  restarts onto the randomized laws/DNA.
+- **Reset** restores the defaults (default law set, world params, species
+  profiles) via a fresh boot.
+- Spawning is now safe with user-added species beyond the 5 built-in profiles
+  (deterministic fallback colours instead of crashing).
+
 ## [4.4.0] - 2026-08-04
 
 ### New law types (3 more laws — 82 total)

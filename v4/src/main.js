@@ -154,6 +154,19 @@ async function boot() {
     bus.emit('boot:complete', { particleCount, speciesCount, dt });
 }
 
+// Fallback colours for user-added species beyond the built-in profiles
+// (matches the species panel's deterministic hue rotation).
+const EXTRA_SPECIES_COLORS = [
+    [120, 160, 255], [255, 140, 60], [180, 255, 120], [255, 120, 220],
+    [120, 255, 220], [240, 220, 100], [160, 120, 255], [255, 160, 160],
+];
+
+function profileColor(s) {
+    const p = SPECIES_PROFILES[s];
+    if (p) return p.color;
+    return EXTRA_SPECIES_COLORS[s % EXTRA_SPECIES_COLORS.length];
+}
+
 const SPECIES_PROFILES = [
     { name: 'Predator', color: [255, 80, 80], force: 1.2, viscosity: 0.95, birthRate: 0.3, predationBias: 0.8 },
     { name: 'Sol', color: [255, 200, 50], force: 0.8, viscosity: 0.97, birthRate: 0.1, fusion: 2.0 },
@@ -271,16 +284,17 @@ function buildSpawnCentres(count, random) {
     return centres;
 }
 
-function spawnDefaultPopulation(preserveDNA = false) {
+function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
     const profiles = SPECIES_PROFILES;
 
-    speciesCount = Math.min(profiles.length, MAX_SPECIES);
+    // Restart preserves the roster the user built; boot/reset restore it.
+    if (!keepSpecies) speciesCount = Math.min(profiles.length, MAX_SPECIES);
     let idx = 0;
     const perSpecies = DEFAULT_PARTICLES_PER_SPECIES;
 
     for (let s = 0; s < speciesCount; s++) {
-        const p = profiles[s];
-        if (!preserveDNA) setDNAFromProfile(s, p);
+        const p = profiles[s] || null;
+        if (p && !preserveDNA) setDNAFromProfile(s, p);
 
         // Per-species 3D grid spanning the full world volume — populations
         // start interleaved across the dish instead of clumped in depth slabs.
@@ -360,9 +374,10 @@ function spawnDefaultPopulation(preserveDNA = false) {
                 particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = getDNAFloat(dnaBuffer, s, d, DNA_RANGES[d].min, DNA_RANGES[d].max);
             }
 
-            particleView[ptr + STRIDE_INDEXES.COLOR_R] = p.color[0];
-            particleView[ptr + STRIDE_INDEXES.COLOR_G] = p.color[1];
-            particleView[ptr + STRIDE_INDEXES.COLOR_B] = p.color[2];
+            const col = profileColor(s);
+            particleView[ptr + STRIDE_INDEXES.COLOR_R] = col[0];
+            particleView[ptr + STRIDE_INDEXES.COLOR_G] = col[1];
+            particleView[ptr + STRIDE_INDEXES.COLOR_B] = col[2];
             particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
             particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
             idx++;
@@ -452,24 +467,17 @@ function setDNAFromProfile(species, profile) {
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', (opts = {}) => {
-        // Full simulation reset: respawn particles, clear laws, reset state
-        // opts: { preserveLaws, preserveDNA } — used by Chaos (randomize
-        // first, then restart a fresh population with the randomized laws/DNA).
+        // Restart = fresh population at tick 0 with the CURRENT configuration:
+        // laws, world params and species params (roster + DNA) are untouched.
+        // opts is accepted for compatibility (Chaos randomizes first, then
+        // restarts onto the randomized laws/DNA — both are preserved here).
         prng = new PRNG(Date.now());
         // Clear buffer by zeroing all data
         particleView.fill(0);
-        if (!opts.preserveLaws) {
-            // Reset laws in place (all off by default) — the UI panels hold a
-            // reference to this object, so replacing it would desync the toggles.
-            for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
-            for (const name of DEFAULT_LAWS) {
-                if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
-            }
-        }
         // Reset offspring ring
         resetOffspringRing();
-        // Respawn
-        spawnDefaultPopulation(opts.preserveDNA);
+        // Respawn with the current DNA + species roster (no defaulting)
+        spawnDefaultPopulation(true, true);
         tick = 0;
         paused = false;
         resetIntelligence();
@@ -487,6 +495,9 @@ function setDNAFromProfile(species, profile) {
 
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
     bus.on('sim:hardReset', () => {
+        // Reset = restore defaults: a fresh boot re-applies the default law
+        // set, world params and species profiles (nothing sim-state persists
+        // to storage, so a reload is the honest way back to defaults).
         console.log('[VEPA v3] Hard reset requested');
         logDebug('hard reset requested', 'warn');
         location.reload();
