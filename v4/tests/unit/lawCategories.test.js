@@ -53,11 +53,16 @@ function makeWorld(polarity) {
 }
 
 describe('New law categories', () => {
-  it('has 7 categories; electromagnetism & information have 13 laws each', () => {
+  it('has 7 categories; electromagnetism 13, information 14, all 82 laws mapped', () => {
     const names = Object.keys(LAW_CATEGORIES);
     expect(names).toHaveLength(7);
     expect(LAW_CATEGORIES.electromagnetism.laws.length).toBe(13);
-    expect(LAW_CATEGORIES.information.laws.length).toBe(13);
+    expect(LAW_CATEGORIES.information.laws.length).toBe(14);
+    expect(LAW_COUNT).toBe(82);
+    for (let i = 0; i < LAW_COUNT; i++) {
+      expect(LAW_TO_CATEGORY[i], `law ${i}`).toBeDefined();
+      expect(LAW_COLOR_BY_INDEX[i], `law ${i}`).toBeDefined();
+    }
   });
 
   it('every law maps to exactly one category with a colour', () => {
@@ -205,5 +210,60 @@ describe('New law categories', () => {
     const crossDiff = Math.abs(world.view[2 * PARTICLE_STRIDE + S.DNA_CACHE_START] - world.view[3 * PARTICLE_STRIDE + S.DNA_CACHE_START]);
     expect(sameDiff).toBeLessThan(crossDiff);
     expect(sameDiff).toBeLessThan(1.5);
+  });
+
+  it('SINGULARITY law pulls matter in and absorbs it at the event horizon', () => {
+    const world = makeWorld(1.0);
+    // particle 0 = supermassive singularity; particle 1 parked inside the horizon
+    world.view[S.MASS] = 25;
+    world.view[PARTICLE_STRIDE + S.POS_X] = 100.5;
+    world.view[PARTICLE_STRIDE + S.POS_Y] = 100;
+    world.view[PARTICLE_STRIDE + S.POS_Z] = 100;
+    world.view[PARTICLE_STRIDE + S.VEL_X] = 0;
+    world.view[PARTICLE_STRIDE + S.VEL_Y] = 0;
+    world.view[PARTICLE_STRIDE + S.VEL_Z] = 0;
+    const mass0 = world.view[S.MASS];
+    const state = createLawState();
+    set(state, LAW_INDEXES.SINGULARITY);
+    solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
+    expect(world.view[PARTICLE_STRIDE + S.DEAD]).toBe(1);
+    expect(world.view[S.MASS]).toBeGreaterThan(mass0);
+  });
+
+  it('ENTANGLEMENT law links touching particles and couples them non-locally', () => {
+    const world = makeWorld(1.0);
+    for (let i = 0; i < COUNT; i++) {
+      world.view[i * PARTICLE_STRIDE + S.ENTANGLE_ID] = -1;
+    }
+    world.view[PARTICLE_STRIDE + S.POS_X] = 100.5; // touch particle 0
+    const state = createLawState();
+    set(state, LAW_INDEXES.ENTANGLEMENT);
+    solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
+    expect(world.view[S.ENTANGLE_ID]).toBe(1);
+    expect(world.view[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(0);
+
+    // non-local momentum convergence while the link lives
+    world.view[S.VEL_X] = 2.0;
+    world.view[PARTICLE_STRIDE + S.VEL_X] = -2.0;
+    world.view[S.ENTANGLE_PHASE] = 1.0;
+    world.view[PARTICLE_STRIDE + S.ENTANGLE_PHASE] = 1.0;
+    const rel0 = Math.abs(world.view[S.VEL_X] - world.view[PARTICLE_STRIDE + S.VEL_X]);
+    for (let t = 0; t < 20; t++) {
+      solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
+    }
+    const rel1 = Math.abs(world.view[S.VEL_X] - world.view[PARTICLE_STRIDE + S.VEL_X]);
+    expect(rel1).toBeLessThan(rel0 * 0.9);
+  });
+
+  it('HISTORY law steers particles toward remembered activity', () => {
+    const world = makeWorld(1.0);
+    const state = createLawState();
+    set(state, LAW_INDEXES.HISTORY);
+    const vx0 = world.view[S.VEL_X];
+    const vy0 = world.view[S.VEL_Y];
+    solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
+    const dx = world.view[S.VEL_X] - vx0;
+    const dy = world.view[S.VEL_Y] - vy0;
+    expect(Math.hypot(dx, dy)).toBeGreaterThan(1e-4);
   });
 });

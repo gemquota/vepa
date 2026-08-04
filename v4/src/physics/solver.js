@@ -94,6 +94,13 @@ import {
   applyFeedback,
   applyLanguage,
   applyCulture,
+  applySingularityForce,
+  applySingularityAbsorb,
+  applyEntanglePair,
+  applyEntanglement,
+  applyHistoryWrite,
+  applyHistoryForce,
+  applyHistoryCalc,
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
@@ -237,6 +244,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     let ax = 0;
     let ay = 0;
     let az = 0;
+    let iAbsorbed = false; // consumed by a singularity's event horizon
 
     // ── Pairwise neighbor loop ──
 
@@ -701,7 +709,33 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
       if (isSet(lawState, LAW_INDEXES.LANGUAGE)) applyLanguage(iBase, jBase, 0.25 * computeSynergy(lawState, LAW_INDEXES.LANGUAGE));
       if (isSet(lawState, LAW_INDEXES.CULTURE)) applyCulture(iBase, jBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.CULTURE));
+
+      // ── New law types (pairwise) ──
+
+      // Singularity — extreme inward pull from a supermassive neighbour,
+      // then absorption if i crosses the hole's event horizon.
+      if (isSet(lawState, LAW_INDEXES.SINGULARITY)) {
+        const singSynergy = computeSynergy(lawState, LAW_INDEXES.SINGULARITY);
+        const singForce = applySingularityForce(iBase, jBase, dx, dy, dz, dist, 0.5 * singSynergy);
+        if (singForce) {
+          ax += singForce.ax;
+          ay += singForce.ay;
+          az += singForce.az;
+        }
+        if (applySingularityAbsorb(iBase, jBase, dist, singSynergy)) {
+          iAbsorbed = true;
+          break; // i was consumed — stop interacting with neighbours
+        }
+      }
+
+      // Entanglement — touching particles forge a non-local quantum link.
+      if (isSet(lawState, LAW_INDEXES.ENTANGLEMENT)) {
+        applyEntanglePair(iBase, jBase, dist);
+      }
     }
+
+    // Consumed by an event horizon this tick — skip integration/lifecycle.
+    if (iAbsorbed) continue;
 
     // ── Non-pairwise laws ──
 
@@ -776,6 +810,31 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         ax += fbForce.ax;
         ay += fbForce.ay;
         az += fbForce.az;
+      }
+    }
+
+    // ── New law types (per-particle) ──
+
+    // Entanglement — non-local momentum/signal coupling with the partner
+    // at any distance; snaps with a recoil when the partner dies.
+    if (isSet(lawState, LAW_INDEXES.ENTANGLEMENT)) {
+      const entForce = applyEntanglement(iBase, 0.1 * computeSynergy(lawState, LAW_INDEXES.ENTANGLEMENT), prng);
+      if (entForce) {
+        ax += entForce.ax;
+        ay += entForce.ay;
+        az += entForce.az;
+      }
+    }
+
+    // History — write presence into the spatial memory field, then drift
+    // toward the field's centre of mass (archaeology as a force).
+    if (isSet(lawState, LAW_INDEXES.HISTORY)) {
+      applyHistoryWrite(iBase, px, py, pz, worldSize);
+      const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * computeSynergy(lawState, LAW_INDEXES.HISTORY));
+      if (histForce) {
+        ax += histForce.ax;
+        ay += histForce.ay;
+        az += histForce.az;
       }
     }
 
@@ -1053,6 +1112,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Astral ──
     applyAstral(lawState, view, iBase, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.ASTRAL));
+  }
+
+  // ── History — advance the memory-field clock once per solve ──
+  if (isSet(lawState, LAW_INDEXES.HISTORY)) {
+    applyHistoryCalc();
   }
 }
 

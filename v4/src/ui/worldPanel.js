@@ -24,6 +24,7 @@ const LAW_ICONS = {
   INDUCTANCE: '∿', MAGNETISM: '🧲', RESONANCE: '♫', FLUX: '⇄', IONIZATION: '⚛',
   MEMORY: '💾', PATTERN: '▦', STIGMERGY: '🐜', SIGNAL_BOOST: '📶', LEARN: '🎓',
   SYMBOL: '☯', METRIC: '📏', PREDICT: '🔮', CODE: '✜', PROTOCOL: '📡',
+  SINGULARITY: '⬤', ENTANGLEMENT: '⚭', HISTORY: '📜',
 };
 
 // Reverse: law index → name

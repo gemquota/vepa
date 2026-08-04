@@ -233,6 +233,8 @@ function spawnSingleParticle(species, pos) {
     particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
     particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
     particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
+    particleView[ptr + STRIDE_INDEXES.ENTANGLE_ID] = -1;
+    particleView[ptr + STRIDE_INDEXES.ENTANGLE_PHASE] = 0;
     particleCount++;
 }
 
@@ -351,6 +353,8 @@ function spawnDefaultPopulation(preserveDNA = false) {
             particleView[ptr + STRIDE_INDEXES.TRAIL_X] = 0;
             particleView[ptr + STRIDE_INDEXES.TRAIL_Y] = 0;
             particleView[ptr + STRIDE_INDEXES.TRAIL_Z] = 0;
+            particleView[ptr + STRIDE_INDEXES.ENTANGLE_ID] = -1;
+            particleView[ptr + STRIDE_INDEXES.ENTANGLE_PHASE] = 0;
 
             for (let d = 0; d < 42; d++) {
                 particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = getDNAFloat(dnaBuffer, s, d, DNA_RANGES[d].min, DNA_RANGES[d].max);
@@ -406,6 +410,8 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
         particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
         particleView[ptr + STRIDE_INDEXES.SOUL] = 0;
+        particleView[ptr + STRIDE_INDEXES.ENTANGLE_ID] = -1;
+        particleView[ptr + STRIDE_INDEXES.ENTANGLE_PHASE] = 0;
         // Inherit the parents' intermediate colour when reproduction carried
         // one; otherwise fall back to the species base colour.
         const sp = SPECIES_PROFILES[off.speciesId] || SPECIES_PROFILES[0];

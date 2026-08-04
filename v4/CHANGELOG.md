@@ -1,6 +1,22 @@
 # Changelog: VEPA v4
 
 
+## [4.4.0] - 2026-08-04
+
+### New law types (3 more laws — 82 total)
+- **SINGULARITY** (physics): supermassive particles (mass ≥ 20) exert an
+  extreme inverse-square pull; any particle crossing the event horizon is
+  absorbed — mass is swallowed and the hole heats up.
+- **ENTANGLEMENT** (metaphysics): touching particles forge a non-local quantum
+  link (new ENTANGLE_ID / ENTANGLE_PHASE stride slots, initialised to −1/0 on
+  every spawn path). Momentum and signals transfer between the pair at any
+  distance; the phase decays until the link snaps with a recoil kick.
+- **HISTORY** (information): a 12³ spatial memory field accumulates particle
+  presence (exponentially decaying); particles drift toward the field's
+  centre of mass — archaeology as a force.
+- HELP_DB entries, tooltip icons (⬤ / ⚭ / 📜) and solver wiring added; all
+  spawn paths (main + multiplex shards) initialise the entanglement slots.
+
 ## [4.3.0] - 2026-08-04
 
 ### Law categories completed — Electromagnetism + Information (26 laws)

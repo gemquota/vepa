@@ -53,6 +53,8 @@ export const STRIDE_INDEXES = {
   TRAIL_Y:        72,
   TRAIL_Z:        73,
   ALPHA:          74,
+  ENTANGLE_ID:    75,
+  ENTANGLE_PHASE: 76,
 };
 
 // --- DNA Indexes (42 parameters) ---
@@ -317,9 +319,14 @@ export const LAW_INDEXES = {
   FEEDBACK:      76,
   LANGUAGE:      77,
   CULTURE:       78,
+
+  // New law types (indices 79-81)
+  SINGULARITY:   79,
+  ENTANGLEMENT:  80,
+  HISTORY:       81,
 };
 
-export const LAW_COUNT = 79;
+export const LAW_COUNT = 82;
 
 // --- Law Category Mapping ---
 
@@ -336,6 +343,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.PLANETARY,
       LAW_INDEXES.VOID,
       LAW_INDEXES.BOND,
+      LAW_INDEXES.SINGULARITY,
     ],
   },
   biology: {
@@ -400,6 +408,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.CLAIRVOYANCE,
       LAW_INDEXES.PRECOGNITION,
       LAW_INDEXES.ASTRAL,
+      LAW_INDEXES.ENTANGLEMENT,
     ],
   },
   electromagnetism: {
@@ -436,6 +445,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.FEEDBACK,
       LAW_INDEXES.LANGUAGE,
       LAW_INDEXES.CULTURE,
+      LAW_INDEXES.HISTORY,
     ],
   },
 };
@@ -595,6 +605,21 @@ export const LAW_HELP_DB = {
     hint: "Culture: same-species contacts converge their traits.",
     explanation: "Contacts between particles of the same species blend their DNA cache — norms spread within the group while leaving other species untouched.",
     system: "In-group trait convergence. With GENOTYPE it acts as soft heredity; with SYMBOL it sharpens species identity over time.",
+  },
+  SINGULARITY: {
+    hint: "Singularity: supermassive particles collapse into black holes.",
+    explanation: "Particles above the critical mass exert an extreme inverse-square pull on everything around them and absorb any particle that crosses their event horizon, releasing an accretion flash.",
+    system: "Uses MASS, DEAD, RADIUS and TEMPERATURE. With ACCR, mass concentrates until collapse; matter then rains in and the hole grows.",
+  },
+  ENTANGLEMENT: {
+    hint: "Entanglement: touching particles forge non-local quantum links.",
+    explanation: "Particles that make contact become entangled — momentum and signals transfer between the pair at any distance, and a partner's death snaps the link with a recoil kick.",
+    system: "Stores the partner index in the ENTANGLE_ID stride slot; ENTANGLE_PHASE decays the link over time. Spooky action without any signal channel.",
+  },
+  HISTORY: {
+    hint: "History: the world remembers where particles have been.",
+    explanation: "A coarse spatial memory field accumulates particle presence; particles drift toward the field's centre of mass — archaeology as a force, long after the action moved on.",
+    system: "12×12×12 memory field in module memory, decaying exponentially. Past activity leaves a global attractor that steers new arrivals.",
   },
 
   GRAV: {

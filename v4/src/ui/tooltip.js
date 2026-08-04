@@ -36,6 +36,7 @@ const LAW_ICONS = {
   MEMORY: '💾', PATTERN: '▦', STIGMERGY: '🐜', SIGNAL_BOOST: '📶', LEARN: '🎓',
   SYMBOL: '☯', METRIC: '📏', PREDICT: '🔮', CODE: '✜', PROTOCOL: '📡',
   FEEDBACK: '↺', LANGUAGE: '💬', CULTURE: '🎭',
+  SINGULARITY: '⬤', ENTANGLEMENT: '⚭', HISTORY: '📜',
 };
 
 /**

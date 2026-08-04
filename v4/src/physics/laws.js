@@ -20,11 +20,34 @@ const DNA_BASE = S.DNA_CACHE_START;
 
 let buffer_global = null;
 
+// HISTORY law — coarse spatial memory field (12^3 cells), reset per buffer
+const HISTORY_DIM = 12;
+const HISTORY_DECAY = 0.97;
+let historyField = null;
+let historyLast = null;
+let historyTick = 0;
+let historyBufferRef = null;
+let historyComX = HISTORY_DIM * 0.5;
+let historyComY = HISTORY_DIM * 0.5;
+let historyComZ = HISTORY_DIM * 0.5;
+
+// SINGULARITY law — collapse threshold (mass units)
+const SINGULARITY_MASS = 20;
+
 /**
  * Set the shared particle buffer reference.
  */
 export function setBuffer(buffer) {
   buffer_global = buffer;
+  if (buffer !== historyBufferRef) {
+    historyBufferRef = buffer;
+    historyField = new Float32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
+    historyLast = new Uint32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
+    historyTick = 0;
+    historyComX = HISTORY_DIM * 0.5;
+    historyComY = HISTORY_DIM * 0.5;
+    historyComZ = HISTORY_DIM * 0.5;
+  }
 }
 
 function readDNA(ptr, dnaIndex) {
@@ -1877,4 +1900,168 @@ export function applyCulture(p1Ptr, p2Ptr, k) {
     buf[p1Ptr + base] = v1 + (v2 - v1) * rate;
     buf[p2Ptr + base] = v2 + (v1 - v2) * rate;
   }
+}
+
+// ============================================================================
+// 13. NEW LAW TYPES (singularity / entanglement / history)
+// ============================================================================
+
+/** SINGULARITY — extreme inward pull from a supermassive neighbour. */
+export function applySingularityForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
+  const buf = buffer_global;
+  const m2 = buf[p2Ptr + S.MASS] || 0;
+  if (m2 < SINGULARITY_MASS) return null;
+  const force = k * (m2 * m2) / (dist * dist + 0.5);
+  const invDist = 1.0 / (dist + 0.001);
+  return {
+    ax: nanGuard(dx * invDist * force),
+    ay: nanGuard(dy * invDist * force),
+    az: nanGuard(dz * invDist * force),
+  };
+}
+
+/**
+ * SINGULARITY — event horizon absorption. The subject (p1, a normal particle)
+ * is consumed by the neighbouring singularity (p2). Returns true if absorbed.
+ */
+export function applySingularityAbsorb(p1Ptr, p2Ptr, dist, k) {
+  const buf = buffer_global;
+  const m2 = buf[p2Ptr + S.MASS] || 0;
+  if (m2 < SINGULARITY_MASS) return false;
+  const horizon = Math.max(2.5, Math.sqrt(m2) * 0.8);
+  if (dist >= horizon) return false;
+  const m1 = buf[p1Ptr + S.MASS] || 0;
+  if (m1 <= 0) return false;
+  buf[p2Ptr + S.MASS] = m2 + m1;
+  buf[p2Ptr + S.TEMPERATURE] = Math.min(1, (buf[p2Ptr + S.TEMPERATURE] || 0) + 0.12 * k);
+  buf[p1Ptr + S.MASS] = 0;
+  buf[p1Ptr + S.DEAD] = 1;
+  return true;
+}
+
+/** ENTANGLEMENT — contact pairs two unentangled particles into a quantum link. */
+export function applyEntanglePair(p1Ptr, p2Ptr, dist) {
+  const buf = buffer_global;
+  if (buf[p1Ptr + S.ENTANGLE_ID] >= 0 || buf[p2Ptr + S.ENTANGLE_ID] >= 0) return;
+  const rSum = (buf[p1Ptr + S.RADIUS] || 0.6) + (buf[p2Ptr + S.RADIUS] || 0.6);
+  if (dist > rSum + 0.5) return;
+  buf[p1Ptr + S.ENTANGLE_ID] = p2Ptr / PARTICLE_STRIDE;
+  buf[p2Ptr + S.ENTANGLE_ID] = p1Ptr / PARTICLE_STRIDE;
+  buf[p1Ptr + S.ENTANGLE_PHASE] = 1.0;
+  buf[p2Ptr + S.ENTANGLE_PHASE] = 1.0;
+}
+
+/**
+ * ENTANGLEMENT — non-local coupling (per-particle). Momentum converges with
+ * the partner at any distance; signals relay through the link; the phase
+ * decays until the link snaps with a recoil kick.
+ */
+export function applyEntanglement(p1Ptr, k, prng) {
+  const buf = buffer_global;
+  const partnerIdx = buf[p1Ptr + S.ENTANGLE_ID];
+  if (partnerIdx < 0) return null;
+  const phase = buf[p1Ptr + S.ENTANGLE_PHASE] || 0;
+  buf[p1Ptr + S.ENTANGLE_PHASE] = phase * 0.998;
+
+  const jBase = partnerIdx * PARTICLE_STRIDE;
+  if (buf[jBase + S.DEAD] >= 0.5 || buf[jBase + S.MASS] <= 0) {
+    // partner lost → recoil kick, link snaps
+    buf[p1Ptr + S.ENTANGLE_ID] = -1;
+    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    if (prng) {
+      return {
+        ax: nanGuard((prng() - 0.5) * 0.8),
+        ay: nanGuard((prng() - 0.5) * 0.8),
+        az: nanGuard((prng() - 0.5) * 0.8),
+      };
+    }
+    return null;
+  }
+
+  if (buf[p1Ptr + S.ENTANGLE_PHASE] < 0.05) {
+    buf[p1Ptr + S.ENTANGLE_ID] = -1;
+    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    return null;
+  }
+
+  // non-local momentum exchange (returned as a force — survives integration)
+  const dvx = (buf[jBase + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * k * phase;
+  const dvy = (buf[jBase + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * k * phase;
+  const dvz = (buf[jBase + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * k * phase;
+
+  // non-local signal relay (persists in stride)
+  const sJ = buf[jBase + S.SIGNAL] || 0;
+  if (sJ > 0.3) {
+    buf[p1Ptr + S.SIGNAL] = Math.max(buf[p1Ptr + S.SIGNAL] || 0, sJ * phase);
+  }
+
+  return {
+    ax: nanGuard(dvx),
+    ay: nanGuard(dvy),
+    az: nanGuard(dvz),
+  };
+}
+
+/** HISTORY — accumulate presence into the spatial memory field. */
+export function applyHistoryWrite(p1Ptr, px, py, pz, worldSize) {
+  const buf = buffer_global;
+  if (!historyField) return;
+  const cx = Math.max(0, Math.min(HISTORY_DIM - 1, Math.floor((px / worldSize) * HISTORY_DIM)));
+  const cy = Math.max(0, Math.min(HISTORY_DIM - 1, Math.floor((py / worldSize) * HISTORY_DIM)));
+  const cz = Math.max(0, Math.min(HISTORY_DIM - 1, Math.floor((pz / worldSize) * HISTORY_DIM)));
+  const c = cx + cy * HISTORY_DIM + cz * HISTORY_DIM * HISTORY_DIM;
+  const dt = historyTick - (historyLast[c] || 0);
+  const presence = (buf[p1Ptr + S.ENERGY] || 50) * 0.02 + (buf[p1Ptr + S.MASS] || 1) * 0.05;
+  historyField[c] = historyField[c] * Math.pow(HISTORY_DECAY, dt) + presence;
+  historyLast[c] = historyTick;
+}
+
+/** Advance the memory-field clock once per solve and refresh the centre of mass. */
+export function applyHistoryCalc() {
+  if (!historyField) return;
+  historyTick++;
+  computeHistoryCom();
+}
+
+/** Recompute the field centre of mass from the current memory field. */
+function computeHistoryCom() {
+  let sum = 0, sx = 0, sy = 0, sz = 0;
+  for (let z = 0; z < HISTORY_DIM; z++) {
+    for (let y = 0; y < HISTORY_DIM; y++) {
+      for (let x = 0; x < HISTORY_DIM; x++) {
+        const v = historyField[x + y * HISTORY_DIM + z * HISTORY_DIM * HISTORY_DIM] || 0;
+        sum += v;
+        sx += v * x;
+        sy += v * y;
+        sz += v * z;
+      }
+    }
+  }
+  if (sum < 1e-6) {
+    historyComX = HISTORY_DIM * 0.5;
+    historyComY = HISTORY_DIM * 0.5;
+    historyComZ = HISTORY_DIM * 0.5;
+    return;
+  }
+  historyComX = sx / sum;
+  historyComY = sy / sum;
+  historyComZ = sz / sum;
+}
+
+/** HISTORY — drift toward the field's centre of mass (global memory attractor). */
+export function applyHistoryForce(p1Ptr, px, py, pz, worldSize, k) {
+  if (!historyField) return null;
+  const cellX = (px / worldSize) * HISTORY_DIM;
+  const cellY = (py / worldSize) * HISTORY_DIM;
+  const cellZ = (pz / worldSize) * HISTORY_DIM;
+  const gx = historyComX - cellX;
+  const gy = historyComY - cellY;
+  const gz = historyComZ - cellZ;
+  const gm = Math.sqrt(gx * gx + gy * gy + gz * gz);
+  if (gm < 0.01) return null;
+  return {
+    ax: nanGuard((gx / gm) * k),
+    ay: nanGuard((gy / gm) * k),
+    az: nanGuard((gz / gm) * k),
+  };
 }
