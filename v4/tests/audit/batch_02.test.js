@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import {
   PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_RANGES, LAW_INDEXES,
 } from '../../src/constants.js';
@@ -80,6 +81,8 @@ describe('Batch 02 — COLL / ACCR / PLANETARY / LIFE (indices 4-7)', () => {
     const laws = createLawState();
     set(laws, LAW_INDEXES.COLL);
     set(laws, LAW_INDEXES.ACCR);
+    // FUSION_TIME DNA (17): 0 → mass transfer is immediate (maturity gate off).
+    view[S.DNA_CACHE_START + 17] = 0;
     expect(isSet(laws, LAW_INDEXES.ACCR)).toBe(true);
     const mBig0 = view[S.MASS];
     const mSmall0 = view[PARTICLE_STRIDE + S.MASS];
@@ -140,9 +143,11 @@ describe('Batch 02 — COLL / ACCR / PLANETARY / LIFE (indices 4-7)', () => {
     const laws = createLawState();
     set(laws, LAW_INDEXES.LIFE);
     expect(isSet(laws, LAW_INDEXES.LIFE)).toBe(true);
+    runtimeConfig.worldParams.LIGHT_LEVEL = 0; // isolate metabolic decay from photosynthesis
     for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
     expect(view[S.ENERGY]).toBeLessThan(100);
     expect(view[S.ENERGY]).toBeCloseTo(99.0, 3);
+    runtimeConfig.worldParams.LIGHT_LEVEL = 0.5; // restore default
   });
 
   it('LIFE: starvation kills when HUNGER exceeds the cap', () => {

@@ -158,7 +158,7 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
         if (alpha < 0.001) continue;
 
         // Depth-adjusted alpha — closer = brighter
-        const depthAlpha = alpha * (0.3 + 0.7 * sr);
+        const depthAlpha = alpha * (0.3 + 0.7 * sr) * runtimeConfig.globalAlpha;
         ctx.globalAlpha = depthAlpha;
 
         // Gravitational collapse: stars render as glowing cores with a halo

@@ -185,6 +185,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true)
   ) return;
 
+  // World parameters (WORLD panel sliders) — read live from runtimeConfig.
+  const WP = runtimeConfig.worldParams || {};
+  const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
+
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
   const _dnaJ = new Array(42);
@@ -303,7 +307,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       if (isSet(lawState, LAW_INDEXES.GRAV)) {
         const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
-        const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, G * gravSynergy);
+        const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy);
         if (gravForce) {
           // Gravitational collapse: stars pull nearby matter much harder
           const mI = view[iBase + S.MASS];
@@ -369,10 +373,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           if (isSet(lawState, LAW_INDEXES.ACCR)) {
             const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
             const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] || 0.5;
-            if (relSpeed < fusionMom * 2.0) {
+            // FUSION_TIME DNA (17): temporal gate — mass transfer only after
+            // the particle is mature enough (AGE >= FUSION_TIME * 50).
+            const fusionTime = dnaI[DNA_INDEXES.FUSION_TIME] || 0;
+            const fusionReady = (view[iBase + S.AGE] || 0) >= fusionTime * 50;
+            // FUSION DNA (9): mass-merging efficiency multiplier (0..1 → 0.5..1.5).
+            const fusionMult = 0.5 + (dnaI[DNA_INDEXES.FUSION] || 0.5);
+            if (relSpeed < fusionMom * 2.0 && fusionReady) {
               if (isStarI) {
                 // Collapse: star pulls overlapping matter in and dissolves it
-                const gain = m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass);
+                const gain = (m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass)) * fusionMult;
                 view[iBase + S.MASS] += gain;
                 view[jBase + S.MASS] = Math.max(0, m2 - gain);
                 if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
@@ -380,14 +390,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
                 mass = view[iBase + S.MASS];
               } else if (isStarJ) {
                 // Neighbor star dissolves this particle
-                const loss = m1 * 0.04;
+                const loss = m1 * 0.04 * fusionMult;
                 view[iBase + S.MASS] = Math.max(0, m1 - loss);
                 view[jBase + S.MASS] += loss;
                 if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
                 mass = view[iBase + S.MASS];
               } else if (m1 > m2 * 2.0) {
                 // Bigger body slowly absorbs the smaller (partial dissolution)
-                const gain = m2 * 0.04;
+                const gain = m2 * 0.04 * fusionMult;
                 view[iBase + S.MASS] += gain;
                 view[jBase + S.MASS] = Math.max(0, m2 - gain);
                 if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
@@ -395,14 +405,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
                 mass = view[iBase + S.MASS];
               } else if (m2 > m1 * 2.0) {
                 // This particle dissolves into the bigger neighbor
-                const loss = m1 * 0.04;
+                const loss = m1 * 0.04 * fusionMult;
                 view[iBase + S.MASS] = Math.max(0, m1 - loss);
                 view[jBase + S.MASS] += loss;
                 if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
                 mass = view[iBase + S.MASS];
               } else {
                 // Similar size: mutual dissolution — blend mass and color
-                const diff = (m2 - m1) * 0.02;
+                const diff = (m2 - m1) * 0.02 * fusionMult;
                 view[iBase + S.MASS] += diff;
                 view[jBase + S.MASS] -= diff;
                 mass = view[iBase + S.MASS];
@@ -1027,7 +1037,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Drag ──
 
     if (isSet(lawState, LAW_INDEXES.DRAG)) {
-      const viscosity = dnaI[DNA_INDEXES.VISCOSITY] || 0.98;
+      const viscosity = (dnaI[DNA_INDEXES.VISCOSITY] || 0.98) * (Number.isFinite(WP.VISCOSITY) ? WP.VISCOSITY : 1);
       const dragFactor = Math.pow(viscosity, localTimeStep);
       ax -= vx * (1 - dragFactor) * 10;
       ay -= vy * (1 - dragFactor) * 10;
@@ -1043,7 +1053,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // Entropy (jitter)
     if (isSet(lawState, LAW_INDEXES.ENTR)) {
-      const jitter = dnaI[DNA_INDEXES.JITTER] || 0.05;
+      const jitter = (dnaI[DNA_INDEXES.JITTER] || 0.05) * (Number.isFinite(WP.ENTROPY) ? WP.ENTROPY : 1);
       const jitterMult = computeSynergy(lawState, LAW_INDEXES.ENTR);
       ax += (prng() - 0.5) * jitter * jitterMult * localTimeStep;
       ay += (prng() - 0.5) * jitter * jitterMult * localTimeStep;
@@ -1095,6 +1105,29 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       vx *= runtimeConfig.dragMultiplier;
       vy *= runtimeConfig.dragMultiplier;
       vz *= runtimeConfig.dragMultiplier;
+    }
+
+    // ── World params: WIND (constant +X drift) + DAMPING (global decay) ──
+
+    const worldDamp = Math.pow(1 - (Number.isFinite(WP.DAMPING) ? WP.DAMPING : 0) / 100, localTimeStep);
+    if (worldDamp !== 1) {
+      vx *= worldDamp;
+      vy *= worldDamp;
+      vz *= worldDamp;
+    }
+    if (WP.WIND) vx += WP.WIND * 0.5 * localTimeStep;
+
+    // ── TORQUE DNA: rotational momentum — gently rotate the velocity vector
+    //    around the Z axis (higher |TORQUE| = faster spin; sign = direction) ──
+    const torque = dnaI[DNA_INDEXES.TORQUE] || 0;
+    if (Math.abs(torque) > 0.001) {
+      const ang = torque * 0.02 * localTimeStep;
+      const c = Math.cos(ang);
+      const s = Math.sin(ang);
+      const tvx = vx * c - vy * s;
+      const tvy = vx * s + vy * c;
+      vx = tvx;
+      vy = tvy;
     }
 
     // ── Velocity clamping ──
@@ -1187,7 +1220,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const sB = view[bPtr + S.SPECIES_ID];
           const aff = dnaI[DNA_INDEXES.SPECIES_AFFINITY] || 0;
           if ((sI === sB && aff >= 0) || (sI !== sB && aff < 0)) {
-            const eqDist = (dnaI[DNA_INDEXES.BASE_RADIUS] || 5) * 2.5 + (view[bPtr + S.DNA_CACHE_START + DNA_INDEXES.BASE_RADIUS] || 5) * 2.5;
+            // BOND_ANGLE DNA (31): favoured cluster geometry — wider angles
+            // reach farther, so the equilibrium bond distance stretches.
+            const bondAngle = dnaI[DNA_INDEXES.BOND_ANGLE] || 0;
+            const angleScale = 1 + Math.min(1, Math.abs(bondAngle) / 120);
+            const eqDist = ((dnaI[DNA_INDEXES.BASE_RADIUS] || 5) * 2.5 + (view[bPtr + S.DNA_CACHE_START + DNA_INDEXES.BASE_RADIUS] || 5) * 2.5) * angleScale;
             if (bd > eqDist && bd > 0.1) {
               const stiffness = dnaI[DNA_INDEXES.STIFFNESS] || 0.5;
               const pull = (bd - eqDist) * stiffness * 0.15;

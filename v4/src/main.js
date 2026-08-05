@@ -12,6 +12,8 @@ import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTIC
 import { createParticleBuffer, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
 import { createLawState, set as lawSet, clear as lawClear, getActiveCount as getLawCount } from './state/lawState.js';
 import { runtimeConfig } from './state/runtimeConfig.js';
+import { createWorldParams, applyWorldParam, spawnCaps } from './state/worldParams.js';
+import { sampleSpawnPosition, buildSpawnCentres, initialPopulationTarget, perSpeciesAllocation } from './spawn/distribution.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from './dna/dnaBuffer.js';
 import { createRenderer, resize as resizeRenderer, paintBackground } from './render/renderer.js';
 import { syncSprites } from './render/spriteSync.js';
@@ -41,22 +43,12 @@ const TIMELINE_SNAPSHOT_INTERVAL = 150;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let multiplexController = null;
 let worldSize = WORLD_SIZE;
-// Initial population layout — driven by the SETUP > WORLD sliders.
-// shape: 0 = perfectly even grid, 1 = fully random positions
-// centres: number of cluster centres (1-64)
-// centreRandom: centre placement — 0 = even grid, 1 = random
-// centreBias: 0 = uniform, 1 = particles pinned to the centres
-// Regular population feed — SPAWN_RATE particles per second, placed inside
-// the same initial distribution (shape / centres / bias).
-let spawnRate = 5;
+// World parameters — single source of truth (WORLD panel sliders).
+// Mirrored into runtimeConfig.worldParams so the solver reads live values.
+let worldParams = createWorldParams();
+runtimeConfig.worldParams = worldParams;
+let spawnRate = worldParams.SPAWN_RATE;
 let spawnAccumulator = 0;
-
-const spawnConfig = {
-    shape: 0,
-    centres: 1,
-    centreRandom: 0.5,
-    centreBias: 0,
-};
 // Begin with all laws disabled — movement and interaction only exist once
 // a law is enabled. Presets (and the user) turn laws on explicitly.
 const DEFAULT_LAWS = [];
@@ -175,42 +167,6 @@ const SPECIES_PROFILES = [
     { name: 'Void', color: [100, 60, 140], force: -0.5, viscosity: 0.96, deathRate: 0.2, hiddenMass: 3.0 },
 ];
 
-/**
- * Sample a random spawn point from the configured initial distribution:
- * shape (even grid ↔ random), cluster centres, and centre bias.
- */
-function sampleSpawnPosition() {
-    const cfg = spawnConfig;
-    const perSpecies = DEFAULT_PARTICLES_PER_SPECIES;
-    const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
-    const cellSize = (worldSize - 10) / gridDim;
-    const cell = Math.floor(prng.nextFloat(0, gridDim * gridDim * gridDim));
-    const gx = cell % gridDim;
-    const gy = Math.floor(cell / gridDim) % gridDim;
-    const gz = Math.floor(cell / (gridDim * gridDim));
-    let px = 5 + gx * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-    let py = 5 + gy * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-    let pz = 5 + gz * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-    if (cfg.shape > 0) {
-        px = px + (prng.nextFloat(0, worldSize) - px) * cfg.shape;
-        py = py + (prng.nextFloat(0, worldSize) - py) * cfg.shape;
-        pz = pz + (prng.nextFloat(0, worldSize) - pz) * cfg.shape;
-    }
-    if (cfg.centreBias > 0) {
-        const centres = buildSpawnCentres(
-            Math.max(1, Math.min(64, Math.round(cfg.centres) || 1)),
-            cfg.centreRandom,
-        );
-        if (centres.length) {
-            const c = centres[Math.floor(prng.nextFloat(0, centres.length))];
-            px = px + (c.x - px) * cfg.centreBias;
-            py = py + (c.y - py) * cfg.centreBias;
-            pz = pz + (c.z - pz) * cfg.centreBias;
-        }
-    }
-    return { x: px, y: py, z: pz };
-}
-
 /** Append one freshly spawned particle at `pos` with the given species. */
 function spawnSingleParticle(species, pos) {
     if (particleCount >= MAX_PARTICLES) return;
@@ -251,46 +207,17 @@ function spawnSingleParticle(species, pos) {
     particleCount++;
 }
 
-/**
- * Compute spawn cluster centres across the world volume.
- * count 1 → single centre at the middle of the dish.
- * random 0 → centres evenly spaced on a grid; 1 → random placement.
- */
-function buildSpawnCentres(count, random) {
-    const r = Math.max(0, Math.min(1, random));
-    const centres = [];
-    if (count <= 1) {
-        centres.push({ x: worldSize * 0.5, y: worldSize * 0.5, z: worldSize * 0.5 });
-        return centres;
-    }
-    const gridDim = Math.max(2, Math.ceil(Math.cbrt(count)));
-    const cellSize = (worldSize - 20) / gridDim;
-    for (let c = 0; c < count; c++) {
-        const gx = c % gridDim;
-        const gy = Math.floor(c / gridDim) % gridDim;
-        const gz = Math.floor(c / (gridDim * gridDim));
-        const bx = 10 + gx * cellSize + cellSize * 0.5;
-        const by = 10 + gy * cellSize + cellSize * 0.5;
-        const bz = 10 + gz * cellSize + cellSize * 0.5;
-        const rx = prng.nextFloat(0, worldSize);
-        const ry = prng.nextFloat(0, worldSize);
-        const rz = prng.nextFloat(0, worldSize);
-        centres.push({
-            x: bx + (rx - bx) * r,
-            y: by + (ry - by) * r,
-            z: bz + (rz - bz) * r,
-        });
-    }
-    return centres;
-}
-
 function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
     const profiles = SPECIES_PROFILES;
 
     // Restart preserves the roster the user built; boot/reset restore it.
     if (!keepSpecies) speciesCount = Math.min(profiles.length, MAX_SPECIES);
     let idx = 0;
-    const perSpecies = DEFAULT_PARTICLES_PER_SPECIES;
+    // INITIAL_POP: total initial population distributed across species.
+    const caps = spawnCaps(worldParams);
+    const totalTarget = initialPopulationTarget(worldParams, caps);
+    const perSpecies = perSpeciesAllocation(totalTarget, speciesCount);
+    const groundH = Math.max(0, Math.min(1, worldParams.GROUND_HEIGHT));
 
     for (let s = 0; s < speciesCount; s++) {
         const p = profiles[s] || null;
@@ -302,11 +229,13 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
         const cellSize = (worldSize - 10) / gridDim;
 
         const centres = buildSpawnCentres(
-            Math.max(1, Math.min(64, Math.round(spawnConfig.centres) || 1)),
-            spawnConfig.centreRandom,
+            Math.max(1, Math.min(64, Math.round(worldParams.SPAWN_CENTRES) || 1)),
+            worldParams.SPAWN_CENTRE_RANDOM,
+            worldSize,
+            prng,
         );
 
-        for (let i = 0; i < perSpecies && idx < MAX_PARTICLES; i++) {
+        for (let i = 0; i < perSpecies && idx < caps.hardCap; i++) {
             const ptr = idx * PARTICLE_STRIDE;
             const gx = i % gridDim;
             const gy = Math.floor(i / gridDim) % gridDim;
@@ -316,18 +245,20 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
             let py = 5 + gy * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
             let pz = 5 + gz * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
             // Distribution: shape 0 = perfectly even grid, 1 = fully random
-            if (spawnConfig.shape > 0) {
-                px = px + (prng.nextFloat(0, worldSize) - px) * spawnConfig.shape;
-                py = py + (prng.nextFloat(0, worldSize) - py) * spawnConfig.shape;
-                pz = pz + (prng.nextFloat(0, worldSize) - pz) * spawnConfig.shape;
+            if (worldParams.SHAPE > 0) {
+                px = px + (prng.nextFloat(0, worldSize) - px) * worldParams.SHAPE;
+                py = py + (prng.nextFloat(0, worldSize) - py) * worldParams.SHAPE;
+                pz = pz + (prng.nextFloat(0, worldSize) - pz) * worldParams.SHAPE;
             }
             // Centre bias: pull the particle toward a cluster centre
-            if (spawnConfig.centreBias > 0 && centres.length > 0) {
+            if (worldParams.SPAWN_CENTRE_BIAS > 0 && centres.length > 0) {
                 const c = centres[Math.floor(prng.nextFloat(0, centres.length))];
-                px = px + (c.x - px) * spawnConfig.centreBias;
-                py = py + (c.y - py) * spawnConfig.centreBias;
-                pz = pz + (c.z - pz) * spawnConfig.centreBias;
+                px = px + (c.x - px) * worldParams.SPAWN_CENTRE_BIAS;
+                py = py + (c.y - py) * worldParams.SPAWN_CENTRE_BIAS;
+                pz = pz + (c.z - pz) * worldParams.SPAWN_CENTRE_BIAS;
             }
+            // GROUND_HEIGHT: keep the initial population inside the ground band.
+            if (groundH < 1) pz = Math.min(pz, Math.max(0, worldSize * groundH));
             setX(particleBuffer, idx, PARTICLE_STRIDE, px);
             setY(particleBuffer, idx, PARTICLE_STRIDE, py);
             particleView[ptr + STRIDE_INDEXES.POS_Z] = pz;
@@ -608,69 +539,27 @@ function setDNAFromProfile(species, profile) {
         }
     });
     bus.on('world:paramChanged', ({ key, value }) => {
+        worldParams = applyWorldParam(worldParams, key, value);
+        runtimeConfig.worldParams = worldParams;
         switch (key) {
             case 'WORLD_SIZE':
-                worldSize = Math.max(50, Math.min(20000, value));
+                worldSize = worldParams.WORLD_SIZE;
                 setWorldSize(worldSize);
-                console.log('[VEPA] World size set to', worldSize);
                 logDebug('world size set to ' + worldSize);
                 break;
-            case 'GLOBAL_G':
-                // Passed to solver via config — would need dynamic G integration
-                console.log('[VEPA] G changed to', value);
-                break;
-            case 'DAMPING':
-                // Applied in solver via drag law — stored for reference
-                break;
             case 'SPAWN_RATE':
-                spawnRate = Math.max(0, Math.min(100, value));
+                spawnRate = worldParams.SPAWN_RATE;
                 break;
-            case 'SHAPE':
-                spawnConfig.shape = Math.max(0, Math.min(1, value));
+            case 'PARTICLE_COUNT':
+            case 'MAX_POP':
+                // Caps are read live by spawnCaps() during spawn paths.
                 break;
-            case 'SPAWN_CENTRES':
-                spawnConfig.centres = Math.max(1, Math.min(64, Math.round(value) || 1));
-                break;
-            case 'SPAWN_CENTRE_RANDOM':
-                spawnConfig.centreRandom = Math.max(0, Math.min(1, value));
-                break;
-            case 'SPAWN_CENTRE_BIAS':
-                spawnConfig.centreBias = Math.max(0, Math.min(1, value));
-                break;
-            case 'BASE_SIZE':
-            case 'VISUAL_SCALE':
-                runtimeConfig.visualScale = Math.max(0.1, Math.min(5, value));
-                break;
-            case 'GLOBAL_ALPHA':
-                runtimeConfig.globalAlpha = Math.max(0.1, Math.min(1, value));
-                break;
-            case 'SIM_SPEED':
-                runtimeConfig.simSpeed = Math.max(0.1, Math.min(10, value));
-                break;
-            case 'STAR_MASS':
-                runtimeConfig.starMass = Math.max(4, Math.min(100, value));
-                break;
-            case 'ENTROPY':
-                // Entropy law intensity
-                break;
-            case 'VISCOSITY':
-                // Global viscosity modifier
-                break;
-            case 'WIND':
-                // Global wind force vector
-                break;
-            case 'HEAT_CAPACITY':
-            case 'LIGHT_LEVEL':
-            case 'RADIATION_LEVEL':
-            case 'SPECIES_INTERACTION':
-            case 'MUTATION_RATE':
-            case 'ENERGY_TRANSFER':
-            case 'DECAY_RATE':
-                console.log('[VEPA] World param', key, '=', value);
-                break;
-            default:
-                console.log('[VEPA] Unhandled world param:', key, value);
         }
+        // GLOBAL_G / WIND / DAMPING / VISCOSITY / ENTROPY / HEAT_CAPACITY /
+        // LIGHT_LEVEL / RADIATION_LEVEL / SPECIES_INTERACTION / ENERGY_TRANSFER /
+        // MUTATION_RATE / DECAY_RATE / GROUND_HEIGHT / SHAPE / SPAWN_CENTRES /
+        // SPAWN_CENTRE_RANDOM / SPAWN_CENTRE_BIAS / INITIAL_POP are applied
+        // directly by the solver (runtimeConfig.worldParams) or spawn paths.
         // Emit event so other systems can react
         bus.emit('world:paramApplied', { key, value });
     });
@@ -821,13 +710,15 @@ function renderLoop(now) {
         spawnOffspring();
         // Regular population feed — SPAWN_RATE particles per second, placed
         // randomly within the configured initial spawn distribution.
-        if (spawnRate > 0 && particleCount < MAX_PARTICLES) {
+        // Capped by MAX_POP (soft cap) and PARTICLE_COUNT (hard cap).
+        const caps = spawnCaps(worldParams);
+        if (spawnRate > 0 && particleCount < caps.softCap) {
             spawnAccumulator += spawnRate * (DT * runtimeConfig.simSpeed);
-            while (spawnAccumulator >= 1 && particleCount < MAX_PARTICLES) {
+            while (spawnAccumulator >= 1 && particleCount < caps.softCap) {
                 spawnAccumulator -= 1;
                 spawnSingleParticle(
                     Math.floor(prng.nextFloat(0, speciesCount)),
-                    sampleSpawnPosition(),
+                    sampleSpawnPosition(worldParams, worldSize, prng),
                 );
             }
         }

@@ -5,6 +5,7 @@
  */
 import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT } from '../constants.js';
 import { isSet, set as setLaw, clear as clearLaw, toggle as toggleLaw } from '../state/lawState.js';
+import { WORLD_PARAM_DEFS } from '../state/worldParams.js';
 
 // Law icon symbols (matching v2 aesthetic)
 const LAW_ICONS = {
@@ -442,97 +443,24 @@ function setupLawSets(grid, bus, lawStateObj) {
 
   updateSelector();
 }
-// ── World parameter groups (accordions) ──
-
-const WORLD_PARAM_GROUPS = [
-  {
-    label: 'SPACE',
-    subgroups: [
-      {
-        label: 'WORLD',
-        params: [
-          { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 50, max: 20000, default: 2000, step: 100 },
-          { key: 'GROUND_HEIGHT', label: 'GROUND HEIGHT', min: 0, max: 1, default: 0.9, step: 0.05 },
-        ],
-      },
-      {
-        label: 'POPULATION',
-        params: [
-          { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 20000, default: 1000, step: 100 },
-          { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250, step: 10 },
-          { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 50000, default: 5000, step: 100 },
-        ],
-      },
-      {
-        label: 'DISTRIBUTION',
-        params: [
-          { key: 'SHAPE', label: 'DISTRIBUTION', min: 0, max: 1, default: 0, step: 0.05 },
-          { key: 'SPAWN_CENTRES', label: 'CENTRES', min: 1, max: 64, default: 1, step: 1 },
-          { key: 'SPAWN_CENTRE_RANDOM', label: 'CENTRE SCATTER', min: 0, max: 1, default: 0.5, step: 0.05 },
-          { key: 'SPAWN_CENTRE_BIAS', label: 'CENTRE BIAS', min: 0, max: 1, default: 0, step: 0.05 },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'PHYSICS',
-    subgroups: [
-      {
-        label: 'FORCES',
-        params: [
-          { key: 'GLOBAL_G', label: 'GRAVITY STRENGTH', min: 0, max: 20, default: 1, step: 1 },
-          { key: 'WIND', label: 'WIND FORCE', min: 0, max: 5, default: 0, step: 0.5 },
-        ],
-      },
-      {
-        label: 'MOTION',
-        params: [
-          { key: 'DAMPING', label: 'MOTION DAMPING %', min: 0, max: 100, default: 10, step: 1 },
-          { key: 'VISCOSITY', label: 'GLOBAL VISCOSITY', min: 0.5, max: 1, default: 0.98, step: 0.01 },
-          { key: 'ENTROPY', label: 'ENTROPY', min: 0, max: 2, default: 0.1, step: 0.05 },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'ENVIRONMENT',
-    subgroups: [
-      {
-        label: 'THERMAL',
-        params: [
-          { key: 'HEAT_CAPACITY', label: 'HEAT CAPACITY', min: 0.1, max: 10, default: 1, step: 0.5 },
-          { key: 'LIGHT_LEVEL', label: 'LIGHT LEVEL', min: 0, max: 2, default: 0.5, step: 0.1 },
-          { key: 'RADIATION_LEVEL', label: 'RADIATION LEVEL', min: 0, max: 5, default: 0, step: 0.5 },
-        ],
-      },
-      {
-        label: 'POPULATION',
-        params: [
-          { key: 'SPAWN_RATE', label: 'REGULAR SPAWN /S', min: 0, max: 100, default: 5, step: 1 },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'BIOLOGY',
-    subgroups: [
-      {
-        label: 'INTERACTION',
-        params: [
-          { key: 'SPECIES_INTERACTION', label: 'SPECIES INTERACTION', min: -2, max: 2, default: 0.5, step: 0.1 },
-          { key: 'ENERGY_TRANSFER', label: 'ENERGY TRANSFER', min: 0, max: 2, default: 0.5, step: 0.1 },
-        ],
-      },
-      {
-        label: 'LIFE CYCLE',
-        params: [
-          { key: 'MUTATION_RATE', label: 'MUTATION RATE', min: 0, max: 5, default: 0.5, step: 0.1 },
-          { key: 'DECAY_RATE', label: 'DECAY RATE', min: 0, max: 2, default: 0.1, step: 0.05 },
-        ],
-      },
-    ],
-  },
-];
+// ── World parameter groups (accordions) — derived from the SSOT defs ──
+const WORLD_PARAM_GROUPS = (() => {
+  const groupMap = new Map();
+  for (const d of WORLD_PARAM_DEFS) {
+    if (!groupMap.has(d.group)) groupMap.set(d.group, new Map());
+    const subMap = groupMap.get(d.group);
+    if (!subMap.has(d.subgroup)) subMap.set(d.subgroup, []);
+    subMap.get(d.subgroup).push({ key: d.key, label: d.label, min: d.min, max: d.max, default: d.default, step: d.step });
+  }
+  const groups = [];
+  for (const [label, subMap] of groupMap) {
+    groups.push({
+      label,
+      subgroups: [...subMap.entries()].map(([sub, params]) => ({ label: sub, params })),
+    });
+  }
+  return groups;
+})();
 
 function renderWorldSliders(container, bus) {
   let html = '<div class="main-accordion">';

@@ -1,6 +1,31 @@
 # Changelog: VEPA v4
 
 
+## [4.6.0] - 2026-08-05
+
+### 72-parameter audit — every slider validated, 9 dead DNA params repaired
+- Full parameter audit mirroring the law audit: 18 batches × 4 params
+  (22 world sliders · 8 settings/camera · 42 DNA) with focused + gate tests in
+  `v4/tests/audit/params_batch_01..18.test.js` (43 audit tests; full suite
+  65 files / 503 tests green).
+- Result: **63 PASS / 9 REPAIRED / 0 FAULTY** — every param functional.
+- World sliders were the reported bug: 16 of 22 were `console.log` no-ops.
+  New SSOT `v4/src/state/worldParams.js` (defs, clamps, `applyWorldParam`,
+  min-clamped `spawnCaps`) + `v4/src/spawn/distribution.js`; all 22 sliders now
+  flow into spawn, solver, and laws (`v4/src/ui/worldPanel.js` renders from the
+  SSOT; `v4/src/main.js` applies `world:paramChanged` live).
+- Repaired DNA params (all were dead — zero physics reads):
+  FORCE (gravity scale/repel), TORQUE (velocity rotation), TIDAL (close-range
+  gravity boost), FUSION + FUSION_TIME (ACCR mass-transfer efficiency +
+  maturity gate), BOND_ANGLE (bond equilibrium distance), REACTION_THRESHOLD
+  (autocatalysis mass gate), HEAT_OUTPUT (oxidation energy release),
+  SEX_CHANCE (reproduction crossover probability).
+- Additional fixes: `resetCamera()` restores focalLength/ortho/sensitivities;
+  renderer `depthAlpha` now respects `runtimeConfig.globalAlpha`.
+- Audit report: `audit-suite/params/` (SPEC, INDEX, 18 batch manifests,
+  combined.md). World/camera/visual params default to neutral — default
+  simulation behaviour unchanged; restart still preserves laws/world/species.
+
 ## [4.5.3] - 2026-08-05
 
 ### Deployment caching fix

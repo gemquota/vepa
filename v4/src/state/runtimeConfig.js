@@ -3,6 +3,8 @@
  * Shared across modules so settings sliders, goal-engine adjustments, and
  * signal tuning take effect without rebuilds.
  */
+import { createWorldParams } from './worldParams.js';
+
 export const runtimeConfig = {
   starMass: 12,        // mass threshold for gravitational collapse (star)
   visualScale: 1.0,    // global particle size multiplier
@@ -15,4 +17,5 @@ export const runtimeConfig = {
   birthRate: 1.0,      // REPRO law synergy multiplier (0.01–1.0)
   deathRate: 1.0,      // LIFE law synergy multiplier (0.01–1.0)
   signalScale: 1.0,    // global communication DNA multiplier
+  worldParams: createWorldParams(), // WORLD panel sliders (SPACE/PHYSICS/ENVIRONMENT/BIOLOGY)
 };

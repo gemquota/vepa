@@ -62,6 +62,12 @@ export function applyStoichiometry(view, iBase, jBase, k) {
 
 export function applyAutocatalysis(view, iBase, jBase, k) {
   if (view[iBase + S.SPECIES_ID] !== view[jBase + S.SPECIES_ID]) return null;
+  // REACTION_THRESHOLD DNA (37): mass limit for the phase change — the
+  // catalytic reaction only fires once both bodies clear the threshold mass.
+  const thrI = nanGuard(view[iBase + S.DNA_CACHE_START + D.REACTION_THRESHOLD]);
+  const thrJ = nanGuard(view[jBase + S.DNA_CACHE_START + D.REACTION_THRESHOLD]);
+  const threshold = Math.max(0, Math.min(1000, thrI || 0));
+  if (view[iBase + S.MASS] < threshold || view[jBase + S.MASS] < (thrJ || threshold)) return null;
   const catI = clamp(nanGuard(view[iBase + S.DNA_CACHE_START + D.CATALYSIS]), 0.1, 2);
   const catJ = clamp(nanGuard(view[jBase + S.DNA_CACHE_START + D.CATALYSIS]), 0.1, 2);
   view[iBase + S.ENERGY] = clamp(nanGuard(view[iBase + S.ENERGY] + 0.1 * k * catI), 0, 200);

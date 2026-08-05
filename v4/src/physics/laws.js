@@ -14,6 +14,11 @@ import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES }
 import { isSet } from '../state/lawState.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
 
+/** Live world-param state (WORLD panel sliders). */
+function worldParams() {
+  return runtimeConfig.worldParams || {};
+}
+
 const S = STRIDE_INDEXES;
 const D = DNA_INDEXES;
 const DNA_BASE = S.DNA_CACHE_START;
@@ -73,7 +78,24 @@ export function applyGravity(p1Ptr, p2Ptr, dx, dy, dz, dist, G) {
   const m1 = readDNA(p1Ptr, D.HIDDEN_MASS) + buf[p1Ptr + S.MASS];
   const m2 = readDNA(p2Ptr, D.HIDDEN_MASS) + buf[p2Ptr + S.MASS];
   const dist2 = dist * dist + SOFTENING;
-  const force = G * m1 * m2 / dist2;
+  let force = G * m1 * m2 / dist2;
+
+  // FORCE DNA (0): primary attraction/repulsion — positive amplifies the
+  // pull, negative inverts it into repulsion. ±100 range → ±2 scale cap.
+  const forceGene = readDNA(p1Ptr, D.FORCE);
+  if (Number.isFinite(forceGene) && forceGene !== 0) {
+    const fScale = Math.max(-2, Math.min(2, forceGene / 25));
+    force *= 1 + Math.abs(fScale) * 0.5;
+    if (forceGene < 0) force = -force;
+  }
+
+  // TIDAL DNA (15): differential structural forces — close encounters pull
+  // harder (stronger with higher |TIDAL|).
+  const tidal = readDNA(p1Ptr, D.TIDAL);
+  if (Number.isFinite(tidal) && tidal !== 0) {
+    force *= 1 + tidal * 0.5 * Math.max(0, 1 - dist / 100);
+  }
+
   const invDist = 1.0 / (dist + 0.001);
   return {
     ax: nanGuard(dx * invDist * force),
@@ -451,8 +473,10 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   const age = view[base + S.AGE];
 
   let energy = view[base + S.ENERGY];
-  const decayRate = 0.01 * (1 - dnaParams[34] * synergy); // ENERGY_EFFICIENCY=34
+  const decayRate = 0.01 * (1 - dnaParams[34] * synergy) * (worldParams().DECAY_RATE ?? 1); // ENERGY_EFFICIENCY=34
   energy -= decayRate * dt;
+  // Photosynthesis — LIGHT_LEVEL feeds a slow energy subsidy to life.
+  energy += 0.02 * (worldParams().LIGHT_LEVEL ?? 0.5) * dt;
   if (energy < 0) energy = 0;
   view[base + S.ENERGY] = energy;
 
@@ -504,7 +528,7 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   // Radiation (LAW_INDEXES.RADIATION = 14)
   if (isSet(lawState, LAW_INDEXES.RADIATION)) {
     const armor = view[base + S.ARMOR];
-    energy -= (0.1 - armor * 0.01) * dt;
+    energy -= (0.1 - armor * 0.01) * (worldParams().RADIATION_LEVEL ?? 1) * dt;
     if (energy <= 0) {
       view[base + S.DEAD] = 1.0;
     }
@@ -623,7 +647,7 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
   const affinityI = view[iBase + S.DNA_CACHE_START + 41]; // SPECIES_AFFINITY=41
 
   if (speciesI === speciesJ) {
-    const strength = 0.1 * Math.abs(affinityI) * synergy;
+    const strength = 0.1 * Math.abs(affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
     const invDist = 1 / Math.sqrt(distSq);
     return {
       ax: dx * invDist * strength,
@@ -633,7 +657,7 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
   }
 
   if (affinityI < 0) {
-    const strength = 0.05 * Math.abs(affinityI) * synergy;
+    const strength = 0.05 * Math.abs(affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
     const invDist = 1 / Math.sqrt(distSq);
     return {
       ax: -dx * invDist * strength,
@@ -694,7 +718,10 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
   let hasTwoParents = false;
   const partnerDna = new Array(48);
 
-  if (partnerIdx >= 0 && prng() < crossoverRate) {
+  // SEX_CHANCE DNA (35): multi-parent reproduction probability — boosts the
+  // crossover/second-parent chance above the species CROSSOVER_RATE baseline.
+  const sexChance = Math.abs(dnaParams[35] || 0);
+  if (partnerIdx >= 0 && prng() < crossoverRate * (1 + sexChance * 0.5)) {
     const partnerBase = partnerIdx * PARTICLE_STRIDE;
     const partnerSpecies = view[partnerBase + S.SPECIES_ID];
     if (partnerSpecies === speciesId) {
@@ -743,7 +770,7 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
     }
 
     // Apply mutation (scaled by repressor)
-    const effectiveMutation = mutationRate * (1 - repressor * 0.5);
+    const effectiveMutation = mutationRate * (1 - repressor * 0.5) * (worldParams().MUTATION_RATE ?? 1);
     val += (prng() - 0.5) * effectiveMutation * 10;
 
     // Apply epigenetic drift (non-heritable noise)
@@ -867,13 +894,13 @@ export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synerg
   const diff = tempI - tempJ;
 
   if (isSet(lawState, LAW_INDEXES.HEAT)) {
-    const rate = 0.01 * dt * synergy;
+    const rate = 0.01 * dt * synergy / (worldParams().HEAT_CAPACITY ?? 1);
     view[iBase + S.TEMPERATURE] -= diff * rate;
     view[jBase + S.TEMPERATURE] += diff * rate;
   }
 
   if (isSet(lawState, LAW_INDEXES.COLD) && tempJ > tempI) {
-    const rate = 0.015 * dt * synergy;
+    const rate = 0.015 * dt * synergy / (worldParams().HEAT_CAPACITY ?? 1);
     const tDec2 = -diff * rate;
     const tInc2 = -diff * rate;
     view[jBase + S.TEMPERATURE] -= (tDec2 !== tDec2) ? 0 : tDec2;
@@ -1302,7 +1329,7 @@ export function applyEnergyTransfer(lawState, view, iBase, jBase, distSq, synerg
   if (!Number.isFinite(energyI) || !Number.isFinite(energyJ)) return null;
   const diff = energyJ - energyI;
   if (Math.abs(diff) < 0.1) return null;
-  const rate = 0.005 * synergy;
+  const rate = 0.005 * synergy * (worldParams().ENERGY_TRANSFER ?? 1);
   const transfer = diff * rate;
   view[iBase + S.ENERGY] += transfer;
   view[jBase + S.ENERGY] -= transfer;
@@ -1426,6 +1453,13 @@ export function applyOxidationEffect(lawState, view, base, dt, synergy) {
   const mass = view[base + S.MASS];
   if (Number.isFinite(mass) && mass > 0.1) {
     view[base + S.MASS] -= charge * 0.001 * dt * synergy;
+  }
+  // HEAT_OUTPUT DNA (39): charged oxidation releases energy + temperature.
+  const heatOutput = view[base + S.DNA_CACHE_START + D.HEAT_OUTPUT] || 0;
+  if (heatOutput > 0.001) {
+    const release = charge * heatOutput * 0.05 * dt * synergy;
+    view[base + S.ENERGY] = Math.min(200, (view[base + S.ENERGY] || 0) + release);
+    view[base + S.TEMPERATURE] = (view[base + S.TEMPERATURE] || 0) + release * 0.01;
   }
 }
 

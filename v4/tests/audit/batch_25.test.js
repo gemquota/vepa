@@ -123,6 +123,9 @@ describe('Batch 25 — STOICHIOMETRY / AUTOCATALYSIS / ADIABATIC / COMPRESSION',
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
       v[S.DNA_CACHE_START + D.CATALYSIS] = 1.5;
       v[PARTICLE_STRIDE + S.DNA_CACHE_START + D.CATALYSIS] = 1.5;
+      // REACTION_THRESHOLD DNA (37): lower the mass gate so default-mass reacts.
+      v[S.DNA_CACHE_START + D.REACTION_THRESHOLD] = 1;
+      v[PARTICLE_STRIDE + S.DNA_CACHE_START + D.REACTION_THRESHOLD] = 1;
     });
     const st = createLawState();
     set(st, LAW_INDEXES.AUTOCATALYSIS);
@@ -134,6 +137,8 @@ describe('Batch 25 — STOICHIOMETRY / AUTOCATALYSIS / ADIABATIC / COMPRESSION',
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
       v[S.DNA_CACHE_START + D.CATALYSIS] = 1.5;
       v[PARTICLE_STRIDE + S.DNA_CACHE_START + D.CATALYSIS] = 1.5;
+      v[S.DNA_CACHE_START + D.REACTION_THRESHOLD] = 1;
+      v[PARTICLE_STRIDE + S.DNA_CACHE_START + D.REACTION_THRESHOLD] = 1;
     });
     solve(off.view, 2, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
     expect(off.view[S.ENERGY]).toBe(100);

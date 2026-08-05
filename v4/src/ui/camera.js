@@ -290,6 +290,10 @@ export function resetCamera() {
   fitZoomForWorld();
   camera.rotY = 0;
   camera.rotX = 0;
+  camera.focalLength = 1200;
+  camera.ortho = 0;
+  camera.rotateSensitivity = 1.0;
+  camera.panSensitivity = 1.0;
 }
 
 export default camera;
