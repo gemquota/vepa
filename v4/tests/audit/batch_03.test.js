@@ -46,7 +46,7 @@ function makeWorld(count, setup) {
 }
 
 describe('Batch 03 — GLOW / AFFINITY / REPRO / TRACK (indices 8-11)', () => {
-  it('GLOW: signaling particles regenerate life energy AND emit signal pulses', () => {
+  it('GLOW: emits signal pulses but never converts signal into life energy', () => {
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.SIGNAL] = 1;
       v[b + S.ENERGY] = 50;
@@ -55,7 +55,10 @@ describe('Batch 03 — GLOW / AFFINITY / REPRO / TRACK (indices 8-11)', () => {
     set(laws, LAW_INDEXES.GLOW);
     expect(isSet(laws, LAW_INDEXES.GLOW)).toBe(true);
     for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
-    expect(view[S.ENERGY]).toBeGreaterThan(50);   // signal → life energy
+    // Batch-04 correction: GLOW is an emitter only. Signal (transmission
+    // strength) and metabolism (ENERGY) are separate channels; GLOW raises
+    // SIGNAL with its oscillator phase but must never touch ENERGY.
+    expect(view[S.ENERGY]).toBe(50);              // life energy untouched
     expect(view[S.SIGNAL]).toBeGreaterThan(1);    // oscillator emits pulses into SIGNAL
   });
 

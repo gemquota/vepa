@@ -1,5 +1,37 @@
 # Changelog: VEPA v4
 
+## [4.6.5] - 2026-08-05
+
+### Law RRP batch 04 — SENESCENCE / ENERGY / RADIATION / GENOTYPE confirmed semantics + GLOW backport
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **GLOW backport (batch 03 correction):** GLOW is an emitter only — the
+  oscillator raises SIGNAL (transmission strength) but never converts signal
+  into life energy. Signal and metabolism stay separate channels.
+- **SENESCENCE** confirmed as LIFE-dependent: age-based death stays nested
+  inside the LIFE cycle (past AGE 500, death chance = DEATH_RATE×0.001×
+  (1 + ageNorm×0.5)×dt); standalone SENESCENCE does nothing.
+- **ENERGY** answered "what energy?": every energy reservoir conducts pairwise
+  toward equilibrium — LIFE energy (ENERGY), ELECTRIC_ENERGY and STORED_ENERGY
+  each transfer independently (conservation holds per channel); SIGNAL and
+  REPRO_DRIVE are never touched.
+- **RADIATION** gained the RADIATION_LEVEL slider scaling plus a slow exposure
+  ramp: particles accumulate RADIATION_EXPOSURE (stride 80, level×dt×0.01,
+  cap 100) that compounds damage over time and steadily ramps DNA mutation
+  chance — more and more over time. Radiation depletion kills consistently
+  with the batch-02 LIFE death. Removed the duplicate in-LIFE radiation drain
+  (double-drain bug).
+- **GENOTYPE** expanded as the genetics engine: REPRESSOR damps drift,
+  HETEROZYGOSITY widens variance, EPIGENETIC_DRIFT adds non-heritable noise,
+  GENE_FLOW pulls foreign genes, radiation exposure ramps the rate, and rare
+  mutations write back into the 64×64 species genome — species-level evolution.
+- Tests: `tests/audit/batch_04.test.js` rewritten (15) + batch_03 GLOW test
+  corrected — full suite 521/521 green; `vite build` clean.
+- HELP_DB synced for all five entries; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_04.md`.
+
+
 
 ## [4.6.4] - 2026-08-05
 
@@ -50,55 +82,6 @@ Interactive law audit (RRP with the user): all four laws confirmed with amendmen
   FUSION gates rewritten for the confirmed semantics — full suite 510/510 green.
 - HELP_DB synced for all four laws; RRP manifest + telemetry in
   `audit-suite/laws-rrp/batch_02.md`.
-
-## [4.7.0] - 2026-08-05
-
-### Multiplayer investigation (branch `feature/multiplayer-investigation`) — P0: architecture ascertained + LAN hub
-
-**What was decided:** phones side by side share one world via a host-authoritative
-star over a LAN WebSocket hub run from one phone (Termux). Guests are render-only
-and send control events; the host runs the unchanged solver and broadcasts binary
-snapshots. Rejected: deterministic lockstep (VEPA is deliberately non-deterministic)
-and pure WebRTC (secure-context wall on plain HTTP + signaling chicken-and-egg).
-
-- `docs/multiplayer/INVESTIGATION.md` — constraints, transport/sync option matrix,
-  chosen architecture, bandwidth math, integration points, phased roadmap.
-- `docs/multiplayer/PROTOCOL.md` — wire spec: JSON control envelope, binary
-  snapshot layout (17 B/particle), quantization, NTP-lite clock sync, join/rejoin,
-  failover/promotion, reconciliation.
-- `v4/net-poc/` — zero-dep reference codec + round-trip demo + bandwidth sim.
-  Verified: 1250 alive ≈ 21.2 KB/snapshot; default world @ 20–30 Hz × 4 guests =
-  34–51% of a 5 MB/s hotspot (2–3× headroom); codec errors below one pixel.
-- `v4/server/` — LAN hub (static app + COOP/COEP + ws room relay + mDNS
-  `vepa.local` + optional QR). Smoke test: host/guest relay, presence, tick
-  sniffing, host-left candidates, promote flow — 13/13 green.
-- `vepa4 multiplayer` launcher subcommand added.
-- `v4/multiplayer/lab.html` — browser port of the protocol lab (live codec
-  round-trip + bandwidth model), deployed as a separate version:
-  **https://vepa-v4-multiplayer.vercel.app** (sim + `/multiplayer/lab.html`).
-
-Not wired into `v4/src` yet — P1 (guest render + interpolation + network panel)
-is the next coding task on the branch.
-
-
-### Law grid now coloured by the EM spectrum — 128-law rainbow
-- All 8 law categories map to evenly spaced spectrum colours (12.5% apart):
-  RED metaphysics · ORANGE thermodynamics · YELLOW information · GREEN biology ·
-  TEAL electromagnetism · BLUE physics · VIOLET quantum · PURPLE chemistry.
-- Each band is 10 points wide on a 0-100% spectrum (red wraps 95%→5%): the 16
-  laws inside a category are each spread across its band, so every one of the
-  128 laws gets its own hue (`LAW_SPECTRUM` + `LAW_HUE_BY_INDEX` in
-  `v4/src/constants.js`, hue = spectrum position × 3.6).
-- `worldPanel.js` stamps `--law-h` on every law button, mini law-set icon and
-  category label; cat filter tabs get `--cat-h`; `tooltip.js` info bar and
-  grid-border highlight use the per-law hue.
-- `style.css` per-category colour blocks replaced with generic `hsl(var(--law-h))`
-  rules for icon grid, word-mode list, mini icons and tabs; new
-  `--accent-teal/yellow/violet` vars added.
-- `lawPanel.js` (settings) updated to the 8-colour palette + missing quantum section.
-- Full suite: 65 files / 505 tests green; `npx vite build` clean.
-
-
 
 ## [4.6.1] - 2026-08-05
 

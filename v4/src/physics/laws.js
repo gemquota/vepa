@@ -23,6 +23,29 @@ const S = STRIDE_INDEXES;
 const D = DNA_INDEXES;
 const DNA_BASE = S.DNA_CACHE_START;
 
+/**
+ * Read a species genome param (DNA buffer, 64×64 Uint16) as a float.
+ * Genetics params 42-47 live only in the species genome, not the stride cache.
+ */
+function readSpeciesDNAParam(buf, sp, idx) {
+  if (!buf) return 0;
+  const raw = buf[sp * 64 + idx];
+  if (idx < DNA_RANGES.length) {
+    const { min, max } = DNA_RANGES[idx];
+    return min + (raw / 65535) * (max - min);
+  }
+  return raw / 65535;
+}
+
+/** Write a float back into the species genome (quantized to uint16). */
+function writeSpeciesDNAParam(buf, sp, idx, value) {
+  if (!buf) return;
+  const r = DNA_RANGES[idx] || { min: -1, max: 1 };
+  const clamped = Math.max(r.min, Math.min(r.max, value));
+  const normalized = (clamped - r.min) / (r.max - r.min);
+  buf[sp * 64 + idx] = Math.round(normalized * 65535);
+}
+
 let buffer_global = null;
 
 // HISTORY law — coarse spatial memory field (12^3 cells), reset per buffer
@@ -536,15 +559,8 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
     }
   }
 
-  // Radiation (LAW_INDEXES.RADIATION = 14)
-  if (isSet(lawState, LAW_INDEXES.RADIATION)) {
-    const armor = view[base + S.ARMOR];
-    energy -= (0.1 - armor * 0.01) * (worldParams().RADIATION_LEVEL ?? 1) * dt;
-    if (energy <= 0) {
-      view[base + S.DEAD] = 1.0;
-    }
-    view[base + S.ENERGY] = Math.max(0, energy);
-  }
+  // Radiation damage lives in the standalone RADIATION law (applyRadiationDamage)
+  // — applying it here as well would double-drain every irradiated organism.
 }
 
 // ============================================================================
@@ -713,25 +729,14 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
   const pz = view[base + S.POS_Z];
   const speciesId = view[base + S.SPECIES_ID];
 
-  // Helper: decode a packed uint16 DNA buffer value to float
-  function readDNAParam(buf, sp, idx) {
-    if (!buf) return 0;
-    const raw = buf[sp * 64 + idx];
-    if (idx < DNA_RANGES.length) {
-      const { min, max } = DNA_RANGES[idx];
-      return min + (raw / 65535) * (max - min);
-    }
-    return raw / 65535;
-  }
-
   // Genetics params (indices 42-47) come from the species DNA buffer,
   // NOT from the per-particle stride cache (which only holds 0-41).
-  const dominance = readDNAParam(dnaBuffer, speciesId, 42);
-  const crossoverRate = readDNAParam(dnaBuffer, speciesId, 43);
-  const epigeneticDrift = readDNAParam(dnaBuffer, speciesId, 44);
-  const heterozygosity = readDNAParam(dnaBuffer, speciesId, 45);
-  const geneFlow = readDNAParam(dnaBuffer, speciesId, 46);
-  const repressor = readDNAParam(dnaBuffer, speciesId, 47);
+  const dominance = readSpeciesDNAParam(dnaBuffer, speciesId, 42);
+  const crossoverRate = readSpeciesDNAParam(dnaBuffer, speciesId, 43);
+  const epigeneticDrift = readSpeciesDNAParam(dnaBuffer, speciesId, 44);
+  const heterozygosity = readSpeciesDNAParam(dnaBuffer, speciesId, 45);
+  const geneFlow = readSpeciesDNAParam(dnaBuffer, speciesId, 46);
+  const repressor = readSpeciesDNAParam(dnaBuffer, speciesId, 47);
 
   const mutationRate = dnaParams[12] * 0.1; // MUTATION=12
   const offspringDna = new Array(48);
@@ -756,7 +761,7 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
       }
       // Fill genetics params (42-47) from species DNA buffer
       for (let d = 42; d < 48; d++) {
-        partnerDna[d] = readDNAParam(dnaBuffer, speciesId, d);
+        partnerDna[d] = readSpeciesDNAParam(dnaBuffer, speciesId, d);
       }
     }
   }
@@ -771,8 +776,8 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
       parentB = hasTwoParents ? (partnerDna[d] || 0) : parentA;
     } else {
       // Genetics params (42-47): read from species DNA buffer
-      parentA = readDNAParam(dnaBuffer, speciesId, d);
-      parentB = hasTwoParents ? readDNAParam(dnaBuffer, speciesId, d) : parentA;
+      parentA = readSpeciesDNAParam(dnaBuffer, speciesId, d);
+      parentB = hasTwoParents ? readSpeciesDNAParam(dnaBuffer, speciesId, d) : parentA;
     }
 
     let val;
@@ -804,7 +809,7 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
     if (prng() < geneFlow * 0.01) {
       const otherSpecies = Math.floor(prng() * 5) % 64;
       if (otherSpecies !== speciesId) {
-        const foreignGene = readDNAParam(dnaBuffer, otherSpecies, d);
+        const foreignGene = readSpeciesDNAParam(dnaBuffer, otherSpecies, d);
         val += (foreignGene - val) * 0.1;
       }
     }
@@ -1335,60 +1340,93 @@ export function applyAstral(lawState, view, base, dt, synergy) {
 export function applyGlowEffect(lawState, view, base, dnaParams, dt, synergy) {
   if (!isSet(lawState, LAW_INDEXES.GLOW)) return;
 
-  // Signal transmission strength (SIGNAL) is separate from life energy
-  // (ENERGY): GLOW emits pulses into SIGNAL and also converts signal into
-  // metabolic energy — both halves of the glow loop.
+  // GLOW emits signal pulses only (confirmed batch-04 correction): an
+  // oscillator raises the particle's SIGNAL — its transmission strength —
+  // when the phase is positive. With COMMS active the pulse propagates to
+  // neighbours. GLOW does NOT convert signal into life energy: signal
+  // (SIGNAL) and metabolism (ENERGY) are separate channels.
   const pulseRate = dnaParams[14] || 0.2;   // PULSE_RATE
   const strength = dnaParams[19] || 0.5;    // SIGNAL_STRENGTH
   const age = view[base + S.AGE] || 0;
-  let signal = view[base + S.SIGNAL] || 0;
+  const signal = view[base + S.SIGNAL] || 0;
 
-  // Emission: an oscillator raises the particle's own signal when the phase
-  // is positive (with COMMS active the pulse propagates to neighbours).
   const phase = Math.sin(age * 0.01 * (0.1 + pulseRate));
   if (phase > 0) {
-    signal += phase * pulseRate * strength * dt * 0.05 * synergy;
-  }
-  view[base + S.SIGNAL] = Math.max(0, signal);
-
-  // Regen: existing signal charges the life-energy pool.
-  if (Number.isFinite(signal) && signal >= 0.01) {
-    const energy = view[base + S.ENERGY];
-    if (Number.isFinite(energy)) {
-      view[base + S.ENERGY] += signal * 0.01 * dt * synergy;
-    }
+    view[base + S.SIGNAL] = Math.max(0, signal + phase * pulseRate * strength * dt * 0.05 * synergy);
   }
 }
 
 // ============================================================================
-// 45. ENERGY — Thermal energy conduction between adjacent particles
+// 45. ENERGY — Energy conduction between adjacent particles
 // ============================================================================
+// The ENERGY law balances every energy reservoir pairwise toward equilibrium:
+// LIFE energy (ENERGY), ELECTRIC_ENERGY and STORED_ENERGY each conduct
+// independently between neighbouring particles. SIGNAL (transmission
+// strength) and REPRO_DRIVE (drive meter) are not energy reservoirs and are
+// intentionally left untouched. Confirmed batch-04 interpretation of "what
+// energy": all of them.
+const ENERGY_CHANNELS = [S.ENERGY, S.ELECTRIC_ENERGY, S.STORED_ENERGY];
+
 export function applyEnergyTransfer(lawState, view, iBase, jBase, distSq, synergy) {
   if (!isSet(lawState, LAW_INDEXES.ENERGY)) return null;
   if (distSq > 40000) return null;
-  const energyI = view[iBase + S.ENERGY];
-  const energyJ = view[jBase + S.ENERGY];
-  if (!Number.isFinite(energyI) || !Number.isFinite(energyJ)) return null;
-  const diff = energyJ - energyI;
-  if (Math.abs(diff) < 0.1) return null;
   const rate = 0.005 * synergy * (worldParams().ENERGY_TRANSFER ?? 1);
-  const transfer = diff * rate;
-  view[iBase + S.ENERGY] += transfer;
-  view[jBase + S.ENERGY] -= transfer;
+  for (const ch of ENERGY_CHANNELS) {
+    const energyI = view[iBase + ch];
+    const energyJ = view[jBase + ch];
+    if (!Number.isFinite(energyI) || !Number.isFinite(energyJ)) continue;
+    const diff = energyJ - energyI;
+    if (Math.abs(diff) < 0.1) continue;
+    const transfer = diff * rate;
+    view[iBase + ch] += transfer;
+    view[jBase + ch] -= transfer;
+  }
   return null;
 }
 
 // ============================================================================
 // 46. RADIATION — Ambient radiation damages low-armor particles
 // ============================================================================
-export function applyRadiationDamage(lawState, view, base, dt, synergy) {
+export function applyRadiationDamage(lawState, view, base, dt, synergy, prng) {
   if (!isSet(lawState, LAW_INDEXES.RADIATION)) return;
+
   const armor = view[base + S.ARMOR];
   const energy = view[base + S.ENERGY];
   if (!Number.isFinite(armor) || !Number.isFinite(energy)) return;
-  const damage = (1 - armor) * 0.02 * dt * synergy;
+
+  // The RADIATION_LEVEL slider scales the damage (confirmed batch-04 spec).
+  const level = Number.isFinite(worldParams().RADIATION_LEVEL) ? worldParams().RADIATION_LEVEL : 1;
+
+  // Exposure builds very slowly but keeps increasing over time (cap 100).
+  // The accumulated dose both worsens the damage and ramps mutation chance.
+  let exposure = view[base + S.RADIATION_EXPOSURE] || 0;
+  exposure += level * dt * 0.01;
+  if (exposure > 100) exposure = 100;
+  view[base + S.RADIATION_EXPOSURE] = exposure;
+
+  // Energy damage: ARMOR shields; exposure slowly compounds the dose.
+  const damage = (1 - armor) * 0.02 * level * (1 + exposure * 0.02) * dt * synergy;
   if (damage > 0.001) {
-    view[base + S.ENERGY] -= damage;
+    const newEnergy = energy - damage;
+    if (newEnergy <= 0) {
+      // Radiation depletion kills — consistent with the batch-02 LIFE death.
+      view[base + S.ENERGY] = 0;
+      view[base + S.DEAD] = 1.0;
+    } else {
+      view[base + S.ENERGY] = newEnergy;
+    }
+  }
+
+  // Mutation ramp: the accumulated dose slowly increases the chance of DNA
+  // damage — more and more over time as exposure climbs.
+  const mutationRate = view[base + S.DNA_CACHE_START + 12] || 0.5;
+  const mutProb = exposure * 0.001 * dt * synergy;
+  if (prng && mutProb > 0 && prng() < mutProb) {
+    const hashVal = Math.sin(base * 173.3 + performance.now() * 0.001) * 43758.5453;
+    const dnaIdx = Math.abs(Math.floor(hashVal)) % 42;
+    const perturb = (prng() - 0.5) * mutationRate * 0.05;
+    const val = view[base + S.DNA_CACHE_START + dnaIdx];
+    if (Number.isFinite(val)) view[base + S.DNA_CACHE_START + dnaIdx] = val + perturb;
   }
 }
 
@@ -1420,25 +1458,70 @@ export function applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, 
 // ============================================================================
 // 48. GENOTYPE — DNA mutation from environmental stress
 // ============================================================================
-export function applyGenotypeMutation(lawState, view, base, dt, synergy) {
+export function applyGenotypeMutation(lawState, view, base, dt, synergy, prng, dnaBuffer) {
   if (!isSet(lawState, LAW_INDEXES.GENOTYPE)) return;
   const mutationRate = view[base + S.DNA_CACHE_START + 12];
   const temperature = view[base + S.TEMPERATURE];
   if (!Number.isFinite(mutationRate) || !Number.isFinite(temperature)) return;
   if (mutationRate < 0.01) return;
-  const mutProb = mutationRate * (1.0 + temperature) * dt * 0.01 * synergy;
+
+  const speciesId = view[base + S.SPECIES_ID] || 0;
+  // Genetics params (42-47) come from the species genome (DNA buffer).
+  const crossoverRate = readSpeciesDNAParam(dnaBuffer, speciesId, 43);
+  const epigeneticDrift = readSpeciesDNAParam(dnaBuffer, speciesId, 44);
+  const heterozygosity = readSpeciesDNAParam(dnaBuffer, speciesId, 45);
+  const geneFlow = readSpeciesDNAParam(dnaBuffer, speciesId, 46);
+  const repressor = readSpeciesDNAParam(dnaBuffer, speciesId, 47);
+
+  // Accumulated radiation dose (RADIATION law) ramps the mutation rate —
+  // radiation increases mutation chance more and more over time.
+  const exposure = view[base + S.RADIATION_EXPOSURE] || 0;
+
+  let mutProb = mutationRate * (1.0 + temperature) * dt * 0.01 * synergy
+    * (1 - repressor * 0.5)   // REPRESSOR dampens genetic drift
+    * (1 + exposure * 0.05);  // radiation dose ramps mutation over time
   if (mutProb < 0.001) return;
+
   const numMutations = Math.floor(mutProb * 3) + 1;
   const dnaStart = S.DNA_CACHE_START;
+
   for (let m = 0; m < numMutations; m++) {
+    // Somatic drift — per-particle DNA cache (heritable through REPRO).
     const hashVal = Math.sin(base * 127.1 + m * 311.7 + performance.now() * 0.001) * 43758.5453;
     const dnaIdx = Math.abs(Math.floor(hashVal)) % 42;
     const perturbHash = Math.sin(base * 269.5 + dnaIdx * 183.3) * 43758.5453;
-    const perturb = ((perturbHash - Math.floor(perturbHash)) * 2.0 - 1.0) * mutationRate * 0.05;
+    const varScale = 1 + heterozygosity * 2; // HETEROZYGOSITY widens variance
+    const perturb = ((perturbHash - Math.floor(perturbHash)) * 2.0 - 1.0) * mutationRate * 0.05 * varScale;
     const newVal = view[base + dnaStart + dnaIdx] + perturb;
     if (Number.isFinite(newVal)) {
       view[base + dnaStart + dnaIdx] = newVal;
     }
+
+    // Epigenetic drift — extra non-heritable noise on the cache.
+    if (epigeneticDrift > 0 && prng && prng() < 0.5) {
+      const epiIdx = Math.abs(Math.floor(Math.sin(base * 91.7 + m * 173.1) * 43758.5453)) % 42;
+      const epiNoise = (prng() - 0.5) * epigeneticDrift * 2;
+      view[base + dnaStart + epiIdx] += epiNoise;
+    }
+
+    // Gene flow — horizontal transfer of a foreign gene into the cache.
+    if (dnaBuffer && prng && prng() < geneFlow * 0.01) {
+      const otherSpecies = (Math.floor(prng() * 63) >= speciesId) ? (Math.floor(prng() * 63) + 1) : Math.floor(prng() * 63);
+      const r = DNA_RANGES[dnaIdx] || { min: -1, max: 1 };
+      const foreign = readSpeciesDNAParam(dnaBuffer, otherSpecies, dnaIdx);
+      view[base + dnaStart + dnaIdx] += (foreign - view[base + dnaStart + dnaIdx]) * 0.1;
+    }
+  }
+
+  // Species-genome evolution — a rare heritable mutation written back to the
+  // species DNA buffer, so evolution accumulates at the species level for
+  // future spawns and offspring genetics. DNA and genetics are a major part
+  // of VEPA, so this is slow but persistent.
+  if (dnaBuffer && prng && prng() < crossoverRate * 0.0002 * dt) {
+    const gIdx = Math.abs(Math.floor(Math.sin(base * 53.7 + performance.now() * 0.0007) * 43758.5453)) % 42;
+    const current = readSpeciesDNAParam(dnaBuffer, speciesId, gIdx);
+    const gPerturb = (prng() - 0.5) * mutationRate * 0.02;
+    writeSpeciesDNAParam(dnaBuffer, speciesId, gIdx, current + gPerturb);
   }
 }
 

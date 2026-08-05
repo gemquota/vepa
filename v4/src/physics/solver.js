@@ -1339,11 +1339,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Genotype ──
     applyGenotypeMutation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.GENOTYPE));
+      computeSynergy(lawState, LAW_INDEXES.GENOTYPE), prng, dnaBuffer);
 
     // ── Radiation ──
     applyRadiationDamage(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.RADIATION));
+      computeSynergy(lawState, LAW_INDEXES.RADIATION), prng);
 
     // ── Phenotype ──
     applyPhenotype(lawState, view, iBase, localTimeStep,

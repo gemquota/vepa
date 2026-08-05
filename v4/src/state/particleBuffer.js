@@ -50,6 +50,7 @@ export function getParticle(buffer, index, stride) {
         electricEnergy: view[base + S.ELECTRIC_ENERGY],
         storedEnergy: view[base + S.STORED_ENERGY],
         reproDrive: view[base + S.REPRO_DRIVE],
+        radiationExposure: view[base + S.RADIATION_EXPOSURE],
     };
 }
 
@@ -80,6 +81,7 @@ export function setParticle(buffer, index, stride, data) {
     if (data.electricEnergy !== undefined) view[base + S.ELECTRIC_ENERGY] = data.electricEnergy;
     if (data.storedEnergy !== undefined) view[base + S.STORED_ENERGY] = data.storedEnergy;
     if (data.reproDrive !== undefined) view[base + S.REPRO_DRIVE] = data.reproDrive;
+    if (data.radiationExposure !== undefined) view[base + S.RADIATION_EXPOSURE] = data.radiationExposure;
 }
 
 export function getX(buffer, index, stride) {

@@ -320,6 +320,7 @@ function spawnShardPopulation(shard) {
       shard.view[b + S.ELECTRIC_ENERGY] = 0;
       shard.view[b + S.STORED_ENERGY] = 0;
       shard.view[b + S.REPRO_DRIVE] = 0;
+      shard.view[b + S.RADIATION_EXPOSURE] = 0;
       shard.view[b + S.ENTANGLE_ID] = -1;
       shard.view[b + S.ENTANGLE_PHASE] = 0;
       idx++;
@@ -364,6 +365,7 @@ function spawnShardOffspring(shard) {
     shard.view[b + S.ELECTRIC_ENERGY] = 0;
     shard.view[b + S.STORED_ENERGY] = 0;
     shard.view[b + S.REPRO_DRIVE] = 0;
+    shard.view[b + S.RADIATION_EXPOSURE] = 0;
     shard.view[b + S.ENTANGLE_ID] = -1;
     shard.view[b + S.ENTANGLE_PHASE] = 0;
     // Inherit the parents' intermediate colour when reproduction carried one

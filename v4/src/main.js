@@ -295,6 +295,7 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
             particleView[ptr + STRIDE_INDEXES.ELECTRIC_ENERGY] = 0;
             particleView[ptr + STRIDE_INDEXES.STORED_ENERGY] = 0;
             particleView[ptr + STRIDE_INDEXES.REPRO_DRIVE] = 0;
+            particleView[ptr + STRIDE_INDEXES.RADIATION_EXPOSURE] = 0;
             particleView[ptr + STRIDE_INDEXES.PHASE_1] = 0;
             particleView[ptr + STRIDE_INDEXES.PHASE_2] = 0;
             particleView[ptr + STRIDE_INDEXES.SOUL] = 0;

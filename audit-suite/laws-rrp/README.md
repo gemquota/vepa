@@ -14,7 +14,7 @@
 | [01](batch_01.md) | GRAV / DRAG / ENTR / WRAP | ✅ |
 | [02](batch_02.md) | COLL / ACCR / PLANETARY / LIFE | ✅ |
 | [03](batch_03.md) | GLOW / AFFINITY / REPRO / TRACK | ✅ |
-| [04](batch_04.md) | SENESCENCE / ENERGY / RADIATION / GENOTYPE | ⏳ |
+| [04](batch_04.md) | SENESCENCE / ENERGY / RADIATION / GENOTYPE | ✅ |
 | [05](batch_05.md) | PHENOTYPE / CATALYSIS_LAW / SOLVATION / ACIDITY | ⏳ |
 | [06](batch_06.md) | OXIDATION / POLYMER / ISOMERIZATION / CHIRALITY | ⏳ |
 | [07](batch_07.md) | CRYSTALLIZATION / HEAT / COLD / CONVECTION | ⏳ |

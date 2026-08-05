@@ -62,6 +62,7 @@ export const STRIDE_INDEXES = {
   ELECTRIC_ENERGY: 77, // electrical potential energy (EM laws, batches 14-20)
   STORED_ENERGY:   78, // general reserve pool (capacitance / fusion storage)
   REPRO_DRIVE:     79, // reproductive drive meter (REPRO law gate)
+  RADIATION_EXPOSURE: 80, // accumulated radiation dose (RADIATION law; ramps mutation)
 };
 
 // --- DNA Indexes (42 parameters) ---
@@ -821,9 +822,9 @@ export const LAW_HELP_DB = {
     system: "Core ecosystem loop. Only the LIFE metabolic path triggers energy-depletion death — charge/electromagnetic energy lives in its own fields and laws. Senescence (age-based death) is a separate law.",
   },
   GLOW: {
-    hint: "Signaling pulses: particles emit periodic signals and convert signal into life energy.",
-    explanation: "GLOW does both: an oscillator (PULSE_RATE × SIGNAL_STRENGTH DNA) raises the particle's SIGNAL — its transmission strength — and existing signal charges the LIFE energy pool. Signal strength (SIGNAL) is a separate energy channel from metabolism (ENERGY).",
-    system: "Emission: SIGNAL += phase×PULSE_RATE×SIGNAL_STRENGTH×dt×0.05×synergy when the oscillator phase is positive; with COMMS the pulse propagates to neighbours. Regen: ENERGY += SIGNAL×0.01×dt×synergy. Distinct from COMMS, which handles propagation.",
+    hint: "Signaling pulses: particles emit periodic signals for visual brightness.",
+    explanation: "GLOW is an emitter only (batch-04 correction): an oscillator (PULSE_RATE × SIGNAL_STRENGTH DNA) raises the particle's SIGNAL — its transmission strength — when the phase is positive. Signal (SIGNAL) and metabolism (ENERGY) are separate channels and GLOW never converts one into the other.",
+    system: "Emission: SIGNAL += phase×PULSE_RATE×SIGNAL_STRENGTH×dt×0.05×synergy when the oscillator phase is positive; with COMMS the pulse propagates to neighbours. No energy regen — ENERGY stays exactly as the LIFE law left it. Distinct from COMMS, which handles propagation.",
   },
   AFFINITY: {
     hint: "Species-based attraction or repulsion.",
@@ -854,23 +855,23 @@ export const LAW_HELP_DB = {
   },
   SENESCENCE: {
     hint: "Age-based death: old particles die off.",
-    explanation: "Particles past age 500 have increasing death probability based on DEATH_RATE DNA.",
-    system: "Prevents immortal particles. Enables generational turnover and evolutionary pressure.",
+    explanation: "Particles past age 500 have increasing death probability based on DEATH_RATE DNA. Senescence is nested inside the LIFE cycle (confirmed): it only fires while LIFE is on, so aging is a property of living organisms.",
+    system: "Past AGE 500, per-tick death chance = DEATH_RATE×0.001×(1 + ageNorm×0.5)×dt. Requires LIFE. Prevents immortal particles and enables generational turnover.",
   },
   ENERGY: {
-    hint: "Energy conservation: particles exchange energy.",
-    explanation: "Nearby particles transfer energy toward equilibrium, like thermal conduction.",
-    system: "Balances energy distribution. Prevents energy hoarding by high-mass particles.",
+    hint: "Energy conduction: every energy pool flows toward equilibrium.",
+    explanation: "Nearby particles conduct ALL energy reservoirs pairwise toward equilibrium — LIFE energy (ENERGY), ELECTRIC_ENERGY and STORED_ENERGY each transfer independently, like thermal conduction. SIGNAL (transmission strength) and REPRO_DRIVE (drive meter) are not energy reservoirs and are never touched.",
+    system: "For each channel, pairs within dist² < 40000 transfer (hot − cold)×0.005×synergy×ENERGY_TRANSFER per tick. Conservation holds per channel. Prevents energy hoarding by high-mass particles.",
   },
   RADIATION: {
-    hint: "Background radiation damages unprotected particles.",
-    explanation: "Particles with low ARMOR take energy damage from ambient radiation.",
-    system: "ARMOR DNA provides radiation shielding. Adds environmental pressure to ecosystem.",
+    hint: "Background radiation damages unprotected particles and slowly irradiates them.",
+    explanation: "Particles accumulate RADIATION_EXPOSURE over time, scaled by the RADIATION_LEVEL slider. Low-ARMOR particles take life-energy damage that slowly compounds with the accumulated dose, and the dose steadily ramps DNA mutation chance — more and more over time.",
+    system: "Exposure += RADIATION_LEVEL×dt×0.01 (cap 100). Damage = (1−ARMOR)×0.02×RADIATION_LEVEL×(1 + exposure×0.02)×dt×synergy; energy ≤ 0 kills. Mutation chance = exposure×0.001×dt×synergy per tick, perturbing the DNA cache. Radiation death is consistent with the batch-02 LIFE depletion death.",
   },
   GENOTYPE: {
-    hint: "Genetic drift: DNA mutates over time.",
-    explanation: "Particles' DNA parameters drift randomly over time, influenced by temperature.",
-    system: "Enables long-term evolution. Hotter particles mutate faster. MUTATION DNA controls rate.",
+    hint: "Genetics engine: somatic drift, gene flow and species-genome evolution.",
+    explanation: "DNA and genetics are a major part of VEPA. GENOTYPE drives per-particle somatic drift in the DNA cache (heritable through REPRO), modulated by the genetics params: REPRESSOR damps drift, HETEROZYGOSITY widens variance, EPIGENETIC_DRIFT adds non-heritable noise, GENE_FLOW pulls foreign genes horizontally, and accumulated RADIATION exposure ramps the rate. Rarely, a mutation writes back into the species genome itself, so evolution accumulates at the species level.",
+    system: "Base chance = MUTATION×(1+TEMPERATURE)×dt×0.01×synergy×(1−REPRESSOR×0.5)×(1+exposure×0.05); mutates 1-3 cache loci by ±MUTATION×0.05×(1+HETEROZYGOSITY×2). Epigenetic noise and gene-flow blend per mutation; writeback chance = CROSSOVER_RATE×0.0002×dt, quantized into the 64×64 species DNA buffer.",
   },
   PHENOTYPE: {
     hint: "Visual phenotype expression from DNA.",
