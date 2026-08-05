@@ -327,8 +327,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Collision + Accretion + Fragmentation ──
-      // ACCR must be able to run standalone (mass exchange on overlap), so the
-      // gate accepts either law; COLL adds the bounce/softbody half.
+      // COLL and ACCR are independent laws (confirmed batch-02 semantics):
+      //  - COLL: softbody push + elastic bounce on overlap.
+      //  - ACCR: mass fusion on overlap. FUSION_MOMENTUM DNA is the MINIMUM
+      //    relative momentum required to fuse on impact — slower pairs bounce
+      //    instead. FUSION_TIME DNA is how long sub-threshold pairs must stay
+      //    in very close proximity before they fuse anyway (proximity dwell,
+      //    tracked in the free MITOSIS_TIMER / PARTNER_ID stride fields).
       if (isSet(lawState, LAW_INDEXES.COLL) || isSet(lawState, LAW_INDEXES.ACCR)) {
         const m1 = view[iBase + S.MASS];
         const m2 = view[jBase + S.MASS];
@@ -336,6 +341,19 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         const r1 = view[iBase + S.RADIUS];
         const r2 = view[jBase + S.RADIUS];
         const overlap = (r1 + r2) - dist;
+        const collOn = isSet(lawState, LAW_INDEXES.COLL);
+        const accrOn = isSet(lawState, LAW_INDEXES.ACCR);
+
+        // ACCR proximity-dwell bookkeeping: reset the timer whenever the
+        // tracked partner leaves overlap range so "very close proximity"
+        // means continuous contact, not a sum of separate grazes.
+        if (accrOn) {
+          const dwellPartner = view[iBase + S.PARTNER_ID] || -1;
+          if (dwellPartner === j && !(overlap > 0 && dist > 0.01)) {
+            view[iBase + S.MITOSIS_TIMER] = 0;
+            view[iBase + S.PARTNER_ID] = -1;
+          }
+        }
 
         if (overlap > 0 && dist > 0.01) {
           // Collision normal (i → j)
@@ -344,23 +362,65 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const ny = dy * invDist;
           const nz = dz * invDist;
 
-          // Softbody push: massive bodies squish instead of rigidly bouncing
-          const isStarI = m1 > runtimeConfig.starMass;
-          const isStarJ = m2 > runtimeConfig.starMass;
-          const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
-          px -= nx * push;
-          py -= ny * push;
-          pz -= nz * push;
-
           // Relative velocity along normal
           const dvx = view[iBase + S.VEL_X] - view[jBase + S.VEL_X];
           const dvy = view[iBase + S.VEL_Y] - view[jBase + S.VEL_Y];
           const dvz = view[iBase + S.VEL_Z] - view[jBase + S.VEL_Z];
           const relVelN = dvx * nx + dvy * ny + dvz * nz;
+          const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
 
-          // Bounce if approaching (relVelN > 0 along the i→j normal means
-          // the pair is closing; a negative impulse along n separates them)
-          if (relVelN > 0) {
+          // ── ACCR fusion gating (confirmed batch-02 semantics) ──
+          // FUSION_MOMENTUM (DNA 16): minimum relative momentum to fuse on
+          // impact; below it the pair bounces. FUSION_TIME (DNA 17): seconds
+          // of continuous close proximity required for sub-threshold pairs
+          // to fuse anyway.
+          let fusing = false;
+          if (accrOn) {
+            const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] ?? 1.0;
+            const fusionTime = dnaI[DNA_INDEXES.FUSION_TIME] ?? 2;
+            const relMomentum = relSpeed * Math.min(m1, m2);
+            fusing = relMomentum >= fusionMom;
+            let dwell = view[iBase + S.MITOSIS_TIMER] || 0;
+            if (!fusing) {
+              if ((view[iBase + S.PARTNER_ID] || -1) === j) {
+                dwell += localTimeStep;
+              } else {
+                dwell = localTimeStep;
+                view[iBase + S.PARTNER_ID] = j;
+              }
+              if (dwell >= fusionTime) fusing = true;
+            } else {
+              dwell = 0;
+              view[iBase + S.PARTNER_ID] = -1;
+            }
+            view[iBase + S.MITOSIS_TIMER] = dwell;
+          }
+
+          // ── COLL: softbody push + elastic bounce ──
+          // Massive bodies squish instead of rigidly bouncing; fusing pairs
+          // coalesce instead of bouncing apart.
+          if (collOn && !fusing) {
+            const isStarI = m1 > runtimeConfig.starMass;
+            const isStarJ = m2 > runtimeConfig.starMass;
+            const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
+            px -= nx * push;
+            py -= ny * push;
+            pz -= nz * push;
+
+            // Bounce if approaching (relVelN > 0 along the i→j normal means
+            // the pair is closing; a negative impulse along n separates them)
+            if (relVelN > 0) {
+              const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
+              const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
+              const bounceForce = impulse * m2;
+              ax += bounceForce * nx;
+              ay += bounceForce * ny;
+              az += bounceForce * nz;
+            }
+          } else if (accrOn && !collOn && relVelN > 0) {
+            // Sub-threshold ACCR-only contact: the pair "bounces" — a gentle
+            // elastic separation so matter does not silently pass through
+            // while the dwell timer decides whether they fuse.
             const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
             const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
             const bounceForce = impulse * m2;
@@ -369,63 +429,57 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
             az += bounceForce * nz;
           }
 
-          // ── Softbody dissolution + gravitational collapse ──
-          if (isSet(lawState, LAW_INDEXES.ACCR)) {
-            const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
-            const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] || 0.5;
-            // FUSION_TIME DNA (17): temporal gate — mass transfer only after
-            // the particle is mature enough (AGE >= FUSION_TIME * 50).
-            const fusionTime = dnaI[DNA_INDEXES.FUSION_TIME] || 0;
-            const fusionReady = (view[iBase + S.AGE] || 0) >= fusionTime * 50;
+          // ── ACCR: softbody dissolution + gravitational collapse ──
+          if (accrOn && fusing) {
+            const isStarI = m1 > runtimeConfig.starMass;
+            const isStarJ = m2 > runtimeConfig.starMass;
             // FUSION DNA (9): mass-merging efficiency multiplier (0..1 → 0.5..1.5).
             const fusionMult = 0.5 + (dnaI[DNA_INDEXES.FUSION] || 0.5);
-            if (relSpeed < fusionMom * 2.0 && fusionReady) {
-              if (isStarI) {
-                // Collapse: star pulls overlapping matter in and dissolves it
-                const gain = (m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass)) * fusionMult;
-                view[iBase + S.MASS] += gain;
-                view[jBase + S.MASS] = Math.max(0, m2 - gain);
-                if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
-                blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
-                mass = view[iBase + S.MASS];
-              } else if (isStarJ) {
-                // Neighbor star dissolves this particle
-                const loss = m1 * 0.04 * fusionMult;
-                view[iBase + S.MASS] = Math.max(0, m1 - loss);
-                view[jBase + S.MASS] += loss;
-                if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
-                mass = view[iBase + S.MASS];
-              } else if (m1 > m2 * 2.0) {
-                // Bigger body slowly absorbs the smaller (partial dissolution)
-                const gain = m2 * 0.04 * fusionMult;
-                view[iBase + S.MASS] += gain;
-                view[jBase + S.MASS] = Math.max(0, m2 - gain);
-                if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
-                blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
-                mass = view[iBase + S.MASS];
-              } else if (m2 > m1 * 2.0) {
-                // This particle dissolves into the bigger neighbor
-                const loss = m1 * 0.04 * fusionMult;
-                view[iBase + S.MASS] = Math.max(0, m1 - loss);
-                view[jBase + S.MASS] += loss;
-                if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
-                mass = view[iBase + S.MASS];
-              } else {
-                // Similar size: mutual dissolution — blend mass and color
-                const diff = (m2 - m1) * 0.02 * fusionMult;
-                view[iBase + S.MASS] += diff;
-                view[jBase + S.MASS] -= diff;
-                mass = view[iBase + S.MASS];
-                const cR = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
-                const cG = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
-                const cB = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
-                view[iBase + S.COLOR_R] += (cR - view[iBase + S.COLOR_R]) * 0.1;
-                view[iBase + S.COLOR_G] += (cG - view[iBase + S.COLOR_G]) * 0.1;
-                view[iBase + S.COLOR_B] += (cB - view[iBase + S.COLOR_B]) * 0.1;
-                view[jBase + S.COLOR_R] += (cR - view[jBase + S.COLOR_R]) * 0.1;
-                view[jBase + S.COLOR_G] += (cG - view[jBase + S.COLOR_G]) * 0.1;
-                view[jBase + S.COLOR_B] += (cB - view[jBase + S.COLOR_B]) * 0.1;
-              }
+            if (isStarI) {
+              // Collapse: star pulls overlapping matter in and dissolves it
+              const gain = (m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass)) * fusionMult;
+              view[iBase + S.MASS] += gain;
+              view[jBase + S.MASS] = Math.max(0, m2 - gain);
+              if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
+              blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
+              mass = view[iBase + S.MASS];
+            } else if (isStarJ) {
+              // Neighbor star dissolves this particle
+              const loss = m1 * 0.04 * fusionMult;
+              view[iBase + S.MASS] = Math.max(0, m1 - loss);
+              view[jBase + S.MASS] += loss;
+              if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
+              mass = view[iBase + S.MASS];
+            } else if (m1 > m2 * 2.0) {
+              // Bigger body slowly absorbs the smaller (partial dissolution)
+              const gain = m2 * 0.04 * fusionMult;
+              view[iBase + S.MASS] += gain;
+              view[jBase + S.MASS] = Math.max(0, m2 - gain);
+              if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
+              blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
+              mass = view[iBase + S.MASS];
+            } else if (m2 > m1 * 2.0) {
+              // This particle dissolves into the bigger neighbor
+              const loss = m1 * 0.04 * fusionMult;
+              view[iBase + S.MASS] = Math.max(0, m1 - loss);
+              view[jBase + S.MASS] += loss;
+              if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
+              mass = view[iBase + S.MASS];
+            } else {
+              // Similar size: mutual dissolution — blend mass and color
+              const diff = (m2 - m1) * 0.02 * fusionMult;
+              view[iBase + S.MASS] += diff;
+              view[jBase + S.MASS] -= diff;
+              mass = view[iBase + S.MASS];
+              const cR = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
+              const cG = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
+              const cB = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
+              view[iBase + S.COLOR_R] += (cR - view[iBase + S.COLOR_R]) * 0.1;
+              view[iBase + S.COLOR_G] += (cG - view[iBase + S.COLOR_G]) * 0.1;
+              view[iBase + S.COLOR_B] += (cB - view[iBase + S.COLOR_B]) * 0.1;
+              view[jBase + S.COLOR_R] += (cR - view[jBase + S.COLOR_R]) * 0.1;
+              view[jBase + S.COLOR_G] += (cG - view[jBase + S.COLOR_G]) * 0.1;
+              view[jBase + S.COLOR_B] += (cB - view[jBase + S.COLOR_B]) * 0.1;
             }
           }
         }

@@ -785,18 +785,18 @@ export const LAW_HELP_DB = {
   },
   COLL: {
     hint: "Physical collisions with momentum exchange.",
-    explanation: "Particles bounce off each other based on ELASTICITY DNA. Overlapping particles are pushed apart.",
-    system: "Impulse-based collision response with mass-weighted velocity exchange. ELASTICITY controls bounciness.",
+    explanation: "Particles bounce off each other based on ELASTICITY DNA. Overlapping particles are pushed apart. Standalone from ACCR — turn ACCR off to get pure elastic bouncing without mass fusion.",
+    system: "Impulse-based collision response with mass-weighted velocity exchange. ELASTICITY controls bounciness. Pairs that are fusing under ACCR coalesce instead of bouncing.",
   },
   ACCR: {
     hint: "Mass accretion on collision.",
-    explanation: "When particles collide with sufficient force, they merge. FUSION and FUSION_MOMENTUM DNA control efficiency.",
-    system: "Hierarchical mass growth. High fusion leads to proto-celestial body formation.",
+    explanation: "FUSION_MOMENTUM DNA is the MINIMUM relative momentum required to fuse on impact — faster pairs merge, slower pairs bounce. FUSION_TIME DNA is how long slower pairs must stay in very close proximity before they fuse anyway. FUSION DNA scales the mass-transfer efficiency.",
+    system: "Hierarchical mass growth. Proximity dwell is tracked per contact pair; leaving contact resets the clock. Stars (> starMass) pull overlapping matter in and dissolve it. High fusion leads to proto-celestial body formation.",
   },
   PLANETARY: {
-    hint: "Central gravity well at world center.",
-    explanation: "All particles experience a gentle pull toward the center of the world, creating a planetary gravity well.",
-    system: "Creates a central attractor. Unlike v2's floor bounce, this is a continuous central gravity field.",
+    hint: "Atmospheric gravity: constant downward pull toward the ground.",
+    explanation: "Every particle falls toward the ground plane (z = 0) with a constant acceleration that is independent of mass — simulating particles much smaller than the world falling through a planet's atmosphere.",
+    system: "Force is scaled by mass so acceleration is mass-independent. ×1.5 with GRAV. With WRAP off the soft-wall clamp turns z = 0 into the ground; particles pile up there instead of floating to the centre.",
   },
   VOID: {
     hint: "Vacuum pressure: empty space pushes particles apart.",
@@ -810,8 +810,8 @@ export const LAW_HELP_DB = {
   },
   LIFE: {
     hint: "Biological lifecycle: energy cost, aging, death.",
-    explanation: "Particles consume energy over time (based on ENERGY_EFFICIENCY). When energy hits 0, they die.",
-    system: "Core ecosystem loop. Also includes hunger tracking and senescence (age-based death).",
+    explanation: "Particles consume metabolic energy over time (based on ENERGY_EFFICIENCY, scaled by the DECAY_RATE slider) and photosynthesis subsidises it from LIGHT_LEVEL. When metabolic energy hits 0, they die; hunger beyond the cap also kills.",
+    system: "Core ecosystem loop. Only the LIFE metabolic path triggers energy-depletion death — charge/electromagnetic energy lives in its own fields and laws. Senescence (age-based death) is a separate law.",
   },
   GLOW: {
     hint: "Signaling pulses: particles emit periodic signals.",

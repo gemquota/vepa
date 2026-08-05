@@ -1,7 +1,30 @@
 # Changelog: VEPA v4
 
 
-## [4.6.2] - 2026-08-05
+## [4.6.3] - 2026-08-05
+
+### Law RRP batch 02 — COLL / ACCR / PLANETARY / LIFE confirmed semantics
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **COLL** is now standalone from ACCR — softbody push + elastic bounce run only
+  under COLL; fusing pairs coalesce instead of bouncing. Off = pass-through.
+- **ACCR** gates reinterpreted: `FUSION_MOMENTUM` (DNA 16) is the MINIMUM
+  relative momentum to fuse on impact (slower pairs bounce); `FUSION_TIME`
+  (DNA 17) is how long sub-threshold pairs must stay in very close proximity
+  before they fuse anyway. Proximity dwell is tracked per contact pair in the
+  free `MITOSIS_TIMER` / `PARTNER_ID` stride fields and resets on separation.
+  Sub-threshold ACCR-only contacts get a gentle elastic bounce.
+- **PLANETARY** replaced the central well with constant atmospheric gravity
+  toward the ground plane (z ≈ 0), mass-scaled so acceleration is
+  mass-independent; ×1.5 with GRAV.
+- **LIFE** now kills on metabolic energy depletion: when the LIFE metabolic
+  budget hits 0 the organism dies (charge/electromagnetic energy paths are
+  untouched).
+- Tests: `tests/audit/batch_02.test.js` (14) + `tests/audit/params_batch_11.test.js`
+  FUSION gates rewritten for the confirmed semantics — full suite 510/510 green.
+- HELP_DB synced for all four laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_02.md`.
 
 ### Law grid now coloured by the EM spectrum — 128-law rainbow
 - All 8 law categories map to evenly spaced spectrum colours (12.5% apart):

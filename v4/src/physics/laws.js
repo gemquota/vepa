@@ -447,26 +447,23 @@ export function applyGenotype(p1Ptr, stride, dt) {
 }
 
 // ============================================================================
-// 14. PLANETARY (Central gravity well)
+// 14. PLANETARY (Atmospheric gravity — confirmed batch-02 semantics)
 // ============================================================================
+// A constant downward force toward the ground plane (z ≈ 0), simulating
+// particles that are much smaller than the world and fall through a planet's
+// atmosphere. Force is scaled by mass so the resulting acceleration is
+// mass-independent — every particle falls at the same rate. Combined with
+// GRAV the pull is ×1.5. With WRAP off the soft-wall clamp turns z = 0 into
+// the ground; with WRAP on the planet world still falls toward the band.
 export function applyPlanetary(lawState, view, base, px, py, pz, worldSize, synergy) {
   if (!isSet(lawState, LAW_INDEXES.PLANETARY)) return null; // LAW_INDEXES.PLANETARY = 6
 
-  const cx = worldSize * 0.5;
-  const cy = worldSize * 0.5;
-  const cz = worldSize * 0.5;
-  const dx = cx - px;
-  const dy = cy - py;
-  const dz = cz - pz;
-  const distSq = dx * dx + dy * dy + dz * dz;
-  if (distSq < 1) return null;
-
-  const strength = 0.001 * synergy;
-  const invDist = 1 / Math.sqrt(distSq);
+  const mass = view[base + S.MASS] || 1.0;
+  const strength = 0.02 * synergy;
   return {
-    ax: dx * invDist * strength,
-    ay: dy * invDist * strength,
-    az: dz * invDist * strength,
+    ax: 0,
+    ay: 0,
+    az: -strength * mass,
   };
 }
 
@@ -484,7 +481,14 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
   energy -= decayRate * dt;
   // Photosynthesis — LIGHT_LEVEL feeds a slow energy subsidy to life.
   energy += 0.02 * (worldParams().LIGHT_LEVEL ?? 0.5) * dt;
-  if (energy < 0) energy = 0;
+  // When the metabolic budget hits 0 the organism dies (confirmed batch-02
+  // semantics). This is the LIFE metabolic path only — charge/electromagnetic
+  // dynamics live in their own fields and laws and do not trigger it.
+  if (energy <= 0) {
+    view[base + S.ENERGY] = 0;
+    view[base + S.DEAD] = 1.0;
+    return;
+  }
   view[base + S.ENERGY] = energy;
 
   let hunger = view[base + S.HUNGER] + dt * 0.02;
