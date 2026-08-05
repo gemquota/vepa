@@ -1334,7 +1334,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       computeSynergy(lawState, LAW_INDEXES.LIFE) * runtimeConfig.deathRate);
 
     // ── Glow ──
-    applyGlowEffect(lawState, view, iBase, localTimeStep,
+    applyGlowEffect(lawState, view, iBase, dnaI, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.GLOW));
 
     // ── Genotype ──
@@ -1373,7 +1373,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Reproduction ──
 
     const offspring = applyReproduction(lawState, view, iBase, dnaI, prng,
-      computeSynergy(lawState, LAW_INDEXES.REPRO) * runtimeConfig.birthRate, dnaBuffer);
+      computeSynergy(lawState, LAW_INDEXES.REPRO) * runtimeConfig.birthRate, dnaBuffer, localTimeStep);
     if (offspring) {
       _offspringRing[_ringWrite] = offspring;
       _ringWrite = (_ringWrite + 1) % OFFSPRING_RING_SIZE;

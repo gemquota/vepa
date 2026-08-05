@@ -1,6 +1,31 @@
 # Changelog: VEPA v4
 
 
+## [4.6.4] - 2026-08-05
+
+### Law RRP batch 03 — GLOW / AFFINITY / REPRO / TRACK confirmed semantics + multi-energy architecture
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **Multi-energy architecture** (stride 77-79): `ELECTRIC_ENERGY`, `STORED_ENERGY`,
+  `REPRO_DRIVE` added to the particle stride — life energy (ENERGY), signal
+  transmission strength (SIGNAL), electricity, storage, and reproductive drive
+  are now separate channels. Initialized at spawn and in multiplex shards;
+  exposed through `particleBuffer.js`.
+- **GLOW** does both: an oscillator (PULSE_RATE × SIGNAL_STRENGTH DNA) emits
+  signal pulses into SIGNAL, and existing signal converts into life energy.
+- **AFFINITY** boosts same-species attraction (scales with positive
+  SPECIES_AFFINITY, inert at 0, none for xenophobic species) — fixes the old
+  `Math.abs` bug where negative affinity attracted your own kind.
+- **REPRO** is now gated on REPRODUCTIVE DRIVE (stride 79): drive accumulates
+  from BIRTH_RATE, spawning needs drive ≥ 60 + AGE ≥ 100, and spawning consumes
+  the drive plus half the parent's life energy — raw energy is no longer the gate.
+- **TRACK** only hunts across species: predators no longer chase their own kind.
+- Tests: `tests/audit/batch_03.test.js` (13) + updated REPRO/AFFINITY param
+  tests — full suite 515/515 green.
+- HELP_DB synced for all four laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_03.md`.
+
 ## [4.6.3] - 2026-08-05
 
 ### Law RRP batch 02 — COLL / ACCR / PLANETARY / LIFE confirmed semantics

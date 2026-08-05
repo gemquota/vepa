@@ -11,6 +11,7 @@ describe('Batch 15 — DNA.MUTATION / DNA.ENERGY_EFFICIENCY / DNA.SEX_CHANCE / D
       const { view, dna } = makeWorld(1, (v, d, b) => {
         v[b + S.DNA_CACHE_START + 10] = 1.0;      // BIRTH_RATE
         v[b + S.DNA_CACHE_START + 12] = mutation; // MUTATION
+        v[b + S.REPRO_DRIVE] = 60; // drive gate satisfied (REPRO)
         v[b + S.AGE] = 200;
         v[b + S.ENERGY] = 100;
       });
@@ -50,6 +51,7 @@ describe('Batch 15 — DNA.MUTATION / DNA.ENERGY_EFFICIENCY / DNA.SEX_CHANCE / D
         if (b === 0) {
           v[b + S.AGE] = 200;
           v[b + S.ENERGY] = 100;
+          v[b + S.REPRO_DRIVE] = 60;          // drive gate satisfied (REPRO)
           v[b + S.BOND_PARTNER_1] = 1;        // partner present
           v[b + S.DNA_CACHE_START + 0] = 1;   // FORCE differs from partner
           v[b + S.DNA_CACHE_START + 35] = sexChance; // SEX_CHANCE

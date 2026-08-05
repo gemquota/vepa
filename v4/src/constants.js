@@ -55,6 +55,13 @@ export const STRIDE_INDEXES = {
   ALPHA:          74,
   ENTANGLE_ID:    75,
   ENTANGLE_PHASE: 76,
+  // ── Multi-energy architecture (batch 03) ──
+  // ENERGY (50) stays the LIFE/metabolic pool; SIGNAL (57) is signal
+  // transmission strength. These additional reservoirs keep other energy
+  // kinds from colliding with metabolism:
+  ELECTRIC_ENERGY: 77, // electrical potential energy (EM laws, batches 14-20)
+  STORED_ENERGY:   78, // general reserve pool (capacitance / fusion storage)
+  REPRO_DRIVE:     79, // reproductive drive meter (REPRO law gate)
 };
 
 // --- DNA Indexes (42 parameters) ---
@@ -814,24 +821,24 @@ export const LAW_HELP_DB = {
     system: "Core ecosystem loop. Only the LIFE metabolic path triggers energy-depletion death — charge/electromagnetic energy lives in its own fields and laws. Senescence (age-based death) is a separate law.",
   },
   GLOW: {
-    hint: "Signaling pulses: particles emit periodic signals.",
-    explanation: "Particles pulse with signal strength based on PULSE_RATE DNA. Signals propagate to neighbors.",
-    system: "Communication layer. SIGNAL_STRENGTH and SIGNAL_RESP DNA control emission and reception.",
+    hint: "Signaling pulses: particles emit periodic signals and convert signal into life energy.",
+    explanation: "GLOW does both: an oscillator (PULSE_RATE × SIGNAL_STRENGTH DNA) raises the particle's SIGNAL — its transmission strength — and existing signal charges the LIFE energy pool. Signal strength (SIGNAL) is a separate energy channel from metabolism (ENERGY).",
+    system: "Emission: SIGNAL += phase×PULSE_RATE×SIGNAL_STRENGTH×dt×0.05×synergy when the oscillator phase is positive; with COMMS the pulse propagates to neighbours. Regen: ENERGY += SIGNAL×0.01×dt×synergy. Distinct from COMMS, which handles propagation.",
   },
   AFFINITY: {
     hint: "Species-based attraction or repulsion.",
-    explanation: "Same-species particles attract; different-species repel if SPECIES_AFFINITY is negative.",
-    system: "Uses SPECIES_AFFINITY DNA (index 41). Positive = gregarious, negative = xenophobic.",
+    explanation: "SPECIES_AFFINITY BOOSTS attraction to the same species: the same-species pull scales with positive affinity and is inert at 0. Different-species pairs repel only when SPECIES_AFFINITY is negative (xenophobic).",
+    system: "Uses SPECIES_AFFINITY DNA (index 41). Same-species: strength 0.1×max(0, affinity)×synergy×SPECIES_INTERACTION. Cross-species: repel at 0.05×|affinity| when negative. Positive = gregarious, negative = xenophobic.",
   },
   REPRO: {
-    hint: "Asexual reproduction: particles spawn offspring.",
-    explanation: "When energy > 60 and age > 100, particles have a chance to spawn a child with mutated DNA.",
-    system: "MUTATION DNA controls offspring variation. Offspring inherit parent DNA with random perturbations.",
+    hint: "Reproduction driven by a reproductive-drive meter.",
+    explanation: "Particles accumulate REPRODUCTIVE DRIVE from BIRTH_RATE over time. Once the drive passes 60 and the particle is mature (AGE ≥ 100), it has a per-tick chance to spawn a child with mutated DNA; spawning consumes the drive and half the parent's life energy.",
+    system: "Drive (REPRO_DRIVE stride field 79) accumulates BIRTH_RATE×0.1×dt×synergy, capped at 100. Chance = BIRTH_RATE×0.01×synergy per tick. MUTATION controls offspring variation; genetics params 42-47 + SEX_CHANCE enable two-parent crossover. Energy is no longer the reproduction gate.",
   },
   TRACK: {
-    hint: "Predation tracking: particles chase lower-mass prey.",
-    explanation: "Particles with high PREDATION_BIAS are attracted to particles with lower mass.",
-    system: "Creates predator-prey dynamics. Combines with LIFE and REPRO for full ecosystem simulation.",
+    hint: "Predation tracking: particles chase lower-mass prey of another species.",
+    explanation: "Particles with high PREDATION_BIAS are attracted to lower-mass particles — but only across species: a predator never hunts its own kind.",
+    system: "Requires PREDATION_BIAS ≥ 0.1 and a different-species neighbour with mass < 0.8× the predator's; pull strength = PREDATION_BIAS×0.05×synergy. Combines with LIFE and REPRO for full ecosystem simulation.",
   },
   PREDATION: {
     hint: "Predation: mass-difference pursuit and gene absorption.",

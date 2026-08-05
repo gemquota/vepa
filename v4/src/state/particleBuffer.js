@@ -47,6 +47,9 @@ export function getParticle(buffer, index, stride) {
         memory: view[base + S.MEMORY],
         hunger: view[base + S.HUNGER],
         armor: view[base + S.ARMOR],
+        electricEnergy: view[base + S.ELECTRIC_ENERGY],
+        storedEnergy: view[base + S.STORED_ENERGY],
+        reproDrive: view[base + S.REPRO_DRIVE],
     };
 }
 
@@ -74,6 +77,9 @@ export function setParticle(buffer, index, stride, data) {
     if (data.memory !== undefined) view[base + S.MEMORY] = data.memory;
     if (data.hunger !== undefined) view[base + S.HUNGER] = data.hunger;
     if (data.armor !== undefined) view[base + S.ARMOR] = data.armor;
+    if (data.electricEnergy !== undefined) view[base + S.ELECTRIC_ENERGY] = data.electricEnergy;
+    if (data.storedEnergy !== undefined) view[base + S.STORED_ENERGY] = data.storedEnergy;
+    if (data.reproDrive !== undefined) view[base + S.REPRO_DRIVE] = data.reproDrive;
 }
 
 export function getX(buffer, index, stride) {

@@ -18,5 +18,15 @@
     "status": "converged",
     "finished_at": "2026-08-05T17:28:14+00:00",
     "duration_s": 9393.0
+  },
+  {
+    "session_id": "20260806-035216-6618",
+    "artifact": "law-batch-03",
+    "date": "2026-08-06",
+    "variant": "linear",
+    "started_at": "2026-08-05T17:52:16+00:00",
+    "status": "converged",
+    "finished_at": "2026-08-05T17:52:25+00:00",
+    "duration_s": 9.0
   }
 ]

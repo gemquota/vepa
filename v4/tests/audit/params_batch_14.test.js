@@ -37,6 +37,7 @@ describe('Batch 14 — DNA.CATALYSIS / DNA.HEAT_OUTPUT / DNA.BIRTH_RATE / DNA.DE
       resetOffspringRing();
       const { view, dna } = makeWorld(1, (v, d, b) => {
         v[b + S.DNA_CACHE_START + 10] = birthRate; // BIRTH_RATE
+        v[b + S.REPRO_DRIVE] = 60; // drive gate satisfied (REPRO)
         v[b + S.AGE] = 200;
         v[b + S.ENERGY] = 100;
       });

@@ -12,6 +12,7 @@ describe('Batch 06 — MUTATION_RATE / DECAY_RATE / visualScale / globalAlpha', 
       const { view, dna } = makeWorld(1, (v, d, b) => {
         v[b + S.DNA_CACHE_START + 10] = 1.0; // BIRTH_RATE → always try to reproduce
         v[b + S.DNA_CACHE_START + 12] = 0.8; // MUTATION
+        v[b + S.REPRO_DRIVE] = 60; // drive gate satisfied (REPRO)
         v[b + S.AGE] = 200;
         v[b + S.ENERGY] = 100;
       });

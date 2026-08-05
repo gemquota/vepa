@@ -658,7 +658,10 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
   const affinityI = view[iBase + S.DNA_CACHE_START + 41]; // SPECIES_AFFINITY=41
 
   if (speciesI === speciesJ) {
-    const strength = 0.1 * Math.abs(affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
+    // Same-species cohesion: SPECIES_AFFINITY BOOSTS the attraction — the
+    // pull grows with positive affinity and is inert at 0. Xenophobic
+    // species (affinity < 0) get no same-species pull at all.
+    const strength = 0.1 * Math.max(0, affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
     const invDist = 1 / Math.sqrt(distSq);
     return {
       ax: dx * invDist * strength,
@@ -683,16 +686,26 @@ export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, 
 // ============================================================================
 // 18. REPRODUCTION
 // ============================================================================
-export function applyReproduction(lawState, view, base, dnaParams, prng, synergy, dnaBuffer) {
+export function applyReproduction(lawState, view, base, dnaParams, prng, synergy, dnaBuffer, dt) {
   if (!isSet(lawState, LAW_INDEXES.REPRO)) return null; // REPRO=10
 
   const energy = view[base + S.ENERGY];
   const age = view[base + S.AGE];
   const birthRate = dnaParams[10]; // BIRTH_RATE=10
 
-  if (energy < 60 || age < 100) return null;
+  // Reproductive drive is its own energy channel (REPRO_DRIVE stride field):
+  // it accumulates from BIRTH_RATE over time and gates reproduction — a
+  // particle cannot spawn from raw metabolic energy alone. Spawning consumes
+  // the drive and half the parent's life energy.
+  let drive = view[base + S.REPRO_DRIVE] || 0;
+  drive += birthRate * 0.1 * (dt || 1) * synergy;
+  if (drive > 100) drive = 100;
+  view[base + S.REPRO_DRIVE] = drive;
+
+  if (drive < 60 || age < 100) return null;
   if (prng() > birthRate * synergy * 0.01) return null;
 
+  view[base + S.REPRO_DRIVE] = 0; // spawning consumes the drive
   view[base + S.ENERGY] = energy * 0.5;
 
   const px = view[base + S.POS_X];
@@ -1319,13 +1332,31 @@ export function applyAstral(lawState, view, base, dt, synergy) {
 // ============================================================================
 // 44. GLOW — Signal emission produces visual brightness
 // ============================================================================
-export function applyGlowEffect(lawState, view, base, dt, synergy) {
+export function applyGlowEffect(lawState, view, base, dnaParams, dt, synergy) {
   if (!isSet(lawState, LAW_INDEXES.GLOW)) return;
-  const signal = view[base + S.SIGNAL];
-  if (!Number.isFinite(signal) || signal < 0.01) return;
-  const energy = view[base + S.ENERGY];
-  if (Number.isFinite(energy)) {
-    view[base + S.ENERGY] += signal * 0.01 * dt * synergy;
+
+  // Signal transmission strength (SIGNAL) is separate from life energy
+  // (ENERGY): GLOW emits pulses into SIGNAL and also converts signal into
+  // metabolic energy — both halves of the glow loop.
+  const pulseRate = dnaParams[14] || 0.2;   // PULSE_RATE
+  const strength = dnaParams[19] || 0.5;    // SIGNAL_STRENGTH
+  const age = view[base + S.AGE] || 0;
+  let signal = view[base + S.SIGNAL] || 0;
+
+  // Emission: an oscillator raises the particle's own signal when the phase
+  // is positive (with COMMS active the pulse propagates to neighbours).
+  const phase = Math.sin(age * 0.01 * (0.1 + pulseRate));
+  if (phase > 0) {
+    signal += phase * pulseRate * strength * dt * 0.05 * synergy;
+  }
+  view[base + S.SIGNAL] = Math.max(0, signal);
+
+  // Regen: existing signal charges the life-energy pool.
+  if (Number.isFinite(signal) && signal >= 0.01) {
+    const energy = view[base + S.ENERGY];
+    if (Number.isFinite(energy)) {
+      view[base + S.ENERGY] += signal * 0.01 * dt * synergy;
+    }
   }
 }
 
@@ -1372,6 +1403,8 @@ export function applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, 
   if (!Number.isFinite(massI) || !Number.isFinite(massJ)) return null;
   const predationBias = view[iBase + S.DNA_CACHE_START + 36];
   if (!Number.isFinite(predationBias) || predationBias < 0.1) return null;
+  // Predation is cross-species: a predator never hunts its own kind.
+  if (view[iBase + S.SPECIES_ID] === view[jBase + S.SPECIES_ID]) return null;
   if (massJ < massI * 0.8) {
     const strength = predationBias * 0.05 * synergy;
     const invDist = 1.0 / dist;

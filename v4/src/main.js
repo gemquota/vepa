@@ -292,6 +292,9 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
             particleView[ptr + STRIDE_INDEXES.PARTNER_ID] = -1;
             particleView[ptr + STRIDE_INDEXES.TEMPERATURE] = 0.5;
             particleView[ptr + STRIDE_INDEXES.CHARGE] = 0;
+            particleView[ptr + STRIDE_INDEXES.ELECTRIC_ENERGY] = 0;
+            particleView[ptr + STRIDE_INDEXES.STORED_ENERGY] = 0;
+            particleView[ptr + STRIDE_INDEXES.REPRO_DRIVE] = 0;
             particleView[ptr + STRIDE_INDEXES.PHASE_1] = 0;
             particleView[ptr + STRIDE_INDEXES.PHASE_2] = 0;
             particleView[ptr + STRIDE_INDEXES.SOUL] = 0;

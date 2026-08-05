@@ -317,6 +317,9 @@ function spawnShardPopulation(shard) {
         shard.view[b + S.DNA_CACHE_START + d] =
           getDNAFloat(shard.dna, s, d, r.min, r.max);
       }
+      shard.view[b + S.ELECTRIC_ENERGY] = 0;
+      shard.view[b + S.STORED_ENERGY] = 0;
+      shard.view[b + S.REPRO_DRIVE] = 0;
       shard.view[b + S.ENTANGLE_ID] = -1;
       shard.view[b + S.ENTANGLE_PHASE] = 0;
       idx++;
@@ -358,6 +361,9 @@ function spawnShardOffspring(shard) {
     shard.view[b + S.BOND_PARTNER_2] = -1;
     shard.view[b + S.TEMPERATURE] = 0.5;
     shard.view[b + S.CHARGE] = 0;
+    shard.view[b + S.ELECTRIC_ENERGY] = 0;
+    shard.view[b + S.STORED_ENERGY] = 0;
+    shard.view[b + S.REPRO_DRIVE] = 0;
     shard.view[b + S.ENTANGLE_ID] = -1;
     shard.view[b + S.ENTANGLE_PHASE] = 0;
     // Inherit the parents' intermediate colour when reproduction carried one
