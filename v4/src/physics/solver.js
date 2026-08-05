@@ -217,6 +217,19 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     );
   }
 
+  // ── Phase 2b: Astral souls — ghosts persist and fade. Soul particles
+  //    (DEAD=0.5) are excluded from the pairwise/integration loop, so they
+  //    are processed here when the ASTRAL law governs them. ──
+  if (isSet(lawState, LAW_INDEXES.ASTRAL)) {
+    const astralSynergy = computeSynergy(lawState, LAW_INDEXES.ASTRAL);
+    for (let i = 0; i < particleCount; i++) {
+      const base = i * stride;
+      if (view[base + S.DEAD] >= 0.5) {
+        applyAstral(lawState, view, base, dt, astralSynergy);
+      }
+    }
+  }
+
   // ── Phase 3: Pairwise interactions + integration ──
 
   for (let i = 0; i < particleCount; i++) {
@@ -310,8 +323,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Collision + Accretion + Fragmentation ──
-
-      if (isSet(lawState, LAW_INDEXES.COLL)) {
+      // ACCR must be able to run standalone (mass exchange on overlap), so the
+      // gate accepts either law; COLL adds the bounce/softbody half.
+      if (isSet(lawState, LAW_INDEXES.COLL) || isSet(lawState, LAW_INDEXES.ACCR)) {
         const m1 = view[iBase + S.MASS];
         const m2 = view[jBase + S.MASS];
         if (m1 <= 0 || m2 <= 0) continue;
@@ -340,8 +354,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const dvz = view[iBase + S.VEL_Z] - view[jBase + S.VEL_Z];
           const relVelN = dvx * nx + dvy * ny + dvz * nz;
 
-          // Bounce if approaching
-          if (relVelN < 0) {
+          // Bounce if approaching (relVelN > 0 along the i→j normal means
+          // the pair is closing; a negative impulse along n separates them)
+          if (relVelN > 0) {
             const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
             const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
             const bounceForce = impulse * m2;
@@ -808,6 +823,18 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // Consumed by an event horizon this tick — skip integration/lifecycle.
     if (iAbsorbed) continue;
 
+    // Pairwise laws may mutate mass in-place (PREDATION absorption); fold any
+    // such change into the local mass before integration and writeback.
+    mass = view[iBase + S.MASS];
+    if (!Number.isFinite(mass) || mass <= 0) mass = 0.001;
+
+    // The collision/softbody pass pushes the local position directly; capture
+    // that delta so per-particle position mutations can be folded in later
+    // without discarding the push.
+    const softbodyDX = px - view[iBase + S.POS_X];
+    const softbodyDY = py - view[iBase + S.POS_Y];
+    const softbodyDZ = pz - view[iBase + S.POS_Z];
+
     // ── Non-pairwise laws ──
 
     // Planetary gravity
@@ -829,7 +856,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // Dimensionality
-    applyDimensionality(lawState, view, iBase, prng, localTimeStep,
+    vz += applyDimensionality(lawState, view, iBase, prng, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.DIMENSIONALITY));
 
     // Chaos
@@ -920,7 +947,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const adForce = applyAdiabatic(view, iBase, 0.1);
       if (adForce) { ax += adForce.ax; ay += adForce.ay; az += adForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.EXPANSION)) applyExpansion(view, iBase, 0.1);
     if (isSet(lawState, LAW_INDEXES.LATENT_HEAT)) applyLatentHeat(view, iBase, 0.1);
     if (isSet(lawState, LAW_INDEXES.RUNAWAY)) applyRunaway(view, iBase, 0.1);
 
@@ -964,6 +990,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const hypForce = applyHyperplane(view, iBase, 1.0);
       if (hypForce) { ax += hypForce.ax; ay += hypForce.ay; az += hypForce.az; }
     }
+
+    // Per-particle laws may mutate position in-place (TUNNELING, UNCERTAINTY,
+    // TELEPORT, WAVEFUNCTION); fold those changes into the local position so
+    // later phases and the final writeback see them — while keeping the
+    // collision/softbody push captured above.
+    px = view[iBase + S.POS_X] + softbodyDX;
+    py = view[iBase + S.POS_Y] + softbodyDY;
+    pz = view[iBase + S.POS_Z] + softbodyDZ;
 
     // ── New law types (per-particle) ──
 
@@ -1034,18 +1068,26 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     const inertia = dnaI[DNA_INDEXES.INERTIA] || 1.0;
     const invMass = 1.0 / mass;
+    // Laws that wrote velocity deltas directly to the buffer during force
+    // accumulation (CHAOS, DIMENSIONALITY, thermal currents) must be folded
+    // into the local velocity before integration.
+    vx = view[iBase + S.VEL_X];
+    vy = view[iBase + S.VEL_Y];
+    vz = view[iBase + S.VEL_Z];
     vx += (ax * localTimeStep * invMass) / inertia;
     vy += (ay * localTimeStep * invMass) / inertia;
     vz += (az * localTimeStep * invMass) / inertia;
 
     // Will — self-propulsion (applies boost along current velocity)
+    const preWillVx = view[iBase + S.VEL_X];
+    const preWillVy = view[iBase + S.VEL_Y];
+    const preWillVz = view[iBase + S.VEL_Z];
     applyWill(lawState, view, iBase, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.WILL));
-
-    // Re-read velocity (Will may have modified it in-place)
-    vx = view[iBase + S.VEL_X] + (vx - view[iBase + S.VEL_X]);
-    vy = view[iBase + S.VEL_Y] + (vy - view[iBase + S.VEL_Y]);
-    vz = view[iBase + S.VEL_Z] + (vz - view[iBase + S.VEL_Z]);
+    // Fold Will's in-place boost into the local velocity copy.
+    vx += view[iBase + S.VEL_X] - preWillVx;
+    vy += view[iBase + S.VEL_Y] - preWillVy;
+    vz += view[iBase + S.VEL_Z] - preWillVz;
 
     // ── Global drag multiplier (goal-engine tunable) — gated by DRAG ──
 
@@ -1173,6 +1215,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     view[iBase + S.VEL_X] = vx;
     view[iBase + S.VEL_Y] = vy;
     view[iBase + S.VEL_Z] = vz;
+    // Laws may have modified particle mass in-place during the pair loop
+    // (ALLOY fusion, accretion, chemistry mass transfer); fold the buffer
+    // value back into the local copy so the writeback and radius update
+    // reflect it.
+    mass = view[iBase + S.MASS];
     view[iBase + S.MASS] = mass;
     // Age is the particle's own time coordinate (frame count since birth),
     // advanced here so oscillator phases and lifecycle gating progress with
@@ -1239,7 +1286,25 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Update radius from mass ──
 
     const baseRadius = dnaI[DNA_INDEXES.BASE_RADIUS] || 2.0;
-    view[iBase + S.RADIUS] = baseRadius * Math.pow(mass, 0.333);
+    let radiusOut = baseRadius * Math.pow(mass, 0.333);
+    if (isSet(lawState, LAW_INDEXES.PHENOTYPE)) {
+      const energy = view[iBase + S.ENERGY];
+      if (Number.isFinite(energy)) {
+        radiusOut *= 1 + (energy / 200 - 0.5) * 0.5 * computeSynergy(lawState, LAW_INDEXES.PHENOTYPE);
+      }
+    }
+    if (isSet(lawState, LAW_INDEXES.ISOMERIZATION)) {
+      const age = view[iBase + S.AGE];
+      if (Number.isFinite(age)) {
+        const phase = Math.sin(age * 0.01) * 0.1 * localTimeStep * computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION);
+        radiusOut *= 1 + phase * 0.05;
+      }
+    }
+    view[iBase + S.RADIUS] = radiusOut;
+
+    // ── Expansion (runs after the mass-derived radius update so its growth
+    //    toward the DNA base radius is not overwritten) ──
+    if (isSet(lawState, LAW_INDEXES.EXPANSION)) applyExpansion(view, iBase, 0.1);
 
     // ── Melt ──
     applyMelt(lawState, view, iBase, localTimeStep,
@@ -1261,9 +1326,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     applyExothermic(lawState, view, iBase,
       computeSynergy(lawState, LAW_INDEXES.EXOTHERMIC));
 
-    // ── Astral ──
-    applyAstral(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.ASTRAL));
   }
 
   // ── History — advance the memory-field clock once per solve ──

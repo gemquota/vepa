@@ -1,0 +1,190 @@
+import { describe, it, expect } from 'vitest';
+import {
+  LAW_INDEXES,
+  PARTICLE_STRIDE,
+  STRIDE_INDEXES as S,
+  DNA_INDEXES as D,
+  MAX_PARTICLES,
+  DNA_RANGES,
+} from '../../src/constants.js';
+import { createLawState, set, isSet } from '../../src/state/lawState.js';
+import { createParticleBuffer } from '../../src/state/particleBuffer.js';
+import { createDNABuffer, loadDefaults, getDNAFloat } from '../../src/dna/dnaBuffer.js';
+import { solve } from '../../src/physics/solver.js';
+import {
+  setBuffer,
+  applyTrailWrite,
+  applyStigmergyForce,
+  applySignalBoost,
+  applyLearnAlign,
+  applySymbolForce,
+} from '../../src/physics/laws.js';
+
+const WORLD = 2000;
+const DT = 0.25;
+
+function buf(n) {
+  const b = new Float32Array(n * PARTICLE_STRIDE);
+  setBuffer(b);
+  return b;
+}
+
+function lawsOn(...names) {
+  const st = createLawState();
+  for (const name of names) set(st, LAW_INDEXES[name]);
+  return st;
+}
+
+function makeWorld(count, opts = {}) {
+  const pb = createParticleBuffer(MAX_PARTICLES, PARTICLE_STRIDE);
+  const v = pb.view;
+  const dna = createDNABuffer();
+  loadDefaults(dna, DNA_RANGES);
+  for (let i = 0; i < count; i++) {
+    const b = i * PARTICLE_STRIDE;
+    v[b + S.POS_X] = 100 + (i % 4) * 50;
+    v[b + S.POS_Y] = 100 + Math.floor(i / 4) * 50;
+    v[b + S.POS_Z] = 100;
+    v[b + S.VEL_X] = opts.velX ?? 0;
+    v[b + S.VEL_Y] = 0;
+    v[b + S.VEL_Z] = 0;
+    v[b + S.MASS] = opts.mass ?? 1.5;
+    v[b + S.SPECIES_ID] = opts.species ?? i % 3;
+    v[b + S.DEAD] = 0;
+    v[b + S.ENERGY] = opts.energy ?? 100;
+    v[b + S.TEMPERATURE] = opts.temperature ?? 0;
+    v[b + S.CHARGE] = opts.charge ?? 0;
+    v[b + S.MEMORY] = opts.memory ?? 0;
+    v[b + S.SIGNAL] = opts.signal ?? 0;
+    v[b + S.RADIUS] = 0.6;
+    v[b + S.BOND_PARTNER_1] = -1;
+    v[b + S.BOND_PARTNER_2] = -1;
+    for (let d = 0; d < 42; d++) {
+      const r = DNA_RANGES[d] || { min: -1, max: 1 };
+      v[b + S.DNA_CACHE_START + d] = getDNAFloat(dna, i % 3, d, r.min, r.max);
+    }
+  }
+  return { view: v, dna };
+}
+
+describe('Batch 18 audit — STIGMERGY / SIGNAL_BOOST / LEARN / SYMBOL', () => {
+  describe('STIGMERGY (68)', () => {
+    it('is flagged when the law is set', () => {
+      expect(isSet(lawsOn('STIGMERGY'), LAW_INDEXES.STIGMERGY)).toBe(true);
+    });
+
+    it('writes a predicted-path trail marker (pos + vel × 8)', () => {
+      const b = buf(1);
+      applyTrailWrite(0, 100, 100, 100, 1, 0, 0);
+      expect(b[S.TRAIL_X]).toBe(108);
+      expect(b[S.TRAIL_Y]).toBe(100);
+      expect(b[S.TRAIL_Z]).toBe(100);
+    });
+
+    it('follows a neighbour trail marker (dx 8, k 0.3 → ax ≈ 0.2667)', () => {
+      const b = buf(2);
+      b[S.POS_X] = 100;
+      b[PARTICLE_STRIDE + S.TRAIL_X] = 108;
+      const f = applyStigmergyForce(0, PARTICLE_STRIDE, 0.3);
+      expect(f.ax).toBeCloseTo(0.266667, 4);
+    });
+
+    it('integration: solve() steers toward a pre-existing trail marker', () => {
+      const world = makeWorld(2);
+      world.view[S.POS_X] = 100;
+      world.view[PARTICLE_STRIDE + S.POS_X] = 100;
+      world.view[PARTICLE_STRIDE + S.TRAIL_X] = 108; // pre-seeded trail east of both
+      solve(world.view, 2, PARTICLE_STRIDE, lawsOn('STIGMERGY'), world.dna, WORLD, DT, () => 0.5);
+      expect(world.view[S.VEL_X]).toBeGreaterThan(0); // follower pulled toward trail
+    });
+  });
+
+  describe('SIGNAL_BOOST (69)', () => {
+    it('is flagged when the law is set', () => {
+      expect(isSet(lawsOn('SIGNAL_BOOST'), LAW_INDEXES.SIGNAL_BOOST)).toBe(true);
+    });
+
+    it('relays a strong signal to a neighbour (s1 0.5, k 0.08 → s2 +0.04)', () => {
+      const b = buf(2);
+      b[S.SIGNAL] = 0.5;
+      applySignalBoost(0, PARTICLE_STRIDE, 0.08);
+      expect(b[PARTICLE_STRIDE + S.SIGNAL]).toBeCloseTo(0.04, 5);
+    });
+
+    it('does nothing for silent particles', () => {
+      const b = buf(2);
+      applySignalBoost(0, PARTICLE_STRIDE, 0.08);
+      expect(b[PARTICLE_STRIDE + S.SIGNAL]).toBe(0);
+    });
+
+    it('integration: solve() propagates a signal to a quiet neighbour', () => {
+      const world = makeWorld(2);
+      world.view[S.POS_X] = 100;
+      world.view[PARTICLE_STRIDE + S.POS_X] = 102;
+      world.view[S.SIGNAL] = 0.5;
+      solve(world.view, 2, PARTICLE_STRIDE, lawsOn('SIGNAL_BOOST'), world.dna, WORLD, DT, () => 0.5);
+      expect(world.view[PARTICLE_STRIDE + S.SIGNAL]).toBeGreaterThan(0);
+    });
+  });
+
+  describe('LEARN (70)', () => {
+    it('is flagged when the law is set', () => {
+      expect(isSet(lawsOn('LEARN'), LAW_INDEXES.LEARN)).toBe(true);
+    });
+
+    it('aligns velocity toward the neighbour (v1 0 → 10, k 0.05 → +0.05)', () => {
+      const b = buf(2);
+      b[PARTICLE_STRIDE + S.VEL_X] = 10;
+      applyLearnAlign(0, PARTICLE_STRIDE, 0.05);
+      expect(b[S.VEL_X]).toBeCloseTo(0.05, 5);
+    });
+
+    it('integration: solve() steers a stationary particle toward its neighbour velocity', () => {
+      const world = makeWorld(2);
+      world.view[S.POS_X] = 100;
+      world.view[PARTICLE_STRIDE + S.POS_X] = 102;
+      world.view[PARTICLE_STRIDE + S.VEL_X] = 10;
+      solve(world.view, 2, PARTICLE_STRIDE, lawsOn('LEARN'), world.dna, WORLD, DT, () => 0.5);
+      expect(world.view[S.VEL_X]).toBeGreaterThan(0);
+      expect(world.view[S.VEL_X]).toBeLessThan(10);
+    });
+  });
+
+  describe('SYMBOL (71)', () => {
+    it('is flagged when the law is set', () => {
+      expect(isSet(lawsOn('SYMBOL'), LAW_INDEXES.SYMBOL)).toBe(true);
+    });
+
+    it('attracts same-species particles by SPECIES_AFFINITY (dx 3, dist 5 → ax 0.03)', () => {
+      const b = buf(2);
+      b[S.SPECIES_ID] = 0;
+      b[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
+      b[S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      const f = applySymbolForce(0, PARTICLE_STRIDE, 3, 0, 0, 5, 0.3);
+      expect(f.ax).toBeCloseTo(0.03, 4);
+    });
+
+    it('repels different-species pairs (affinity flipped ×0.5)', () => {
+      const b = buf(2);
+      b[S.SPECIES_ID] = 0;
+      b[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
+      b[S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      const f = applySymbolForce(0, PARTICLE_STRIDE, 3, 0, 0, 5, 0.3);
+      expect(f.ax).toBeCloseTo(-0.015, 5); // k · (−affinity·0.5) / (dist+1) · dx/(dist)
+    });
+
+    it('integration: solve() pulls same-species flockmates together', () => {
+      const world = makeWorld(2, { species: 0 });
+      world.view[S.POS_X] = 100;
+      world.view[PARTICLE_STRIDE + S.POS_X] = 110;
+      world.view[S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      world.view[PARTICLE_STRIDE + S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      const d0 = world.view[PARTICLE_STRIDE + S.POS_X] - world.view[S.POS_X];
+      for (let t = 0; t < 40; t++) {
+        solve(world.view, 2, PARTICLE_STRIDE, lawsOn('SYMBOL'), world.dna, WORLD, DT, () => 0.5);
+      }
+      const d1 = world.view[PARTICLE_STRIDE + S.POS_X] - world.view[S.POS_X];
+      expect(d1).toBeLessThan(d0);
+    });
+  });
+});

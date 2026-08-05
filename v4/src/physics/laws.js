@@ -874,8 +874,8 @@ export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synerg
 
   if (isSet(lawState, LAW_INDEXES.COLD) && tempJ > tempI) {
     const rate = 0.015 * dt * synergy;
-    const tDec2 = diff * rate;
-    const tInc2 = diff * rate;
+    const tDec2 = -diff * rate;
+    const tInc2 = -diff * rate;
     view[jBase + S.TEMPERATURE] -= (tDec2 !== tDec2) ? 0 : tDec2;
     view[iBase + S.TEMPERATURE] += (tInc2 !== tInc2) ? 0 : tInc2;
   }
@@ -907,9 +907,10 @@ export function applyTimeDilation(lawState, view, base, synergy) {
 // 24. DIMENSIONALITY
 // ============================================================================
 export function applyDimensionality(lawState, view, base, prng, dt, synergy) {
-  if (!isSet(lawState, LAW_INDEXES.DIMENSIONALITY)) return; // DIMENSIONALITY=31
+  if (!isSet(lawState, LAW_INDEXES.DIMENSIONALITY)) return 0; // DIMENSIONALITY=31
   const force = (prng() - 0.5) * 0.1 * synergy * dt;
   view[base + S.VEL_Z] += force;
+  return force;
 }
 
 // ============================================================================
@@ -1529,7 +1530,7 @@ export function applyChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   const c2 = buf[p2Ptr + S.CHARGE] || 0;
   const qq = q1 * q2 + c1 * c2 * 0.5;
   if (qq === 0) return null;
-  const force = k * qq / (dist * dist + 0.5);
+  const force = -k * qq / (dist * dist + 0.5); // like charges repel, opposite attract
   const invDist = 1.0 / (dist + 0.001);
   return {
     ax: nanGuard(dx * invDist * force),
@@ -1582,7 +1583,7 @@ export function applyStoredChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   const c2 = buf[p2Ptr + S.CHARGE] || 0;
   const qq = c1 * c2;
   if (qq === 0) return null;
-  const force = k * qq / (dist * dist + 0.5);
+  const force = -k * qq / (dist * dist + 0.5); // same-sign stored charge repels
   const invDist = 1.0 / (dist + 0.001);
   return {
     ax: nanGuard(dx * invDist * force),

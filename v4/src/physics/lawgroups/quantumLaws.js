@@ -183,7 +183,7 @@ export function applySpin(view, iBase, k, prng) {
   const vy = nanGuard(view[iBase + S.VEL_Y]);
   const vz = nanGuard(view[iBase + S.VEL_Z]);
   const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
-  const sign = iBase % 2 === 0 ? 1 : -1;
+  const sign = Math.floor(iBase / PARTICLE_STRIDE) % 2 === 0 ? 1 : -1;
   const amp = 0.1 * k * sign;
   if (speed > 0.1) {
     return {
