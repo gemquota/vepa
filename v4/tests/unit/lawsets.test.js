@@ -3,8 +3,8 @@ import { LAW_INDEXES, LAW_COUNT } from '../../src/constants.js';
 import { LAW_SET_PRESETS } from '../../src/ui/worldPanel.js';
 
 describe('Law set presets', () => {
-  it('has exactly 23 presets', () => {
-    expect(LAW_SET_PRESETS.length).toBe(23);
+  it('has exactly 31 presets', () => {
+    expect(LAW_SET_PRESETS.length).toBe(31);
   });
 
   it('every preset law name resolves to a valid index', () => {

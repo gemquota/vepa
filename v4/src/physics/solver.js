@@ -104,6 +104,14 @@ import {
   setBuffer,
 } from './laws.js';
 import { computeSynergy } from './synergy.js';
+import { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation } from './lawgroups/physicsLaws.js';
+import { applyAdiabatic, applyCompression, applyExpansion, applyEquilibrium, applyLatentHeat, applyRunaway } from './lawgroups/thermoLaws.js';
+import { applySymbiosis, applyParasite, applyHibernation, applyImmunity } from './lawgroups/biologyLaws.js';
+import { applyElectrolysis, applyPhotolysis, applyPrecipitation, applyNeutralization, applyStoichiometry, applyAutocatalysis } from './lawgroups/chemistryLaws.js';
+import { applyAntenna, applyShielding, applyPolarization } from './lawgroups/emLaws.js';
+import { applyNavigation, applyEncryption } from './lawgroups/infoLaws.js';
+import { applyConsciousness, applyPerception, applySynchronicity } from './lawgroups/metaLaws.js';
+import { applySuperposition, applyTunneling, applyDecoherence, applyWaveParticle, applyUncertainty, applyTeleport, applyObserver, applyPlanck, applyCoherence, applyBosonic, applyFermionic, applySpin, applySpectral, applyWavefunction, applyHyperplane, applyAntimatter } from './lawgroups/quantumLaws.js';
 
 // ── Solver Constants ──
 
@@ -711,6 +719,68 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       if (isSet(lawState, LAW_INDEXES.LANGUAGE)) applyLanguage(iBase, jBase, 0.25 * computeSynergy(lawState, LAW_INDEXES.LANGUAGE));
       if (isSet(lawState, LAW_INDEXES.CULTURE)) applyCulture(iBase, jBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.CULTURE));
 
+      // ── 8x16 expansion (pairwise) ──
+
+      // Physics
+      if (isSet(lawState, LAW_INDEXES.TIDE)) {
+        const tideForce = applyTide(view, iBase, jBase, dx, dy, dz, dist, 0.3);
+        if (tideForce) { ax += tideForce.ax; ay += tideForce.ay; az += tideForce.az; }
+      }
+      if (isSet(lawState, LAW_INDEXES.ELASTICITY)) {
+        const elasForce = applyElasticity(view, iBase, jBase, dx, dy, dz, dist, 1.0);
+        if (elasForce) { ax += elasForce.ax; ay += elasForce.ay; az += elasForce.az; }
+      }
+
+      // Biology
+      if (isSet(lawState, LAW_INDEXES.SYMBIOSIS)) applySymbiosis(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.PARASITE)) applyParasite(view, iBase, jBase, 0.5);
+
+      // Chemistry
+      if (isSet(lawState, LAW_INDEXES.ELECTROLYSIS)) applyElectrolysis(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.PRECIPITATION)) applyPrecipitation(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.NEUTRALIZATION)) applyNeutralization(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.STOICHIOMETRY)) applyStoichiometry(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.AUTOCATALYSIS)) applyAutocatalysis(view, iBase, jBase, 0.5);
+
+      // Thermodynamics
+      if (isSet(lawState, LAW_INDEXES.COMPRESSION)) applyCompression(view, iBase, jBase, dist, 0.5);
+      if (isSet(lawState, LAW_INDEXES.EQUILIBRIUM)) applyEquilibrium(view, iBase, jBase, 0.3);
+
+      // Electromagnetism
+      if (isSet(lawState, LAW_INDEXES.POLARIZATION)) applyPolarization(view, iBase, jBase, 0.5);
+
+      // Information
+      if (isSet(lawState, LAW_INDEXES.NAVIGATION)) {
+        const navForce = applyNavigation(view, iBase, jBase, dx, dy, dz, dist, 0.5);
+        if (navForce) { ax += navForce.ax; ay += navForce.ay; az += navForce.az; }
+      }
+
+      // Metaphysics
+      if (isSet(lawState, LAW_INDEXES.PERCEPTION)) {
+        const perForce = applyPerception(view, iBase, jBase, dist, 0.5);
+        if (perForce) { ax += perForce.ax; ay += perForce.ay; az += perForce.az; }
+      }
+      if (isSet(lawState, LAW_INDEXES.SYNCHRONICITY)) {
+        const syncForce = applySynchronicity(view, iBase, jBase, 0.5);
+        if (syncForce) { ax += syncForce.ax; ay += syncForce.ay; az += syncForce.az; }
+      }
+
+      // Quantum
+      if (isSet(lawState, LAW_INDEXES.COHERENCE)) {
+        const cohForce = applyCoherence(view, iBase, jBase, 0.5);
+        if (cohForce) { ax += cohForce.ax; ay += cohForce.ay; az += cohForce.az; }
+      }
+      if (isSet(lawState, LAW_INDEXES.BOSONIC)) {
+        const bosForce = applyBosonic(view, iBase, jBase, dx, dy, dz, dist, 0.5);
+        if (bosForce) { ax += bosForce.ax; ay += bosForce.ay; az += bosForce.az; }
+      }
+      if (isSet(lawState, LAW_INDEXES.FERMIONIC)) {
+        const ferForce = applyFermionic(view, iBase, jBase, dx, dy, dz, dist, 0.5);
+        if (ferForce) { ax += ferForce.ax; ay += ferForce.ay; az += ferForce.az; }
+      }
+      if (isSet(lawState, LAW_INDEXES.OBSERVER)) applyObserver(view, iBase, jBase, 0.5);
+      if (isSet(lawState, LAW_INDEXES.ANTIMATTER)) applyAntimatter(view, iBase, jBase, 0.5);
+
       // ── New law types (pairwise) ──
 
       // Singularity — extreme inward pull from a supermassive neighbour,
@@ -812,6 +882,87 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         ay += fbForce.ay;
         az += fbForce.az;
       }
+    }
+
+    // ── 8x16 expansion (per-particle) ──
+    const center = worldSize * 0.5;
+
+    // Physics
+    if (isSet(lawState, LAW_INDEXES.FRICTION)) {
+      const frForce = applyFriction(view, iBase, 0.05);
+      if (frForce) { ax += frForce.ax; ay += frForce.ay; az += frForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.TURBULENCE)) {
+      const tbForce = applyTurbulence(view, iBase, 0.05, prng);
+      if (tbForce) { ax += tbForce.ax; ay += tbForce.ay; az += tbForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.CENTRIPETAL)) {
+      const cpForce = applyCentripetal(view, iBase, center, center, center, 0.0005);
+      if (cpForce) { ax += cpForce.ax; ay += cpForce.ay; az += cpForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.ROTATION)) {
+      const rotForce = applyRotation(view, iBase, center, center, center, 0.002);
+      if (rotForce) { ax += rotForce.ax; ay += rotForce.ay; az += rotForce.az; }
+    }
+
+    // Biology
+    if (isSet(lawState, LAW_INDEXES.HIBERNATION)) {
+      const hibForce = applyHibernation(view, iBase, 0.5);
+      if (hibForce) { ax += hibForce.ax; ay += hibForce.ay; az += hibForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.IMMUNITY)) applyImmunity(view, iBase, 0.5);
+
+    // Chemistry
+    if (isSet(lawState, LAW_INDEXES.PHOTOLYSIS)) applyPhotolysis(view, iBase, 0.5);
+
+    // Thermodynamics
+    if (isSet(lawState, LAW_INDEXES.ADIABATIC)) {
+      const adForce = applyAdiabatic(view, iBase, 0.1);
+      if (adForce) { ax += adForce.ax; ay += adForce.ay; az += adForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.EXPANSION)) applyExpansion(view, iBase, 0.1);
+    if (isSet(lawState, LAW_INDEXES.LATENT_HEAT)) applyLatentHeat(view, iBase, 0.1);
+    if (isSet(lawState, LAW_INDEXES.RUNAWAY)) applyRunaway(view, iBase, 0.1);
+
+    // Metaphysics
+    if (isSet(lawState, LAW_INDEXES.CONSCIOUSNESS)) applyConsciousness(view, iBase, 0.5);
+
+    // Electromagnetism
+    if (isSet(lawState, LAW_INDEXES.ANTENNA)) applyAntenna(view, iBase, 0.5);
+    if (isSet(lawState, LAW_INDEXES.SHIELDING)) applyShielding(view, iBase, 0.5);
+
+    // Information
+    if (isSet(lawState, LAW_INDEXES.ENCRYPTION)) applyEncryption(view, iBase, 0.5);
+
+    // Quantum
+    if (isSet(lawState, LAW_INDEXES.SUPERPOSITION)) {
+      const supForce = applySuperposition(view, iBase, 0.05, prng);
+      if (supForce) { ax += supForce.ax; ay += supForce.ay; az += supForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.TUNNELING)) applyTunneling(view, iBase, 0.5, prng);
+    if (isSet(lawState, LAW_INDEXES.DECOHERENCE)) {
+      const decForce = applyDecoherence(view, iBase, 0.1);
+      if (decForce) { ax += decForce.ax; ay += decForce.ay; az += decForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.WAVE_PARTICLE)) {
+      const wpForce = applyWaveParticle(view, iBase, 0.1);
+      if (wpForce) { ax += wpForce.ax; ay += wpForce.ay; az += wpForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.UNCERTAINTY)) {
+      const uncForce = applyUncertainty(view, iBase, 0.1, prng);
+      if (uncForce) { ax += uncForce.ax; ay += uncForce.ay; az += uncForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.TELEPORT)) applyTeleport(view, iBase, worldSize, 0.5, prng);
+    if (isSet(lawState, LAW_INDEXES.PLANCK)) applyPlanck(view, iBase, 0.5);
+    if (isSet(lawState, LAW_INDEXES.SPIN)) {
+      const spinForce = applySpin(view, iBase, 0.05, prng);
+      if (spinForce) { ax += spinForce.ax; ay += spinForce.ay; az += spinForce.az; }
+    }
+    if (isSet(lawState, LAW_INDEXES.SPECTRAL)) applySpectral(view, iBase, 0.5);
+    if (isSet(lawState, LAW_INDEXES.WAVEFUNCTION)) applyWavefunction(view, iBase, 0.5);
+    if (isSet(lawState, LAW_INDEXES.HYPERPLANE)) {
+      const hypForce = applyHyperplane(view, iBase, 1.0);
+      if (hypForce) { ax += hypForce.ax; ay += hypForce.ay; az += hypForce.az; }
     }
 
     // ── New law types (per-particle) ──
