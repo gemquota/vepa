@@ -53,12 +53,16 @@ function makeWorld(polarity) {
 }
 
 describe('New law categories', () => {
-  it('has 7 categories; electromagnetism 13, information 14, all 82 laws mapped', () => {
+  it('has 8 categories; each has 16 laws, all 128 laws mapped', () => {
     const names = Object.keys(LAW_CATEGORIES);
-    expect(names).toHaveLength(7);
-    expect(LAW_CATEGORIES.electromagnetism.laws.length).toBe(13);
-    expect(LAW_CATEGORIES.information.laws.length).toBe(14);
-    expect(LAW_COUNT).toBe(82);
+    expect(names).toHaveLength(8);
+    for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
+      expect(cat.laws.length, `category ${catName}`).toBe(16);
+    }
+    expect(LAW_CATEGORIES.electromagnetism.laws.length).toBe(16);
+    expect(LAW_CATEGORIES.information.laws.length).toBe(16);
+    expect(LAW_CATEGORIES.quantum.laws.length).toBe(16);
+    expect(LAW_COUNT).toBe(128);
     for (let i = 0; i < LAW_COUNT; i++) {
       expect(LAW_TO_CATEGORY[i], `law ${i}`).toBeDefined();
       expect(LAW_COLOR_BY_INDEX[i], `law ${i}`).toBeDefined();

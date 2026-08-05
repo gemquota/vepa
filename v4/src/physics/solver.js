@@ -173,7 +173,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   if (
     lawState.lowFlags[0] === 0 &&
     lawState.highFlags[0] === 0 &&
-    (lawState.extFlags ? lawState.extFlags[0] === 0 : true)
+    (lawState.extFlags ? lawState.extFlags[0] === 0 : true) &&
+    (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true)
   ) return;
 
   // Reusable DNA cache array (avoids allocation per particle)

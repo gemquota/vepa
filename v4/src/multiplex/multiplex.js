@@ -212,6 +212,7 @@ function createShard(index, seed, source, config) {
   laws.lowFlags[0] = source.laws.lowFlags[0];
   laws.highFlags[0] = source.laws.highFlags[0];
   laws.extFlags[0] = source.laws.extFlags[0] || 0;
+  laws.quadFlags[0] = source.laws.quadFlags[0] || 0;
 
   const prng = new SplitMix32(seed);
   const shard = {
@@ -249,7 +250,8 @@ function applyVariation(shard, config) {
       if (prng.next() < v * 0.5) {
         if (l < 32) shard.laws.lowFlags[0] ^= (1 << l);
         else if (l < 64) shard.laws.highFlags[0] ^= (1 << (l - 32));
-        else shard.laws.extFlags[0] ^= (1 << (l - 64));
+        else if (l < 96) shard.laws.extFlags[0] ^= (1 << (l - 64));
+        else shard.laws.quadFlags[0] ^= (1 << (l - 96));
       }
     }
   }
