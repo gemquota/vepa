@@ -1,6 +1,25 @@
 # Changelog: VEPA v4
 
 
+## [4.6.1] - 2026-08-05
+
+### Law RRP batch 01 — GRAV / DRAG / ENTR / WRAP spec confirmed with user
+- RRP pass (per-batch spec confirmation): batch 01 behavior confirmed interactively:
+  - **FORCE DNA is now pairwise with gravity**: both positive FORCE multiply the
+    pull, both negative multiply negatively (repel), opposite signs cancel to a
+    gravitationally neutral pair (`applyGravity` reads both particles).
+  - New world slider **WALL REFLECT** (PHYSICS/MOTION, 0-2, default 1): soft-wall
+    velocity effect — 0 = 100% absorption, 1 = 100% reflect, 2 = 200% reflect.
+    The soft wall previously lost 50% on bounce; the default is now a full 100%
+    reflect. Velocity clamp moved after the position step so super-bounces get to
+    move the particle for one tick before the MAX_VELOCITY cap applies.
+  - FRICTION DNA damping stays gated behind DRAG (confirmed).
+- HELP_DB synced for GRAV (pairwise FORCE) and WRAP (binary + WALL REFLECT).
+- Tests: `tests/audit/batch_01.test.js` 8 → 10 tests (pairwise FORCE + wall slider).
+  Full suite 65 files / 505 tests green.
+- RRP artifacts: `audit-suite/laws-rrp/` (README + batch_01..32 manifests),
+  RSIRRP session `.rsirrp/sessions/2026-08-06/law-batch-01/20260806-001941-1c16`.
+
 ## [4.6.0] - 2026-08-05
 
 ### 72-parameter audit — every slider validated, 9 dead DNA params repaired

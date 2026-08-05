@@ -737,8 +737,8 @@ export const LAW_HELP_DB = {
 
   GRAV: {
     hint: "Universal gravitational attraction between all particles.",
-    explanation: "Newtonian gravity: F = G*m1*m2/r². Positive force collapses structures; negative force expands them.",
-    system: "Fundamental force driving cluster formation and orbital dynamics. Uses HIDDEN_MASS for dark-matter effects.",
+    explanation: "Newtonian gravity: F = G*m1*m2/r². FORCE DNA modulates the pair: both positive multiply the pull, both negative invert it into repulsion, opposite signs cancel to a neutral pair. HIDDEN_MASS adds dark-matter mass.",
+    system: "Fundamental force driving cluster formation and orbital dynamics. Uses HIDDEN_MASS for dark-matter effects; TIDAL boosts close-range pull; stars (> starMass) pull harder.",
   },
   DRAG: {
     hint: "Velocity-dependent motion damping.",
@@ -753,7 +753,7 @@ export const LAW_HELP_DB = {
   WRAP: {
     hint: "Toroidal world wrapping (particles wrap around edges).",
     explanation: "When enabled, particles leaving one edge reappear on the opposite edge. When disabled, soft walls reflect them.",
-    system: "Multi-state law: state 1-3 control wrap behavior. Essential for uniform spatial distribution.",
+    system: "Binary law in v4: on = toroidal wrap, off = soft walls whose velocity effect is set by the WALL REFLECT slider (0 = absorb, 1 = reflect, 2 = double bounce). Essential for uniform spatial distribution.",
   },
   COLL: {
     hint: "Physical collisions with momentum exchange.",

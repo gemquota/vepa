@@ -80,13 +80,20 @@ export function applyGravity(p1Ptr, p2Ptr, dx, dy, dz, dist, G) {
   const dist2 = dist * dist + SOFTENING;
   let force = G * m1 * m2 / dist2;
 
-  // FORCE DNA (0): primary attraction/repulsion — positive amplifies the
-  // pull, negative inverts it into repulsion. ±100 range → ±2 scale cap.
-  const forceGene = readDNA(p1Ptr, D.FORCE);
-  if (Number.isFinite(forceGene) && forceGene !== 0) {
-    const fScale = Math.max(-2, Math.min(2, forceGene / 25));
-    force *= 1 + Math.abs(fScale) * 0.5;
-    if (forceGene < 0) force = -force;
+  // FORCE DNA (0): pairwise gravity modifier — like signs multiply the pull
+  // (both negative invert it into repulsion), opposite signs cancel each
+  // other out leaving a gravitationally neutral pair. ±100 range → ±2 cap.
+  const forceA = readDNA(p1Ptr, D.FORCE) || 0;
+  const forceB = readDNA(p2Ptr, D.FORCE) || 0;
+  if (forceA !== 0 || forceB !== 0) {
+    const combined = forceA + forceB;
+    if (Math.abs(combined) > 0.001) {
+      const fScale = Math.max(-2, Math.min(2, combined / 25));
+      force *= 1 + Math.abs(fScale) * 0.5;
+      if (combined < 0) force = -force;
+    } else {
+      force = 0; // opposite signs cancel each other out
+    }
   }
 
   // TIDAL DNA (15): differential structural forces — close encounters pull

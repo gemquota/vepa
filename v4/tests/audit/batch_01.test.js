@@ -6,6 +6,7 @@ import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults } from '../../src/dna/dnaBuffer.js';
 import { solve } from '../../src/physics/solver.js';
+import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 
 const WORLD = 2000;
 const DT = 0.25;
@@ -65,6 +66,23 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     expect(d1).toBeLessThan(d0);
     expect(view[S.VEL_X]).toBeGreaterThan(0);              // i pulled toward j (+x)
     expect(view[PARTICLE_STRIDE + S.VEL_X]).toBeLessThan(0); // j pulled toward i (-x)
+  });
+
+  it('GRAV: FORCE DNA is pairwise — both positive amplify, both negative repel, opposite cancel', () => {
+    const run = (f0, f1) => {
+      const { view, dna } = makeWorld(2, (v, dna, b, i) => {
+        v[b + S.POS_X] = i === 0 ? 995 : 1005;
+        v[b + S.DNA_CACHE_START + 0] = i === 0 ? f0 : f1; // FORCE
+      });
+      const laws = createLawState();
+      set(laws, LAW_INDEXES.GRAV);
+      for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+      return view[PARTICLE_STRIDE + S.POS_X] - view[S.POS_X]; // separation
+    };
+    const plain = run(0, 0);              // no FORCE → plain attraction
+    expect(run(100, 100)).toBeLessThan(plain); // both positive → multiply pull
+    expect(run(-100, -100)).toBeGreaterThan(10); // both negative → multiply negatively (repel)
+    expect(run(100, -100)).toBeCloseTo(10, 5);   // opposite signs → cancel (neutral)
   });
 
   it('GRAV gate: with GRAV off, resting particles never move', () => {
@@ -139,7 +157,7 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     expect(view[S.POS_X]).toBeLessThan(10);
   });
 
-  it('WRAP gate: without WRAP, edges reflect (clamp + velocity flip)', () => {
+  it('WRAP gate: without WRAP, edges clamp and reflect at the WALL_REFLECT default', () => {
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.POS_X] = WORLD - 5;
       v[b + S.VEL_X] = 10;
@@ -148,7 +166,34 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     // GLOW with zero SIGNAL keeps the sim running without adding any force.
     set(laws, LAW_INDEXES.GLOW);
     for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
-    expect(view[S.POS_X]).toBeGreaterThan(WORLD - 2);
-    expect(view[S.VEL_X]).toBeLessThan(0);
+    expect(view[S.POS_X]).toBeLessThan(WORLD);        // clamped inside the world
+    expect(view[S.VEL_X]).toBeCloseTo(-10, 5);        // full 100% reflect (default)
+  });
+
+  it('WRAP: WALL_REFLECT slider — 0 absorbs, 1 reflects, 2 doubles the bounce', () => {
+    const run = (wallReflect) => {
+      const { view, dna } = makeWorld(1, (v, dna, b) => {
+        v[b + S.POS_X] = WORLD - 5;
+        v[b + S.VEL_X] = 10;
+      });
+      const laws = createLawState();
+      // GLOW with zero SIGNAL keeps the sim running without adding any force.
+      set(laws, LAW_INDEXES.GLOW);
+      const prev = runtimeConfig.worldParams;
+      runtimeConfig.worldParams = { ...prev, WALL_REFLECT: wallReflect };
+      for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+      runtimeConfig.worldParams = prev;
+      return { x: view[S.POS_X], vx: view[S.VEL_X] };
+    };
+    const absorb = run(0);
+    const reflect = run(1);
+    const double = run(2);
+    expect(absorb.x).toBeCloseTo(WORLD - 0.01, 3); // 100% absorption → sticks to wall
+    expect(absorb.vx).toBeCloseTo(0, 5);
+    expect(reflect.x).toBeCloseTo(WORLD - 2.5, 1); // full reflect → ~2.5 back in (clamped at WORLD-0.01)
+    expect(reflect.vx).toBeCloseTo(-10, 5);
+    // 200% reflect moves twice as far before the MAX_VELOCITY cap reins it in.
+    expect(double.x).toBeLessThan(reflect.x - 1);
+    expect(double.vx).toBeLessThan(0);
   });
 });

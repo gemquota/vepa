@@ -1,0 +1,12 @@
+[
+  {
+    "session_id": "20260806-001941-1c16",
+    "artifact": "law-batch-01",
+    "date": "2026-08-06",
+    "variant": "linear",
+    "started_at": "2026-08-05T14:19:41+00:00",
+    "status": "converged",
+    "finished_at": "2026-08-05T14:50:10+00:00",
+    "duration_s": 1829.0
+  }
+]

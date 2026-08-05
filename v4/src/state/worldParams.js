@@ -26,6 +26,7 @@ export const WORLD_PARAM_DEFS = [
   { key: 'DAMPING', label: 'MOTION DAMPING %', min: 0, max: 100, default: 0, step: 1, group: 'PHYSICS', subgroup: 'MOTION' },
   { key: 'VISCOSITY', label: 'GLOBAL VISCOSITY', min: 0.5, max: 1, default: 1, step: 0.01, group: 'PHYSICS', subgroup: 'MOTION' },
   { key: 'ENTROPY', label: 'ENTROPY', min: 0, max: 2, default: 1, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' },
+  { key: 'WALL_REFLECT', label: 'WALL REFLECT', min: 0, max: 2, default: 1, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' }, // 0 = 100% absorption, 1 = 100% reflect, 2 = 200% reflect
   // ── ENVIRONMENT ──
   { key: 'HEAT_CAPACITY', label: 'HEAT CAPACITY', min: 0.1, max: 10, default: 1, step: 0.5, group: 'ENVIRONMENT', subgroup: 'THERMAL' },
   { key: 'LIGHT_LEVEL', label: 'LIGHT LEVEL', min: 0, max: 2, default: 0.5, step: 0.1, group: 'ENVIRONMENT', subgroup: 'THERMAL' },

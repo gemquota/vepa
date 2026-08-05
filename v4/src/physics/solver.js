@@ -1130,7 +1130,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       vy = tvy;
     }
 
+    // ── Integration: position ──
+
+    px += vx * localTimeStep;
+    py += vy * localTimeStep;
+    pz += vz * localTimeStep;
+
     // ── Velocity clamping ──
+    // Runs AFTER the position step so wall-bounce velocities (set in the soft-
+    // wall block below, e.g. WALL_REFLECT 2 → 200% bounce) get to move the
+    // particle for one tick before the hard MAX_VELOCITY cap reins them in.
 
     const dnaMaxVel = dnaI[DNA_INDEXES.MAX_VELOCITY] || MAX_VELOCITY;
     const velLimit = Math.min(dnaMaxVel, MAX_VELOCITY);
@@ -1142,12 +1151,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       vz *= vScale;
     }
 
-    // ── Integration: position ──
-
-    px += vx * localTimeStep;
-    py += vy * localTimeStep;
-    pz += vz * localTimeStep;
-
     // ── Toroidal wrapping ──
 
     if (isSet(lawState, LAW_INDEXES.WRAP)) {
@@ -1155,13 +1158,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       py = ((py % worldSize) + worldSize) % worldSize;
       pz = ((pz % worldSize) + worldSize) % worldSize;
     } else {
-      // Clamp to world bounds (soft wall)
-      if (px < 0) { px = 0; vx = Math.abs(vx) * 0.5; }
-      else if (px >= worldSize) { px = worldSize - 0.01; vx = -Math.abs(vx) * 0.5; }
-      if (py < 0) { py = 0; vy = Math.abs(vy) * 0.5; }
-      else if (py >= worldSize) { py = worldSize - 0.01; vy = -Math.abs(vy) * 0.5; }
-      if (pz < 0) { pz = 0; vz = Math.abs(vz) * 0.5; }
-      else if (pz >= worldSize) { pz = worldSize - 0.01; vz = -Math.abs(vz) * 0.5; }
+      // Clamp to world bounds (soft wall). WALL_REFLECT slider: 0 = 100%
+      // absorption, 1 = 100% reflect (default), 2 = 200% reflect.
+      const wallReflect = Number.isFinite(WP.WALL_REFLECT) ? WP.WALL_REFLECT : 1;
+      if (px < 0) { px = 0; vx = Math.abs(vx) * wallReflect; }
+      else if (px >= worldSize) { px = worldSize - 0.01; vx = -Math.abs(vx) * wallReflect; }
+      if (py < 0) { py = 0; vy = Math.abs(vy) * wallReflect; }
+      else if (py >= worldSize) { py = worldSize - 0.01; vy = -Math.abs(vy) * wallReflect; }
+      if (pz < 0) { pz = 0; vz = Math.abs(vz) * wallReflect; }
+      else if (pz >= worldSize) { pz = worldSize - 0.01; vz = -Math.abs(vz) * wallReflect; }
     }
 
     // ── NaN guard ──
