@@ -51,6 +51,36 @@ Interactive law audit (RRP with the user): all four laws confirmed with amendmen
 - HELP_DB synced for all four laws; RRP manifest + telemetry in
   `audit-suite/laws-rrp/batch_02.md`.
 
+## [4.7.0] - 2026-08-05
+
+### Multiplayer investigation (branch `feature/multiplayer-investigation`) — P0: architecture ascertained + LAN hub
+
+**What was decided:** phones side by side share one world via a host-authoritative
+star over a LAN WebSocket hub run from one phone (Termux). Guests are render-only
+and send control events; the host runs the unchanged solver and broadcasts binary
+snapshots. Rejected: deterministic lockstep (VEPA is deliberately non-deterministic)
+and pure WebRTC (secure-context wall on plain HTTP + signaling chicken-and-egg).
+
+- `docs/multiplayer/INVESTIGATION.md` — constraints, transport/sync option matrix,
+  chosen architecture, bandwidth math, integration points, phased roadmap.
+- `docs/multiplayer/PROTOCOL.md` — wire spec: JSON control envelope, binary
+  snapshot layout (17 B/particle), quantization, NTP-lite clock sync, join/rejoin,
+  failover/promotion, reconciliation.
+- `v4/net-poc/` — zero-dep reference codec + round-trip demo + bandwidth sim.
+  Verified: 1250 alive ≈ 21.2 KB/snapshot; default world @ 20–30 Hz × 4 guests =
+  34–51% of a 5 MB/s hotspot (2–3× headroom); codec errors below one pixel.
+- `v4/server/` — LAN hub (static app + COOP/COEP + ws room relay + mDNS
+  `vepa.local` + optional QR). Smoke test: host/guest relay, presence, tick
+  sniffing, host-left candidates, promote flow — 13/13 green.
+- `vepa4 multiplayer` launcher subcommand added.
+- `v4/multiplayer/lab.html` — browser port of the protocol lab (live codec
+  round-trip + bandwidth model), deployed as a separate version:
+  **https://vepa-v4-multiplayer.vercel.app** (sim + `/multiplayer/lab.html`).
+
+Not wired into `v4/src` yet — P1 (guest render + interpolation + network panel)
+is the next coding task on the branch.
+
+
 ### Law grid now coloured by the EM spectrum — 128-law rainbow
 - All 8 law categories map to evenly spaced spectrum colours (12.5% apart):
   RED metaphysics · ORANGE thermodynamics · YELLOW information · GREEN biology ·

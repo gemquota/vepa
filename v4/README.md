@@ -95,3 +95,14 @@ choice persists.
 - `PLAN.md` — implementation plan
 - `CHANGELOG.md` — version history
 - `../audit/FULL_AUDIT_2026-08-01.md` — the audit that scoped this release
+
+## Multiplayer (investigation)
+
+Branch `feature/multiplayer-investigation` ships the LAN multiplayer
+architecture for phones side by side (host-authoritative star over a WebSocket
+hub): see `docs/multiplayer/INVESTIGATION.md`, `docs/multiplayer/PROTOCOL.md`,
+the zero-dep codec in `v4/net-poc/`, and the hub in `v4/server/`.
+Run the hub with `vepa4 multiplayer` (build first with `vepa4 build`).
+A browser port of the protocol lab (live round-trip + bandwidth model) ships at
+`v4/multiplayer/lab.html` and is deployed separately at
+https://vepa-v4-multiplayer.vercel.app.

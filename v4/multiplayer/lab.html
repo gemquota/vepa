@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VEPA Multiplayer — Protocol Lab</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --panel: rgba(15,15,25,0.92); --border: rgba(255,255,255,0.08);
+    --text: #e0e0e0; --dim: #888; --mono: 'JetBrains Mono','Fira Code',monospace;
+    --accent: #4ae8ff; --ok: #4aff8a; --warn: #ffd93d; --bad: #ff4a4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); padding: 24px; }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 18px; }
+  h1 { font-size: 15px; letter-spacing: 3px; }
+  .ver { color: var(--accent); font-size: 11px; letter-spacing: 2px; }
+  .sub { color: var(--dim); font-size: 10px; letter-spacing: 1px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+  .card h2 { font-size: 11px; letter-spacing: 2px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; }
+  .row { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 11px; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+  .row b { font-weight: 700; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 6px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  th { color: var(--dim); font-weight: 400; letter-spacing: 1px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 12px; }
+  .ctl label { font-size: 9px; color: var(--dim); letter-spacing: 1px; }
+  .bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .bar span { display: block; height: 100%; background: linear-gradient(90deg, #4ae8ff, #7b5cff); }
+  pre { font-size: 10px; color: var(--dim); white-space: pre-wrap; line-height: 1.6; }
+  .foot { margin-top: 18px; color: var(--dim); font-size: 10px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>VEPA MULTIPLAYER <span class="ver">EDITION v4.7.0-mp · PROTOCOL LAB</span></h1>
+  <span class="sub">host-authoritative snapshot relay · binary codec · LAN hub</span>
+  <span class="sub"><a href="../">← back to the simulation</a></span>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <h2>Live round-trip · 1250-particle snapshot</h2>
+    <div id="rt"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bandwidth model · 5 MB/s hotspot</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>ALIVE POPULATION — <span id="popVal">1250</span></label>
+        <input type="range" id="pop" min="250" max="2500" step="250" value="1250">
+      </div>
+      <div class="ctl">
+        <label>SNAPSHOT RATE — <span id="rateVal">20 Hz</span></label>
+        <input type="range" id="rate" min="5" max="60" step="5" value="20">
+      </div>
+    </div>
+    <div id="bw"></div>
+  </div>
+
+  <div class="card">
+    <h2>How it works</h2>
+    <pre>Host phone runs the sim (unchanged physics) and
+broadcasts compact binary snapshots every tick.
+
+Guests are render-only: they replicate the stride-100
+particle buffer and interpolate between snapshots.
+
+Laws / params / spawn / DNA / preset controls send
+small events to the host, applied authoritatively.
+
+Failover: if the host disappears, the guest with the
+freshest snapshot is promoted and the world continues.</pre>
+  </div>
+
+  <div class="card">
+    <h2>Run the LAN hub</h2>
+    <pre>  1. build:      npm run build        (in v4/)
+  2. hub:        node server/server.js
+  3. open on every phone:
+        http://192.168.43.1:3000   (host hotspot)
+        http://vepa.local:3000     (mDNS)
+  4. join the same 4-char room code.
+
+First phone = HOST (runs the sim).
+Others mirror the same world in real time.</pre>
+    <p class="sub" style="margin-top:8px">Protocol spec: <a href="https://github.com/gemquota/vepa/blob/feature/multiplayer-investigation/docs/multiplayer/PROTOCOL.md">docs/multiplayer/PROTOCOL.md</a></p>
+  </div>
+</div>
+
+<div class="foot">codec: v4/net-poc/codec.js (zero-dep, browser-compatible ESM) · roundtrip + bandwidth sims ported to the browser</div>
+
+<script type="module">
+  import {
+    encodeSnapshot, decodeSnapshot, applySnapshot, SNAP_FULL,
+    collectAliveIds, IDX, MAX_RADIUS, MAX_ENERGY,
+  } from '../net-poc/codec.js';
+
+  const STRIDE = 100, WORLD_SIZE = 2000, F32_TOL = 1e-3;
+  let seed = 0xC0FFEE;
+  const rng = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+
+  function buildWorld(count) {
+    const view = new Float32Array(count * STRIDE);
+    for (let i = 0; i < count; i++) {
+      const p = i * STRIDE;
+      view[p + IDX.POS_X] = rng() * WORLD_SIZE - WORLD_SIZE / 2;
+      view[p + IDX.POS_Y] = rng() * WORLD_SIZE - WORLD_SIZE / 2;
+      view[p + IDX.VEL_X] = (rng() - 0.5) * 6;
+      view[p + IDX.VEL_Y] = (rng() - 0.5) * 6;
+      view[p + IDX.SPECIES_ID] = Math.floor(rng() * 5);
+      view[p + IDX.COLOR_R] = rng();
+      view[p + IDX.COLOR_G] = rng();
+      view[p + IDX.COLOR_B] = rng();
+      view[p + IDX.RADIUS] = 1 + rng() * 7;
+      view[p + IDX.ENERGY] = rng() * 200;
+      view[p + IDX.DEAD] = rng() < 0.016 ? 1 : 0;
+    }
+    return view;
+  }
+
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const row = (k, v, cls = '') => `<div class="row"><span>${esc(k)}</span><b class="${cls}">${v}</b></div>`;
+  const mono = (v) => `<span style="font-variant-numeric:tabular-nums">${v}</span>`;
+
+  function runRoundTrip() {
+    seed = 0xC0FFEE;
+    const COUNT = 1250;
+    const hostView = buildWorld(COUNT);
+    const aliveIds = collectAliveIds(hostView, COUNT, STRIDE);
+    const law = { low: 0x0000000f, high: 0x00000100, ext: 0x00000040, quad: 0x80000000 };
+    const params = [{ key: 0, value: WORLD_SIZE }, { key: 11, value: 0.9 }, { key: 13, value: 1 }];
+    const dna = new Uint16Array(5 * 64);
+    for (let i = 0; i < dna.length; i++) dna[i] = Math.floor(rng() * 65536);
+
+    const t0 = performance.now();
+    const buf = encodeSnapshot({ type: SNAP_FULL, tick: 4821, seq: 77, hostTimeMs: 1234567.89, worldSize: WORLD_SIZE, simVersion: 3, law, params, dna, particles: hostView, stride: STRIDE, particleCount: COUNT, aliveIds });
+    const t1 = performance.now();
+    const snap = decodeSnapshot(buf);
+    const t2 = performance.now();
+    const guestView = new Float32Array(COUNT * STRIDE); guestView.fill(0);
+    for (let i = 0; i < COUNT; i++) guestView[i * STRIDE + IDX.DEAD] = 1;
+    applySnapshot(guestView, snap, STRIDE);
+    const t3 = performance.now();
+
+    let maxPosErr = 0, maxVelErr = 0, maxRadErr = 0, maxEnergyErr = 0, bad = 0;
+    for (const rec of snap.records) {
+      const p = rec.id * STRIDE;
+      maxPosErr = Math.max(maxPosErr, Math.abs(hostView[p + IDX.POS_X] - rec.xf), Math.abs(hostView[p + IDX.POS_Y] - rec.yf));
+      maxVelErr = Math.max(maxVelErr, Math.abs(hostView[p + IDX.VEL_X] - rec.vxf), Math.abs(hostView[p + IDX.VEL_Y] - rec.vyf));
+      maxRadErr = Math.max(maxRadErr, Math.abs(hostView[p + IDX.RADIUS] - rec.radiusF));
+      maxEnergyErr = Math.max(maxEnergyErr, Math.abs(hostView[p + IDX.ENERGY] - rec.energyF));
+      if (rec.species !== hostView[p + IDX.SPECIES_ID]) bad++;
+      if (Math.abs(rec.r / 255 - hostView[p + IDX.COLOR_R]) > 1 / 255 + 1e-9) bad++;
+      if ((hostView[p + IDX.DEAD] >= 0.5) !== rec.dead) bad++;
+    }
+    const pStep = WORLD_SIZE / 65535 / 2, vStep = 50 / 32767 / 2, rStep = MAX_RADIUS / 255 / 2, eStep = MAX_ENERGY / 255 / 2;
+    const ok = maxPosErr <= pStep + F32_TOL && maxVelErr <= vStep + F32_TOL && maxRadErr <= rStep + F32_TOL && maxEnergyErr <= eStep + F32_TOL && bad === 0;
+
+    const bytes20 = buf.byteLength * 20, bytes30 = buf.byteLength * 30;
+    document.getElementById('rt').innerHTML =
+      row('world slots', mono(`${COUNT} · ${aliveIds.length} alive`)) +
+      row('snapshot size', mono(`${(buf.byteLength / 1024).toFixed(1)} KB`) + ' · ' + mono(`${buf.byteLength.toLocaleString()} B`)) +
+      row('encode / decode / apply', mono(`${((t1 - t0) * 1000).toFixed(0)} µs / ${((t2 - t1) * 1000).toFixed(0)} µs / ${((t3 - t2) * 1000).toFixed(0)} µs`)) +
+      row('max position error', mono(`${maxPosErr.toFixed(4)}`) + ` ≤ ${mono((pStep + F32_TOL).toFixed(4))}`, maxPosErr <= pStep + F32_TOL ? 'ok' : 'bad') +
+      row('max velocity error', mono(`${maxVelErr.toFixed(4)}`) + ` ≤ ${mono(vStep.toFixed(4))}`, maxVelErr <= vStep ? 'ok' : 'bad') +
+      row('max radius error', mono(`${maxRadErr.toFixed(4)}`) + ` ≤ ${mono(rStep.toFixed(4))}`, maxRadErr <= rStep ? 'ok' : 'bad') +
+      row('max energy error', mono(`${maxEnergyErr.toFixed(4)}`) + ` ≤ ${mono(eStep.toFixed(4))}`, maxEnergyErr <= eStep ? 'ok' : 'bad') +
+      row('mismatches', mono(`${bad} / ${snap.records.length}`), bad === 0 ? 'ok' : 'bad') +
+      row('verdict', ok ? '✅ ROUND TRIP OK' : '❌ ROUND TRIP FAILED', ok ? 'ok' : 'bad') +
+      row('@ 20 Hz → 4 guests', mono(`${(bytes20 * 4 / 1024).toFixed(0)} KB/s`)) +
+      row('@ 30 Hz → 4 guests', mono(`${(bytes30 * 4 / 1024).toFixed(0)} KB/s`));
+  }
+
+  function bwRow(label, rate, bytes, alive) {
+    const perGuest = bytes * rate;
+    const pct = ((perGuest * 4 * 8) / 1e6 / (5e6)) * 100;
+    return `<tr><td>${esc(label)}</td><td class="num">${rate} Hz</td><td class="num">${(perGuest / 1024).toFixed(0)}</td><td class="num">${(perGuest * 8 / 1e6).toFixed(2)}</td><td class="num">${pct.toFixed(1)}%</td></tr>`;
+  }
+
+  function runBandwidth() {
+    const pop = parseInt(document.getElementById('pop').value, 10);
+    const rate = parseInt(document.getElementById('rate').value, 10);
+    document.getElementById('popVal').textContent = pop;
+    document.getElementById('rateVal').textContent = rate + ' Hz';
+    seed = 7;
+    const view = buildWorld(pop);
+    const buf = encodeSnapshot({ type: SNAP_FULL, tick: 1, seq: 1, hostTimeMs: 0, worldSize: WORLD_SIZE, simVersion: 1, law: { low: 0, high: 0, ext: 0, quad: 0 }, params: [], dna: null, particles: view, stride: STRIDE, particleCount: pop, aliveIds: Array.from({ length: pop }, (_, i) => i) });
+    const pct = ((buf.byteLength * rate * 4 * 8) / 1e6 / (5e6)) * 100;
+    document.getElementById('bw').innerHTML =
+      `<table><tr><th>population</th><th>rate</th><th>KB/s/guest</th><th>Mbps/guest</th><th>4 guests % link</th></tr>` +
+      bwRow('this world', rate, buf.byteLength, pop) +
+      `<tr><td>default 1250</td><td class="num">${rate} Hz</td><td class="num">—</td><td class="num">—</td><td class="num">see round-trip</td></tr>` +
+      `</table>` +
+      `<div style="margin-top:8px"><div style="font-size:9px;color:var(--dim);letter-spacing:1px">4 GUESTS × FULL SNAPSHOTS vs 5 MB/s HOTSPOT</div><div class="bar"><span style="width:${Math.min(pct, 100)}%"></span></div></div>` +
+      `<div class="row" style="margin-top:8px"><span>link utilisation</span><b class="${pct > 90 ? 'bad' : pct > 60 ? 'warn' : 'ok'}">${pct.toFixed(1)}%</b></div>`;
+  }
+
+  runRoundTrip();
+  runBandwidth();
+  document.getElementById('pop').addEventListener('input', runBandwidth);
+  document.getElementById('rate').addEventListener('input', runBandwidth);
+</script>
+</body>
+</html>
