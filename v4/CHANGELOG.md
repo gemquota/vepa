@@ -1,6 +1,17 @@
 # Changelog: VEPA v4
 
 
+## [4.5.3] - 2026-08-05
+
+### Deployment caching fix
+- `vercel.json` no longer applies `max-age=31536000, immutable` to the HTML
+  shell — browsers were caching the old `index.html` for a year and never
+  picking up new builds. Hashed `/assets/*` bundles keep the long immutable
+  cache; the HTML entry now serves `no-cache, must-revalidate` (COOP/COEP
+  headers unchanged, so SharedArrayBuffer keeps working).
+
+
+
 ## [4.5.2] - 2026-08-05
 
 ### 4-agent law audit — all 128 laws validated
