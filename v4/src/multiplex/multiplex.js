@@ -360,6 +360,10 @@ function spawnShardOffspring(shard) {
     shard.view[b + S.BOND_COUNT] = 0;
     shard.view[b + S.BOND_PARTNER_1] = -1;
     shard.view[b + S.BOND_PARTNER_2] = -1;
+      shard.view[b + S.BOND_PARTNER_3] = -1;
+      shard.view[b + S.BOND_PARTNER_4] = -1;
+      shard.view[b + S.BOND_PARTNER_5] = -1;
+      shard.view[b + S.BOND_PARTNER_6] = -1;
     shard.view[b + S.TEMPERATURE] = 0.5;
     shard.view[b + S.CHARGE] = 0;
     shard.view[b + S.ELECTRIC_ENERGY] = 0;

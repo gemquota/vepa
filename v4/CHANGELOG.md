@@ -1,5 +1,34 @@
 # Changelog: VEPA v4
 
+## [4.6.7] - 2026-08-05
+
+### Law RRP batch 06 — OXIDATION / POLYMER / ISOMERIZATION / CHIRALITY confirmed semantics
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **OXIDATION** is now real electron loss: CHARGE decays toward 0 (electrical
+  rust) alongside the MASS erosion, and HEAT_OUTPUT DNA releases heat plus a
+  glow flash (COLOR_R/G/B + ALPHA brighten while the particle burns).
+- **POLYMER** matches the documentation: the particle stride grew to
+  `BOND_PARTNER_1..6` (81-84 appended, existing offsets stable) for the
+  documented max 6 bonds per particle; bonds are now mutual (i records j, j
+  records i) so A-B-C chains hold on both ends, and partner indices use the
+  real stride (the hardcoded `/100` is gone).
+- **ISOMERIZATION** matches real life: same atoms, rearranged bonds — a
+  particle with 3+ chain bonds occasionally breaks one connection (the freed
+  partner becomes a fragment, its reciprocal cleared) and consumes a little
+  energy. The sinusoidal "radius breathing" placeholder was removed.
+- **CHIRALITY** uses the documented TORQUE DNA: handedness is geometric
+  mirror-spin (clockwise vs counter-clockwise), same-handedness pairs deflect
+  perpendicular with direction following the torque sign; opposite-handedness
+  and zero-torque pairs feel nothing.
+- Tests: `tests/audit/batch_06.test.js` rewritten (21) — rust + glow, mutual
+  6-slot bonds + cap, isomerization rearrangement/reciprocal/energy, chirality
+  handedness incl. mirror direction. Full suite 538/538 green; `vite build` clean.
+- HELP_DB synced for all four laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_06.md`.
+
+
 ## [4.6.6] - 2026-08-05
 
 ### Law RRP batch 05 — PHENOTYPE / CATALYSIS_LAW / SOLVATION / ACIDITY confirmed semantics

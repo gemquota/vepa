@@ -63,6 +63,14 @@ export const STRIDE_INDEXES = {
   STORED_ENERGY:   78, // general reserve pool (capacitance / fusion storage)
   REPRO_DRIVE:     79, // reproductive drive meter (REPRO law gate)
   RADIATION_EXPOSURE: 80, // accumulated radiation dose (RADIATION law; ramps mutation)
+  // ── Polymer chain expansion (batch 06) ──
+  // BOND_PARTNER_1/2 (59/60) plus these four slots give the documented
+  // "max 6 bonds per particle" for POLYMER chains. Added at the tail so
+  // existing stride offsets (persisted saves, workers) stay stable.
+  BOND_PARTNER_3:     81,
+  BOND_PARTNER_4:     82,
+  BOND_PARTNER_5:     83,
+  BOND_PARTNER_6:     84,
 };
 
 // --- DNA Indexes (42 parameters) ---
@@ -894,24 +902,24 @@ export const LAW_HELP_DB = {
     system: "When |Δcharge| ≥ 0.3, transfer = Δcharge × max(CONDUCTIVITY_i, CONDUCTIVITY_j) × 0.1 × dt × synergy from the higher-charge particle to the lower. Charge is conserved per pair.",
   },
   OXIDATION: {
-    hint: "Oxidation: charge transfer with energy release.",
-    explanation: "Like acidity but releases heat energy. Particles glow brighter after oxidation events.",
-    system: "HEAT_OUTPUT DNA controls energy release. Increases TEMPERATURE and ENERGY.",
+    hint: "Oxidation: charged particles rust, burn and glow.",
+    explanation: "Real oxidation is electron loss (confirmed batch-06): a charged particle's CHARGE drifts toward 0 at the same rate its mass erodes, and with HEAT_OUTPUT DNA it releases heat energy and flashes brighter while it burns.",
+    system: "Requires |CHARGE| ≥ 0.3. MASS −= |charge|×0.001×dt×synergy; CHARGE decays by |charge|×0.001×dt×synergy toward 0 (electrical rust). With HEAT_OUTPUT (DNA 39): ENERGY += charge×HEAT_OUTPUT×0.05×dt×synergy (cap 200), TEMPERATURE rises, and COLOR_R/G/B + ALPHA flash toward white.",
   },
   POLYMER: {
     hint: "Polymerization: particles form chain bonds.",
-    explanation: "Particles can link into polymer chains by establishing bond connections with neighbors.",
-    system: "Bond slots (BOND_PARTNER_1/2) track chain topology. Max 6 bonds per particle.",
+    explanation: "Particles link into polymer chains by establishing mutual bond connections with neighbors (confirmed batch-06: match documentation).",
+    system: "Bond slots (BOND_PARTNER_1..6, stride 59/60/81-84) track chain topology — max 6 bonds per particle, tracked mutually (i records j, j records i). Bond when dist < 10×synergy; spring force stiffness 0.02×synergy with rest length 4 holds the chain.",
   },
   ISOMERIZATION: {
     hint: "Isomerization: bond topology rearrangement.",
-    explanation: "Particles with many bonds may release some, creating free fragments.",
-    system: "Random bond-breaking events for particles with 3+ bonds. Consumes energy.",
+    explanation: "Real isomerization keeps the same atoms but rearranges the bonds (confirmed batch-06: match real life). A particle with 3+ chain bonds occasionally breaks one connection — the freed partner becomes a fragment (its reciprocal bond is cleared too) — and the rearrangement consumes a little energy.",
+    system: "Chance = 0.02×dt×synergy per tick when BOND_COUNT ≥ 3 and ENERGY ≥ 1: break the first filled bond slot, clear the partner's reciprocal slot and decrement both counts, then ENERGY −= 0.5×dt×synergy.",
   },
   CHIRALITY: {
-    hint: "Chirality: rotational bias from torque.",
-    explanation: "Particles with TORQUE DNA receive perpendicular velocity components, inducing spin.",
-    system: "Creates rotational dynamics. Positive torque = clockwise, negative = counterclockwise.",
+    hint: "Chirality: handedness from TORQUE DNA creates spin bias.",
+    explanation: "Confirmed batch-06: handedness comes from TORQUE DNA (geometric mirror-handedness, clockwise vs counter-clockwise), not charge. Same-handedness pairs deflect perpendicular to their separation — positive torque spins one way, negative the other, like mirror-image enantiomers.",
+    system: "Same-sign TORQUE pair (dist ≥ 1): perpendicular deflection (−dy, dx)×0.01×synergy×sign(TORQUE)×invDist. Opposite-handedness or zero-torque pairs: no force.",
   },
   CRYSTALLIZATION: {
     hint: "Crystallization: same-species rigid lattice formation.",

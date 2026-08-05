@@ -510,7 +510,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       if (isSet(lawState, LAW_INDEXES.POLYMER)) {
         const polySynergy = computeSynergy(lawState, LAW_INDEXES.POLYMER);
-        applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, polySynergy);
+        applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, polySynergy, stride);
       }
 
 
@@ -1364,7 +1364,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Isomerization ──
     applyIsomerization(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION));
+      computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION), prng, stride);
 
     // ── Phase Radiation ──
     applyPhaseRadiation(lawState, view, iBase, localTimeStep,
@@ -1396,13 +1396,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const energy = view[iBase + S.ENERGY];
       if (Number.isFinite(energy)) {
         radiusOut *= 1 + (energy / 200 - 0.5) * 0.5 * computeSynergy(lawState, LAW_INDEXES.PHENOTYPE);
-      }
-    }
-    if (isSet(lawState, LAW_INDEXES.ISOMERIZATION)) {
-      const age = view[iBase + S.AGE];
-      if (Number.isFinite(age)) {
-        const phase = Math.sin(age * 0.01) * 0.1 * localTimeStep * computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION);
-        radiusOut *= 1 + phase * 0.05;
       }
     }
     view[iBase + S.RADIUS] = radiusOut;

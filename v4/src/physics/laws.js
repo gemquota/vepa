@@ -23,6 +23,14 @@ const S = STRIDE_INDEXES;
 const D = DNA_INDEXES;
 const DNA_BASE = S.DNA_CACHE_START;
 
+// Polymer chain bond slots (batch 06): the documented "max 6 bonds per
+// particle". Not contiguous in the stride (2 legacy slots + 4 appended), so
+// iterate this list rather than a numeric range.
+const BOND_SLOTS = [
+  S.BOND_PARTNER_1, S.BOND_PARTNER_2, S.BOND_PARTNER_3,
+  S.BOND_PARTNER_4, S.BOND_PARTNER_5, S.BOND_PARTNER_6,
+];
+
 /**
  * Read a species genome param (DNA buffer, 64×64 Uint16) as a float.
  * Genetics params 42-47 live only in the species genome, not the stride cache.
@@ -899,21 +907,37 @@ export function applyChemistry(lawState, view, iBase, jBase, distSq, synergy) {
 // ============================================================================
 // 20. POLYMER (bond formation)
 // ============================================================================
-export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy, stride) {
   if (!isSet(lawState, LAW_INDEXES.POLYMER)) return { ax: 0, ay: 0, az: 0 };
   if (dist > 25) return { ax: 0, ay: 0, az: 0 };
 
+  // Batch-06 confirmation ("match documentation"): up to 6 bonds per particle
+  // (BOND_PARTNER_1..6), tracked mutually — when i chains to j, j chains back
+  // to i, so A-B-C topology is stable on both ends.
+  const iIdx = Math.round(iBase / stride);
+  const jIdx = Math.round(jBase / stride);
   const bondCount = view[iBase + S.BOND_COUNT];
-  const jIdx = jBase / 100;
+  const jBondCount = view[jBase + S.BOND_COUNT];
+
   let alreadyBonded = false;
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
-    if (view[iBase + slot] === jIdx) { alreadyBonded = true; break; }
+  for (const slot of BOND_SLOTS) {
+    if (view[iBase + slot] === jIdx || view[jBase + slot] === iIdx) {
+      alreadyBonded = true;
+      break;
+    }
   }
-  if (!alreadyBonded && bondCount < 2 && dist < 10 * synergy) {
-    for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
+  if (!alreadyBonded && bondCount < 6 && jBondCount < 6 && dist < 10 * synergy) {
+    for (const slot of BOND_SLOTS) {
       if (view[iBase + slot] < 0) {
         view[iBase + slot] = jIdx;
         view[iBase + S.BOND_COUNT] = bondCount + 1;
+        break;
+      }
+    }
+    for (const slot of BOND_SLOTS) {
+      if (view[jBase + slot] < 0) {
+        view[jBase + slot] = iIdx;
+        view[jBase + S.BOND_COUNT] = jBondCount + 1;
         break;
       }
     }
@@ -1625,27 +1649,70 @@ export function applyOxidationEffect(lawState, view, base, dt, synergy) {
   if (Number.isFinite(mass) && mass > 0.1) {
     view[base + S.MASS] -= charge * 0.001 * dt * synergy;
   }
-  // HEAT_OUTPUT DNA (39): charged oxidation releases energy + temperature.
+  // Batch-06 confirmation: real oxidation is electron loss — the charge
+  // magnitude drifts toward 0 at the same rate (the particle rusts
+  // electrically) instead of only eating mass.
+  const c = view[base + S.CHARGE];
+  if (Number.isFinite(c) && c !== 0) {
+    const decay = c * 0.001 * dt * synergy;
+    view[base + S.CHARGE] = Math.abs(c) <= Math.abs(decay) ? 0 : c - decay;
+  }
+
+  // HEAT_OUTPUT DNA (39): charged oxidation releases energy + temperature and
+  // the particle flashes brighter (glow) as it burns.
   const heatOutput = view[base + S.DNA_CACHE_START + D.HEAT_OUTPUT] || 0;
   if (heatOutput > 0.001) {
     const release = charge * heatOutput * 0.05 * dt * synergy;
     view[base + S.ENERGY] = Math.min(200, (view[base + S.ENERGY] || 0) + release);
     view[base + S.TEMPERATURE] = (view[base + S.TEMPERATURE] || 0) + release * 0.01;
+    if (release > 0.0001) {
+      const flash = release * 40;
+      view[base + S.COLOR_R] = Math.min(255, (view[base + S.COLOR_R] || 0) + flash);
+      view[base + S.COLOR_G] = Math.min(255, (view[base + S.COLOR_G] || 0) + flash);
+      view[base + S.COLOR_B] = Math.min(255, (view[base + S.COLOR_B] || 0) + flash);
+      view[base + S.ALPHA] = Math.min(1, (view[base + S.ALPHA] || 0) + release * 0.1);
+    }
   }
 }
 
 // ============================================================================
 // 53. ISOMERIZATION — Structural rearrangement changes properties
 // ============================================================================
-export function applyIsomerization(lawState, view, base, dt, synergy) {
+export function applyIsomerization(lawState, view, base, dt, synergy, prng, stride) {
   if (!isSet(lawState, LAW_INDEXES.ISOMERIZATION)) return;
-  const age = view[base + S.AGE];
-  if (!Number.isFinite(age)) return;
-  const phase = Math.sin(age * 0.01) * 0.1 * dt * synergy;
-  const radius = view[base + S.RADIUS];
-  if (Number.isFinite(radius)) {
-    view[base + S.RADIUS] = radius * (1 + phase * 0.05);
+  // Batch-06 confirmation ("match real life"): real isomerization keeps the
+  // same atoms but rearranges the bonds. A particle with 3+ chain bonds
+  // occasionally breaks one connection — the freed partner becomes a fragment
+  // (its reciprocal bond is cleared too) — and the rearrangement consumes a
+  // little energy. The old "radius breathing" placeholder is gone.
+  const bondCount = view[base + S.BOND_COUNT];
+  if (!Number.isFinite(bondCount) || bondCount < 3) return;
+  const energy = view[base + S.ENERGY];
+  if (!Number.isFinite(energy) || energy < 1) return;
+  const chance = 0.02 * dt * synergy;
+  if (prng && prng() >= chance) return;
+
+  const iIdx = Math.round(base / stride);
+  for (const slot of BOND_SLOTS) {
+    const partnerIdx = view[base + slot];
+    if (partnerIdx >= 0) {
+      const partnerBase = Math.round(partnerIdx) * stride;
+      if (Number.isFinite(partnerBase) && partnerBase >= 0 && partnerBase < view.length) {
+        for (const pSlot of BOND_SLOTS) {
+          if (view[partnerBase + pSlot] === iIdx) {
+            view[partnerBase + pSlot] = -1;
+            view[partnerBase + S.BOND_COUNT] = Math.max(0, (view[partnerBase + S.BOND_COUNT] || 0) - 1);
+            break;
+          }
+        }
+      }
+      view[base + slot] = -1;
+      view[base + S.BOND_COUNT] = Math.max(0, bondCount - 1);
+      break;
+    }
   }
+  // Isomerization consumes energy (documented).
+  view[base + S.ENERGY] = Math.max(0, energy - 0.5 * dt * synergy);
 }
 
 // ============================================================================
@@ -1654,15 +1721,23 @@ export function applyIsomerization(lawState, view, base, dt, synergy) {
 export function applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
   if (!isSet(lawState, LAW_INDEXES.CHIRALITY)) return null;
   if (dist < 1) return null;
-  const polI = view[iBase + S.DNA_CACHE_START + 4];
-  const polJ = view[jBase + S.DNA_CACHE_START + 4];
-  if (!Number.isFinite(polI) || !Number.isFinite(polJ)) return null;
-  if ((polI > 0 && polJ > 0) || (polI < 0 && polJ < 0)) {
+  // Batch-06 confirmation (documented): handedness comes from TORQUE DNA
+  // (rotational momentum), not POLARITY — real chirality is geometric
+  // mirror-handedness (clockwise vs counter-clockwise spin), not charge.
+  const torqueI = view[iBase + S.DNA_CACHE_START + D.TORQUE];
+  const torqueJ = view[jBase + S.DNA_CACHE_START + D.TORQUE];
+  if (!Number.isFinite(torqueI) || !Number.isFinite(torqueJ)) return null;
+  if (torqueI === 0 || torqueJ === 0) return null;
+  // Same-handedness pairs deflect perpendicular to their separation; the
+  // deflection direction follows the handedness sign (left vs right mirror
+  // image rotate opposite ways). Opposite-handedness pairs: no force.
+  if ((torqueI > 0 && torqueJ > 0) || (torqueI < 0 && torqueJ < 0)) {
     const strength = 0.01 * synergy;
     const invDist = 1.0 / dist;
+    const dir = torqueI > 0 ? 1 : -1;
     return {
-      ax: -dy * invDist * strength,
-      ay: dx * invDist * strength,
+      ax: -dy * invDist * strength * dir,
+      ay: dx * invDist * strength * dir,
       az: 0,
     };
   }

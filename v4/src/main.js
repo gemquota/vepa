@@ -193,6 +193,10 @@ function spawnSingleParticle(species, pos) {
     particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
     particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
     particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_3] = -1;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_4] = -1;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_5] = -1;
+    particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_6] = -1;
     particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
     particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
     particleView[ptr + STRIDE_INDEXES.ARMOR] = prng.nextFloat(0, 0.5);
@@ -285,6 +289,10 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
             particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
             particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
             particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_3] = -1;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_4] = -1;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_5] = -1;
+            particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_6] = -1;
             particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
             particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
             particleView[ptr + STRIDE_INDEXES.ARMOR] = prng.nextFloat(0, 0.5);
@@ -352,6 +360,10 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.BOND_COUNT] = 0;
         particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_1] = -1;
         particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_2] = -1;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_3] = -1;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_4] = -1;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_5] = -1;
+        particleView[ptr + STRIDE_INDEXES.BOND_PARTNER_6] = -1;
         particleView[ptr + STRIDE_INDEXES.MEMORY] = 0;
         particleView[ptr + STRIDE_INDEXES.HUNGER] = 0;
         particleView[ptr + STRIDE_INDEXES.ARMOR] = 0.2;

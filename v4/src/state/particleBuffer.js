@@ -44,6 +44,12 @@ export function getParticle(buffer, index, stride) {
         radius: view[base + S.RADIUS],
         signal: view[base + S.SIGNAL],
         bondCount: view[base + S.BOND_COUNT],
+        bondPartner1: view[base + S.BOND_PARTNER_1],
+        bondPartner2: view[base + S.BOND_PARTNER_2],
+        bondPartner3: view[base + S.BOND_PARTNER_3],
+        bondPartner4: view[base + S.BOND_PARTNER_4],
+        bondPartner5: view[base + S.BOND_PARTNER_5],
+        bondPartner6: view[base + S.BOND_PARTNER_6],
         memory: view[base + S.MEMORY],
         hunger: view[base + S.HUNGER],
         armor: view[base + S.ARMOR],
@@ -75,6 +81,12 @@ export function setParticle(buffer, index, stride, data) {
     if (data.radius !== undefined) view[base + S.RADIUS] = data.radius;
     if (data.signal !== undefined) view[base + S.SIGNAL] = data.signal;
     if (data.bondCount !== undefined) view[base + S.BOND_COUNT] = data.bondCount;
+    if (data.bondPartner1 !== undefined) view[base + S.BOND_PARTNER_1] = data.bondPartner1;
+    if (data.bondPartner2 !== undefined) view[base + S.BOND_PARTNER_2] = data.bondPartner2;
+    if (data.bondPartner3 !== undefined) view[base + S.BOND_PARTNER_3] = data.bondPartner3;
+    if (data.bondPartner4 !== undefined) view[base + S.BOND_PARTNER_4] = data.bondPartner4;
+    if (data.bondPartner5 !== undefined) view[base + S.BOND_PARTNER_5] = data.bondPartner5;
+    if (data.bondPartner6 !== undefined) view[base + S.BOND_PARTNER_6] = data.bondPartner6;
     if (data.memory !== undefined) view[base + S.MEMORY] = data.memory;
     if (data.hunger !== undefined) view[base + S.HUNGER] = data.hunger;
     if (data.armor !== undefined) view[base + S.ARMOR] = data.armor;
