@@ -2,6 +2,8 @@
 
 32 batches × 4 laws = 128 laws (8 categories × 16). **All batches audited — 0 faulty.**
 
+> 📄 **Combined results:** [combined.md](combined.md) — 110 ✅ PASS · 18 ⚠️ REPAIRED · 0 ❌ FAULTY
+
 | Batch | Laws | Result |
 |-------|------|--------|
 | [batch 01](batch_01.md) | 01 — GRAV / DRAG / ENTR / WRAP | ✅ |

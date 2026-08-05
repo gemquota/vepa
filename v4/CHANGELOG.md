@@ -1,6 +1,49 @@
 # Changelog: VEPA v4
 
 
+## [4.5.2] - 2026-08-05
+
+### 4-agent law audit — all 128 laws validated
+- All 32 batches of 4 laws audited by independent agents with integration-level
+  `solve()` tests (`v4/tests/audit/batch_01..32.test.js`): 297 audit tests.
+- Result: **110 PASS / 18 REPAIRED / 0 FAULTY** — every law functional.
+- Repair highlights (`v4/src/physics/laws.js`, `solver.js`, `quantumLaws.js`):
+  - COLD heat-transfer sign flipped (was heating the wrong particle).
+  - CHARGE force sign flipped — like charges now repel, opposites attract.
+  - COLL bounce condition `relVelN > 0` — approaching pairs now bounce.
+  - SPIN parity uses real particle index (`floor(i/PARTICLE_STRIDE) % 2`) so the
+    sign alternates per particle, not per buffer slot.
+  - PHENOTYPE radius write no longer overwritten each tick by mass recompute.
+  - ASTRAL processes DEAD=0.5 souls; ACCR can run standalone; PREDATION mass
+    fold-in + softbody position delta; TUNNELING/UNCERTAINTY/TELEPORT/
+    WAVEFUNCTION position mutations survive solver writeback.
+  - Full suite: 47 files / 420 tests passing.
+
+## [4.5.1] - 2026-08-05
+
+### All 46 new laws implemented — 8 categories × 16 = 128 laws
+- Law logic landed in `v4/src/physics/lawgroups/` (physicsLaws, thermoLaws,
+  biologyLaws, chemistryLaws, emLaws, infoLaws, metaLaws, quantumLaws) and is
+  dispatched from `solver.js` (pairwise + per-particle passes).
+- New **quantum** law category (indigo) with 16 laws: SUPERPOSITION, TUNNELING,
+  DECOHERENCE, WAVE_PARTICLE, UNCERTAINTY, TELEPORT, OBSERVER, PLANCK,
+  COHERENCE, BOSONIC, FERMIONIC, SPIN, SPECTRAL, WAVEFUNCTION, HYPERPLANE,
+  ANTIMATTER.
+- Quantum tab (QNTE) + indigo theme in `v4/index.html` / `style.css`; 46 law
+  icons added to `worldPanel.js` / `tooltip.js`.
+- 8 new presets (31 total); sub-agent verification tests green (123/123 unit).
+
+## [4.5.0] - 2026-08-05
+
+### 128-law foundation
+- 46 new `LAW_INDEXES` entries; `LAW_COUNT` 82 → 128; 8 categories × 16.
+- Bitmask widened to 128 bits (`quadFlags` in `v4/src/state/lawState.js`);
+  serialization stores `quad` word, deserialization accepts legacy 64-bit saves.
+- 46 HELP_DB entries (HINT / EXPLANATION / SYSTEM / ADVANCED).
+- Solver hard-freeze + multiplex copy/randomize extended to the 4th flags word.
+
+
+
 ## [4.4.2] - 2026-08-04
 
 ### Law-type synergy + icon parity pass
