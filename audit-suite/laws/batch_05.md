@@ -7,20 +7,17 @@ Laws under audit (indices 16-19):
 - **SOLVATION** (index 18, chemistry / PURPLE)
 - **ACIDITY** (index 19, chemistry / PURPLE)
 
-## Validation results
+## Validation results (confirmed spec, v4.6.6)
 
 | Law | Status | Evidence |
 |-----|--------|----------|
-| PHENOTYPE | ⚠️ REPAIRED (1 attempt) | `v4/tests/audit/batch_05.test.js` — direct call: radius 2.0 @ energy 200 → 2.5 (×1.25, synergy 1). Integration: `solve()` radius ratio energy 200 vs 100 = 1.25 (was broken: radius effect was overwritten by the mass-derived recompute in `solver.js`). Gating `isSet` verified. |
-| CATALYSIS_LAW | ✅ PASS | `v4/tests/audit/batch_05.test.js` — `applyChemistry` multiplier 1.0 (gate) → 1.5 with CATALYSIS DNA 1.0 @ synergy 1 (×[1 + cat·0.5]). Gating `isSet` verified. |
-| SOLVATION | ✅ PASS | `v4/tests/audit/batch_05.test.js` — `applySolvationEffect` 1.0 (gate / near-equal charges) → 1.4 with charge gap 2. Gating `isSet` verified. |
-| ACIDITY | ✅ PASS | `v4/tests/audit/batch_05.test.js` — `applyAcidityEffect` no-op (gate / gap < 0.3); gap 2, dt 1 → neighbour energy 100 → 99.98, actor 50 → 50.01 (half returned). Gating `isSet` verified. |
+| PHENOTYPE | ✅ PASS | `v4/tests/audit/batch_05.test.js` — radius ×1.25 at energy 200 (direct + integration); colour expression: POLARITY −1 → red (R>B), +1 → blue (B>R) from HSL mapping. Gate: radius unchanged without the law. |
+| CATALYSIS_LAW | ✅ PASS | Direct: chemMult 1.0 (gate) → ×1.5 with CATALYSIS 1.0. Free: energy untouched over 50 ticks. Solver: amplifies the AFFINITY pull >2× with CATALYSIS 5.0 (chemMult applies to pre-chemistry forces; the old CHARGE_LAW test was premised wrong and removed). |
+| SOLVATION | ✅ PASS | Multiplier: ×1.4 at charge gap 2, 1.0 near-equal. Real-world forces via solve(): opposite charges (1/−1) attract (vx>0), like charges (1/1) repel (vx<0), gate (WRAP only) → vx=0. |
+| ACIDITY | ✅ PASS | Direct: gap 2 → charge 1→0.98, −1→−0.98 (equalizing), energy untouched; inert below gap 0.3. Solver: gap 2 → <1.0 after 200 ticks, charge conserved, energy untouched. |
 
 ## Notes
 
-- PHENOTYPE repaired in `v4/src/physics/solver.js` (radius recompute, `src/physics/solver.js` ~line 1264):
-  - Before: `view[iBase + S.RADIUS] = baseRadius * Math.pow(mass, 0.333);`
-  - After: the base radius is computed into `radiusOut`, then multiplied by the PHENOTYPE energy factor `1 + (energy/200 − 0.5) · 0.5 · synergy` when the law is set, then written. The `applyPhenotype` per-particle call had its radius modulation overwritten by the unconditional mass-derived recompute each tick, making the law dead at integration level.
-  - Repair attempt count: 1 (implementation). One test assertion was tightened (ratio vs frozen world) — test-only change, no further implementation edits.
-- All other laws passed on first validation; no other files modified.
-- Test file: `v4/tests/audit/batch_05.test.js` (15 tests).
+- Validation method: integration-level `solve()` tests + direct law calls with `isSet()` gating.
+- Repairs performed: SOLVATION force was dead code → wired + fixed magnitude (|q1−q2| → |q1×q2| so like charges repel) and direction (both signs); ACIDITY rewritten from ENERGY erosion to documented CHARGE equalization; PHENOTYPE gained colour expression; CATALYSIS test re-anchored to a force the multiplier actually amplifies.
+- Full suite: 533/533 tests green (`v4/`); `vite build` clean.

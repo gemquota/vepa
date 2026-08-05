@@ -56,6 +56,7 @@ import {
   applyPredation,
   applyGenotypeMutation,
   applyPhenotype,
+  applySolvation,
   applySolvationEffect,
   applyAcidityEffect,
   applyOxidationEffect,
@@ -598,6 +599,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           ax *= solvMult;
           ay *= solvMult;
           az *= solvMult;
+        }
+        // Real-world solvation: solvent charge forces — opposite charges
+        // attract, like charges repel (ions disperse through the medium).
+        const solvForce = applySolvation(iBase, jBase, stride, dx, dy, dz, dist, solvSynergy);
+        if (solvForce) {
+          ax += solvForce.ax;
+          ay += solvForce.ay;
+          az += solvForce.az;
         }
       }
 

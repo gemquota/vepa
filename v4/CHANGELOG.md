@@ -1,5 +1,36 @@
 # Changelog: VEPA v4
 
+## [4.6.6] - 2026-08-05
+
+### Law RRP batch 05 — PHENOTYPE / CATALYSIS_LAW / SOLVATION / ACIDITY confirmed semantics
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **PHENOTYPE** is gene expression: the inherited genome (DNA cache) is
+  translated into the visible body every tick — POLARITY → hue, ALPHA →
+  saturation, SYMMETRY → lightness — and ENERGY is the environment: well-fed
+  particles (energy > 100) express a larger body, starving ones shrink.
+  Offspring inherit DNA, so they inherit the look.
+- **CATALYSIS_LAW** confirmed: chemistry multiplier ×(1 + CATALYSIS×0.5×synergy),
+  applied to the pre-chemistry forces in the pair loop, and it is free —
+  never touches energy (locked by test).
+- **SOLVATION** replicates real-world behaviour: like dissolving salt in water,
+  the solvent exerts charge forces — opposite charges attract, like charges
+  repel (Coulomb-style |q1×q2|) — plus charge-different particles react
+  faster. The force was previously dead code; now wired into the solver.
+- **ACIDITY** switched to the documented behavior: particles exchange CHARGE
+  when close, equalizing electrical potential; CONDUCTIVITY DNA controls the
+  transfer rate and the CHARGE field is altered. The old ENERGY erosion is gone.
+- Tests: `tests/audit/batch_05.test.js` rewritten (23) — phenotype colour
+  expression, catalysis free + amplification, solvation attract/repel/gate,
+  acidity equalization/conservation. Fixed a flaky catalysis test whose
+  premise was wrong (chemMult runs before the CHARGE_LAW block — re-anchored
+  to the AFFINITY pull it actually amplifies). Full suite 533/533 green;
+  `vite build` clean.
+- HELP_DB synced for all four laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_05.md`.
+
+
 ## [4.6.5] - 2026-08-05
 
 ### Law RRP batch 04 — SENESCENCE / ENERGY / RADIATION / GENOTYPE confirmed semantics + GLOW backport

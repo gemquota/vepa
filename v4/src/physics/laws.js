@@ -46,6 +46,22 @@ function writeSpeciesDNAParam(buf, sp, idx, value) {
   buf[sp * 64 + idx] = Math.round(normalized * 65535);
 }
 
+/** HSL → RGB (0-1 channels) — used by PHENOTYPE gene expression. */
+function hslToRgb(h, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hp = (((h % 360) + 360) % 360) / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (hp < 1) [r, g, b] = [c, x, 0];
+  else if (hp < 2) [r, g, b] = [x, c, 0];
+  else if (hp < 3) [r, g, b] = [0, c, x];
+  else if (hp < 4) [r, g, b] = [0, x, c];
+  else if (hp < 5) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const m = l - c / 2;
+  return [r + m, g + m, b + m];
+}
+
 let buffer_global = null;
 
 // HISTORY law — coarse spatial memory field (12^3 cells), reset per buffer
@@ -313,18 +329,22 @@ export function applyPredation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
 // ============================================================================
 // 7. SOLVATION
 // ============================================================================
-export function applySolvation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
+export function applySolvation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist, synergy) {
   const buf = buffer_global;
   const charge1 = buf[p1Ptr + S.CHARGE];
   const charge2 = buf[p2Ptr + S.CHARGE];
-  if (charge1 * charge2 >= 0) return { ax: 0, ay: 0, az: 0 };
+  if (charge1 === 0 || charge2 === 0) return { ax: 0, ay: 0, az: 0 };
 
-  const strength = 0.05 * Math.abs(charge1 - charge2);
+  const strength = 0.05 * Math.abs(charge1 * charge2) * (synergy || 1);
   const invDist = 1.0 / Math.max(dist, 0.01);
+  // Real-world solvation (batch-05 confirmation): the solvent pulls
+  // opposite-charge ions together and pushes like charges apart — the same
+  // Coulomb rule that dissolves salt crystals and keeps ions dispersed.
+  const sign = charge1 * charge2 < 0 ? 1 : -1;
   return {
-    ax: nanGuard(dx * invDist * strength),
-    ay: nanGuard(dy * invDist * strength),
-    az: nanGuard(dz * invDist * strength),
+    ax: nanGuard(dx * invDist * strength * sign),
+    ay: nanGuard(dy * invDist * strength * sign),
+    az: nanGuard(dz * invDist * strength * sign),
   };
 }
 
@@ -1533,8 +1553,27 @@ export function applyPhenotype(lawState, view, base, dt, synergy) {
   const energy = view[base + S.ENERGY];
   const radius = view[base + S.RADIUS];
   if (!Number.isFinite(energy) || !Number.isFinite(radius)) return;
+  // Energy-driven size (batch-05 confirmation): ENERGY is the environment —
+  // a well-fed particle (energy > 100) expresses a larger body, a starving
+  // one shrinks, exactly like real organisms where nutrition affects size.
   const energyFactor = 1 + (energy / 200 - 0.5) * 0.5 * synergy;
   view[base + S.RADIUS] = radius * energyFactor;
+
+  // Gene expression: the inherited genome (DNA cache) is translated into the
+  // visible phenotype — POLARITY → hue, ALPHA → saturation, SYMMETRY →
+  // lightness — so offspring inherit their species' look along with its DNA.
+  const polarity = view[base + S.DNA_CACHE_START + 4];
+  const alpha = view[base + S.DNA_CACHE_START + 5];
+  const symmetry = view[base + S.DNA_CACHE_START + 6];
+  if (Number.isFinite(polarity) && Number.isFinite(alpha) && Number.isFinite(symmetry)) {
+    const hue = (polarity + 1) * 120; // POLARITY -1..1 → 0(red)..240(blue)
+    const sat = Math.max(0, Math.min(1, alpha)); // ALPHA 0..1
+    const light = Math.max(0.1, Math.min(0.9, 0.5 + symmetry * 0.4)); // SYMMETRY -1..1
+    const [r, g, b] = hslToRgb(hue, sat, light);
+    view[base + S.COLOR_R] = r * 255;
+    view[base + S.COLOR_G] = g * 255;
+    view[base + S.COLOR_B] = b * 255;
+  }
 }
 
 // ============================================================================
@@ -1560,14 +1599,19 @@ export function applyAcidityEffect(lawState, view, iBase, jBase, dt, synergy) {
   const chargeI = view[iBase + S.CHARGE];
   const chargeJ = view[jBase + S.CHARGE];
   if (!Number.isFinite(chargeI) || !Number.isFinite(chargeJ)) return;
-  const diff = Math.abs(chargeI - chargeJ);
-  if (diff < 0.3) return;
-  const acidDamage = diff * 0.01 * dt * synergy;
-  const energyJ = view[jBase + S.ENERGY];
-  if (Number.isFinite(energyJ)) {
-    view[jBase + S.ENERGY] -= acidDamage;
-    view[iBase + S.ENERGY] += acidDamage * 0.5;
-  }
+  const diff = chargeJ - chargeI;
+  if (Math.abs(diff) < 0.3) return;
+  // Documented behavior (batch-05 confirmation): acid/base exchange equalizes
+  // electrical potential. CONDUCTIVITY DNA controls the transfer rate and the
+  // CHARGE field is altered — charge flows from the higher-charge particle to
+  // the lower until the gap closes. ENERGY is untouched.
+  const condI = view[iBase + S.DNA_CACHE_START + 32] || 0;
+  const condJ = view[jBase + S.DNA_CACHE_START + 32] || 0;
+  const conductivity = Math.max(condI, condJ);
+  if (conductivity <= 0) return;
+  const transfer = diff * conductivity * 0.1 * dt * synergy;
+  view[iBase + S.CHARGE] += transfer;
+  view[jBase + S.CHARGE] -= transfer;
 }
 
 // ============================================================================
