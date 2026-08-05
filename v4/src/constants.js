@@ -499,7 +499,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   electromagnetism: {
-    color: 'CYAN',
+    color: 'TEAL',
     laws: [
       LAW_INDEXES.CHARGE_LAW,
       LAW_INDEXES.FIELD,
@@ -520,7 +520,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   information: {
-    color: 'GOLD',
+    color: 'YELLOW',
     laws: [
       LAW_INDEXES.MEMORY,
       LAW_INDEXES.PATTERN,
@@ -541,7 +541,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   quantum: {
-    color: 'INDIGO',
+    color: 'VIOLET',
     laws: [
       LAW_INDEXES.SUPERPOSITION,
       LAW_INDEXES.TUNNELING,
@@ -579,6 +579,34 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
   for (const idx of cat.laws) {
     LAW_COLOR_BY_INDEX[idx] = cat.color;
   }
+}
+
+
+// --- EM-spectrum rainbow bands (percent positions on a 0-100 spectrum) ---
+// Eight evenly spaced colours at 12.5% intervals; each band is 10 points wide.
+// RED wraps through 100/0 (95% -> 5%), so its band runs start=95 to end=105.
+
+export const LAW_SPECTRUM = {
+  RED:    { start: 95,   end: 105, center: 0 },
+  ORANGE: { start: 7.5,  end: 17.5, center: 12.5 },
+  YELLOW: { start: 20,   end: 30,   center: 25 },
+  GREEN:  { start: 32.5, end: 42.5, center: 37.5 },
+  TEAL:   { start: 45,   end: 55,   center: 50 },
+  BLUE:   { start: 57.5, end: 67.5, center: 62.5 },
+  VIOLET: { start: 70,   end: 80,   center: 75 },
+  PURPLE: { start: 82.5, end: 92.5, center: 87.5 },
+};
+
+// --- Per-law hue: each of the 16 laws in a category is spread across its band ---
+
+export const LAW_HUE_BY_INDEX = {};
+for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
+  const band = LAW_SPECTRUM[cat.color];
+  const step = (band.end - band.start) / (cat.laws.length - 1);
+  cat.laws.forEach((idx, k) => {
+    const pos = (band.start + k * step) % 100; // RED wraps through 100/0
+    LAW_HUE_BY_INDEX[idx] = Math.round(((pos / 100) * 360) * 10) / 10;
+  });
 }
 
 

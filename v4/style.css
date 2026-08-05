@@ -14,6 +14,9 @@
     --accent-gold: #ffd700;
     --accent-cyan: #4ae8ff;
     --accent-indigo: #7b5cff;
+    --accent-teal: #2ee6c8;
+    --accent-yellow: #ffd93d;
+    --accent-violet: #9b5cff;
     --border: rgba(255, 255, 255, 0.08);
     --glow-blue: 0 0 8px rgba(74, 158, 255, 0.3);
     --glow-green: 0 0 8px rgba(74, 255, 138, 0.3);
@@ -201,13 +204,13 @@ body {
     transition: all 0.15s;
     text-transform: uppercase;
 }
-.law-btn.active { font-weight: 700; }
-.law-btn.active.physics { background: rgba(74, 158, 255, 0.2); color: var(--accent-blue); border-color: var(--accent-blue); box-shadow: var(--glow-blue); }
-.law-btn.active.biology { background: rgba(74, 255, 138, 0.2); color: var(--accent-green); border-color: var(--accent-green); box-shadow: var(--glow-green); }
-.law-btn.active.chemistry { background: rgba(180, 74, 255, 0.2); color: var(--accent-purple); border-color: var(--accent-purple); box-shadow: var(--glow-purple); }
-.law-btn.active.thermodynamics { background: rgba(255, 138, 74, 0.2); color: var(--accent-orange); border-color: var(--accent-orange); }
-.law-btn.active.metaphysics { background: rgba(255, 74, 74, 0.2); color: var(--accent-red); border-color: var(--accent-red); }
-.law-btn.active.quantum { background: rgba(123, 92, 255, 0.2); color: var(--accent-indigo); border-color: var(--accent-indigo); box-shadow: var(--glow-indigo); }
+.law-btn.active {
+  font-weight: 700;
+  background: hsl(var(--law-h, 210) 70% 24% / 0.8);
+  color: hsl(var(--law-h, 210) 95% 74%);
+  border-color: hsl(var(--law-h, 210) 85% 58%);
+  box-shadow: 0 0 8px hsl(var(--law-h, 210) 85% 60% / 0.35);
+}
 
 /* DNA Slider */
 .dna-slider-group {
@@ -802,23 +805,9 @@ body {
     transition: all 0.15s ease;
 }
 .cat-tab:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
-/* Category filter buttons carry their own colour (dull off, bright on) */
-.cat-tab[data-cat="cat-physics"] { color: rgba(130,180,255,0.7); border-color: rgba(74,158,255,0.35); }
-.cat-tab[data-cat="cat-biology"] { color: rgba(130,255,175,0.7); border-color: rgba(74,255,138,0.35); }
-.cat-tab[data-cat="cat-chemistry"] { color: rgba(200,140,255,0.7); border-color: rgba(180,74,255,0.35); }
-.cat-tab[data-cat="cat-thermodynamics"] { color: rgba(255,175,120,0.7); border-color: rgba(255,138,74,0.35); }
-.cat-tab[data-cat="cat-metaphysics"] { color: rgba(255,130,130,0.7); border-color: rgba(255,74,74,0.35); }
-.cat-tab[data-cat="cat-electromagnetism"] { color: rgba(120,235,255,0.7); border-color: rgba(74,232,255,0.35); }
-.cat-tab[data-cat="cat-information"] { color: rgba(255,215,0,0.7); border-color: rgba(255,215,0,0.35); }
-.cat-tab[data-cat="cat-physics"].active { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(74,158,255,0.12); }
-.cat-tab[data-cat="cat-biology"].active { border-color: var(--accent-green); color: var(--accent-green); background: rgba(74,255,138,0.12); }
-.cat-tab[data-cat="cat-chemistry"].active { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(180,74,255,0.12); }
-.cat-tab[data-cat="cat-thermodynamics"].active { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(255,138,74,0.12); }
-.cat-tab[data-cat="cat-metaphysics"].active { border-color: var(--accent-red); color: var(--accent-red); background: rgba(255,74,74,0.12); }
-.cat-tab[data-cat="cat-electromagnetism"].active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(74,232,255,0.12); }
-.cat-tab[data-cat="cat-information"].active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.12); }
-.cat-tab[data-cat="cat-quantum"] { color: rgba(160,140,255,0.7); border-color: rgba(123,92,255,0.35); }
-.cat-tab[data-cat="cat-quantum"].active { border-color: var(--accent-indigo); color: var(--accent-indigo); background: rgba(123,92,255,0.12); }
+/* Category filter buttons carry their own spectrum colour (dull off, bright on) */
+.cat-tab { color: hsl(var(--cat-h, 210) 80% 72% / 0.7); border-color: hsl(var(--cat-h, 210) 70% 55% / 0.35); }
+.cat-tab.active { border-color: hsl(var(--cat-h, 210) 95% 64%); color: hsl(var(--cat-h, 210) 95% 72%); background: hsl(var(--cat-h, 210) 85% 55% / 0.12); }
 
 /* ── Law Icon Grid (World tab) ── */
 #law-grid.hidden { display: none !important; }
@@ -845,16 +834,8 @@ body {
     color: var(--text-dim);
 }
 /* Category colour visible even when the law is off (bright when active) */
-.law-icon-grid .sq-toggle.cat-physics { color: rgba(74,158,255,0.65); border-color: rgba(74,158,255,0.3); }
-.law-icon-grid .sq-toggle.cat-biology { color: rgba(74,255,138,0.65); border-color: rgba(74,255,138,0.3); }
-.law-icon-grid .sq-toggle.cat-chemistry { color: rgba(180,74,255,0.65); border-color: rgba(180,74,255,0.3); }
-.law-icon-grid .sq-toggle.cat-thermodynamics { color: rgba(255,138,74,0.65); border-color: rgba(255,138,74,0.3); }
-.law-icon-grid .sq-toggle.cat-metaphysics { color: rgba(255,74,74,0.65); border-color: rgba(255,74,74,0.3); }
-.law-icon-grid .sq-toggle.active.cat-physics { border-color: var(--accent-blue); background: rgba(74,158,255,0.15); box-shadow: 0 0 6px rgba(74,158,255,0.2); color: #8cf; }
-.law-icon-grid .sq-toggle.active.cat-biology { border-color: var(--accent-green); background: rgba(74,255,138,0.15); box-shadow: 0 0 6px rgba(74,255,138,0.2); color: #8f8; }
-.law-icon-grid .sq-toggle.active.cat-chemistry { border-color: var(--accent-purple); background: rgba(180,74,255,0.15); box-shadow: 0 0 6px rgba(180,74,255,0.2); color: #c8f; }
-.law-icon-grid .sq-toggle.active.cat-thermodynamics { border-color: var(--accent-orange); background: rgba(255,138,74,0.15); color: #fca; }
-.law-icon-grid .sq-toggle.active.cat-metaphysics { border-color: var(--accent-red); background: rgba(255,74,74,0.15); color: #f88; }
+.law-icon-grid .sq-toggle { color: hsl(var(--law-h, 210) 80% 72% / 0.55); border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
+.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.25); color: hsl(var(--law-h, 210) 95% 85%); }
 
 /* ── World Sliders ── */
 .world-sliders {
@@ -1459,22 +1440,10 @@ body {
   letter-spacing: 0.5px;
 }
 /* Category-coloured icons in list mode (dim when inactive, bright when active) */
-#law-grid.word-mode .law-btn.cat-physics .tog-icon { color: #6ab0ff; }
-#law-grid.word-mode .law-btn.cat-biology .tog-icon { color: #6aff9c; }
-#law-grid.word-mode .law-btn.cat-chemistry .tog-icon { color: #c77bff; }
-#law-grid.word-mode .law-btn.cat-thermodynamics .tog-icon { color: #ffa066; }
-#law-grid.word-mode .law-btn.cat-metaphysics .tog-icon { color: #ff7070; }
-/* Active list-mode laws get the full category accent (matches icon mode) */
-#law-grid.word-mode .law-btn.active.cat-physics { border-color: var(--accent-blue); background: rgba(74,158,255,0.15); box-shadow: 0 0 6px rgba(74,158,255,0.2); color: #8cf; }
-#law-grid.word-mode .law-btn.active.cat-biology { border-color: var(--accent-green); background: rgba(74,255,138,0.15); box-shadow: 0 0 6px rgba(74,255,138,0.2); color: #8f8; }
-#law-grid.word-mode .law-btn.active.cat-chemistry { border-color: var(--accent-purple); background: rgba(180,74,255,0.15); box-shadow: 0 0 6px rgba(180,74,255,0.2); color: #c8f; }
-#law-grid.word-mode .law-btn.active.cat-thermodynamics { border-color: var(--accent-orange); background: rgba(255,138,74,0.15); color: #fca; }
-#law-grid.word-mode .law-btn.active.cat-metaphysics { border-color: var(--accent-red); background: rgba(255,74,74,0.15); color: #f88; }
-#law-grid.word-mode .law-btn.cat-physics { border-color: rgba(74,158,255,0.28); }
-#law-grid.word-mode .law-btn.cat-biology { border-color: rgba(74,255,138,0.28); }
-#law-grid.word-mode .law-btn.cat-chemistry { border-color: rgba(180,74,255,0.28); }
-#law-grid.word-mode .law-btn.cat-thermodynamics { border-color: rgba(255,138,74,0.28); }
-#law-grid.word-mode .law-btn.cat-metaphysics { border-color: rgba(255,74,74,0.28); }
+#law-grid.word-mode .law-btn .tog-icon { color: hsl(var(--law-h, 210) 80% 74%); }
+/* Active list-mode laws get the full spectrum accent (matches icon mode) */
+#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.2); color: hsl(var(--law-h, 210) 95% 85%); }
+#law-grid.word-mode .law-btn { border-color: hsl(var(--law-h, 210) 65% 50% / 0.28); }
 @media (max-width: 480px) {
   #law-grid.word-mode { grid-template-columns: repeat(3, 1fr); }
 }
@@ -2145,19 +2114,11 @@ body {
 }
 #law-grid.hidden { display: none; }
 
-/* ── Dull category tint when a law is OFF (icon mode) ── */
-.law-icon-grid .sq-toggle.cat-physics { border-color: rgba(74,158,255,0.30); color: rgba(130,180,255,0.55); background: rgba(74,158,255,0.05); }
-.law-icon-grid .sq-toggle.cat-biology { border-color: rgba(74,255,138,0.30); color: rgba(130,255,175,0.55); background: rgba(74,255,138,0.05); }
-.law-icon-grid .sq-toggle.cat-chemistry { border-color: rgba(180,74,255,0.30); color: rgba(200,140,255,0.55); background: rgba(180,74,255,0.05); }
-.law-icon-grid .sq-toggle.cat-thermodynamics { border-color: rgba(255,138,74,0.30); color: rgba(255,175,120,0.55); background: rgba(255,138,74,0.05); }
-.law-icon-grid .sq-toggle.cat-metaphysics { border-color: rgba(255,74,74,0.30); color: rgba(255,130,130,0.55); background: rgba(255,74,74,0.05); }
+/* ── Dull spectrum tint when a law is OFF (icon mode) ── */
+.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); color: hsl(var(--law-h, 210) 80% 74% / 0.55); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
 
-/* ── Dull category tint when a law is OFF (list mode) ── */
-#law-grid.word-mode .law-btn.cat-physics { color: rgba(130,180,255,0.60); }
-#law-grid.word-mode .law-btn.cat-biology { color: rgba(130,255,175,0.60); }
-#law-grid.word-mode .law-btn.cat-chemistry { color: rgba(200,140,255,0.60); }
-#law-grid.word-mode .law-btn.cat-thermodynamics { color: rgba(255,175,120,0.60); }
-#law-grid.word-mode .law-btn.cat-metaphysics { color: rgba(255,130,130,0.60); }
+/* ── Dull spectrum tint when a law is OFF (list mode) ── */
+#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) 80% 74% / 0.60); }
 /* Active list-mode icons inherit the bright button colour */
 #law-grid.word-mode .law-btn.active .tog-icon { color: inherit; }
 
@@ -2270,11 +2231,7 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.03);
 }
-.law-set-mini-icon.cat-physics { color: rgba(130,180,255,0.95); border-color: rgba(74,158,255,0.5); }
-.law-set-mini-icon.cat-biology { color: rgba(130,255,175,0.95); border-color: rgba(74,255,138,0.5); }
-.law-set-mini-icon.cat-chemistry { color: rgba(200,140,255,0.95); border-color: rgba(180,74,255,0.5); }
-.law-set-mini-icon.cat-thermodynamics { color: rgba(255,175,120,0.95); border-color: rgba(255,138,74,0.5); }
-.law-set-mini-icon.cat-metaphysics { color: rgba(255,130,130,0.95); border-color: rgba(255,74,74,0.5); }
+.law-set-mini-icon { color: hsl(var(--law-h, 210) 90% 80% / 0.95); border-color: hsl(var(--law-h, 210) 70% 55% / 0.5); }
 .law-set-row-name {
   font-family: var(--font-mono);
   font-size: 8px;
@@ -2321,23 +2278,9 @@ body {
   border-bottom: none;
 }
 
-/* ── Electromagnetism (cyan) — dull off, bright on ── */
-.law-icon-grid .sq-toggle.cat-electromagnetism { border-color: rgba(74,232,255,0.30); color: rgba(120,235,255,0.55); background: rgba(74,232,255,0.05); }
-.law-icon-grid .sq-toggle.active.cat-electromagnetism { border-color: var(--accent-cyan); background: rgba(74,232,255,0.15); box-shadow: 0 0 6px rgba(74,232,255,0.25); color: #9ff; }
-#law-grid.word-mode .law-btn.cat-electromagnetism { color: rgba(120,235,255,0.60); }
-#law-grid.word-mode .law-btn.active.cat-electromagnetism { border-color: var(--accent-cyan); background: rgba(74,232,255,0.15); box-shadow: 0 0 6px rgba(74,232,255,0.2); color: #9ff; }
-.law-set-mini-icon.cat-electromagnetism { color: rgba(120,235,255,0.95); border-color: rgba(74,232,255,0.5); }
-
-/* ── Information (gold) — dull off, bright on ── */
-.law-icon-grid .sq-toggle.cat-information { border-color: rgba(255,215,0,0.30); color: rgba(255,225,110,0.55); background: rgba(255,215,0,0.05); }
-.law-icon-grid .sq-toggle.active.cat-information { border-color: var(--accent-gold); background: rgba(255,215,0,0.15); box-shadow: 0 0 6px rgba(255,215,0,0.25); color: #fea; }
-#law-grid.word-mode .law-btn.cat-information { color: rgba(255,225,110,0.60); }
-#law-grid.word-mode .law-btn.active.cat-information { border-color: var(--accent-gold); background: rgba(255,215,0,0.15); box-shadow: 0 0 6px rgba(255,215,0,0.2); color: #fea; }
-.law-set-mini-icon.cat-information { color: rgba(255,225,110,0.95); border-color: rgba(255,215,0,0.5); }
-
-/* ── Quantum (indigo) — dull off, bright on ── */
-.law-icon-grid .sq-toggle.cat-quantum { border-color: rgba(123,92,255,0.30); color: rgba(170,140,255,0.55); background: rgba(123,92,255,0.05); }
-.law-icon-grid .sq-toggle.active.cat-quantum { border-color: var(--accent-indigo); background: rgba(123,92,255,0.15); box-shadow: 0 0 6px rgba(123,92,255,0.25); color: #c9f; }
-#law-grid.word-mode .law-btn.cat-quantum { color: rgba(170,140,255,0.60); }
-#law-grid.word-mode .law-btn.active.cat-quantum { border-color: var(--accent-indigo); background: rgba(123,92,255,0.15); box-shadow: 0 0 6px rgba(123,92,255,0.2); color: #c9f; }
-.law-set-mini-icon.cat-quantum { color: rgba(170,140,255,0.95); border-color: rgba(123,92,255,0.5); }
+/* ── EM-spectrum law rainbow — all 8 categories, hue-driven ── */
+.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); color: hsl(var(--law-h, 210) 80% 74% / 0.55); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
+.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.25); color: hsl(var(--law-h, 210) 95% 85%); }
+#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) 80% 74% / 0.60); }
+#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.2); color: hsl(var(--law-h, 210) 95% 85%); }
+.law-set-mini-icon { color: hsl(var(--law-h, 210) 90% 80% / 0.95); border-color: hsl(var(--law-h, 210) 70% 55% / 0.5); }

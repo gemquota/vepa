@@ -3,7 +3,7 @@
  * Category filter tabs + law grid (icon ⇄ settings-style word mode) +
  * world parameter sliders grouped into accordion sections.
  */
-import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT } from '../constants.js';
+import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT, LAW_SPECTRUM, LAW_HUE_BY_INDEX } from '../constants.js';
 import { isSet, set as setLaw, clear as clearLaw, toggle as toggleLaw } from '../state/lawState.js';
 import { WORLD_PARAM_DEFS } from '../state/worldParams.js';
 
@@ -132,6 +132,9 @@ export function createWorldPanel(bus, lawStateObj) {
   const filterRow = document.querySelector('.category-filter-row');
   if (filterRow) {
     filterRow.querySelectorAll('.cat-tab').forEach((btn) => {
+      const catName = (btn.dataset.cat || '').replace('cat-', '');
+      const band = LAW_SPECTRUM[LAW_CATEGORIES[catName]?.color] || LAW_SPECTRUM.BLUE;
+      btn.style.setProperty('--cat-h', Math.round(band.center * 3.6));
       btn.addEventListener('click', () => {
         btn.classList.toggle('active');
         applyCategoryFilter(grid);
@@ -218,22 +221,24 @@ function renderLawGrid(grid, lawStateObj, bus) {
   let html = '';
   // One row per law category (physics / biology / chemistry / thermo / meta)
   for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
-    const colorName = (cat.color || 'BLUE').toLowerCase();
+    const band = LAW_SPECTRUM[cat.color] || LAW_SPECTRUM.BLUE;
+    const centerHue = Math.round(band.center * 3.6);
     html += `<div class="law-cat-row" data-cat-row="${catName}">`;
-    html += `<div class="law-cat-label" style="color:var(--accent-${colorName})">${catName}</div>`;
+    html += `<div class="law-cat-label" style="color:hsl(${centerHue} 85% 65%);--law-h:${centerHue}">${catName}</div>`;
     for (const idx of cat.laws) {
       const name = LAW_NAME_BY_IDX[idx] || `LAW_${idx}`;
       const icon = LAW_ICONS[name] || '?';
       const active = isSet(lawStateObj, idx);
       const catClass = 'cat-' + catName;
+      const hue = LAW_HUE_BY_INDEX[idx] !== undefined ? LAW_HUE_BY_INDEX[idx] : centerHue;
       const selectedClass = idx === selectedLawIdx ? ' selected' : '';
       if (isWordMode) {
         html += `<button class="law-btn ${catClass}${active ? ' active' : ''}${selectedClass}" `
-              + `data-law="${idx}" title="${name}">`
+              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">`
               + `<span class="tog-icon">${icon}</span><span class="tog-name">${name}</span></button>`;
       } else {
         html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
-              + `data-law="${idx}" title="${name}">${icon}</button>`;
+              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">${icon}</button>`;
       }
     }
     html += '</div>';
@@ -358,6 +363,7 @@ function setupLawSets(grid, bus, lawStateObj) {
         const cat = LAW_CAT_CLASS[idx] || 'physics';
         const s = document.createElement('span');
         s.className = 'law-set-mini-icon cat-' + cat;
+        s.style.setProperty('--law-h', LAW_HUE_BY_INDEX[idx] !== undefined ? LAW_HUE_BY_INDEX[idx] : 210);
         s.textContent = icon;
         miniRow.appendChild(s);
       }

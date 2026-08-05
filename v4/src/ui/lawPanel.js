@@ -7,13 +7,14 @@ import { LAW_INDEXES, LAW_CATEGORIES, LAW_COLOR_BY_INDEX } from '../constants.js
 import * as lawState from '../state/lawState.js';
 
 const CATEGORY_COLORS = {
-  BLUE:   { active: 'var(--accent-blue)',   glow: 'var(--glow-blue)',   label: 'Physics' },
-  GREEN:  { active: 'var(--accent-green)',  glow: 'var(--glow-green)',  label: 'Biology' },
-  PURPLE: { active: 'var(--accent-purple)', glow: 'var(--glow-purple)', label: 'Chemistry' },
-  ORANGE: { active: 'var(--accent-orange)', glow: 'none',               label: 'Thermodynamics' },
-  RED:    { active: 'var(--accent-red)',    glow: 'none',               label: 'Metaphysics' },
-  CYAN:   { active: 'var(--accent-cyan)',   glow: 'none',               label: 'Electromagnetism' },
-  GOLD:   { active: 'var(--accent-gold)',   glow: 'none',               label: 'Information' },
+  BLUE:   { active: 'var(--accent-blue)',   glow: 'none', label: 'Physics' },
+  GREEN:  { active: 'var(--accent-green)',  glow: 'none', label: 'Biology' },
+  PURPLE: { active: 'var(--accent-purple)', glow: 'none', label: 'Chemistry' },
+  ORANGE: { active: 'var(--accent-orange)', glow: 'none', label: 'Thermodynamics' },
+  RED:    { active: 'var(--accent-red)',    glow: 'none', label: 'Metaphysics' },
+  TEAL:   { active: 'var(--accent-teal)',   glow: 'none', label: 'Electromagnetism' },
+  YELLOW: { active: 'var(--accent-yellow)', glow: 'none', label: 'Information' },
+  VIOLET: { active: 'var(--accent-violet)', glow: 'none', label: 'Quantum' },
 };
 
 // Laws that have multi-state behavior and their max states
@@ -93,6 +94,7 @@ export function createLawPanel(bus, lawStateObj) {
     { key: 'metaphysics',   cat: LAW_CATEGORIES.metaphysics },
     { key: 'electromagnetism', cat: LAW_CATEGORIES.electromagnetism },
     { key: 'information',   cat: LAW_CATEGORIES.information },
+    { key: 'quantum',       cat: LAW_CATEGORIES.quantum },
   ];
 
   let html = '';

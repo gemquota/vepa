@@ -3,7 +3,7 @@
  * Full-width info bar above the law grid showing the last-tapped law's
  * icon, name, category, HELP_DB description, and an on/off toggle.
  */
-import { LAW_INDEXES, LAW_HELP_DB, LAW_COLOR_BY_INDEX, LAW_TO_CATEGORY } from '../constants.js';
+import { LAW_INDEXES, LAW_HELP_DB, LAW_TO_CATEGORY, LAW_HUE_BY_INDEX } from '../constants.js';
 import { isSet, toggle as toggleLaw } from '../state/lawState.js';
 
 let infoEl = null;
@@ -84,7 +84,7 @@ function showLawInfo(idx) {
   if (!help) return;
 
   const catName = LAW_TO_CATEGORY[idx] || 'unknown';
-  const colorName = (LAW_COLOR_BY_INDEX[idx] || 'BLUE').toLowerCase();
+  const hue = LAW_HUE_BY_INDEX[idx] !== undefined ? LAW_HUE_BY_INDEX[idx] : 210;
   const icon = LAW_ICONS[name] || '□';
   const hint = help.hint || '';
   const explanation = help.explanation || '';
@@ -93,11 +93,11 @@ function showLawInfo(idx) {
 
   infoEl.innerHTML = `
     <div class="info-row">
-      <div class="info-icon" style="color:var(--accent-${colorName})">${icon}</div>
+      <div class="info-icon" style="color:hsl(${hue} 90% 68%);--law-h:${hue}">${icon}</div>
       <div class="info-body">
         <div class="info-header">
           <span class="info-title">${name}</span>
-          <span class="info-category" style="color:var(--accent-${colorName})">${catName.toUpperCase()}</span>
+          <span class="info-category" style="color:hsl(${hue} 90% 68%)">${catName.toUpperCase()}</span>
           <button class="info-toggle ${isActive ? 'on' : 'off'}" data-law="${idx}">
             <span class="toggle-track">
               <span class="toggle-knob"></span>
@@ -128,8 +128,8 @@ function showLawInfo(idx) {
       const gridBtn = document.querySelector(`#law-grid .sq-toggle[data-law="${lawIdx}"]`);
       if (gridBtn) {
         gridBtn.classList.toggle('active', nowActive);
-        const color = (LAW_COLOR_BY_INDEX[lawIdx] || 'BLUE').toLowerCase();
-        gridBtn.style.borderColor = nowActive ? `var(--accent-${color})` : '';
+        const h = LAW_HUE_BY_INDEX[lawIdx] !== undefined ? LAW_HUE_BY_INDEX[lawIdx] : 210;
+        gridBtn.style.borderColor = nowActive ? `hsl(${h} 90% 60%)` : '';
       }
       // Notify
       busRef.emit('law:toggled', {

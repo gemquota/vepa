@@ -1,6 +1,27 @@
 # Changelog: VEPA v4
 
 
+## [4.6.2] - 2026-08-05
+
+### Law grid now coloured by the EM spectrum — 128-law rainbow
+- All 8 law categories map to evenly spaced spectrum colours (12.5% apart):
+  RED metaphysics · ORANGE thermodynamics · YELLOW information · GREEN biology ·
+  TEAL electromagnetism · BLUE physics · VIOLET quantum · PURPLE chemistry.
+- Each band is 10 points wide on a 0-100% spectrum (red wraps 95%→5%): the 16
+  laws inside a category are each spread across its band, so every one of the
+  128 laws gets its own hue (`LAW_SPECTRUM` + `LAW_HUE_BY_INDEX` in
+  `v4/src/constants.js`, hue = spectrum position × 3.6).
+- `worldPanel.js` stamps `--law-h` on every law button, mini law-set icon and
+  category label; cat filter tabs get `--cat-h`; `tooltip.js` info bar and
+  grid-border highlight use the per-law hue.
+- `style.css` per-category colour blocks replaced with generic `hsl(var(--law-h))`
+  rules for icon grid, word-mode list, mini icons and tabs; new
+  `--accent-teal/yellow/violet` vars added.
+- `lawPanel.js` (settings) updated to the 8-colour palette + missing quantum section.
+- Full suite: 65 files / 505 tests green; `npx vite build` clean.
+
+
+
 ## [4.6.1] - 2026-08-05
 
 ### Law RRP batch 01 — GRAV / DRAG / ENTR / WRAP spec confirmed with user
