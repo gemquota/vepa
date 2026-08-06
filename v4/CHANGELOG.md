@@ -7,6 +7,7 @@
 - ELASTICITY — match irl: the overlap push is now scaled by a coefficient of restitution from ELASTICITY DNA (0–1, default 0.5) — mag = overlap·k·ELASTICITY/(mI+mJ); real materials bounce less when less elastic, light particles still bounce harder.
 - FEEDBACK / LANGUAGE / CULTURE / SINGULARITY / ENTANGLEMENT / HISTORY / TIDE / TURBULENCE / CENTRIPETAL / ROTATION — confirmed as-is against docs; HELP_DB entries updated with confirmed specs and synergy notes.
 - Tests: `batch_20/21/22.test.js` updated to confirmed specs (+1 FRICTION viscosity+heat case, +1 ELASTICITY restitution case; 38 total across the three files). Full suite 596/596 green; `npx vite build` clean.
+- **Deploy**: production live at https://vepa-v4.vercel.app/ (Vercel, 2026-08-06).
 
 ## [4.6.22] - 2026-08-06
 
