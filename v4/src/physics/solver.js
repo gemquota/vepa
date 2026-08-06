@@ -306,6 +306,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     let ax = 0;
     let ay = 0;
     let az = 0;
+    // DISCHARGE aim: net direction toward the most opposite stored charge.
+    let ddx = 0;
+    let ddy = 0;
+    let ddz = 0;
     let iAbsorbed = false; // consumed by a singularity's event horizon
 
     // ── Pairwise neighbor loop ──
@@ -774,6 +778,21 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         );
         applyIonization(iBase, jBase, dist, relSpeed, 0.6 * computeSynergy(lawState, LAW_INDEXES.IONIZATION));
       }
+      if (isSet(lawState, LAW_INDEXES.DISCHARGE)) {
+        // Spark direction: toward the neighbor whose stored charge is most
+        // opposite to this particle's (the potential difference it will bridge).
+        const ci = view[iBase + S.CHARGE] || 0;
+        if (Math.abs(ci) >= 0.5) {
+          const cj = view[jBase + S.CHARGE] || 0;
+          const dq = cj - ci;
+          const weight = (ci > 0 ? -dq : dq) / (dist + 1.0);
+          if (weight > 0) {
+            ddx += dx * weight;
+            ddy += dy * weight;
+            ddz += dz * weight;
+          }
+        }
+      }
 
       // ── Information (pairwise) ──
       if (isSet(lawState, LAW_INDEXES.SYMBOL)) {
@@ -995,7 +1014,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       applyCapacitanceStore(iBase, 0.002);
     }
     if (isSet(lawState, LAW_INDEXES.DISCHARGE)) {
-      const discForce = applyDischarge(iBase, prng, 0.8 * computeSynergy(lawState, LAW_INDEXES.DISCHARGE));
+      const discForce = applyDischarge(iBase, prng, 0.8 * computeSynergy(lawState, LAW_INDEXES.DISCHARGE), ddx, ddy, ddz);
       if (discForce) {
         ax += discForce.ax;
         ay += discForce.ay;

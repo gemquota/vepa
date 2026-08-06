@@ -1,6 +1,6 @@
 # CHANGELOG — VEPA
 
-> **Current release:** v4.6.20 (2026-08-06) — full history in `v4/CHANGELOG.md`.
+> **Current release:** v4.6.21 (2026-08-06) — full history in `v4/CHANGELOG.md`.
 
 ## 4.0.0 — 2026-08-01
 VEPA v4 (Integrated Intelligence) shipped in `v4/`. See `v4/CHANGELOG.md`. 

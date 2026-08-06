@@ -2182,16 +2182,31 @@ export function applyMagneticForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** RESONANCE — pulsing particles with similar PULSE_RATE attract. */
+/** RESONANCE — sympathetic vibration: matched pulsing pairs attract and amplify.
+ * Batch-16: phase alignment matters. In-phase pairs (constructive interference)
+ * scale the attraction up and the stronger pulser amplifies the weaker one's
+ * SIGNAL — synchronized swarms get louder. Mismatched phase damps the force. */
 export function applyResonanceForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   const buf = buffer_global;
   const s1 = buf[p1Ptr + S.SIGNAL] || 0;
   const s2 = buf[p2Ptr + S.SIGNAL] || 0;
   if (s1 <= 0.01 || s2 <= 0.01) return null;
-  const sync = 1.0 - Math.abs((readDNA(p1Ptr, D.PULSE_RATE) || 0.5) - (readDNA(p2Ptr, D.PULSE_RATE) || 0.5));
+  const pr1 = readDNA(p1Ptr, D.PULSE_RATE) || 0.5;
+  const pr2 = readDNA(p2Ptr, D.PULSE_RATE) || 0.5;
+  const sync = 1.0 - Math.abs(pr1 - pr2);
   const sig = s1 * s2 * Math.max(0, sync);
   if (sig <= 0.001) return null;
-  const force = k * sig / (dist + 1.0);
+  // Same oscillator phase as GLOW/COMMS: phase = sin(age·0.01·(0.1+pulseRate)).
+  const ph1 = Math.sin((buf[p1Ptr + S.AGE] || 0) * 0.01 * (0.1 + pr1));
+  const ph2 = Math.sin((buf[p2Ptr + S.AGE] || 0) * 0.01 * (0.1 + pr2));
+  const phaseSync = 0.5 + 0.5 * Math.cos((ph1 - ph2) * Math.PI * 0.5);
+  // Constructive interference: the weaker pulser is driven by the stronger.
+  if (phaseSync > 0.6) {
+    const weaker = s1 < s2 ? p1Ptr : p2Ptr;
+    const stronger = weaker === p1Ptr ? p2Ptr : p1Ptr;
+    buf[weaker + S.SIGNAL] = Math.min(1, (buf[weaker + S.SIGNAL] || 0) + (buf[stronger + S.SIGNAL] || 0) * phaseSync * k * 0.1);
+  }
+  const force = k * sig * phaseSync / (dist + 1.0);
   const invDist = 1.0 / (dist + 0.001);
   return {
     ax: nanGuard(dx * invDist * force),
@@ -2200,12 +2215,19 @@ export function applyResonanceForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** FLUX — push along the stored-charge gradient. */
+/** FLUX — charge carriers drift along the field: F = qE (batch-16).
+ * Direction depends on the particle's effective charge q = POLARITY + CHARGE:
+ * positive carriers move DOWN the stored-charge gradient (with the field),
+ * negative carriers move UP it (electrons run the other way), and neutrals
+ * follow the field lines — the classic "pushed toward higher charge" behavior. */
 export function applyFluxForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   const buf = buffer_global;
   const dq = (buf[p2Ptr + S.CHARGE] || 0) - (buf[p1Ptr + S.CHARGE] || 0);
   if (dq === 0) return null;
-  const force = k * dq / (dist + 1.0);
+  const q = (readDNA(p1Ptr, D.POLARITY) || 0) + (buf[p1Ptr + S.CHARGE] || 0);
+  // Epsilon band: quantized "default 0" POLARITY is ~1.5e-5, so treat |q| ≤ 1e-3 as neutral (follows the field lines).
+  const dir = q > 1e-3 ? -1 : q < -1e-3 ? 1 : 1;
+  const force = dir * k * dq / (dist + 1.0);
   const invDist = 1.0 / (dist + 0.001);
   return {
     ax: nanGuard(dx * invDist * force),
@@ -2214,34 +2236,52 @@ export function applyFluxForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** IONIZATION — hard contacts strip charge onto particles. */
+/** IONIZATION — hard contacts strip charge, forming conserved +/− ion pairs.
+ * Batch-16 (match irl): ionization needs a threshold impact (real ionization
+ * energy), and it transfers charge — the pair becomes a +/− ion pair with
+ * conserved total charge (q_i + q_j = 0). The combined POLARITY of the pair
+ * sets which partner turns positive. Already-charged particles are not re-stripped. */
 export function applyIonization(p1Ptr, p2Ptr, dist, relSpeed, k) {
   const buf = buffer_global;
   if (dist > 3.0) return;
   const impact = Math.min(1, relSpeed * k);
-  if (impact <= 0.01) return;
-  if ((buf[p1Ptr + S.CHARGE] || 0) === 0) {
-    buf[p1Ptr + S.CHARGE] = (readDNA(p1Ptr, D.POLARITY) || 0) * impact;
-  }
-  if ((buf[p2Ptr + S.CHARGE] || 0) === 0) {
-    buf[p2Ptr + S.CHARGE] = (readDNA(p2Ptr, D.POLARITY) || 0) * impact;
-  }
+  if (impact <= 0.15) return; // below ionization energy — no strip
+  const c1 = buf[p1Ptr + S.CHARGE] || 0;
+  const c2 = buf[p2Ptr + S.CHARGE] || 0;
+  if (c1 !== 0 || c2 !== 0) return; // already ionized — no further stripping
+  const s = Math.sign((readDNA(p1Ptr, D.POLARITY) || 0) + (readDNA(p2Ptr, D.POLARITY) || 0)) || 1;
+  buf[p1Ptr + S.CHARGE] = impact * s;
+  buf[p2Ptr + S.CHARGE] = -impact * s;
 }
 
-/** DISCHARGE — stored charge bursts into motion + heat (per-particle). */
-export function applyDischarge(p1Ptr, prng, k) {
+/** DISCHARGE — stored charge bursts into motion + heat (per-particle).
+ * Batch-16 (match irl): the spark travels along the potential difference —
+ * kicked toward the neighbor with the most opposite stored charge (accumulated
+ * by the solver during the pair loop). Random burst only when no opposite-charge
+ * field exists nearby. Threshold (|c| ≥ 0.5), heat spike, and reset unchanged. */
+export function applyDischarge(p1Ptr, prng, k, aimX, aimY, aimZ) {
   const buf = buffer_global;
   const c = buf[p1Ptr + S.CHARGE] || 0;
   if (Math.abs(c) < 0.5) return null;
   const kick = c * k;
-  const dir = prng ? (prng() - 0.5) * 2 : 0;
+  const aimMag = Math.sqrt(aimX * aimX + aimY * aimY + aimZ * aimZ);
+  let ax, ay, az;
+  if (aimMag > 0.001) {
+    // Spark follows the gradient toward the opposite charge. Direction comes
+    // from the aim (already charge-aware); magnitude is |charge|·k so the
+    // charge sign never flips the aimed kick.
+    ax = Math.abs(kick) * (aimX / aimMag);
+    ay = Math.abs(kick) * (aimY / aimMag);
+    az = Math.abs(kick) * (aimZ / aimMag);
+  } else {
+    const dir = prng ? (prng() - 0.5) * 2 : 0;
+    ax = kick * 0.6;
+    ay = kick * dir;
+    az = kick * 0.2;
+  }
   buf[p1Ptr + S.TEMPERATURE] = Math.min(1, (buf[p1Ptr + S.TEMPERATURE] || 0) + Math.abs(c) * 0.08);
   buf[p1Ptr + S.CHARGE] = 0;
-  return {
-    ax: nanGuard(kick * 0.6),
-    ay: nanGuard(kick * dir),
-    az: nanGuard(kick * 0.2),
-  };
+  return { ax: nanGuard(ax), ay: nanGuard(ay), az: nanGuard(az) };
 }
 
 /** PLASMA — hot particles ionize: surplus heat becomes stored charge. */

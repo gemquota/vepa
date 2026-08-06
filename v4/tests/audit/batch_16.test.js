@@ -86,7 +86,35 @@ describe('Batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE', () => {
     expect(Math.abs(pairDist(w2.view) - d20)).toBeLessThan(1e-3);
   });
 
-  it('FLUX pushes particles along the stored-charge gradient', () => {
+  it('RESONANCE amplifies the weaker pulser when in phase (constructive interference)', () => {
+    const w = makeWorld(2, 20);
+    w.view[S.SIGNAL] = 1.0;
+    w.view[PARTICLE_STRIDE + S.SIGNAL] = 0.05;
+    setDNA(w.view, 0, D.PULSE_RATE, 0.5);
+    setDNA(w.view, 1, D.PULSE_RATE, 0.5);
+    const st = createLawState();
+    set(st, LAW_INDEXES.RESONANCE);
+    const s1 = w.view[PARTICLE_STRIDE + S.SIGNAL];
+    for (let t = 0; t < 10; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[PARTICLE_STRIDE + S.SIGNAL]).toBeGreaterThan(s1 + 0.05);
+  });
+
+  it('RESONANCE out-of-phase pairs do not amplify (no sympathetic drive)', () => {
+    const w = makeWorld(2, 20);
+    w.view[S.SIGNAL] = 1.0;
+    w.view[PARTICLE_STRIDE + S.SIGNAL] = 0.05;
+    w.view[S.AGE] = 0;
+    w.view[PARTICLE_STRIDE + S.AGE] = 500;
+    setDNA(w.view, 0, D.PULSE_RATE, 0.2);
+    setDNA(w.view, 1, D.PULSE_RATE, 0.9);
+    const st = createLawState();
+    set(st, LAW_INDEXES.RESONANCE);
+    const s1 = w.view[PARTICLE_STRIDE + S.SIGNAL];
+    for (let t = 0; t < 10; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[PARTICLE_STRIDE + S.SIGNAL]).toBeLessThan(s1 + 0.01);
+  });
+
+  it('FLUX pushes neutral particles along the stored-charge gradient', () => {
     const w = makeWorld(2, 10);
     w.view[S.CHARGE] = 0.0;
     w.view[PARTICLE_STRIDE + S.CHARGE] = 2.0;
@@ -95,7 +123,7 @@ describe('Batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE', () => {
     expect(isSet(st, LAW_INDEXES.FLUX)).toBe(true);
     const x0 = w.view[S.POS_X];
     for (let t = 0; t < 30; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
-    expect(w.view[S.POS_X]).toBeGreaterThan(x0 + 0.5); // lower-charge particle follows gradient
+    expect(w.view[S.POS_X]).toBeGreaterThan(x0 + 0.5); // neutral follows the field lines
 
     // Gate: no law → no movement
     const w2 = makeWorld(2, 10);
@@ -106,18 +134,36 @@ describe('Batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE', () => {
     expect(w2.view[S.POS_X]).toBe(100);
   });
 
-  it('IONIZATION strips charge onto particles on hard contact', () => {
+  it('FLUX positive carriers move DOWN the gradient, negative carriers UP it', () => {
+    const run = (polarity) => {
+      const w = makeWorld(2, 10);
+      setDNA(w.view, 0, D.POLARITY, polarity);
+      w.view[S.CHARGE] = 0.0;
+      w.view[PARTICLE_STRIDE + S.CHARGE] = 2.0;
+      const st = createLawState();
+      set(st, LAW_INDEXES.FLUX);
+      for (let t = 0; t < 30; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+      return w.view[S.POS_X];
+    };
+    expect(run(1.0)).toBeLessThan(100 - 0.5);  // q>0 → down the gradient (away from +2)
+    expect(run(-1.0)).toBeGreaterThan(100 + 0.5); // q<0 → up the gradient (toward +2)
+  });
+
+  it('IONIZATION forms a conserved +/− ion pair on hard contact', () => {
     const w = makeWorld(2, 2); // dist 2 ≤ 3 (contact)
     setDNA(w.view, 0, D.POLARITY, 1.0);
     setDNA(w.view, 1, D.POLARITY, 1.0);
     w.view[S.VEL_X] = 1.0;
-    w.view[PARTICLE_STRIDE + S.VEL_X] = -1.0; // relSpeed 2
+    w.view[PARTICLE_STRIDE + S.VEL_X] = -1.0; // relSpeed 2 → impact 1
     const st = createLawState();
     set(st, LAW_INDEXES.IONIZATION);
     expect(isSet(st, LAW_INDEXES.IONIZATION)).toBe(true);
     solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
-    expect(w.view[S.CHARGE]).toBeGreaterThan(0);
-    expect(w.view[PARTICLE_STRIDE + S.CHARGE]).toBeGreaterThan(0);
+    const q0 = w.view[S.CHARGE];
+    const q1 = w.view[PARTICLE_STRIDE + S.CHARGE];
+    expect(q0).toBeGreaterThan(0);
+    expect(q1).toBeLessThan(0);
+    expect(q0 + q1).toBeCloseTo(0, 6); // conserved pair
 
     // Gate: no law → charge stays zero
     const w2 = makeWorld(2, 2);
@@ -129,6 +175,19 @@ describe('Batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE', () => {
     solve(w2.view, 2, PARTICLE_STRIDE, none, w2.dna, WORLD, DT, rng);
     expect(w2.view[S.CHARGE]).toBe(0);
     expect(w2.view[PARTICLE_STRIDE + S.CHARGE]).toBe(0);
+  });
+
+  it('IONIZATION needs a threshold impact (ionization energy)', () => {
+    const w = makeWorld(2, 2);
+    setDNA(w.view, 0, D.POLARITY, 1.0);
+    setDNA(w.view, 1, D.POLARITY, 1.0);
+    w.view[S.VEL_X] = 0.1;
+    w.view[PARTICLE_STRIDE + S.VEL_X] = -0.1; // relSpeed 0.2 → impact 0.12 < 0.15
+    const st = createLawState();
+    set(st, LAW_INDEXES.IONIZATION);
+    solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[S.CHARGE]).toBe(0);
+    expect(w.view[PARTICLE_STRIDE + S.CHARGE]).toBe(0);
   });
 
   it('DISCHARGE converts stored charge into motion and heat, resetting charge', () => {
@@ -151,5 +210,18 @@ describe('Batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE', () => {
     solve(w2.view, 1, PARTICLE_STRIDE, none, w2.dna, WORLD, DT, rng);
     expect(w2.view[S.CHARGE]).toBe(1.5);
     expect(w2.view[S.TEMPERATURE]).toBe(0);
+  });
+
+  it('DISCHARGE sparks toward the opposite charge (potential difference)', () => {
+    const w = makeWorld(2, 10);
+    w.view[S.CHARGE] = 1.5;
+    w.view[PARTICLE_STRIDE + S.CHARGE] = -1.5;
+    const st = createLawState();
+    set(st, LAW_INDEXES.DISCHARGE);
+    solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[S.VEL_X]).toBeGreaterThan(0);   // p0 kicked toward p1 (+x)
+    expect(w.view[PARTICLE_STRIDE + S.VEL_X]).toBeLessThan(0); // p1 kicked toward p0 (−x)
+    expect(w.view[S.CHARGE]).toBe(0);
+    expect(w.view[PARTICLE_STRIDE + S.CHARGE]).toBe(0);
   });
 });

@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.21] - 2026-08-06
+
+### Law RRP batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE confirmed
+- RESONANCE — sympathetic vibration is now phase-aware (match irl): `phaseSync = 0.5+0.5·cos(Δphase·π/2)` scales the matched-rate attraction (same oscillator as GLOW/COMMS), and in-phase pairs amplify each other — the stronger pulser drives the weaker one's SIGNAL up, so synchronized swarms get louder. Out-of-phase pairs get no drive.
+- FLUX — F = qE (match irl): drift direction now depends on effective charge q = POLARITY + CHARGE. Positive carriers move DOWN the stored-charge gradient, negative carriers UP it (electrons run the other way); neutrals (|q| ≤ 1e-3, includes the quantized default) still follow the field lines as documented.
+- IONIZATION — hard contacts now need a threshold impact (> 0.15, ionization energy) and form a conserved +/− ion pair: q_i = impact·s, q_j = −impact·s with s = sign(POLARITY_i + POLARITY_j) || 1. Genuine charge conservation seeds CHARGE_LAW/FLUX/CURRENT with real ion pairs; already-charged pairs are not re-stripped.
+- DISCHARGE — the spark now travels along the potential difference: the solver accumulates the direction toward the neighbor with the most opposite stored charge and the kick (|c|·k) is aimed that way; charge sign no longer flips the aimed kick. Random burst only with no opposite-charge field nearby. Threshold/heat/reset unchanged.
+- Tests: `batch_16.test.js` rewritten to confirmed specs (9 cases: phase amplification, out-of-phase no-drive, neutral/positive/negative flux carriers, ion-pair conservation, ionization threshold, aimed discharge). Full suite 589/589 green; `npx vite build` clean.
+
 ## [4.6.20] - 2026-08-06
 
 ### Law RRP batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM confirmed

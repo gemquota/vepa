@@ -719,23 +719,23 @@ export const LAW_HELP_DB = {
   },
   RESONANCE: {
     hint: "Resonance: pulsing particles attract when their pulse rates match.",
-    explanation: "Particles with similar PULSE_RATE DNA that are actively signaling attract each other — sympathetic vibration.",
-    system: "Uses SIGNAL and PULSE_RATE. In a hive-mind setup it tightens synchronized swarms.",
+    explanation: "Confirmed batch-16 (match irl): sympathetic vibration — particles with similar PULSE_RATE DNA that are actively signaling attract each other, and phase alignment amplifies them. In-phase pairs (constructive interference) scale the attraction up and the stronger pulser drives the weaker one's SIGNAL upward; out-of-phase pairs get no drive.",
+    system: "F = k·s1·s2·sync·phaseSync/(dist+1), sync = 1−|ΔPULSE_RATE|, phaseSync = 0.5+0.5·cos(Δphase·π/2) using the GLOW/COMMS oscillator phase = sin(age·0.01·(0.1+pulseRate)). phaseSync > 0.6 → weaker pulser gains SIGNAL.",
   },
   FLUX: {
     hint: "Charge flux: particles are pushed along the charge gradient.",
-    explanation: "Each particle feels a force toward higher stored charge — charge flows like field lines, dragging particles along the gradient.",
-    system: "Works with CURRENT and CAPACITANCE. Turns stored charge into directed motion.",
+    explanation: "Confirmed batch-16 (match irl): F = qE — the drift direction depends on the particle's effective charge q = POLARITY + CHARGE. Positive carriers move DOWN the stored-charge gradient (with the field), negative carriers move UP it (electrons run the other way), and neutral particles follow the field lines toward higher stored charge.",
+    system: "F = dir·k·(c_j − c_i)/(dist+1), dir = −1 for q > 1e-3, +1 for q < −1e-3, +1 for neutral. Turns stored charge into directed motion; works with CURRENT and CAPACITANCE.",
   },
   IONIZATION: {
     hint: "Ionization: hard contacts strip charge onto particles.",
-    explanation: "On close contact, particles acquire stored CHARGE proportional to their POLARITY and impact speed, seeding electrostatic effects.",
-    system: "Writes the CHARGE stride slot so CHARGE_LAW, FLUX, and CURRENT have something to act on.",
+    explanation: "Confirmed batch-16 (match irl): a hard contact above a threshold impact energy ionizes the pair — charge is transferred, forming a conserved +/− ion pair (q_i + q_j = 0). The pair's combined POLARITY sign decides which partner turns positive. Already-charged particles are not re-stripped.",
+    system: "dist ≤ 3 and impact = min(1, relSpeed·k) > 0.15 → q_i = impact·s, q_j = −impact·s with s = sign(POLARITY_i + POLARITY_j) || 1. Seeds CHARGE_LAW, FLUX, and CURRENT with genuine ion pairs.",
   },
   DISCHARGE: {
     hint: "Discharge: stored charge bursts into motion and heat.",
-    explanation: "Particles holding strong stored CHARGE suddenly release it — a velocity kick proportional to the charge plus a heat spike, then the charge resets to zero.",
-    system: "Capacitance builds charge, discharge converts it into kinetic energy. Creates spark-like impulse events that re-seed electrostatic dynamics.",
+    explanation: "Confirmed batch-16 (match irl): the spark travels along the potential difference — the kick is aimed at the neighbor with the most opposite stored charge, not a random direction. Threshold |c| ≥ 0.5, heat spike, and reset-to-zero unchanged; random burst only when no opposite-charge field exists nearby.",
+    system: "|c| ≥ 0.5 → kick = |c|·k aimed along the accumulated opposite-charge gradient (weighted by −sign(c)·(c_j − c_i)/(dist+1)); TEMP += |c|·0.08 (cap 1); CHARGE = 0. Spark-like impulses re-seed electrostatic dynamics.",
   },
   PLASMA: {
     hint: "Plasma: hot particles ionize — heat becomes charge.",
