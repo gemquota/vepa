@@ -13,6 +13,7 @@
 import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from '../constants.js';
 import { isSet } from '../state/lawState.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
+import { getDNAFloat } from '../dna/dnaBuffer.js';
 
 /** Live world-param state (WORLD panel sliders). */
 function worldParams() {
@@ -1295,10 +1296,14 @@ export function applyReduction(b1Ptr, b2Ptr, stride, synergy) {
   const charge1 = buf[b1Ptr + S.CHARGE];
   const charge2 = buf[b2Ptr + S.CHARGE];
   if (!Number.isFinite(charge1) || !Number.isFinite(charge2)) return;
-  const diff = charge1 - charge2;
-  const neutralization = diff * 0.05 * synergy;
-  buf[b1Ptr + S.CHARGE] -= neutralization;
-  buf[b2Ptr + S.CHARGE] += neutralization;
+  // Real-life reduction: opposite charges attract and cancel out when they
+  // interact; same-sign charges repel, so nothing gets neutralized.
+  if (charge1 * charge2 >= 0) return;
+  const rate = 0.05 * synergy;
+  const d1 = charge1 * rate;
+  const d2 = charge2 * rate;
+  buf[b1Ptr + S.CHARGE] = Math.abs(charge1) <= Math.abs(d1) ? 0 : charge1 - d1;
+  buf[b2Ptr + S.CHARGE] = Math.abs(charge2) <= Math.abs(d2) ? 0 : charge2 - d2;
 }
 
 // ============================================================================
@@ -1312,11 +1317,22 @@ export function applyAlloy(lawState, view, iBase, jBase, stride, dist, synergy) 
   const r1 = view[iBase + S.RADIUS];
   const r2 = view[jBase + S.RADIUS];
   if (dist > (r1 + r2) * 0.5) return;
-  // Merge j into i
+  // Real-life alloying: the two materials dissolve into one homogeneous
+  // composite — full mass merge, DNA averaged (hybrid composition), colour
+  // blended. The survivor keeps its species slot but behaves as the mix.
+  const m1 = view[iBase + S.MASS];
   const m2 = view[jBase + S.MASS];
-  view[iBase + S.MASS] += m2 * 0.1 * synergy;
+  const total = m1 + m2;
+  const w2 = total > 0 ? m2 / total : 0.5;
+  view[iBase + S.MASS] = total;
   view[jBase + S.DEAD] = 1.0;
-  // Blend colors
+  for (let d = 0; d < 42; d++) {
+    const a = view[iBase + S.DNA_CACHE_START + d];
+    const b = view[jBase + S.DNA_CACHE_START + d];
+    if (Number.isFinite(a) && Number.isFinite(b)) {
+      view[iBase + S.DNA_CACHE_START + d] = a + (b - a) * w2;
+    }
+  }
   view[iBase + S.COLOR_R] = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
   view[iBase + S.COLOR_G] = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
   view[iBase + S.COLOR_B] = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
@@ -1325,23 +1341,34 @@ export function applyAlloy(lawState, view, iBase, jBase, stride, dist, synergy) 
 // ============================================================================
 // 35. MELT — High temp particles lose mass
 // ============================================================================
-export function applyMelt(lawState, view, base, dt, synergy) {
+export function applyMelt(lawState, view, base, dt, synergy, dnaBuffer) {
   if (!isSet(lawState, LAW_INDEXES.MELT)) return;
   const temp = view[base + S.TEMPERATURE];
-  if (!Number.isFinite(temp) || temp < 0.7) return;
-  const mass = view[base + S.MASS];
-  const meltRate = (temp - 0.7) * 0.01 * dt * synergy;
-  const newMass = mass - meltRate;
-  if (newMass > 0.1) {
-    view[base + S.MASS] = newMass;
-    view[base + S.TEMPERATURE] -= meltRate * 0.5;
+  if (!Number.isFinite(temp)) return;
+  const stiffness = view[base + S.DNA_CACHE_START + D.STIFFNESS];
+  if (!Number.isFinite(stiffness)) return;
+  const speciesId = view[base + S.SPECIES_ID];
+  const range = DNA_RANGES[D.STIFFNESS] || { min: 0.1, max: 5, default: 1 };
+  const baseline = dnaBuffer && dnaBuffer.length
+    ? getDNAFloat(dnaBuffer, speciesId, D.STIFFNESS, range.min, range.max)
+    : (stiffness > 0 ? stiffness : range.default);
+  if (temp >= 0.7) {
+    // Melt (per HELP_DB): heat softens the particle — effective stiffness
+    // decays toward a 20% floor while hot. Real melting loses rigidity, not
+    // mass, and it is reversible below the melt point.
+    const floor = baseline * 0.2;
+    const rate = (temp - 0.7) * 0.02 * dt * synergy;
+    view[base + S.DNA_CACHE_START + D.STIFFNESS] = Math.max(floor, stiffness - rate);
+  } else if (stiffness < baseline - 1e-6) {
+    // Re-solidify: stiffness recovers toward the species baseline.
+    view[base + S.DNA_CACHE_START + D.STIFFNESS] = Math.min(baseline, stiffness + 0.005 * dt * synergy);
   }
 }
 
 // ============================================================================
 // 36. BOIL — Very hot particles eject mass as energetic vapor
 // ============================================================================
-export function applyBoil(lawState, view, base, dt, synergy) {
+export function applyBoil(lawState, view, base, dt, synergy, prng) {
   if (!isSet(lawState, LAW_INDEXES.BOIL)) return;
   const temp = view[base + S.TEMPERATURE];
   if (!Number.isFinite(temp) || temp < 0.9) return;
@@ -1349,11 +1376,15 @@ export function applyBoil(lawState, view, base, dt, synergy) {
   const boilRate = (temp - 0.9) * 0.02 * dt * synergy;
   const ejectMass = mass * boilRate;
   if (ejectMass > 0.01) {
-    view[base + S.MASS] -= ejectMass;
-    // Velocity boost from mass ejection
-    view[base + S.VEL_X] += (Math.random() - 0.5) * ejectMass * 10;
-    view[base + S.VEL_Y] += (Math.random() - 0.5) * ejectMass * 10;
-    view[base + S.VEL_Z] += (Math.random() - 0.5) * ejectMass * 5;
+    // Boil: vaporizing mass is energetic — the ejected fraction becomes
+    // kinetic energy and costs latent heat (ENERGY), with a mass floor so
+    // particles never boil away completely.
+    view[base + S.MASS] = Math.max(0.02, mass - ejectMass);
+    const rnd = prng || Math.random;
+    view[base + S.VEL_X] += (rnd() - 0.5) * ejectMass * 10;
+    view[base + S.VEL_Y] += (rnd() - 0.5) * ejectMass * 10;
+    view[base + S.VEL_Z] += (rnd() - 0.5) * ejectMass * 5;
+    view[base + S.ENERGY] = Math.max(0, (view[base + S.ENERGY] || 0) - ejectMass * 20);
     view[base + S.TEMPERATURE] -= boilRate * 0.3;
   }
 }

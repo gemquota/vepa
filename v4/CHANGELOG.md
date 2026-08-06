@@ -1,5 +1,15 @@
 # Changelog: VEPA v4
 
+## [4.6.15] - 2026-08-06
+
+### Law RRP batch 11 — REDUCTION / ALLOY / MELT / BOIL confirmed + multiplexer live settings
+- REDUCTION — real-life behavior: opposite charges cancel toward zero on interaction (same-sign pairs untouched; the old code equalized like a conductor).
+- ALLOY — real-life alloying: full mass merge + mass-weighted DNA average (hybrid composition) + colour blend; survivor keeps its species slot.
+- MELT — follows HELP_DB: hot particles lose effective STIFFNESS toward a 20% floor (mass untouched) and re-solidify when cool — reversible phase change.
+- BOIL — yes: ejected mass costs latent heat (ENERGY −= ejectMass×20), uses the SplitMix32 PRNG for the velocity kick, 0.02 mass floor.
+- Multiplexer — the right drawer now shows every setting live during multiplexing: VARIATION slider, RANDOMIZE (LAWS/DNA/POP), DERIVE (CLONE/SPAWN), GRID (C×R, applies immediately), AUTO-ITERATE + EVERY interval, AUTO-SELECT FITTEST. New engine: `autoIterate` regenerates shards on a cadence; `selectFittestShard` picks the most alive.
+- Tests: `batch_11.test.js` rewritten (8 cases), `multiplex.test.js` +4 — full suite 565/565 green; `npx vite build` clean.
+
 ## [4.6.14] - 2026-08-06
 
 ### Law colours: 10% bands tightened to 4%

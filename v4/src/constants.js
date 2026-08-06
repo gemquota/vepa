@@ -953,13 +953,13 @@ export const LAW_HELP_DB = {
   },
   MELT: {
     hint: "Melting: hot particles lose structural integrity.",
-    explanation: "High temperature softens particles, reducing their effective stiffness.",
-    system: "STIFFNESS DNA is reduced proportionally to temperature above threshold.",
+    explanation: "Confirmed batch-11 (follow HELP_DB): melting is a loss of rigidity, not mass — above the melt point (temp 0.7) a particle's effective STIFFNESS decays toward a 20% floor, and below it the particle re-solidifies and stiffness recovers. Reversible phase change.",
+    system: "STIFFNESS (DNA cache) decays by (temp−0.7) x 0.02 x dt x synergy toward 20% of the species baseline; recovers at 0.005 x dt x synergy below temp 0.7.",
   },
   BOIL: {
     hint: "Boiling: very hot particles eject mass.",
-    explanation: "Particles above boiling temperature shed mass as energetic vapor.",
-    system: "Mass is converted to velocity for the ejected fraction. Consumes energy.",
+    explanation: "Confirmed batch-11 (yes): particles above boiling temperature (temp 0.9) eject a mass fraction as energetic vapor — the ejected mass becomes a PRNG velocity burst and costs latent heat (ENERGY), with a 0.02 mass floor so nothing boils away completely.",
+    system: "ejectMass = mass x (temp−0.9) x 0.02 x dt x synergy (> 0.01 threshold); MASS −= ejectMass (floor 0.02); VEL ±= (prng()−0.5) x ejectMass x 10/5; ENERGY −= ejectMass x 20; TEMPERATURE −= boilRate x 0.3.",
   },
   CONDENSE: {
     hint: "Condensation: cool particles gain mass from vapor.",
@@ -1038,13 +1038,13 @@ export const LAW_HELP_DB = {
   },
   REDUCTION: {
     hint: "Reduction: charge is neutralized between particles.",
-    explanation: "Opposite charges cancel out when particles interact, reducing net charge differentials.",
-    system: "Chemical reduction. Opposite to OXIDATION. Lowers charge magnitude toward zero.",
+    explanation: "Confirmed batch-11 (real-life behavior): opposite charges attract and cancel out when they interact — each magnitude shrinks toward zero. Same-sign charges repel, so nothing is neutralized. The mirror of OXIDATION.",
+    system: "For opposite-sign pairs: CHARGE −= CHARGE x 0.05 x synergy on both (snap to 0 when the step exceeds the magnitude). Same-sign pairs are untouched.",
   },
   ALLOY: {
     hint: "Alloying: different-species particles fuse into composites.",
-    explanation: "Particles of different species can merge, creating hybrid particles with mixed DNA.",
-    system: "Cross-species fusion. Creates hybrid offspring with averaged DNA from both parents.",
+    explanation: "Confirmed batch-11 (real-life behavior): two different-species particles that overlap dissolve into one homogeneous composite — full mass merge, per-particle DNA averaged (mass-weighted), colour blended. The survivor keeps its species slot but behaves as the mix.",
+    system: "Overlap dist < (r1+r2) x 0.5: MASS = m1+m2, DNA_CACHE = mass-weighted average of both, colours blended, j is marked DEAD. Gated by ALLOY.",
   },
   TIDE: {
     hint: "Tides: massive neighbours stretch and pull at each other.",

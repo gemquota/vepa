@@ -63,58 +63,67 @@ function makeWorld(count, mutate) {
 }
 
 describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
-  it('REDUCTION (40): charge neutralization toward the mean', () => {
+  it('REDUCTION (40): opposite charges cancel toward zero, same-sign pairs untouched', () => {
     const buf = view(2);
     seed(buf, 2);
     buf[S.CHARGE] = 1.0;
-    buf[PARTICLE_STRIDE + S.CHARGE] = 0.2;
+    buf[PARTICLE_STRIDE + S.CHARGE] = -1.0;
     setBuffer(buf);
     applyReduction(0, PARTICLE_STRIDE, PARTICLE_STRIDE, 1);
-    expect(buf[S.CHARGE]).toBeCloseTo(0.96, 5); // 1.0 - 0.8*0.05
-    expect(buf[PARTICLE_STRIDE + S.CHARGE]).toBeCloseTo(0.24, 5); // 0.2 + 0.8*0.05
-    // equal charges → no change
-    const buf2 = view(2);
-    seed(buf2, 2);
-    buf2[S.CHARGE] = 0.5;
-    buf2[PARTICLE_STRIDE + S.CHARGE] = 0.5;
-    setBuffer(buf2);
+    expect(buf[S.CHARGE]).toBeCloseTo(0.95, 5);
+    expect(buf[PARTICLE_STRIDE + S.CHARGE]).toBeCloseTo(-0.95, 5);
+
+    // Same-sign charges repel — nothing is neutralized.
+    const same = view(2);
+    seed(same, 2);
+    same[S.CHARGE] = 1.0;
+    same[PARTICLE_STRIDE + S.CHARGE] = 0.2;
+    setBuffer(same);
     applyReduction(0, PARTICLE_STRIDE, PARTICLE_STRIDE, 1);
-    expect(buf2[S.CHARGE]).toBe(0.5);
-    expect(buf2[PARTICLE_STRIDE + S.CHARGE]).toBe(0.5);
+    expect(same[S.CHARGE]).toBe(1.0);
+    expect(same[PARTICLE_STRIDE + S.CHARGE]).toBeCloseTo(0.2, 5);
   });
 
-  it('REDUCTION integration: charges converge only when law enabled', () => {
+  it('REDUCTION integration: opposite charges converge only when law enabled', () => {
     const on = makeWorld(2, (v) => {
       v[S.CHARGE] = 1.0;
-      v[PARTICLE_STRIDE + S.CHARGE] = 0.2;
+      v[PARTICLE_STRIDE + S.CHARGE] = -1.0;
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
     });
     const st = createLawState();
     set(st, LAW_INDEXES.REDUCTION);
     expect(isSet(st, LAW_INDEXES.REDUCTION)).toBe(true);
     solve(on.view, 2, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
-    const diffOn = Math.abs(on.view[S.CHARGE] - on.view[PARTICLE_STRIDE + S.CHARGE]);
-    expect(diffOn).toBeLessThan(0.8);
+    expect(Math.abs(on.view[S.CHARGE])).toBeLessThan(1.0);
+    expect(Math.abs(on.view[PARTICLE_STRIDE + S.CHARGE])).toBeLessThan(1.0);
 
     const off = makeWorld(2, (v) => {
       v[S.CHARGE] = 1.0;
-      v[PARTICLE_STRIDE + S.CHARGE] = 0.2;
+      v[PARTICLE_STRIDE + S.CHARGE] = -1.0;
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
     });
     solve(off.view, 2, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
-    expect(Math.abs(off.view[S.CHARGE] - off.view[PARTICLE_STRIDE + S.CHARGE])).toBeCloseTo(0.8, 5);
+    expect(off.view[S.CHARGE]).toBe(1.0);
+    expect(off.view[PARTICLE_STRIDE + S.CHARGE]).toBe(-1.0);
   });
 
-  it('ALLOY (41): cross-species fusion on overlap, gated by isSet', () => {
+  it('ALLOY (41): full mass merge + mass-weighted DNA average + colour blend', () => {
     const buf = view(2);
     seed(buf, 2);
     buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
+    buf[S.DNA_CACHE_START + 0] = 100; // FORCE of the survivor
+    buf[PARTICLE_STRIDE + S.DNA_CACHE_START + 0] = 0; // FORCE of the absorbed
+    buf[S.COLOR_R] = 255;
+    buf[PARTICLE_STRIDE + S.COLOR_B] = 255;
     const state = createLawState();
     set(state, LAW_INDEXES.ALLOY);
     expect(isSet(state, LAW_INDEXES.ALLOY)).toBe(true);
     applyAlloy(state, buf, 0, PARTICLE_STRIDE, PARTICLE_STRIDE, 0.3, 1);
     expect(buf[PARTICLE_STRIDE + S.DEAD]).toBe(1);
-    expect(buf[S.MASS]).toBeCloseTo(1.65, 5); // 1.5 + 1.5*0.1
+    expect(buf[S.MASS]).toBeCloseTo(3.0, 5); // full merge, not 10%
+    expect(buf[S.DNA_CACHE_START + 0]).toBeCloseTo(50, 5); // averaged hybrid DNA
+    expect(buf[S.COLOR_R]).toBeCloseTo(127.5, 5);
+    expect(buf[S.COLOR_B]).toBeCloseTo(127.5, 5);
     // same species → no merge
     const same = view(2);
     seed(same, 2);
@@ -134,15 +143,18 @@ describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
     expect(off[PARTICLE_STRIDE + S.DEAD]).toBe(0);
   });
 
-  it('ALLOY integration: overlapping cross-species pair fuses in solve()', () => {
+  it('ALLOY integration: overlapping cross-species pair fuses fully in solve()', () => {
     const on = makeWorld(2, (v) => {
       v[PARTICLE_STRIDE + S.POS_X] = 100.3; // dist 0.3
+      v[S.DNA_CACHE_START + 0] = 100;
+      v[PARTICLE_STRIDE + S.DNA_CACHE_START + 0] = 0;
     });
     const st = createLawState();
     set(st, LAW_INDEXES.ALLOY);
     solve(on.view, 2, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
     expect(on.view[PARTICLE_STRIDE + S.DEAD]).toBe(1);
     expect(on.view[S.MASS]).toBeGreaterThan(1.5);
+    expect(on.view[S.DNA_CACHE_START + 0]).toBeLessThan(100);
 
     const off = makeWorld(2, (v) => {
       v[PARTICLE_STRIDE + S.POS_X] = 100.3;
@@ -152,47 +164,53 @@ describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
     expect(off.view[S.MASS]).toBe(1.5);
   });
 
-  it('MELT (42): hot particles lose mass and cool, gated by isSet', () => {
+  it('MELT (42): hot particles lose stiffness (not mass), recover when cool', () => {
+    const dna = createDNABuffer();
+    loadDefaults(dna, DNA_RANGES);
     const buf = view(1);
     seed(buf, 1);
     buf[S.TEMPERATURE] = 1.0;
+    buf[S.DNA_CACHE_START + 8] = 1.0; // STIFFNESS baseline
     const state = createLawState();
     set(state, LAW_INDEXES.MELT);
     expect(isSet(state, LAW_INDEXES.MELT)).toBe(true);
-    applyMelt(state, buf, 0, 1, 1);
-    expect(buf[S.MASS]).toBeCloseTo(1.497, 5); // 1.5 - 0.3*0.01
-    expect(buf[S.TEMPERATURE]).toBeLessThan(1.0);
-    // below threshold (0.7) → unchanged
-    const cool = view(1);
-    seed(cool, 1);
-    cool[S.TEMPERATURE] = 0.5;
-    applyMelt(state, cool, 0, 1, 1);
-    expect(cool[S.MASS]).toBe(1.5);
+    applyMelt(state, buf, 0, 1, 1, dna);
+    expect(buf[S.DNA_CACHE_START + 8]).toBeLessThan(1.0); // softened
+    expect(buf[S.DNA_CACHE_START + 8]).toBeGreaterThan(0.19); // 20% floor
+    expect(buf[S.MASS]).toBe(1.5); // melting is not mass loss
+
+    // Cool below the melt point → stiffness recovers toward the baseline.
+    buf[S.TEMPERATURE] = 0.5;
+    applyMelt(state, buf, 0, 1, 1, dna);
+    expect(buf[S.DNA_CACHE_START + 8]).toBeGreaterThan(0.99);
     // gate off → unchanged
     const off = view(1);
     seed(off, 1);
     off[S.TEMPERATURE] = 1.0;
-    applyMelt(createLawState(), off, 0, 1, 1);
-    expect(off[S.MASS]).toBe(1.5);
+    off[S.DNA_CACHE_START + 8] = 1.0;
+    applyMelt(createLawState(), off, 0, 1, 1, dna);
+    expect(off[S.DNA_CACHE_START + 8]).toBe(1.0);
   });
 
-  it('MELT integration: high-temperature particle sheds mass', () => {
+  it('MELT integration: high-temperature particle softens with law on', () => {
     const on = makeWorld(1, (v) => {
       v[S.TEMPERATURE] = 1.0;
     });
     const st = createLawState();
     set(st, LAW_INDEXES.MELT);
     solve(on.view, 1, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
-    expect(on.view[S.MASS]).toBeLessThan(1.5);
+    expect(on.view[S.DNA_CACHE_START + 8]).toBeLessThan(1.0);
+    expect(on.view[S.MASS]).toBe(1.5);
 
     const off = makeWorld(1, (v) => {
       v[S.TEMPERATURE] = 1.0;
     });
     solve(off.view, 1, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
+    expect(off.view[S.DNA_CACHE_START + 8]).toBeCloseTo(1.0, 4);
     expect(off.view[S.MASS]).toBe(1.5);
   });
 
-  it('BOIL (43): very hot particles eject mass and cool, gated by isSet', () => {
+  it('BOIL (43): very hot particles eject mass, burn energy, use the PRNG', () => {
     const buf = view(1);
     seed(buf, 1);
     buf[S.MASS] = 10;
@@ -200,28 +218,30 @@ describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
     const state = createLawState();
     set(state, LAW_INDEXES.BOIL);
     expect(isSet(state, LAW_INDEXES.BOIL)).toBe(true);
-    applyBoil(state, buf, 0, 1, 1);
+    applyBoil(state, buf, 0, 1, 1, rng);
     expect(buf[S.MASS]).toBeLessThan(10); // ejectMass = 10*0.002 = 0.02 > 0.01
+    expect(buf[S.ENERGY]).toBeLessThan(100); // latent heat burn
     expect(buf[S.TEMPERATURE]).toBeLessThan(1.0);
+    expect(buf[S.VEL_X]).toBe(0); // deterministic prng (0.5) → no kick
     // below threshold (0.9) → unchanged
     const warm = view(1);
     seed(warm, 1);
     warm[S.MASS] = 10;
     warm[S.TEMPERATURE] = 0.5;
-    applyBoil(state, warm, 0, 1, 1);
+    applyBoil(state, warm, 0, 1, 1, rng);
     expect(warm[S.MASS]).toBe(10);
     // ejection too small (mass 1.5 → ejectMass 0.003 < 0.01) → unchanged
     const small = view(1);
     seed(small, 1);
     small[S.TEMPERATURE] = 1.0;
-    applyBoil(state, small, 0, 1, 1);
+    applyBoil(state, small, 0, 1, 1, rng);
     expect(small[S.MASS]).toBe(1.5);
     // gate off → unchanged
     const off = view(1);
     seed(off, 1);
     off[S.MASS] = 10;
     off[S.TEMPERATURE] = 1.0;
-    applyBoil(createLawState(), off, 0, 1, 1);
+    applyBoil(createLawState(), off, 0, 1, 1, rng);
     expect(off[S.MASS]).toBe(10);
   });
 
@@ -234,6 +254,7 @@ describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
     set(st, LAW_INDEXES.BOIL);
     solve(on.view, 1, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
     expect(on.view[S.MASS]).toBeLessThan(50);
+    expect(on.view[S.ENERGY]).toBeLessThan(100);
 
     const off = makeWorld(1, (v) => {
       v[S.MASS] = 50;

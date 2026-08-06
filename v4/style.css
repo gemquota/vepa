@@ -1966,6 +1966,78 @@ body {
 .mpx-action:hover { background: rgba(255,74,74,0.22); }
 .mpx-danger { background: rgba(255,74,74,0.16); }
 
+/* ── Live settings inside the right-edge drawer ── */
+.mpx-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  margin-top: 2px;
+}
+.mpx-settings-title {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--accent-red);
+  opacity: 0.85;
+}
+.mpx-set-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+.mpx-set-label { flex: 0 0 auto; }
+.mpx-set-value {
+  margin-left: auto;
+  color: var(--accent-red);
+  font-size: 8px;
+}
+.mpx-set-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent-red);
+  height: 12px;
+}
+.mpx-checks { display: flex; gap: 6px; margin-left: auto; }
+.mpx-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.mpx-check input { accent-color: var(--accent-red); }
+.mpx-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.mpx-num input {
+  width: 30px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 2px 3px;
+}
+.mpx-set-row select {
+  margin-left: auto;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 2px 4px;
+}
+
 /* Chaos Multiplex settings modal */
 #chaos-modal {
   position: fixed;

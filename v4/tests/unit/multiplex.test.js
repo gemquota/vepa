@@ -15,6 +15,7 @@ import {
   iterateMultiplex,
   stepMultiplex,
   selectShard,
+  selectFittestShard,
   MULTIPLEX_DEFAULTS,
 } from '../../src/multiplex/multiplex.js';
 
@@ -86,5 +87,69 @@ describe('Chaos Multiplex core', () => {
     expect(mx.sourceSeed).not.toBe(prevSeed);
     expect(mx.shards.length).toBe(4);
     expect(mx.selected).toBe(2);
+  });
+
+  it('new defaults: auto-iterate cadence + auto-select fittest are present', () => {
+    expect(MULTIPLEX_DEFAULTS.autoIterate).toBe(false);
+    expect(MULTIPLEX_DEFAULTS.autoIterateInterval).toBe(400);
+    expect(MULTIPLEX_DEFAULTS.autoSelectFittest).toBe(false);
+    const mx = createMultiplex(null);
+    expect(mx.tick).toBe(0);
+  });
+
+  it('autoIterate regenerates shards on the configured cadence', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(), {
+      ...MULTIPLEX_DEFAULTS,
+      cols: 2,
+      rows: 1,
+      variation: 0,
+      autoIterate: true,
+      autoIterateInterval: 2,
+    }, null);
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 1
+    expect(mx.iteration).toBe(0);
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 2 → auto-iterate
+    expect(mx.iteration).toBe(1);
+    expect(mx.shards.length).toBe(2);
+  });
+
+  it('selectFittestShard picks the shard with the most living particles', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(4), { ...MULTIPLEX_DEFAULTS, cols: 2, rows: 2, variation: 0 }, null);
+    // All four shards start with 4 alive → first is fittest.
+    selectFittestShard(mx);
+    expect(mx.selected).toBe(0);
+    // Kill two in shard 1 and three in shard 2 → shard 0 (4 alive) stays fittest.
+    mx.shards[1].view[1 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[1].view[2 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[2].view[1 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[2].view[2 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[2].view[3 * PARTICLE_STRIDE + S.DEAD] = 1;
+    selectFittestShard(mx);
+    expect(mx.selected).toBe(0);
+    // Kill all in shard 0 → shard 1 (2 alive) is now fittest.
+    for (let p = 0; p < 4; p++) mx.shards[0].view[p * PARTICLE_STRIDE + S.DEAD] = 1;
+    selectFittestShard(mx);
+    expect(mx.selected).toBe(3); // shard 3 is untouched → 4 alive
+  });
+
+  it('autoSelectFittest keeps the fittest shard selected after an auto-iteration', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(4), {
+      ...MULTIPLEX_DEFAULTS,
+      cols: 2,
+      rows: 1,
+      variation: 0,
+      autoIterate: true,
+      autoIterateInterval: 1,
+      autoSelectFittest: true,
+    }, null);
+    mx.shards[1].view[1 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[1].view[2 * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[1].view[3 * PARTICLE_STRIDE + S.DEAD] = 1;
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 1 → auto-iterate + fittest
+    expect(mx.iteration).toBe(1);
+    expect(mx.selected).toBe(0); // shard 0 had the most life before rebuild
   });
 });

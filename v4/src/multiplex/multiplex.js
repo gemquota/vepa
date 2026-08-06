@@ -33,6 +33,9 @@ export const MULTIPLEX_DEFAULTS = {
   randomizePopulation: true,
   variation: 0.5,
   deriveMode: 'clone', // 'clone' | 'spawn'
+  autoIterate: false,        // regenerate all shards every autoIterateInterval ticks
+  autoIterateInterval: 400,  // ticks between auto-iterations
+  autoSelectFittest: false,  // after each iteration, select the shard with the most life
 };
 
 /** Hard cap on concurrent shards (keeps the main thread usable). */
@@ -58,6 +61,7 @@ export function createMultiplex(bus) {
     shards: [],
     selected: 0,
     iteration: 0,
+    tick: 0,
     sourceSeed: (Date.now() & 0x7fffffff) | 0,
     container: null,
     onResize: null,
@@ -73,6 +77,7 @@ export function startMultiplex(mx, source, config, container) {
   mx.config = { ...MULTIPLEX_DEFAULTS, ...(config || {}) };
   mx.active = true;
   mx.iteration = 0;
+  mx.tick = 0;
   mx.container = container || null;
   mx.sourceSeed = (Date.now() & 0x7fffffff) | 0;
   buildShards(mx, source, false);
@@ -124,6 +129,35 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
     spawnShardOffspring(shard);
     shard.tick++;
   }
+  mx.tick++;
+  // Auto-iterate: hands-off guided evolution — regenerate every shard on a
+  // fixed cadence and (optionally) keep the fittest shard selected.
+  const cfg = mx.config || {};
+  const interval = Math.max(1, Math.round(cfg.autoIterateInterval) || 400);
+  if (cfg.autoIterate && mx.shards.length > 0 && (mx.tick % interval === 0)) {
+    iterateMultiplex(mx);
+    if (cfg.autoSelectFittest) selectFittestShard(mx);
+  }
+}
+
+/** Select the shard with the most living particles (guided evolution). */
+export function selectFittestShard(mx) {
+  let best = -1;
+  let bestAlive = -1;
+  for (let i = 0; i < mx.shards.length; i++) {
+    const shard = mx.shards[i];
+    if (!shard || !shard.view) continue;
+    let alive = 0;
+    const n = Math.min(shard.count || 0, (shard.view.length / PARTICLE_STRIDE) | 0);
+    for (let p = 0; p < n; p++) {
+      if (shard.view[p * PARTICLE_STRIDE + S.DEAD] === 0) alive++;
+    }
+    if (alive > bestAlive) {
+      bestAlive = alive;
+      best = i;
+    }
+  }
+  if (best >= 0) selectShard(mx, best);
 }
 
 /** Render every shard to its canvas (shared camera). */

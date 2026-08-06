@@ -1426,11 +1426,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Melt ──
     applyMelt(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.MELT));
+      computeSynergy(lawState, LAW_INDEXES.MELT), dnaBuffer);
 
     // ── Boil ──
     applyBoil(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.BOIL));
+      computeSynergy(lawState, LAW_INDEXES.BOIL), prng);
 
     // ── Condense ──
     applyCondense(lawState, view, iBase, localTimeStep,
