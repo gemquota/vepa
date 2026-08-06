@@ -108,6 +108,24 @@ export function createMultiplexController(bus, getSource) {
           <div class="mpx-set-row">
             <label class="mpx-check"><input id="mpx-drawer-fittest" type="checkbox"><span>AUTO-SELECT FITTEST</span></label>
           </div>
+          <div class="mpx-set-row">
+            <span class="mpx-set-label">SIM SPEED</span>
+            <input id="mpx-drawer-sim-speed" type="range" min="0.25" max="3" step="0.25" value="1">
+            <span class="mpx-set-value" id="mpx-drawer-sim-speed-value">1.0×</span>
+          </div>
+          <div class="mpx-set-row">
+            <label class="mpx-check"><input id="mpx-drawer-paused" type="checkbox"><span>PAUSE GRID</span></label>
+          </div>
+          <div class="mpx-set-row">
+            <span class="mpx-set-label">MAX ITERS</span>
+            <input id="mpx-drawer-max-iters" type="number" min="0" max="999" value="0">
+            <span class="mpx-set-value" id="mpx-drawer-max-iters-value">∞</span>
+          </div>
+          <div class="mpx-set-row">
+            <span class="mpx-set-label">DRIFT</span>
+            <input id="mpx-drawer-drift" type="range" min="0" max="0.05" step="0.005" value="0">
+            <span class="mpx-set-value" id="mpx-drawer-drift-value">0</span>
+          </div>
         </div>
         <div class="mpx-actions">
           <button id="mpx-iterate" class="mpx-btn mpx-action" title="Regenerate all shards from the selected shard">⚡ ITERATE</button>
@@ -193,6 +211,34 @@ export function createMultiplexController(bus, getSource) {
     drawer.querySelector('#mpx-drawer-fittest').addEventListener('change', (e) => {
       mx.config.autoSelectFittest = e.target.checked;
     });
+
+    const simSpeed = drawer.querySelector('#mpx-drawer-sim-speed');
+    const simSpeedValue = drawer.querySelector('#mpx-drawer-sim-speed-value');
+    simSpeed.addEventListener('input', () => {
+      mx.config.simSpeed = parseFloat(simSpeed.value) || 1;
+      simSpeedValue.textContent = mx.config.simSpeed.toFixed(2) + '×';
+    });
+
+    const paused = drawer.querySelector('#mpx-drawer-paused');
+    paused.addEventListener('change', (e) => {
+      mx.config.paused = e.target.checked;
+    });
+
+    const maxIters = drawer.querySelector('#mpx-drawer-max-iters');
+    const maxItersValue = drawer.querySelector('#mpx-drawer-max-iters-value');
+    const applyMaxIters = () => {
+      mx.config.maxIterations = clamp(maxIters.value, 0, 999, 0);
+      maxIters.value = mx.config.maxIterations;
+      maxItersValue.textContent = mx.config.maxIterations > 0 ? String(mx.config.maxIterations) : '∞';
+    };
+    maxIters.addEventListener('change', applyMaxIters);
+
+    const drift = drawer.querySelector('#mpx-drawer-drift');
+    const driftValue = drawer.querySelector('#mpx-drawer-drift-value');
+    drift.addEventListener('input', () => {
+      mx.config.variationDrift = parseFloat(drift.value) || 0;
+      driftValue.textContent = String(mx.config.variationDrift);
+    });
   }
 
   /** Mirror mx.config back into the drawer controls (after modal start). */
@@ -222,6 +268,20 @@ export function createMultiplexController(bus, getSource) {
     if (iv) iv.textContent = (mx.config.autoIterateInterval ?? 400) + 'T';
     const f = drawer.querySelector('#mpx-drawer-fittest');
     if (f) f.checked = mx.config.autoSelectFittest === true;
+    const ss = drawer.querySelector('#mpx-drawer-sim-speed');
+    const ssv = drawer.querySelector('#mpx-drawer-sim-speed-value');
+    if (ss) ss.value = mx.config.simSpeed ?? 1;
+    if (ssv) ssv.textContent = ((mx.config.simSpeed ?? 1)).toFixed(2) + '×';
+    const ps = drawer.querySelector('#mpx-drawer-paused');
+    if (ps) ps.checked = mx.config.paused === true;
+    const mi = drawer.querySelector('#mpx-drawer-max-iters');
+    const miv = drawer.querySelector('#mpx-drawer-max-iters-value');
+    if (mi) mi.value = mx.config.maxIterations ?? 0;
+    if (miv) miv.textContent = (mx.config.maxIterations ?? 0) > 0 ? String(mx.config.maxIterations) : '∞';
+    const dr = drawer.querySelector('#mpx-drawer-drift');
+    const drv = drawer.querySelector('#mpx-drawer-drift-value');
+    if (dr) dr.value = mx.config.variationDrift ?? 0;
+    if (drv) drv.textContent = String(mx.config.variationDrift ?? 0);
   }
 
   function buildModal() {

@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.16] - 2026-08-06
+
+### Law RRP batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY confirmed + 4 more multiplexer live settings
+- CONDENSE — real-life behavior: condensation is exothermic — cool particles gain vapor mass and release latent heat (TEMP += rate×2, capped 0.9 so they can't cross into boiling; mass logic unchanged).
+- DEPOSIT — real-life frost: exothermic, skips the liquid phase — solid mass builds fast (rate×3 mass, rate×0.5 radius) and latent heat is released (TEMP += rate×2, capped 0.9).
+- EXOTHERMIC — real-life bounded steady release while the reaction runs: ENERGY += 0.05×synergy×dt (capped 200), TEMP += 0.01×synergy×dt (capped 0.9). Replaces the old unbounded ENERGY ×= 1.1 exponential.
+- TELEPATHY — same-species signal sharing now costs the receiver a slight energy toll per transfer (ENERGY −= 0.02×synergy×dt, floored 0) — user requested.
+- Multiplexer — 4 more live settings, all visible in the right drawer during multiplexing: SIM SPEED (0.25–3×, scales each shard's effective timestep), PAUSE GRID (freezes shard stepping while the main sim keeps running), MAX ITERS (0 = ∞, caps auto-iteration), DRIFT (0–0.05, raises VARIATION each generation, capped at 1).
+- Tests: `batch_12.test.js` rewritten (8 cases), `multiplex.test.js` +5 (new defaults, pause freeze, sim-speed scaling, iteration cap, variation drift) — full suite 570/570 green; `npx vite build` clean.
 ## [4.6.15] - 2026-08-06
 
 ### Law RRP batch 11 — REDUCTION / ALLOY / MELT / BOIL confirmed + multiplexer live settings

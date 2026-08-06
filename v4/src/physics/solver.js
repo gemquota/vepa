@@ -670,7 +670,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // Telepathy
       if (isSet(lawState, LAW_INDEXES.TELEPATHY)) {
         const telepathySynergy = computeSynergy(lawState, LAW_INDEXES.TELEPATHY);
-        applyTelepathy(lawState, view, iBase, jBase, distSq, telepathySynergy);
+        applyTelepathy(lawState, view, iBase, jBase, distSq, telepathySynergy, localTimeStep);
       }
 
       // Clairvoyance
@@ -1442,7 +1442,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Exothermic ──
     applyExothermic(lawState, view, iBase,
-      computeSynergy(lawState, LAW_INDEXES.EXOTHERMIC));
+      localTimeStep, computeSynergy(lawState, LAW_INDEXES.EXOTHERMIC));
 
   }
 

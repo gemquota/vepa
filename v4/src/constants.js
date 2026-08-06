@@ -963,18 +963,18 @@ export const LAW_HELP_DB = {
   },
   CONDENSE: {
     hint: "Condensation: cool particles gain mass from vapor.",
-    explanation: "Low-energy particles can absorb ambient energy and increase mass.",
-    system: "Opposite of boiling. Energy → mass conversion at low temperatures.",
+    explanation: "Confirmed batch-12 (match irl): condensation is exothermic — below temp 0.3 a particle absorbs vapor mass and releases latent heat, so it warms as it grows (clamped below boiling).",
+    system: "temp < 0.3: MASS += (0.3−temp) x 0.005 x dt x synergy; TEMPERATURE += (0.3−temp) x 0.01 x dt x synergy (cap 0.9).",
   },
   DEPOSIT: {
     hint: "Deposition: vapor directly solidifies on cold particles.",
-    explanation: "Skip the liquid phase: cold particles directly accrete mass from the environment.",
-    system: "Gas→solid phase transition. Rapid mass gain for cold, slow particles.",
+    explanation: "Confirmed batch-12 (match irl): deposition (frost) skips the liquid phase and is exothermic — cold particles (temp < 0.2) accrete solid mass 3x faster than condensation, grow visibly (radius), and release latent heat as the frost forms.",
+    system: "temp < 0.2: MASS += (0.2−temp) x 0.03 x dt x synergy, RADIUS += (0.2−temp) x 0.005 x dt x synergy, TEMPERATURE += (0.2−temp) x 0.02 x dt x synergy (cap 0.9).",
   },
   EXOTHERMIC: {
     hint: "Exothermic reactions release extra energy.",
-    explanation: "Chemical reactions produce more energy than they consume. Amplifies energy dynamics.",
-    system: "All interaction energy transfers are amplified by 1.5x. Net energy increase.",
+    explanation: "Confirmed batch-12 (match irl): exothermic reactions release heat while they run — a bounded steady ENERGY + TEMPERATURE release (replaces the old unbounded ENERGY ×= 1.1 exponential), capped at the 200 energy ceiling and below boiling.",
+    system: "ENERGY += 0.05 x dt x synergy (cap 200); TEMPERATURE += 0.01 x dt x synergy (cap 0.9).",
   },
   TIME_DILATION: {
     hint: "Time dilation: SOUL slows local time.",
@@ -1018,8 +1018,8 @@ export const LAW_HELP_DB = {
   },
   TELEPATHY: {
     hint: "Telepathy: instant information sharing across species.",
-    explanation: "All particles of the same species share their SIGNAL state instantly, regardless of distance.",
-    system: "Global signal synchronization within species. Bypasses physical propagation limits.",
+    explanation: "Confirmed batch-12 (slight energy drain): same-species particles share SIGNAL instantly regardless of distance, and the receiver pays a slight energy cost per transfer for the shared channel.",
+    system: "Same-species pair: receiver SIGNAL += sender SIGNAL x 0.05 x synergy (any distance); receiver ENERGY −= 0.02 x synergy x dt.",
   },
   CLAIRVOYANCE: {
     hint: "Clairvoyance: particles sense future positions.",

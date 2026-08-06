@@ -63,7 +63,7 @@ function makeWorld(count, mutate) {
 }
 
 describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
-  it('CONDENSE (44): cool particles gain mass, gated by isSet', () => {
+  it('CONDENSE (44): cool particles gain mass and release latent heat', () => {
     const buf = view(1);
     seed(buf, 1);
     buf[S.TEMPERATURE] = 0.0;
@@ -72,7 +72,7 @@ describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
     expect(isSet(state, LAW_INDEXES.CONDENSE)).toBe(true);
     applyCondense(state, buf, 0, 1, 1);
     expect(buf[S.MASS]).toBeCloseTo(1.5015, 5); // 1.5 + 0.3*0.005
-    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.00015, 5);
+    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.003, 5); // latent heat: rate x 2
     // above threshold (0.3) → unchanged
     const warm = view(1);
     seed(warm, 1);
@@ -103,7 +103,7 @@ describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
     expect(off.view[S.MASS]).toBe(1.5);
   });
 
-  it('DEPOSIT (45): cold particles gain mass and radius, gated by isSet', () => {
+  it('DEPOSIT (45): cold particles gain mass, radius and latent heat', () => {
     const buf = view(1);
     seed(buf, 1);
     buf[S.TEMPERATURE] = 0.0;
@@ -113,6 +113,7 @@ describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
     applyDeposit(state, buf, 0, 1, 1);
     expect(buf[S.MASS]).toBeCloseTo(1.506, 5); // 1.5 + 0.2*0.01*3
     expect(buf[S.RADIUS]).toBeCloseTo(0.601, 5); // 0.6 + 0.002*0.5
+    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.004, 5); // exothermic frost: rate x 2
     // above threshold (0.2) → unchanged
     const warm = view(1);
     seed(warm, 1);
@@ -143,64 +144,73 @@ describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
     expect(off.view[S.MASS]).toBe(1.5);
   });
 
-  it('EXOTHERMIC (46): energy amplification, gated by isSet', () => {
+  it('EXOTHERMIC (46): bounded steady heat release, gated by isSet', () => {
     const buf = view(1);
     seed(buf, 1);
     const state = createLawState();
     set(state, LAW_INDEXES.EXOTHERMIC);
     expect(isSet(state, LAW_INDEXES.EXOTHERMIC)).toBe(true);
-    applyExothermic(state, buf, 0, 1);
-    expect(buf[S.ENERGY]).toBeCloseTo(110, 5); // 100 * (1 + 0.1)
+    applyExothermic(state, buf, 0, 1, 1);
+    expect(buf[S.ENERGY]).toBeCloseTo(100.05, 5); // 100 + 0.05*dt
+    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.01, 5); // 0 + 0.01*dt
+    // capped at the 200 energy ceiling
+    const capped = view(1);
+    seed(capped, 1);
+    capped[S.ENERGY] = 200;
+    applyExothermic(state, capped, 0, 1, 1);
+    expect(capped[S.ENERGY]).toBe(200);
     // gate off → unchanged
     const off = view(1);
     seed(off, 1);
-    applyExothermic(createLawState(), off, 0, 1);
+    applyExothermic(createLawState(), off, 0, 1, 1);
     expect(off[S.ENERGY]).toBe(100);
   });
 
-  it('EXOTHERMIC integration: energy grows in solve() only when enabled', () => {
+  it('EXOTHERMIC integration: energy and temperature grow only when enabled', () => {
     const on = makeWorld(1);
     const st = createLawState();
     set(st, LAW_INDEXES.EXOTHERMIC);
     solve(on.view, 1, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
     expect(on.view[S.ENERGY]).toBeGreaterThan(100);
+    expect(on.view[S.TEMPERATURE]).toBeGreaterThan(0);
 
     const off = makeWorld(1);
     solve(off.view, 1, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
     expect(off.view[S.ENERGY]).toBe(100);
   });
 
-  it('TELEPATHY (47): same-species signal sharing, gated by isSet', () => {
+  it('TELEPATHY (47): same-species signal sharing with a slight energy drain', () => {
     const buf = view(2);
     seed(buf, 2);
     buf[PARTICLE_STRIDE + S.SIGNAL] = 0.5;
     const state = createLawState();
     set(state, LAW_INDEXES.TELEPATHY);
     expect(isSet(state, LAW_INDEXES.TELEPATHY)).toBe(true);
-    applyTelepathy(state, buf, 0, PARTICLE_STRIDE, 10000, 1);
+    applyTelepathy(state, buf, 0, PARTICLE_STRIDE, 10000, 1, 1);
     expect(buf[S.SIGNAL]).toBeCloseTo(0.025, 5); // 0.5 * 0.05
+    expect(buf[S.ENERGY]).toBeCloseTo(99.98, 5); // receiver pays 0.02
     // different species → no transfer
     const buf2 = view(2);
     seed(buf2, 2);
     buf2[PARTICLE_STRIDE + S.SIGNAL] = 0.5;
     buf2[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
-    applyTelepathy(state, buf2, 0, PARTICLE_STRIDE, 10000, 1);
+    applyTelepathy(state, buf2, 0, PARTICLE_STRIDE, 10000, 1, 1);
     expect(buf2[S.SIGNAL]).toBe(0);
     // tiny signal below 0.001 transfer threshold → no change
     const buf3 = view(2);
     seed(buf3, 2);
     buf3[PARTICLE_STRIDE + S.SIGNAL] = 0.01;
-    applyTelepathy(state, buf3, 0, PARTICLE_STRIDE, 10000, 1);
+    applyTelepathy(state, buf3, 0, PARTICLE_STRIDE, 10000, 1, 1);
     expect(buf3[S.SIGNAL]).toBe(0);
     // gate off → no transfer
     const buf4 = view(2);
     seed(buf4, 2);
     buf4[PARTICLE_STRIDE + S.SIGNAL] = 0.5;
-    applyTelepathy(createLawState(), buf4, 0, PARTICLE_STRIDE, 10000, 1);
+    applyTelepathy(createLawState(), buf4, 0, PARTICLE_STRIDE, 10000, 1, 1);
     expect(buf4[S.SIGNAL]).toBe(0);
   });
 
-  it('TELEPATHY integration: signal propagates between same-species particles', () => {
+  it('TELEPATHY integration: signal propagates with an energy cost', () => {
     const on = makeWorld(2, (v) => {
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
       v[PARTICLE_STRIDE + S.SIGNAL] = 0.5;
@@ -209,6 +219,7 @@ describe('Batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY', () => {
     set(st, LAW_INDEXES.TELEPATHY);
     solve(on.view, 2, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
     expect(on.view[S.SIGNAL]).toBeGreaterThan(0);
+    expect(on.view[S.ENERGY]).toBeLessThan(100);
 
     const off = makeWorld(2, (v) => {
       v[PARTICLE_STRIDE + S.SPECIES_ID] = 0;

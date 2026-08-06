@@ -1399,7 +1399,9 @@ export function applyCondense(lawState, view, base, dt, synergy) {
   const mass = view[base + S.MASS];
   const condenseRate = (0.3 - temp) * 0.005 * dt * synergy;
   view[base + S.MASS] = mass + condenseRate;
-  view[base + S.TEMPERATURE] += condenseRate * 0.1;
+  // Real-life condensation releases latent heat — the particle warms as it
+  // gains vapor mass (clamped so it can't cross into boiling).
+  view[base + S.TEMPERATURE] = Math.min(0.9, temp + condenseRate * 2);
 }
 
 // ============================================================================
@@ -1413,24 +1415,30 @@ export function applyDeposit(lawState, view, base, dt, synergy) {
   const depositRate = (0.2 - temp) * 0.01 * dt * synergy;
   view[base + S.MASS] = mass + depositRate * 3;
   view[base + S.RADIUS] = view[base + S.RADIUS] + depositRate * 0.5;
-  view[base + S.TEMPERATURE] += depositRate * 0.05;
+  // Real-life deposition (frost) is exothermic — it skips the liquid phase,
+  // builds solid mass fast, and releases latent heat as it forms.
+  view[base + S.TEMPERATURE] = Math.min(0.9, temp + depositRate * 2);
 }
 
 // ============================================================================
 // 39. EXOTHERMIC — Energy amplification for all reactions
 // ============================================================================
-export function applyExothermic(lawState, view, base, synergy) {
+export function applyExothermic(lawState, view, base, dt, synergy) {
   if (!isSet(lawState, LAW_INDEXES.EXOTHERMIC)) return;
   const energy = view[base + S.ENERGY];
-  if (!Number.isFinite(energy)) return;
-  const amp = 1.0 + 0.1 * synergy;
-  view[base + S.ENERGY] *= amp;
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(energy) || !Number.isFinite(temp)) return;
+  // Real-life exothermic reactions release heat while the reaction runs —
+  // a bounded steady release (the old ENERGY ×= 1.1 was an unbounded
+  // exponential). Capped at the ENERGY ceiling and below boiling.
+  view[base + S.ENERGY] = Math.min(200, energy + 0.05 * synergy * dt);
+  view[base + S.TEMPERATURE] = Math.min(0.9, temp + 0.01 * synergy * dt);
 }
 
 // ============================================================================
 // 40. TELEPATHY — Instant signal sharing within species
 // ============================================================================
-export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy) {
+export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy, dt) {
   if (!isSet(lawState, LAW_INDEXES.TELEPATHY)) return null;
   const speciesI = view[iBase + S.SPECIES_ID];
   const speciesJ = view[jBase + S.SPECIES_ID];
@@ -1440,6 +1448,11 @@ export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy) {
   const transfer = signalJ * 0.05 * synergy;
   if (transfer > 0.001) {
     view[iBase + S.SIGNAL] += transfer;
+    // The receiver pays a slight energy cost for the shared channel.
+    const energy = view[iBase + S.ENERGY];
+    if (Number.isFinite(energy)) {
+      view[iBase + S.ENERGY] = Math.max(0, energy - 0.02 * synergy * (dt || 1));
+    }
   }
   return null;
 }

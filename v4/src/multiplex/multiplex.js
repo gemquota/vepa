@@ -36,6 +36,10 @@ export const MULTIPLEX_DEFAULTS = {
   autoIterate: false,        // regenerate all shards every autoIterateInterval ticks
   autoIterateInterval: 400,  // ticks between auto-iterations
   autoSelectFittest: false,  // after each iteration, select the shard with the most life
+  simSpeed: 1.0,             // timescale multiplier for the shard grid
+  paused: false,             // freeze shard stepping (main sim keeps running)
+  maxIterations: 0,          // 0 = unlimited; auto-iterate stops at this count
+  variationDrift: 0,         // per-iteration variation increase (evolutionary pressure)
 };
 
 /** Hard cap on concurrent shards (keeps the main thread usable). */
@@ -106,6 +110,11 @@ export function stopMultiplex(mx) {
  */
 export function iterateMultiplex(mx) {
   if (!mx.active || mx.shards.length === 0) return;
+  const cfg = mx.config || {};
+  // Evolutionary pressure: each generation drifts the variation upward so
+  // later generations explore more broadly (capped at full divergence).
+  const drift = Math.max(0, Math.min(0.1, parseFloat(cfg.variationDrift) || 0));
+  if (drift > 0) cfg.variation = Math.min(1, (cfg.variation || 0) + drift);
   const source = mx.shards[mx.selected];
   mx.iteration++;
   mx.sourceSeed = ((mx.sourceSeed + 7919) & 0x7fffffff) | 0;
@@ -114,6 +123,9 @@ export function iterateMultiplex(mx) {
 
 /** Advance physics on every shard by one step. */
 export function stepMultiplex(mx, dt, simSpeed, worldSize) {
+  const cfg = mx.config || {};
+  if (cfg.paused) return; // frozen grid — the main sim keeps stepping
+  const effDt = dt * simSpeed * Math.max(0.05, cfg.simSpeed || 1);
   for (const shard of mx.shards) {
     if (shard.count <= 0) continue;
     solve(
@@ -123,7 +135,7 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
       shard.laws,
       shard.dna,
       worldSize,
-      dt * simSpeed,
+      effDt,
       () => shard.prng.next(),
     );
     spawnShardOffspring(shard);
@@ -132,9 +144,10 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
   mx.tick++;
   // Auto-iterate: hands-off guided evolution — regenerate every shard on a
   // fixed cadence and (optionally) keep the fittest shard selected.
-  const cfg = mx.config || {};
   const interval = Math.max(1, Math.round(cfg.autoIterateInterval) || 400);
-  if (cfg.autoIterate && mx.shards.length > 0 && (mx.tick % interval === 0)) {
+  const maxIter = Math.max(0, Math.round(cfg.maxIterations) || 0);
+  const withinLimit = maxIter === 0 || mx.iteration < maxIter;
+  if (cfg.autoIterate && mx.shards.length > 0 && withinLimit && (mx.tick % interval === 0)) {
     iterateMultiplex(mx);
     if (cfg.autoSelectFittest) selectFittestShard(mx);
   }

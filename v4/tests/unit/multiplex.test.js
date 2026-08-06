@@ -4,10 +4,11 @@ import {
   PARTICLE_STRIDE,
   MAX_PARTICLES,
   STRIDE_INDEXES,
+  LAW_INDEXES,
 } from '../../src/constants.js';
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createDNABuffer } from '../../src/dna/dnaBuffer.js';
-import { createLawState } from '../../src/state/lawState.js';
+import { createLawState, set } from '../../src/state/lawState.js';
 import {
   createMultiplex,
   startMultiplex,
@@ -151,5 +152,88 @@ describe('Chaos Multiplex core', () => {
     stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 1 → auto-iterate + fittest
     expect(mx.iteration).toBe(1);
     expect(mx.selected).toBe(0); // shard 0 had the most life before rebuild
+  });
+});
+
+describe('Multiplex live settings (v4.6.16)', () => {
+  /** Law state with EXOTHERMIC enabled — deterministic linear energy gain. */
+  function exoLaw() {
+    const laws = createLawState();
+    set(laws, LAW_INDEXES.EXOTHERMIC);
+    return laws;
+  }
+
+  it('new defaults: sim speed, pause, max iterations, drift present', () => {
+    expect(MULTIPLEX_DEFAULTS.simSpeed).toBe(1.0);
+    expect(MULTIPLEX_DEFAULTS.paused).toBe(false);
+    expect(MULTIPLEX_DEFAULTS.maxIterations).toBe(0);
+    expect(MULTIPLEX_DEFAULTS.variationDrift).toBe(0);
+    const mx = createMultiplex(null);
+    expect(mx.config.simSpeed).toBe(1.0);
+    expect(mx.config.paused).toBe(false);
+    expect(mx.config.maxIterations).toBe(0);
+    expect(mx.config.variationDrift).toBe(0);
+  });
+
+  it('paused freezes the shard grid (no stepping, no tick advance)', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(), {
+      ...MULTIPLEX_DEFAULTS, cols: 1, rows: 1, variation: 0, paused: true,
+    }, null);
+    const before = mx.shards[0].view[S.ENERGY];
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE);
+    expect(mx.shards[0].view[S.ENERGY]).toBe(before);
+    expect(mx.tick).toBe(0);
+    expect(mx.shards[0].tick).toBe(0);
+  });
+
+  it('simSpeed scales the shard timestep (2× speed → double per-step effect)', () => {
+    const run = (simSpeed) => {
+      const mx = createMultiplex(null);
+      startMultiplex(mx, makeSource(4, exoLaw()), {
+        ...MULTIPLEX_DEFAULTS, cols: 1, rows: 1, variation: 0, simSpeed,
+      }, null);
+      stepMultiplex(mx, 0.25, 1, WORLD_SIZE);
+      return mx.shards[0].view[S.ENERGY];
+    };
+    // With a law that grants +0.05/s, one 0.25s step at 1× gains 0.0125,
+    // at 2× gains 0.025 (effDt = dt × simSpeed).
+    const slow = run(1.0);
+    const fast = run(2.0);
+    expect(slow).toBeCloseTo(80.0125, 5);
+    expect(fast).toBeCloseTo(80.025, 5);
+    expect(fast - slow).toBeCloseTo(0.0125, 5);
+  });
+
+  it('maxIterations caps auto-iteration', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(), {
+      ...MULTIPLEX_DEFAULTS,
+      cols: 2, rows: 1, variation: 0,
+      autoIterate: true, autoIterateInterval: 2, maxIterations: 1,
+    }, null);
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 1
+    expect(mx.iteration).toBe(0);
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 2 → iterate once
+    expect(mx.iteration).toBe(1);
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 3
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE); // tick 4 → would iterate, capped
+    expect(mx.iteration).toBe(1);
+  });
+
+  it('variationDrift raises variation each iteration, capped at 1', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, makeSource(), {
+      ...MULTIPLEX_DEFAULTS, cols: 1, rows: 1, variation: 0.3, variationDrift: 0.05,
+    }, null);
+    iterateMultiplex(mx);
+    expect(mx.config.variation).toBeCloseTo(0.35, 10);
+    // Cap: near-full divergence cannot exceed 1.
+    const capped = createMultiplex(null);
+    startMultiplex(capped, makeSource(), {
+      ...MULTIPLEX_DEFAULTS, cols: 1, rows: 1, variation: 0.98, variationDrift: 0.05,
+    }, null);
+    iterateMultiplex(capped);
+    expect(capped.config.variation).toBe(1);
   });
 });
