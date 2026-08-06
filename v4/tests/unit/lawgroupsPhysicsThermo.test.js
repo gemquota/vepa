@@ -34,6 +34,9 @@ function seed(buf, n) {
     buf[b + S.TEMPERATURE] = 0;
     buf[b + S.DEAD] = 0;
     buf[b + S.SPECIES_ID] = 0;
+    // DNA cache defaults the lawgroup functions read (VISCOSITY / ELASTICITY).
+    buf[b + S.DNA_CACHE_START + D.VISCOSITY] = 0.98;
+    buf[b + S.DNA_CACHE_START + D.ELASTICITY] = 0.5;
   }
 }
 
@@ -50,24 +53,25 @@ describe('physicsLaws', () => {
     expect(f.az).toBeCloseTo(0, 5);
   });
 
-  it('applyFriction opposes velocity (force = -v * k)', () => {
+  it('applyFriction opposes velocity, scaled by VISCOSITY DNA (force = -v * k * viscosity)', () => {
     const buf = view(1);
     seed(buf, 1);
     buf[S.VEL_X] = 5;
     const f = applyFriction(buf, 0, 0.1);
     expect(f.ax).toBeLessThan(0);
-    expect(f.ax).toBeCloseTo(-0.5, 5);
+    expect(f.ax).toBeCloseTo(-5 * 0.1 * 0.98, 5); // default VISCOSITY 0.98
     expect(f.ay).toBeCloseTo(0, 5);
     expect(f.az).toBeCloseTo(0, 5);
+    expect(buf[S.TEMPERATURE]).toBeGreaterThan(0); // kinetic → heat
   });
 
-  it('applyElasticity pushes overlapping particles apart', () => {
+  it('applyElasticity pushes overlapping particles apart, scaled by ELASTICITY DNA', () => {
     const buf = view(2);
     seed(buf, 2);
     buf[PARTICLE_STRIDE + S.POS_X] = 100.5; // dist = 0.5 < rI + rJ = 1.2
     const f = applyElasticity(buf, 0, PARTICLE_STRIDE, 0.5, 0, 0, 0.5, 1.0);
     expect(f.ax).toBeLessThan(0); // i pushed away from j
-    expect(f.ax).toBeCloseTo(-(0.7 * 1.0) / 3.0, 5); // overlap * k / combined mass
+    expect(f.ax).toBeCloseTo(-(0.7 * 1.0 * 0.5) / 3.0, 5); // overlap * k * ELASTICITY / combined mass
     // No force when particles do not overlap.
     buf[PARTICLE_STRIDE + S.POS_X] = 103;
     expect(applyElasticity(buf, 0, PARTICLE_STRIDE, 3, 0, 0, 3, 1.0)).toBeNull();

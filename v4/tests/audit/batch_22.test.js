@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_RANGES, LAW_INDEXES,
+  PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_INDEXES as D, DNA_RANGES, LAW_INDEXES,
 } from '../../src/constants.js';
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
@@ -65,6 +65,20 @@ describe('Batch 22 — ELASTICITY / TURBULENCE / CENTRIPETAL / ROTATION (indices
     const sep1 = view[PARTICLE_STRIDE + S.POS_X] - view[S.POS_X];
     expect(sep1).toBeGreaterThan(sep0);
     expect(sep1).toBeGreaterThan(1.0); // clearly separated, not stuck
+  });
+
+  it('ELASTICITY: ELASTICITY DNA sets the restitution (high bounces more than low)', () => {
+    const run = (rest) => {
+      const { view, dna } = makeWorld(2, (v, dna, b, i) => {
+        v[b + S.POS_X] = i === 0 ? 1000 : 1000.5;
+        v[b + S.DNA_CACHE_START + D.ELASTICITY] = rest;
+      });
+      const laws = createLawState();
+      set(laws, LAW_INDEXES.ELASTICITY);
+      for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+      return view[PARTICLE_STRIDE + S.POS_X] - view[S.POS_X];
+    };
+    expect(run(1.0)).toBeGreaterThan(run(0.0));
   });
 
   it('ELASTICITY gate: without ELASTICITY, separation is unchanged', () => {

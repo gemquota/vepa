@@ -32,16 +32,26 @@ export function applyTide(view, iBase, jBase, dx, dy, dz, dist, k) {
 }
 
 /**
- * FRICTION — velocity-dependent drag: force = -v * k.
+ * FRICTION — velocity-dependent drag: force = -v * k, scaled by VISCOSITY DNA
+ * (batch-20, match irl). The removed kinetic energy is converted to heat:
+ * real friction dissipates motion as temperature. Higher viscosity = more
+ * damping (and more heating).
  */
 export function applyFriction(view, iBase, k) {
   const vx = nanGuard(view[iBase + S.VEL_X]);
   const vy = nanGuard(view[iBase + S.VEL_Y]);
   const vz = nanGuard(view[iBase + S.VEL_Z]);
+  const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  const visRaw = view[iBase + S.DNA_CACHE_START + D.VISCOSITY];
+  const viscosity = Number.isFinite(visRaw) ? visRaw : 0.98;
+  const damp = k * viscosity;
+  if (speed > 1e-6) {
+    view[iBase + S.TEMPERATURE] = Math.min(1, (view[iBase + S.TEMPERATURE] || 0) + speed * damp * 0.5);
+  }
   return {
-    ax: clamp(-vx * k, -50, 50),
-    ay: clamp(-vy * k, -50, 50),
-    az: clamp(-vz * k, -50, 50),
+    ax: clamp(-vx * damp, -50, 50),
+    ay: clamp(-vy * damp, -50, 50),
+    az: clamp(-vz * damp, -50, 50),
   };
 }
 
@@ -57,7 +67,11 @@ export function applyElasticity(view, iBase, jBase, dx, dy, dz, dist, k) {
   if (overlap <= 0) return null;
   const mI = Math.max(nanGuard(view[iBase + S.MASS]), 0.001);
   const mJ = Math.max(nanGuard(view[jBase + S.MASS]), 0.001);
-  const mag = (overlap * k) / (mI + mJ);
+  // Coefficient of restitution from ELASTICITY DNA (0..1, default 0.5) —
+  // real materials bounce less when less elastic (batch-20).
+  const restRaw = view[iBase + S.DNA_CACHE_START + D.ELASTICITY];
+  const rest = Number.isFinite(restRaw) ? restRaw : 0.5;
+  const mag = (overlap * k * rest) / (mI + mJ);
   return {
     ax: clamp(nanGuard((-dx / dist) * mag), -50, 50),
     ay: clamp(nanGuard((-dy / dist) * mag), -50, 50),

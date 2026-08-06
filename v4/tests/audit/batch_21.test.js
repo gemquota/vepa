@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_RANGES, LAW_INDEXES,
+  PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_INDEXES as D, DNA_RANGES, LAW_INDEXES,
 } from '../../src/constants.js';
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
@@ -161,7 +161,7 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     expect(view[PARTICLE_STRIDE + S.POS_X] - view[S.POS_X]).toBeCloseTo(100, 5);
   });
 
-  it('FRICTION: velocity-dependent drag slows moving particles', () => {
+  it('FRICTION: velocity-dependent drag slows moving particles and converts motion to heat', () => {
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.VEL_X] = 5;
     });
@@ -172,6 +172,22 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(Math.abs(view[S.VEL_X])).toBeLessThan(5);
     expect(view[S.VEL_X]).toBeGreaterThan(0);
+    expect(view[S.TEMPERATURE]).toBeGreaterThan(0); // kinetic energy dissipates as heat (batch-20)
+  });
+
+  it('FRICTION: higher VISCOSITY DNA damps harder (material friction)', () => {
+    const run = (viscosity) => {
+      const { view, dna } = makeWorld(1, (v, dna, b) => {
+        v[b + S.VEL_X] = 5;
+        v[b + S.DNA_CACHE_START + D.VISCOSITY] = viscosity;
+      });
+      const laws = createLawState();
+      set(laws, LAW_INDEXES.FRICTION);
+      set(laws, LAW_INDEXES.WRAP);
+      for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+      return Math.abs(view[S.VEL_X]);
+    };
+    expect(run(1.0)).toBeLessThan(run(0.5));
   });
 
   it('FRICTION gate: without FRICTION, velocity is preserved', () => {

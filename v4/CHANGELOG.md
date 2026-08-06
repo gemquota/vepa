@@ -1,5 +1,13 @@
 # Changelog: VEPA v4
 
+## [4.6.23] - 2026-08-06
+
+### Law RRP batches 20-22 (triple batch, 12 laws)
+- FRICTION — match irl: damping now scales with VISCOSITY DNA (0.5–1.0, higher viscosity = more damping) and the removed kinetic energy converts to heat (TEMP += speed·damp·0.5, cap 1). Both doc promises ("converting motion into heat", "VISCOSITY DNA modulates it") are finally implemented.
+- ELASTICITY — match irl: the overlap push is now scaled by a coefficient of restitution from ELASTICITY DNA (0–1, default 0.5) — mag = overlap·k·ELASTICITY/(mI+mJ); real materials bounce less when less elastic, light particles still bounce harder.
+- FEEDBACK / LANGUAGE / CULTURE / SINGULARITY / ENTANGLEMENT / HISTORY / TIDE / TURBULENCE / CENTRIPETAL / ROTATION — confirmed as-is against docs; HELP_DB entries updated with confirmed specs and synergy notes.
+- Tests: `batch_20/21/22.test.js` updated to confirmed specs (+1 FRICTION viscosity+heat case, +1 ELASTICITY restitution case; 38 total across the three files). Full suite 596/596 green; `npx vite build` clean.
+
 ## [4.6.22] - 2026-08-06
 
 ### Law RRP batches 17-19 (triple batch, 12 laws)
