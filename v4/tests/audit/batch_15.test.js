@@ -10,7 +10,7 @@ import {
 } from '../../src/constants.js';
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
-import { createDNABuffer, loadDefaults, getDNAFloat } from '../../src/dna/dnaBuffer.js';
+import { createDNABuffer, loadDefaults, getDNAFloat, setDNAFloat } from '../../src/dna/dnaBuffer.js';
 import { solve } from '../../src/physics/solver.js';
 
 const WORLD = 2000;
@@ -53,6 +53,13 @@ function setDNA(view, idx, dnaIndex, value) {
   view[idx * PARTICLE_STRIDE + S.DNA_CACHE_START + dnaIndex] = value;
 }
 
+function setDNAViaSpecies(world, idx, dnaIndex, value) {
+  // Real pipeline: species genome buffer → per-particle DNA cache.
+  const r = DNA_RANGES[dnaIndex] || { min: -1, max: 1 };
+  setDNAFloat(world.dna, idx, dnaIndex, value, r.min, r.max);
+  world.view[idx * PARTICLE_STRIDE + S.DNA_CACHE_START + dnaIndex] = getDNAFloat(world.dna, idx, dnaIndex, r.min, r.max);
+}
+
 function pairDist(view) {
   const b0 = 0;
   const b1 = PARTICLE_STRIDE;
@@ -85,7 +92,37 @@ describe('Batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM', () =>
     expect(w2.view[S.TEMPERATURE]).toBe(0.0);
   });
 
-  it('CAPACITANCE stores surplus energy as charge and bleeds it when low', () => {
+  it('RESISTANCE is material-dependent: conductors glide, insulators resist', () => {
+    const run = (conductivity) => {
+      const w = makeWorld(1);
+      setDNA(w.view, 0, D.CONDUCTIVITY, conductivity);
+      w.view[S.VEL_X] = 5.0;
+      const st = createLawState();
+      set(st, LAW_INDEXES.RESISTANCE);
+      for (let t = 0; t < 20; t++) solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+      return Math.abs(w.view[S.VEL_X]);
+    };
+    const insulator = run(0.0);
+    const conductor = run(1.0);
+    expect(insulator).toBeLessThan(conductor * 0.6);
+  });
+
+  it('RESISTANCE hot particles damp harder (thermal-Ohmic feedback)', () => {
+    const run = (temp) => {
+      const w = makeWorld(1);
+      w.view[S.TEMPERATURE] = temp;
+      w.view[S.VEL_X] = 5.0;
+      const st = createLawState();
+      set(st, LAW_INDEXES.RESISTANCE);
+      for (let t = 0; t < 10; t++) solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+      return Math.abs(w.view[S.VEL_X]);
+    };
+    const hot = run(0.9);
+    const cold = run(0.0);
+    expect(hot).toBeLessThan(cold * 0.9);
+  });
+
+  it('CAPACITANCE stores surplus energy as charge and bleeds toward zero when low', () => {
     // ENERGY 100 > 50 → charge accrues
     const w = makeWorld(1);
     w.view[S.ENERGY] = 100;
@@ -95,14 +132,23 @@ describe('Batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM', () =>
     for (let t = 0; t < 20; t++) solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
     expect(w.view[S.CHARGE]).toBeGreaterThan(0.5);
 
-    // ENERGY 30 < 50 → charge bleeds toward zero
+    // ENERGY 30 < 50 → charge bleeds toward zero, never below
     const w2 = makeWorld(1);
     w2.view[S.ENERGY] = 30;
     w2.view[S.CHARGE] = 1.0;
     const st2 = createLawState();
     set(st2, LAW_INDEXES.CAPACITANCE);
-    for (let t = 0; t < 20; t++) solve(w2.view, 1, PARTICLE_STRIDE, st2, w2.dna, WORLD, DT, rng);
-    expect(w2.view[S.CHARGE]).toBeLessThan(1.0);
+    for (let t = 0; t < 100; t++) solve(w2.view, 1, PARTICLE_STRIDE, st2, w2.dna, WORLD, DT, rng);
+    expect(w2.view[S.CHARGE]).toBe(0.0);
+
+    // Negative stored charge is not drained further by low energy (no sign flip)
+    const w3 = makeWorld(1);
+    w3.view[S.ENERGY] = 30;
+    w3.view[S.CHARGE] = -1.0;
+    const st3 = createLawState();
+    set(st3, LAW_INDEXES.CAPACITANCE);
+    for (let t = 0; t < 100; t++) solve(w3.view, 1, PARTICLE_STRIDE, st3, w3.dna, WORLD, DT, rng);
+    expect(w3.view[S.CHARGE]).toBe(-1.0);
   });
 
   it('CAPACITANCE stored charge produces a pairwise repulsion force', () => {
@@ -116,8 +162,10 @@ describe('Batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM', () =>
     expect(pairDist(w.view)).toBeGreaterThan(d0 + 0.02);
   });
 
-  it('INDUCTANCE aligns neighbour velocities (relative motion damps)', () => {
+  it('INDUCTANCE aligns neighbour velocities when magnetically coupled and conductive', () => {
     const w = makeWorld(2, 10);
+    setDNA(w.view, 0, D.MAGNETIC_MOMENT, 1.0);
+    setDNA(w.view, 1, D.MAGNETIC_MOMENT, 1.0);
     w.view[S.VEL_X] = 3.0;
     w.view[PARTICLE_STRIDE + S.VEL_X] = -3.0;
     const st = createLawState();
@@ -135,6 +183,32 @@ describe('Batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM', () =>
     const none = createLawState();
     for (let t = 0; t < 20; t++) solve(w2.view, 2, PARTICLE_STRIDE, none, w2.dna, WORLD, DT, rng);
     expect(Math.abs(w2.view[S.VEL_X] - w2.view[PARTICLE_STRIDE + S.VEL_X])).toBe(6.0);
+  });
+
+  it('INDUCTANCE needs a magnetic field: zero moments do not couple', () => {
+    const w = makeWorld(2, 10);
+    setDNA(w.view, 0, D.MAGNETIC_MOMENT, 0.0);
+    setDNA(w.view, 1, D.MAGNETIC_MOMENT, 0.0);
+    w.view[S.VEL_X] = 3.0;
+    w.view[PARTICLE_STRIDE + S.VEL_X] = -3.0;
+    const st = createLawState();
+    set(st, LAW_INDEXES.INDUCTANCE);
+    for (let t = 0; t < 20; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(Math.abs(w.view[S.VEL_X] - w.view[PARTICLE_STRIDE + S.VEL_X])).toBe(6.0);
+  });
+
+  it('INDUCTANCE requires both particles to conduct (real materials)', () => {
+    const w = makeWorld(2, 10);
+    setDNA(w.view, 0, D.MAGNETIC_MOMENT, 1.0);
+    setDNA(w.view, 1, D.MAGNETIC_MOMENT, 1.0);
+    setDNA(w.view, 0, D.CONDUCTIVITY, 0.0);
+    setDNA(w.view, 1, D.CONDUCTIVITY, 0.0);
+    w.view[S.VEL_X] = 3.0;
+    w.view[PARTICLE_STRIDE + S.VEL_X] = -3.0;
+    const st = createLawState();
+    set(st, LAW_INDEXES.INDUCTANCE);
+    for (let t = 0; t < 20; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(Math.abs(w.view[S.VEL_X] - w.view[PARTICLE_STRIDE + S.VEL_X])).toBe(6.0);
   });
 
   it('MAGNETISM attracts aligned moments and repels opposing moments', () => {
@@ -158,5 +232,22 @@ describe('Batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM', () =>
     const d20 = pairDist(w2.view);
     for (let t = 0; t < 60; t++) solve(w2.view, 2, PARTICLE_STRIDE, st2, w2.dna, WORLD, DT, rng);
     expect(pairDist(w2.view)).toBeGreaterThan(d20 + 0.02);
+  });
+
+  it('MAGNETIC_MOMENT is signed (-1..1): opposing signs reachable through real DNA', () => {
+    expect(DNA_RANGES[D.MAGNETIC_MOMENT].min).toBe(-1);
+    expect(DNA_RANGES[D.MAGNETIC_MOMENT].max).toBe(1);
+
+    // Species genome holds -1 for p0, +1 for p1 → cache mirrors it → repel.
+    const w = makeWorld(2, 10);
+    setDNAViaSpecies(w, 0, D.MAGNETIC_MOMENT, -1.0);
+    setDNAViaSpecies(w, 1, D.MAGNETIC_MOMENT, 1.0);
+    expect(w.view[S.DNA_CACHE_START + D.MAGNETIC_MOMENT]).toBeLessThan(0);
+    expect(w.view[PARTICLE_STRIDE + S.DNA_CACHE_START + D.MAGNETIC_MOMENT]).toBeGreaterThan(0);
+    const st = createLawState();
+    set(st, LAW_INDEXES.MAGNETISM);
+    const d0 = pairDist(w.view);
+    for (let t = 0; t < 60; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(pairDist(w.view)).toBeGreaterThan(d0 + 0.02);
   });
 });

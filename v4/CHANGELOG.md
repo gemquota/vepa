@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.20] - 2026-08-06
+
+### Law RRP batch 15 — RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM confirmed
+- RESISTANCE — match irl: resistance is now material-dependent and thermal-Ohmic. Damping scales with (1 − CONDUCTIVITY·0.9) so conductors glide and insulators resist, and with (1 + TEMP·2) so hotter particles slow harder — the doc's "hotter they get, the more they slow" feedback is finally wired. Kinetic→heat conversion retained (TEMP += speed·k·(1 − CONDUCTIVITY·0.9)·0.5, cap 1).
+- CAPACITANCE — discharging drains toward zero only: a depleted capacitor never flips polarity from draining (negative stored charge is left alone). Accrual above ENERGY 50, ±2 breakdown clamp, and same-sign stored-charge repulsion unchanged.
+- INDUCTANCE — magnetic coupling: velocity alignment now scales with |MAGNETIC_MOMENT product|/(1 + dist·0.03) (a field is required, and coupling fades with distance) and both particles must conduct (real materials, consistent with CURRENT). Momentum-conserving as before.
+- MAGNETISM — MAGNETIC_MOMENT DNA widened to [−1,1] (default 0.1): the documented "opposing signs repel" was unreachable with a [0,1] range; both aligned-attract and opposing-repel now work through normal DNA. Force law unchanged (F = k·m1·m2/dist²).
+- Tests: `batch_15.test.js` rewritten to confirmed specs (10 cases: material resistance, thermal feedback, bleed-to-zero + no-sign-flip, moment-gated and conductivity-gated inductance, signed-moment real-DNA magnetism); `params_batch_13.test.js` MAGNETIC_MOMENT unaffected. Full suite 584/584 green; `npx vite build` clean.
+
 ## [4.6.19] - 2026-08-06
 
 ### DNA parameter space expanded 48 → 64 — 16 new genetics & regulatory params (genome-only)

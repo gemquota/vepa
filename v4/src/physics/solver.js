@@ -764,7 +764,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += fluxForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.INDUCTANCE)) applyInductance(iBase, jBase, 0.05);
+      if (isSet(lawState, LAW_INDEXES.INDUCTANCE)) applyInductance(iBase, jBase, dist, 0.05 * computeSynergy(lawState, LAW_INDEXES.INDUCTANCE));
       if (isSet(lawState, LAW_INDEXES.CURRENT)) applyCurrentTransfer(iBase, jBase, distSq, 0.05 * computeSynergy(lawState, LAW_INDEXES.CURRENT));
       if (isSet(lawState, LAW_INDEXES.IONIZATION)) {
         const relSpeed = Math.sqrt(

@@ -252,7 +252,7 @@ export const DNA_RANGES = [
   { min: 0,     max: 1,    default: 0.5     },   // 30 ELASTICITY
   { min: 0,     max: 360,  default: 0       },   // 31 BOND_ANGLE
   { min: 0,     max: 1,    default: 0.1     },   // 32 CONDUCTIVITY
-  { min: 0,     max: 1,    default: 0.1     },   // 33 MAGNETIC_MOMENT
+  { min: -1,    max: 1,    default: 0.1     },   // 33 MAGNETIC_MOMENT
   { min: 0,     max: 10,   default: 0.8     },   // 34 ENERGY_EFFICIENCY
   { min: 0,     max: 10,   default: 0.05    },   // 35 SEX_CHANCE
   { min: 0,     max: 20,   default: 0       },   // 36 PREDATION_BIAS
@@ -699,23 +699,23 @@ export const LAW_HELP_DB = {
   },
   RESISTANCE: {
     hint: "Electrical resistance: fast motion converts kinetic energy into heat.",
-    explanation: "Moving particles experience velocity-dependent damping and their TEMPERATURE rises with speed — kinetic energy dissipates as heat.",
-    system: "A thermal-Ohmic bridge: the hotter they get the more they slow, preventing runaway charge-driven velocities.",
+    explanation: "Confirmed batch-15 (match irl): moving particles are damped and their TEMPERATURE rises with speed — kinetic energy dissipates as heat. Resistance is material-dependent: CONDUCTIVITY DNA lowers the damping (conductors glide, insulators resist), and hotter particles damp harder — the thermal-Ohmic feedback that prevents runaway charge-driven velocities.",
+    system: "damp = speed·k·(1 − CONDUCTIVITY·0.9)·(1 + TEMP·2); TEMP += speed·k·(1 − CONDUCTIVITY·0.9)·0.5 (cap 1). High conductivity = low resistance; hot = slow.",
   },
   CAPACITANCE: {
     hint: "Capacitance: particles store energy as charge.",
-    explanation: "Particles accumulate stored CHARGE from surplus ENERGY and feel a pairwise force from stored charge — energy storage that later drives electrostatic motion.",
-    system: "Charge accrues when ENERGY exceeds 50 and bleeds off when below. Stored charge feeds CHARGE_LAW and FLUX.",
+    explanation: "Confirmed batch-15: particles accumulate stored CHARGE from surplus ENERGY and feel a pairwise force from stored charge — energy storage that later drives electrostatic motion. Discharging drains toward zero only, so a depleted capacitor never flips polarity from draining.",
+    system: "Charge accrues when ENERGY exceeds 50 (clamped ±2, the breakdown limit) and bleeds toward zero when below. Stored charge feeds CHARGE_LAW and FLUX; same-sign stored charge repels.",
   },
   INDUCTANCE: {
     hint: "Inductance: neighbors align their motion magnetically.",
-    explanation: "Velocities of nearby particles are pulled toward each other — magnetic coupling that damps relative motion and shepherds streams.",
-    system: "Smooths velocity fields like an inductor opposing current change. Helps form coherent flow lanes.",
+    explanation: "Confirmed batch-15 (match irl): velocity alignment between coupled particles — magnetic coupling that damps relative motion and shepherds streams. Coupling needs a magnetic field (|MAGNETIC_MOMENT product|) and both particles must conduct, and it fades with distance like a real inductive field.",
+    system: "dv = (v_j − v_i)·k·couple, couple = |m1·m2|/(1 + dist·0.03), requires CONDUCTIVITY > 0 on both. Momentum-conserving; forms coherent flow lanes.",
   },
   MAGNETISM: {
     hint: "Magnetic moment alignment: aligned moments attract.",
-    explanation: "Particles with matching MAGNETIC_MOMENT DNA signs attract; opposing signs repel, scaled by the product of their moments.",
-    system: "Creates magnetic chains and filaments along moment direction. Complements CHARGE_LAW for full electromagnetic structure.",
+    explanation: "Confirmed batch-15: MAGNETIC_MOMENT is signed (−1..1) — matching signs attract, opposing signs repel, scaled by the product of their moments. Both behaviors are now reachable through normal DNA.",
+    system: "F = k·m1·m2/dist² — aligned moments form magnetic chains and filaments along the moment direction; opposing moments push apart. Complements CHARGE_LAW for full electromagnetic structure.",
   },
   RESONANCE: {
     hint: "Resonance: pulsing particles attract when their pulse rates match.",

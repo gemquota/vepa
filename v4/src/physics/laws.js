@@ -2099,22 +2099,36 @@ export function applyCurrentTransfer(p1Ptr, p2Ptr, distSq, k) {
   buf[p2Ptr + S.CHARGE] -= dq;
 }
 
-/** RESISTANCE — kinetic energy → heat + velocity damping (per-particle). */
+/** RESISTANCE — kinetic energy → heat + velocity damping (per-particle).
+ * Material-dependent (batch-15): high CONDUCTIVITY = low resistance, and
+ * hotter particles damp harder (the doc's "hotter they get, more they slow"
+ * feedback — prevents runaway charge-driven velocities). */
 export function applyResistance(p1Ptr, vx, vy, vz, k) {
   const buf = buffer_global;
   const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
   if (speed < 0.01) return null;
-  buf[p1Ptr + S.TEMPERATURE] = Math.min(1, (buf[p1Ptr + S.TEMPERATURE] || 0) + speed * k * 0.5);
-  const damp = speed * k;
+  const cond = readDNA(p1Ptr, D.CONDUCTIVITY) || 0;
+  const materialFactor = 1 - cond * 0.9; // conductors glide, insulators resist
+  const heatFactor = 1 + (buf[p1Ptr + S.TEMPERATURE] || 0) * 2; // hotter → slower
+  const damp = speed * k * materialFactor * heatFactor;
+  buf[p1Ptr + S.TEMPERATURE] = Math.min(1, (buf[p1Ptr + S.TEMPERATURE] || 0) + speed * k * materialFactor * 0.5);
   return { ax: -vx * damp, ay: -vy * damp, az: -vz * damp };
 }
 
-/** CAPACITANCE — store surplus energy as charge (per-particle). */
+/** CAPACITANCE — store surplus energy as charge (per-particle).
+ * Batch-15: discharging drains toward zero only — a depleted capacitor never
+ * flips sign from draining. Charging keeps the ±2 breakdown clamp. */
 export function applyCapacitanceStore(p1Ptr, k) {
   const buf = buffer_global;
   const energy = buf[p1Ptr + S.ENERGY] || 50;
   const delta = (energy - 50) * k;
-  buf[p1Ptr + S.CHARGE] = clamp((buf[p1Ptr + S.CHARGE] || 0) + delta, -2, 2);
+  const c = buf[p1Ptr + S.CHARGE] || 0;
+  if (delta < 0) {
+    // Bleed toward zero; never overshoot into the opposite polarity.
+    buf[p1Ptr + S.CHARGE] = c > 0 ? Math.max(0, c + delta) : c;
+  } else {
+    buf[p1Ptr + S.CHARGE] = clamp(c + delta, -2, 2);
+  }
 }
 
 /** CAPACITANCE — pairwise force from stored charge. */
@@ -2133,11 +2147,21 @@ export function applyStoredChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** INDUCTANCE — velocity alignment (magnetic coupling), in-place. */
-export function applyInductance(p1Ptr, p2Ptr, k) {
+/** INDUCTANCE — velocity alignment (magnetic coupling), in-place.
+ * Batch-15: coupling scales with the product of MAGNETIC_MOMENT magnitudes
+ * (|m1·m2| — induction needs a magnetic field), fades with distance, and both
+ * particles must conduct (real materials, consistent with CURRENT). Momentum
+ * is conserved: the pair swaps equal-and-opposite velocity deltas. */
+export function applyInductance(p1Ptr, p2Ptr, dist, k) {
   const buf = buffer_global;
+  const cond = Math.min(readDNA(p1Ptr, D.CONDUCTIVITY) || 0, readDNA(p2Ptr, D.CONDUCTIVITY) || 0);
+  if (cond <= 0) return;
+  const m1 = readDNA(p1Ptr, D.MAGNETIC_MOMENT) || 0;
+  const m2 = readDNA(p2Ptr, D.MAGNETIC_MOMENT) || 0;
+  const couple = Math.abs(m1 * m2) / (1 + dist * 0.03);
+  if (couple <= 0.0001) return;
   for (const slot of [S.VEL_X, S.VEL_Y, S.VEL_Z]) {
-    const dv = (buf[p2Ptr + slot] - buf[p1Ptr + slot]) * k;
+    const dv = (buf[p2Ptr + slot] - buf[p1Ptr + slot]) * k * couple;
     buf[p1Ptr + slot] += dv;
     buf[p2Ptr + slot] -= dv;
   }
