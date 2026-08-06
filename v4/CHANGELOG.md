@@ -1,5 +1,12 @@
 # Changelog: VEPA v4
 
+## [4.6.14] - 2026-08-06
+
+### Law colours: 10% bands tightened to 4%
+- Each of the 8 law-category bands on the EM-spectrum is now 4 points wide (center ± 2) instead of 10, so the 16 laws inside a category sit closer to their category colour (RED wraps 98% → 102% through 0).
+- All 128 laws still get a distinct hue; `LAW_SPECTRUM` + `LAW_HUE_BY_INDEX` recompute automatically.
+- Full suite 561/561 green; `npx vite build` clean.
+
 ## [4.6.13] - 2026-08-06
 
 ### Drawer fixes — reopen after minimize, swipe up/down, LAWS + WORLD sub-tabs, laws hide button removed

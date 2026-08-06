@@ -599,18 +599,18 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 
 
 // --- EM-spectrum rainbow bands (percent positions on a 0-100 spectrum) ---
-// Eight evenly spaced colours at 12.5% intervals; each band is 10 points wide.
-// RED wraps through 100/0 (95% -> 5%), so its band runs start=95 to end=105.
+// Eight evenly spaced colours at 12.5% intervals; each band is 4 points wide
+// (center ± 2). RED wraps through 100/0, so its band runs start=98 to end=102.
 
 export const LAW_SPECTRUM = {
-  RED:    { start: 95,   end: 105, center: 0 },
-  ORANGE: { start: 7.5,  end: 17.5, center: 12.5 },
-  YELLOW: { start: 20,   end: 30,   center: 25 },
-  GREEN:  { start: 32.5, end: 42.5, center: 37.5 },
-  TEAL:   { start: 45,   end: 55,   center: 50 },
-  BLUE:   { start: 57.5, end: 67.5, center: 62.5 },
-  VIOLET: { start: 70,   end: 80,   center: 75 },
-  PURPLE: { start: 82.5, end: 92.5, center: 87.5 },
+  RED:    { start: 98,   end: 102, center: 0 },
+  ORANGE: { start: 10.5, end: 14.5, center: 12.5 },
+  YELLOW: { start: 23,   end: 27,   center: 25 },
+  GREEN:  { start: 35.5, end: 39.5, center: 37.5 },
+  TEAL:   { start: 48,   end: 52,   center: 50 },
+  BLUE:   { start: 60.5, end: 64.5, center: 62.5 },
+  VIOLET: { start: 73,   end: 77,   center: 75 },
+  PURPLE: { start: 85.5, end: 89.5, center: 87.5 },
 };
 
 // --- Per-law hue: each of the 16 laws in a category is spread across its band ---
