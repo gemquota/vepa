@@ -1034,7 +1034,8 @@ export function applyTimeDilation(lawState, view, base, synergy) {
 // ============================================================================
 export function applyDimensionality(lawState, view, base, prng, dt, synergy) {
   if (!isSet(lawState, LAW_INDEXES.DIMENSIONALITY)) return 0; // DIMENSIONALITY=31
-  const force = (prng() - 0.5) * 0.1 * synergy * dt;
+  // Batch-08 confirmation ("make it stronger"): 0.1 -> 0.3 Z-drift amplitude.
+  const force = (prng() - 0.5) * 0.3 * synergy * dt;
   view[base + S.VEL_Z] += force;
   return force;
 }
@@ -1775,7 +1776,9 @@ export function applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, s
 // ============================================================================
 export function applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
   if (!isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)) return null;
-  if (dist < 1 || dist > 30) return null;
+  // Batch-07 repair: range widened 30 -> 150 so lattices actually form at
+  // default spawn spacing (~100-300 units), pull strengthened 0.01 -> 0.05.
+  if (dist < 1 || dist > 150) return null;
   const gridSize = 8.0;
   const targetX = Math.round(dx / gridSize) * gridSize;
   const targetY = Math.round(dy / gridSize) * gridSize;
@@ -1783,9 +1786,9 @@ export function applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, d
   // Same-species pairs crystallize 3x stronger (batch-07 confirmation)
   const sameSpecies = view[iBase + S.SPECIES_ID] === view[jBase + S.SPECIES_ID];
   const pullScale = sameSpecies ? 3.0 : 1.0;
-  const pullX = (targetX - dx) * 0.01 * synergy * pullScale;
-  const pullY = (targetY - dy) * 0.01 * synergy * pullScale;
-  const pullZ = (targetZ - dz) * 0.01 * synergy * pullScale;
+  const pullX = (targetX - dx) * 0.05 * synergy * pullScale;
+  const pullY = (targetY - dy) * 0.05 * synergy * pullScale;
+  const pullZ = (targetZ - dz) * 0.05 * synergy * pullScale;
   return {
     ax: pullX,
     ay: pullY,
@@ -1801,28 +1804,37 @@ export function applyPhaseRadiation(lawState, view, base, dt, synergy) {
   const temp = view[base + S.TEMPERATURE];
   const energy = view[base + S.ENERGY];
   if (!Number.isFinite(temp) || !Number.isFinite(energy)) return;
-  if (temp > 0.6) {
-    const radiated = (temp - 0.6) * 0.02 * dt * synergy;
-    view[base + S.ENERGY] -= radiated;
-    view[base + S.TEMPERATURE] -= radiated;
-    view[base + S.SIGNAL] = Math.min(1, view[base + S.SIGNAL] + radiated);
+  // Batch-08 confirmation ("follow irl behaviour"): Stefan-Boltzmann blackbody
+  // emission — every warm body radiates, hot bodies radiate disproportionately
+  // (T^4 curve), cooling both TEMPERATURE and ENERGY and glowing via SIGNAL.
+  if (temp > 0.05) {
+    const radiated = temp * temp * temp * temp * 0.05 * dt * synergy;
+    if (radiated > 0) {
+      view[base + S.ENERGY] -= radiated;
+      view[base + S.TEMPERATURE] = Math.max(0, view[base + S.TEMPERATURE] - radiated);
+      view[base + S.SIGNAL] = Math.min(1, view[base + S.SIGNAL] + radiated);
+    }
   }
 }
 
 // ============================================================================
 // 57. SUBLIMATION — Solid particles skip liquid phase
 // ============================================================================
-export function applySublimation(lawState, view, base, dt, synergy) {
+export function applySublimation(lawState, view, base, dt, synergy, prng) {
   if (!isSet(lawState, LAW_INDEXES.SUBLIMATION)) return;
   const temp = view[base + S.TEMPERATURE];
   const mass = view[base + S.MASS];
-  if (!Number.isFinite(temp) || !Number.isFinite(mass)) return;
-  if (temp > 0.5 && mass > 0.2) {
+  const energy = view[base + S.ENERGY];
+  if (!Number.isFinite(temp) || !Number.isFinite(mass) || !Number.isFinite(energy)) return;
+  // Batch-08 confirmation ("sure"): documented low-mass + high-energy gate;
+  // mass can sublimate almost fully away (floor 0.02); burst uses the sim PRNG.
+  if (temp > 0.5 && energy > 50 && mass > 0.02) {
     const sublRate = (temp - 0.5) * 0.005 * dt * synergy;
-    view[base + S.MASS] -= sublRate;
-    view[base + S.VEL_X] += (Math.random() - 0.5) * sublRate * 5;
-    view[base + S.VEL_Y] += (Math.random() - 0.5) * sublRate * 5;
-    view[base + S.TEMPERATURE] -= sublRate * 0.5;
+    view[base + S.MASS] = Math.max(0.02, view[base + S.MASS] - sublRate);
+    view[base + S.VEL_X] += (prng() - 0.5) * sublRate * 5;
+    view[base + S.VEL_Y] += (prng() - 0.5) * sublRate * 5;
+    view[base + S.ENERGY] = Math.max(0, view[base + S.ENERGY] - sublRate * 20);
+    view[base + S.TEMPERATURE] = Math.max(0, view[base + S.TEMPERATURE] - sublRate * 0.5);
   }
 }
 

@@ -78,25 +78,25 @@ describe('Batch 07 audit — CRYSTALLIZATION / HEAT / COLD / CONVECTION', () => 
       buf[S.SPECIES_ID] = 0;
       buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
       const f = applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 4, 4, 0, 5.657, 1);
-      // round(4/8)*8 = 8 → pull = (8−4)*0.01 = 0.04
-      expect(f.ax).toBeCloseTo(0.04, 5);
-      expect(f.ay).toBeCloseTo(0.04, 5);
+      // round(4/8)*8 = 8 → pull = (8−4)*0.05 = 0.2
+      expect(f.ax).toBeCloseTo(0.2, 5);
+      expect(f.ay).toBeCloseTo(0.2, 5);
       expect(f.az).toBe(0);
     });
 
-    it('gives same-species pairs a 3x crystallization bonus (0.04 → 0.12)', () => {
+    it('gives same-species pairs a 3x crystallization bonus (0.2 → 0.6)', () => {
       const buf = view(2);
       buf[S.SPECIES_ID] = 2;
       buf[PARTICLE_STRIDE + S.SPECIES_ID] = 2;
       const f = applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 4, 4, 0, 5.657, 1);
-      expect(f.ax).toBeCloseTo(0.12, 5);
-      expect(f.ay).toBeCloseTo(0.12, 5);
+      expect(f.ax).toBeCloseTo(0.6, 5);
+      expect(f.ay).toBeCloseTo(0.6, 5);
       expect(f.az).toBe(0);
     });
 
-    it('is a no-op beyond 30 units', () => {
+    it('is a no-op beyond 150 units', () => {
       const buf = view(2);
-      expect(applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 40, 0, 0, 40, 1)).toBeNull();
+      expect(applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 160, 0, 0, 160, 1)).toBeNull();
     });
   });
 

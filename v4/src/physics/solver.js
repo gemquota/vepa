@@ -1374,7 +1374,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Sublimation ──
     applySublimation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.SUBLIMATION));
+      computeSynergy(lawState, LAW_INDEXES.SUBLIMATION), prng);
 
     // ── Thermal jitter (HEAT) ──
 

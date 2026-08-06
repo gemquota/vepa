@@ -1,5 +1,38 @@
 # Changelog: VEPA v4
 
+## [4.6.9] - 2026-08-06
+
+### Law RRP batch 08 — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIMENSIONALITY + crystallization repair
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments, plus a user-reported crystallization bug fixed.
+
+- **CRYSTALLIZATION REPAIR** (user report: "lattices are entirely absent") — root
+  cause: pairs only interacted within 30 units at a 0.01 pull while default spawn
+  spacing is ~100-300 units, so lattices never formed. Range widened 30 -> 150 and
+  pull strengthened 0.01 -> 0.05 (same-species 3x = 0.15); same-species pairs now
+  visibly snap into the 8-unit lattice grid.
+- **PHASE_RADIATION** — follows real blackbody physics: Stefan-Boltzmann T^4
+  emission — every warm body (temp > 0.05) radiates, hot bodies radiate
+  disproportionately (temp^4 x 0.05 x dt x synergy), cooling TEMPERATURE and
+  ENERGY while boosting SIGNAL glow. The old ENERGY > 50 doc hint and the 0.6
+  threshold are replaced.
+- **SUBLIMATION** — documented low-mass + high-energy gate: temp > 0.5 AND
+  ENERGY > 50; mass sublimes down to a 0.02 floor (near-full evaporation); the
+  velocity burst now uses the sim PRNG instead of Math.random(); sublimation
+  consumes extra energy (x20 sublRate) and cools.
+- **TIME_DILATION** — agent decision (user delegated): kept `localDt = 1 -
+  soul x 0.3 x synergy` (70% max slowdown) — a stronger cap would make
+  differential aging (AGE, reproduction timers) diverge too far between souls.
+- **DIMENSIONALITY** — Z-drift amplitude raised 0.1 -> 0.3 (3x) so 3D
+  exploration is visible.
+- Tests: `batch_07.test.js` crystallization values updated (0.2 / 0.6 / no-op
+  beyond 150); `batch_08.test.js` rewritten (T^4 curve + proportionality,
+  near-zero gate, sublimation energy gate + floor + PRNG, dimensionality 0.15
+  kick). Full suite 550/550 green; `vite build` clean.
+- HELP_DB synced for all five laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_07.md` + `batch_08.md`.
+
+
 ## [4.6.8] - 2026-08-06
 
 ### Law RRP batch 07 — CRYSTALLIZATION / HEAT / COLD / CONVECTION confirmed semantics

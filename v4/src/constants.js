@@ -923,8 +923,8 @@ export const LAW_HELP_DB = {
   },
   CRYSTALLIZATION: {
     hint: "Crystallization: same-species rigid lattice formation.",
-    explanation: "Confirmed batch-07: any nearby pair is pulled toward an 8-unit lattice grid, and same-species pairs crystallize 3x stronger (rigid clusters).",
-    system: "Quantizes pair separation to an 8-unit grid (pull 0.01 x synergy); same-species pairs pull 3x harder. Creates crystalline structures.",
+    explanation: "Confirmed batch-07 + repaired: any pair within 150 units is pulled toward an 8-unit lattice grid, and same-species pairs crystallize 3x stronger (rigid clusters). Range and strength were tuned up so lattices actually form at default spawn spacing.",
+    system: "Quantizes pair separation to an 8-unit grid (pull 0.05 x synergy, range 1-150); same-species pairs pull 3x harder. Creates crystalline structures.",
   },
   HEAT: {
     hint: "Thermal motion: heat adds random jitter to hot particles.",
@@ -943,13 +943,13 @@ export const LAW_HELP_DB = {
   },
   PHASE_RADIATION: {
     hint: "Blackbody radiation: hot particles emit energy.",
-    explanation: "Particles with energy above 50 radiate excess energy, cooling down.",
-    system: "Radiated energy boosts SIGNAL for visual glow. Prevents energy runaway.",
+    explanation: "Confirmed batch-08 (follow irl behaviour): Stefan-Boltzmann blackbody emission — every warm body radiates and hot bodies radiate disproportionately (T^4 curve), cooling TEMPERATURE and ENERGY while boosting SIGNAL glow.",
+    system: "For temp > 0.05: radiated = temp^4 x 0.05 x dt x synergy; ENERGY -= radiated, TEMPERATURE -= radiated, SIGNAL += radiated (cap 1). Prevents energy runaway.",
   },
   SUBLIMATION: {
     hint: "Sublimation: low-mass hot particles turn to gas.",
-    explanation: "Particles with low mass and high energy may sublimate, losing mass and gaining velocity.",
-    system: "Direct solid→gas transition. Reduces mass and adds velocity burst.",
+    explanation: "Confirmed batch-08: hot (temp > 0.5) high-energy (ENERGY > 50) particles sublimate, losing mass down to a 0.02 floor and gaining a PRNG velocity burst; sublimation consumes extra energy and cools the particle.",
+    system: "sublRate = (temp-0.5) x 0.005 x dt x synergy; MASS -= sublRate (floor 0.02), VEL_X/Y += (prng()-0.5) x sublRate x 5, ENERGY -= sublRate x 20, TEMPERATURE -= sublRate x 0.5.",
   },
   MELT: {
     hint: "Melting: hot particles lose structural integrity.",
@@ -978,13 +978,13 @@ export const LAW_HELP_DB = {
   },
   TIME_DILATION: {
     hint: "Time dilation: SOUL slows local time.",
-    explanation: "Particles with high SOUL experience slower local time, giving them more frames to react.",
-    system: "localDt = 1.0 - soul * 0.3. SOUL = 1.0 → 70% time speed. Enables bullet-time effects.",
+    explanation: "Confirmed batch-08 (agent decision): high-SOUL particles experience slower local time, giving them more frames to react. 70% max slowdown is kept — a stronger cap would make differential aging (AGE, reproduction timers) diverge too far between souls.",
+    system: "localDt = 1.0 - soul * 0.3 * synergy. SOUL = 1.0 → 70% time speed. Enables bullet-time effects.",
   },
   DIMENSIONALITY: {
     hint: "Dimensional drift: random Z-axis motion.",
-    explanation: "Particles receive small random forces in the Z dimension, exploring 3D space.",
-    system: "Subtle Z-axis perturbation. Prevents particles from settling into pure 2D planes.",
+    explanation: "Confirmed batch-08 (make it stronger): particles receive random Z-axis forces at 3x the old amplitude, visibly exploring 3D space.",
+    system: "VEL_Z += (prng()-0.5) x 0.3 x synergy x dt. Prevents particles from settling into pure 2D planes.",
   },
   CHAOS: {
     hint: "Chaos: strong random forces, system instability.",

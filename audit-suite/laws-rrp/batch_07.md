@@ -25,3 +25,15 @@ Laws under audit (indices 24-27). Status: ✅ confirmed + implemented + validate
 - [x] User confirmation → 1. same-species bonus 2. yes jitter 3. sure damping 4. unsure (agent decision, amendable)
 - [x] Implementation + tests (547/547)
 - [x] Deployed to https://vepa-v4.vercel.app
+
+## Repair (v4.6.9, user report: "lattices are entirely absent")
+
+- Root cause: `applyCrystallization` gated pairs at `dist 1-30` with a 0.01 pull.
+  Default spawn spacing is ~100-300 units (1250 particles in a 2000 world), so
+  virtually no pairs ever entered range and the pull was far too weak to win
+  against gravity/jitter/affinity — lattices never formed.
+- Fix: range widened `30 -> 150` (inside the spatial-grid neighborhood) and pull
+  strengthened `0.01 -> 0.05` (same-species 3x = 0.15). Lattice springs now
+  engage at real spawn spacing and visibly snap same-species pairs into the
+  8-unit grid.
+- Tests updated: cross-species pull 0.2, same-species 0.6, no-op beyond 150.

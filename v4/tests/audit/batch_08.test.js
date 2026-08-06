@@ -77,19 +77,28 @@ describe('Batch 08 audit — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIM
       expect(isSet(lawsOn('PHASE_RADIATION'), LAW_INDEXES.PHASE_RADIATION)).toBe(true);
     });
 
-    it('radiates excess heat (temp 1 → energy −0.008, signal +0.008)', () => {
+    it('radiates as a T^4 blackbody (temp 1 → energy −0.05, signal +0.05)', () => {
       const buf = view(1);
       buf[S.TEMPERATURE] = 1;
       buf[S.ENERGY] = 100;
       applyPhaseRadiation(lawsOn('PHASE_RADIATION'), buf, 0, 1, 1);
-      expect(buf[S.ENERGY]).toBeCloseTo(99.992, 5);
-      expect(buf[S.TEMPERATURE]).toBeCloseTo(0.992, 5);
-      expect(buf[S.SIGNAL]).toBeCloseTo(0.008, 5);
+      expect(buf[S.ENERGY]).toBeCloseTo(99.95, 5);
+      expect(buf[S.TEMPERATURE]).toBeCloseTo(0.95, 5);
+      expect(buf[S.SIGNAL]).toBeCloseTo(0.05, 5);
     });
 
-    it('ignores cool particles (temp 0.5)', () => {
+    it('hot bodies radiate disproportionately (T^4 curve)', () => {
       const buf = view(1);
-      buf[S.TEMPERATURE] = 0.5;
+      buf[S.TEMPERATURE] = 0.8;
+      buf[S.ENERGY] = 100;
+      applyPhaseRadiation(lawsOn('PHASE_RADIATION'), buf, 0, 1, 1);
+      // 0.8^4 x 0.05 = 0.02048 — far less than the 0.05 radiated at temp 1
+      expect(buf[S.ENERGY]).toBeCloseTo(99.97952, 5);
+    });
+
+    it('ignores near-absolute-zero particles (temp 0.04)', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 0.04;
       buf[S.ENERGY] = 100;
       applyPhaseRadiation(lawsOn('PHASE_RADIATION'), buf, 0, 1, 1);
       expect(buf[S.ENERGY]).toBe(100);
@@ -118,16 +127,36 @@ describe('Batch 08 audit — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIM
       expect(isSet(lawsOn('SUBLIMATION'), LAW_INDEXES.SUBLIMATION)).toBe(true);
     });
 
-    it('converts hot mass to vapour (temp 1, mass 1.5 → −0.0025, temp −0.00125)', () => {
+    it('converts hot high-energy mass to vapour (temp 1, energy 100, mass 1.5 → −0.0025)', () => {
       const buf = view(1);
       buf[S.TEMPERATURE] = 1;
+      buf[S.ENERGY] = 100;
       buf[S.MASS] = 1.5;
-      applySublimation(lawsOn('SUBLIMATION'), buf, 0, 1, 1);
+      applySublimation(lawsOn('SUBLIMATION'), buf, 0, 1, 1, () => 0.5);
       expect(buf[S.MASS]).toBeCloseTo(1.4975, 5);
+      expect(buf[S.ENERGY]).toBeCloseTo(99.95, 5);
       expect(buf[S.TEMPERATURE]).toBeCloseTo(0.99875, 5);
     });
 
-    it('integration: solve() sublimates a hot, massive particle', () => {
+    it('does not sublimate low-energy particles (energy 20)', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 1;
+      buf[S.ENERGY] = 20;
+      buf[S.MASS] = 1.5;
+      applySublimation(lawsOn('SUBLIMATION'), buf, 0, 1, 1, () => 0.5);
+      expect(buf[S.MASS]).toBe(1.5);
+    });
+
+    it('mass floor: evaporation stops at 0.02', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 1;
+      buf[S.ENERGY] = 100;
+      buf[S.MASS] = 0.021;
+      applySublimation(lawsOn('SUBLIMATION'), buf, 0, 1, 1, () => 0.5);
+      expect(buf[S.MASS]).toBeCloseTo(0.02, 5);
+    });
+
+    it('integration: solve() sublimates a hot, massive, high-energy particle', () => {
       const world = makeWorld(1, { temperature: 1 });
       world.view[S.MASS] = 1.5;
       solve(world.view, 1, PARTICLE_STRIDE, lawsOn('SUBLIMATION'), world.dna, WORLD, DT, () => 0.5);
@@ -178,10 +207,10 @@ describe('Batch 08 audit — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIM
       expect(isSet(lawsOn('DIMENSIONALITY'), LAW_INDEXES.DIMENSIONALITY)).toBe(true);
     });
 
-    it('perturbs Z velocity via prng (prng 1.0, dt 1 → VEL_Z +0.05)', () => {
+    it('perturbs Z velocity via prng (prng 1.0, dt 1 → VEL_Z +0.15)', () => {
       const buf = view(1);
       applyDimensionality(lawsOn('DIMENSIONALITY'), buf, 0, () => 1.0, 1, 1);
-      expect(buf[S.VEL_Z]).toBeCloseTo(0.05, 5);
+      expect(buf[S.VEL_Z]).toBeCloseTo(0.15, 5);
     });
 
     it('integration: solve() perturbs VEL_Z in 3D space', () => {

@@ -76,5 +76,15 @@
     "status": "converged",
     "finished_at": "2026-08-06T00:20:50+00:00",
     "duration_s": 21.0
+  },
+  {
+    "session_id": "20260806-111640-aaf3",
+    "artifact": "law-batch-08",
+    "date": "2026-08-06",
+    "variant": "linear",
+    "started_at": "2026-08-06T01:16:40+00:00",
+    "status": "converged",
+    "finished_at": "2026-08-06T01:16:41+00:00",
+    "duration_s": 1.0
   }
 ]
