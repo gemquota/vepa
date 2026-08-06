@@ -988,18 +988,18 @@ export const LAW_HELP_DB = {
   },
   CHAOS: {
     hint: "Chaos: strong random forces, system instability.",
-    explanation: "Large random forces applied to all particles. Destabilizes structures, creates turbulence.",
-    system: "Strong stochastic forcing. Amplified by CHAOS synergy with ORDER (mutual cancellation).",
+    explanation: "Confirmed batch-09 (agent decision): strong random velocity forcing (X/Y full, Z half) PLUS a small temperature stir — flickering hot/cold pockets that feed HEAT and PHASE_RADIATION dynamics.",
+    system: "Kinetic: (prng()-0.5) x 0.5 x dt x synergy on X/Y, half on Z. Thermal: (prng()-0.5) x 0.02 x dt x synergy on TEMPERATURE (clamped 0-1). With ORDER on, both run at x0.3 (mutual cancellation).",
   },
   ORDER: {
     hint: "Order: velocity alignment, system convergence.",
-    explanation: "Particles align their velocity with nearby particles, creating coherent flow.",
-    system: "Like Vicsek model alignment. Counteracts CHAOS. Drives system toward ordered states.",
+    explanation: "Confirmed batch-09 (strongly): particles strongly align their velocity with neighbors within ~200 units, creating coherent flow.",
+    system: "Vicsek alignment: accel = neighbor velocity x 0.04 x synergy within distSq < 40000 (~200 units). With CHAOS on, both run at x0.3.",
   },
   FATE: {
-    hint: "Fate: same-species long-range attraction.",
-    explanation: "Particles of the same species are gently attracted across long distances.",
-    system: "Long-range (dist² < 250k) same-species attraction. Creates species segregation.",
+    hint: "Fate: each species drifts toward its own destiny.",
+    explanation: "Confirmed batch-09 (redesign — the old pairwise attraction duplicated AFFINITY): every species has a slowly wandering destiny point it is gently pulled toward, so species migrate and segregate toward their own fate.",
+    system: "Destiny point = golden-angle phase per species, drifting on a fate clock (span 0.32 x worldSize). Pull = 0.02 x synergy along the shortest toroidal path. Full-world range.",
   },
   WILL: {
     hint: "Will: self-propulsion along current velocity.",

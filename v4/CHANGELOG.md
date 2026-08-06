@@ -1,5 +1,31 @@
 # Changelog: VEPA v4
 
+## [4.6.10] - 2026-08-06
+
+### Law RRP batch 09 — CHAOS / ORDER / FATE / WILL confirmed semantics
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **CHAOS** — agent decision (user delegated): kinetic forcing stays plus a small
+  temperature stir (+/-(prng()-0.5) x 0.02 x dt x synergy, clamped 0-1) so chaos
+  flickers hot/cold pockets that feed HEAT and PHASE_RADIATION. With ORDER on,
+  both run at x0.3 (mutual cancellation, unchanged).
+- **ORDER** — "strongly": Vicsek alignment 0.005 -> 0.04 and range ~100 -> ~200
+  units, so coherent flow actually emerges.
+- **FATE** — redesigned (user: "boring and similar to existing laws"): the old
+  pairwise same-species attraction duplicated AFFINITY. Each species now has a
+  slowly drifting destiny point (golden-angle phase, fate clock) its members are
+  gently pulled toward along the shortest toroidal path — species migrate and
+  segregate toward their own fate.
+- **WILL** — followed docs: energy-independent self-propulsion along current
+  heading (0.01 x dt x synergy, speed gate 0.01). Unchanged.
+- Tests: `batch_09.test.js` updated (CHAOS thermal stir + clamp, ORDER 0.2
+  alignment + 50k range gate, FATE destiny magnitude/direction + per-species
+  divergence + integration). Full suite 550/550 green; `vite build` clean.
+- HELP_DB synced for CHAOS / ORDER / FATE; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_09.md`.
+
+
 ## [4.6.9] - 2026-08-06
 
 ### Law RRP batch 08 — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIMENSIONALITY + crystallization repair

@@ -3,7 +3,7 @@ import { PARTICLE_STRIDE, STRIDE_INDEXES as S, DNA_INDEXES as D, DNA_RANGES, LAW
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, clear, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults, setDNAFloat, getDNAFloat } from '../../src/dna/dnaBuffer.js';
-import { applyChaos, applyOrder, applyFate, applyWill } from '../../src/physics/laws.js';
+import { applyChaos, applyOrder, applyFate, applyWill, advanceFateClock, getFateTime } from '../../src/physics/laws.js';
 import { solve } from '../../src/physics/solver.js';
 
 const WORLD = 2000;
@@ -69,11 +69,13 @@ describe('Batch 09 — CHAOS / ORDER / FATE / WILL', () => {
     expect(buf[S.VEL_X]).toBeCloseTo(0.25, 5); // (1-0.5)*0.5*1*1
     expect(buf[S.VEL_Y]).toBeCloseTo(0.25, 5);
     expect(buf[S.VEL_Z]).toBeCloseTo(0.125, 5);
+    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.01, 5); // thermal stir (1-0.5)*0.02*1*1
     // opposite prng flips sign
     const buf2 = view(1);
     seed(buf2, 1);
     applyChaos(state, buf2, 0, () => 0.0, 1, 1);
     expect(buf2[S.VEL_X]).toBeCloseTo(-0.25, 5);
+    expect(buf2[S.TEMPERATURE]).toBe(0); // clamped at 0 (stir -0.01)
     // gate off → no effect
     const off = createLawState();
     applyChaos(off, buf, 0, () => 1.0, 1, 1);
@@ -101,10 +103,10 @@ describe('Batch 09 — CHAOS / ORDER / FATE / WILL', () => {
     expect(isSet(state, LAW_INDEXES.ORDER)).toBe(true);
     const f = applyOrder(state, buf, 0, PARTICLE_STRIDE, 100, 1);
     expect(f).not.toBeNull();
-    expect(f.ax).toBeCloseTo(5 * 0.005, 5); // 0.025
+    expect(f.ax).toBeCloseTo(5 * 0.04, 5); // 0.2 (strong alignment)
     expect(f.ay).toBeCloseTo(0, 5);
-    // beyond 10k distSq → no alignment
-    expect(applyOrder(state, buf, 0, PARTICLE_STRIDE, 20000, 1)).toBeNull();
+    // beyond 40k distSq (~200 units) → no alignment
+    expect(applyOrder(state, buf, 0, PARTICLE_STRIDE, 50000, 1)).toBeNull();
     // gate off → null
     expect(applyOrder(createLawState(), buf, 0, PARTICLE_STRIDE, 100, 1)).toBeNull();
   });
@@ -125,36 +127,43 @@ describe('Batch 09 — CHAOS / ORDER / FATE / WILL', () => {
     expect(off.view[S.VEL_X]).toBe(0);
   });
 
-  it('FATE (34): same-species long-range attraction, gated by isSet', () => {
-    const buf = view(2);
-    seed(buf, 2);
+  it('FATE (34): species destiny point pull, gated by isSet', () => {
+    advanceFateClock(-getFateTime()); // deterministic destiny phase
+    const buf = view(1);
+    seed(buf, 1); // species 0 at (100, 100, 100)
     const state = createLawState();
     set(state, LAW_INDEXES.FATE);
     expect(isSet(state, LAW_INDEXES.FATE)).toBe(true);
-    const f = applyFate(state, buf, 0, PARTICLE_STRIDE, 10, 0, 0, 100, 1);
+    const f = applyFate(state, buf, 0, 100, 100, 100, WORLD, 1);
     expect(f).not.toBeNull();
-    expect(f.ax).toBeCloseTo(0.05, 5); // 10 * (1/10) * 0.05
-    // different species → null
-    buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
-    expect(applyFate(state, buf, 0, PARTICLE_STRIDE, 10, 0, 0, 100, 1)).toBeNull();
-    // beyond 250k distSq → null
-    buf[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
-    expect(applyFate(state, buf, 0, PARTICLE_STRIDE, 10, 0, 0, 300000, 1)).toBeNull();
+    // Species 0 destiny at t=0 is (1000, 1640, 1000): pull magnitude 0.02,
+    // toroidal shortest path → +X, −Y (wrapped), +Z
+    expect(Math.hypot(f.ax, f.ay, f.az)).toBeCloseTo(0.02, 5);
+    expect(f.ax).toBeGreaterThan(0);
+    expect(f.ay).toBeLessThan(0);
+    expect(f.az).toBeGreaterThan(0);
+    // a different species has a different destiny direction
+    const buf2 = view(1);
+    seed(buf2, 1);
+    buf2[S.SPECIES_ID] = 1;
+    const f2 = applyFate(state, buf2, 0, 100, 100, 100, WORLD, 1);
+    expect(f2).not.toBeNull();
+    expect(Math.sign(f2.ax)).not.toBe(Math.sign(f.ax));
     // gate off → null
-    expect(applyFate(createLawState(), buf, 0, PARTICLE_STRIDE, 10, 0, 0, 100, 1)).toBeNull();
+    expect(applyFate(createLawState(), buf, 0, 100, 100, 100, WORLD, 1)).toBeNull();
   });
 
-  it('FATE integration: same-species particles attract; different species do not', () => {
-    const on = makeWorld(2, (v) => {
-      v[PARTICLE_STRIDE + S.SPECIES_ID] = 0; // same species as i
-    });
+  it('FATE integration: particles drift toward their destiny; off preserves position', () => {
+    advanceFateClock(-getFateTime());
+    const on = makeWorld(1);
     const st = createLawState();
     set(st, LAW_INDEXES.FATE);
-    solve(on.view, 2, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
+    solve(on.view, 1, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
+    // species 0 destiny X = 1000 > particle X = 100 → drifts +X
     expect(on.view[S.VEL_X]).toBeGreaterThan(0);
 
-    const off = makeWorld(2);
-    solve(off.view, 2, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
+    const off = makeWorld(1);
+    solve(off.view, 1, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
     expect(off.view[S.VEL_X]).toBe(0);
   });
 

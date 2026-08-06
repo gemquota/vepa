@@ -35,6 +35,7 @@ import {
   applyChaos,
   applyOrder,
   applyFate,
+  advanceFateClock,
   applyWill,
   applySoul,
   applyMind,
@@ -191,6 +192,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
   const WP = runtimeConfig.worldParams || {};
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
+
+  // Fate clock — advances once per tick so species destiny points wander.
+  advanceFateClock(dt);
 
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
@@ -560,16 +564,6 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         az += orderForce.az;
       }
 
-      // ── Fate ──
-
-      const fateSynergy = computeSynergy(lawState, LAW_INDEXES.FATE);
-      const fateForce = applyFate(lawState, view, iBase, jBase, dx, dy, dz, distSq, fateSynergy);
-      if (fateForce) {
-        ax += fateForce.ax;
-        ay += fateForce.ay;
-        az += fateForce.az;
-      }
-
       // ── Soul ──
 
       if (isSet(lawState, LAW_INDEXES.SOUL_LAW)) {
@@ -937,6 +931,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // Chaos
     applyChaos(lawState, view, iBase, prng, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.CHAOS));
+
+    // Fate — per-species drifting destiny point
+    const fateForce = applyFate(lawState, view, iBase, px, py, pz, worldSize,
+      computeSynergy(lawState, LAW_INDEXES.FATE));
+    if (fateForce) {
+      ax += fateForce.ax;
+      ay += fateForce.ay;
+      az += fateForce.az;
+    }
 
     // ── Electromagnetism (per-particle) ──
     if (isSet(lawState, LAW_INDEXES.FIELD)) {

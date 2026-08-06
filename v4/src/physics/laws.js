@@ -1049,6 +1049,11 @@ export function applyChaos(lawState, view, base, prng, dt, synergy) {
   view[base + S.VEL_X] += force;
   view[base + S.VEL_Y] += force;
   view[base + S.VEL_Z] += force * 0.5;
+  // Thermal chaos (batch-09 agent decision): chaos also stirs TEMPERATURE,
+  // flickering hot/cold pockets that feed HEAT / PHASE_RADIATION dynamics.
+  const tempStir = (prng() - 0.5) * 0.02 * synergy * dt;
+  const temp = view[base + S.TEMPERATURE] + tempStir;
+  view[base + S.TEMPERATURE] = Number.isFinite(temp) ? Math.max(0, Math.min(1, temp)) : view[base + S.TEMPERATURE];
 }
 
 // ============================================================================
@@ -1056,9 +1061,11 @@ export function applyChaos(lawState, view, base, prng, dt, synergy) {
 // ============================================================================
 export function applyOrder(lawState, view, iBase, jBase, distSq, synergy) {
   if (!isSet(lawState, LAW_INDEXES.ORDER)) return null; // ORDER=33
-  if (distSq > 10000) return null;
+  // Batch-09 confirmation ("strongly"): alignment 0.005 -> 0.04, range
+  // ~100 -> ~200 units, so coherent flow actually emerges.
+  if (distSq > 40000) return null;
 
-  const strength = 0.005 * synergy;
+  const strength = 0.04 * synergy;
   return {
     ax: view[jBase + S.VEL_X] * strength,
     ay: view[jBase + S.VEL_Y] * strength,
@@ -1069,20 +1076,35 @@ export function applyOrder(lawState, view, iBase, jBase, distSq, synergy) {
 // ============================================================================
 // 27. FATE
 // ============================================================================
-export function applyFate(lawState, view, iBase, jBase, dx, dy, dz, distSq, synergy) {
+// Fate (batch-09 redesign — user: "boring and similar to existing laws"):
+// the old pairwise same-species attraction duplicated AFFINITY. Now every
+// species has a drifting "destiny" point (golden-angle phase per species,
+// slowly wandering on a clock) that its members are gently pulled toward —
+// species migrate and segregate toward their own fate.
+let _fateTime = 0;
+export function advanceFateClock(dt) { _fateTime += dt; }
+export function getFateTime() { return _fateTime; }
+
+export function applyFate(lawState, view, base, px, py, pz, worldSize, synergy) {
   if (!isSet(lawState, LAW_INDEXES.FATE)) return null; // FATE=34
-  if (distSq < 1 || distSq > 250000) return null;
-
-  const speciesI = view[iBase + S.SPECIES_ID];
-  const speciesJ = view[jBase + S.SPECIES_ID];
-  if (speciesI !== speciesJ) return null;
-
-  const strength = 0.05 * synergy;
-  const invDist = 1 / Math.sqrt(distSq);
+  const species = view[base + S.SPECIES_ID] || 0;
+  const phase = species * 2.39996323; // golden-angle offset, unique per species
+  const t = getFateTime() * 0.0004;
+  const span = worldSize * 0.32;
+  let dx = worldSize * 0.5 + span * Math.sin(t + phase) - px;
+  let dy = worldSize * 0.5 + span * Math.cos(t * 0.8 + phase * 1.3) - py;
+  let dz = worldSize * 0.5 + span * Math.sin(t * 0.6 + phase * 1.7) - pz;
+  // Shortest toroidal path to the destiny point
+  if (dx > worldSize * 0.5) dx -= worldSize; else if (dx < -worldSize * 0.5) dx += worldSize;
+  if (dy > worldSize * 0.5) dy -= worldSize; else if (dy < -worldSize * 0.5) dy += worldSize;
+  if (dz > worldSize * 0.5) dz -= worldSize; else if (dz < -worldSize * 0.5) dz += worldSize;
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  if (dist < 1) return { ax: 0, ay: 0, az: 0 };
+  const strength = 0.02 * synergy;
   return {
-    ax: dx * invDist * strength,
-    ay: dy * invDist * strength,
-    az: dz * invDist * strength,
+    ax: (dx / dist) * strength,
+    ay: (dy / dist) * strength,
+    az: (dz / dist) * strength,
   };
 }
 
