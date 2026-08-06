@@ -1,5 +1,33 @@
 # Changelog: VEPA v4
 
+## [4.6.8] - 2026-08-06
+
+### Law RRP batch 07 — CRYSTALLIZATION / HEAT / COLD / CONVECTION confirmed semantics
+
+Interactive law audit (RRP with the user): all four laws confirmed with amendments.
+
+- **CRYSTALLIZATION** — same-species bonus: any pair within dist 1-30 is pulled
+  toward the 8-unit lattice grid, and same-species pairs pull 3x stronger, so
+  rigid clusters form between kin (cross-species keeps the original 0.01 pull).
+- **HEAT** — kinetic-theory thermal noise added: particles above 0.5 TEMPERATURE
+  receive random velocity kicks proportional to temperature
+  (+/-(temp x 0.01 x dt x synergy) per axis), alongside the existing pairwise
+  conduction.
+- **COLD** — documented velocity damping added: particles below 0.5 TEMPERATURE
+  have VEL_X/Y/Z multiplied by max(0, 1 - (0.5-temp) x 0.1 x dt x synergy) each
+  tick, alongside the pairwise equalization.
+- **CONVECTION** — kept as documented: buoyancy (temp-0.5) x 0.001 x dt x synergy
+  on +VEL_Y, deliberately not scaled by HEAT_CAPACITY (conduction already encodes
+  capacity into the temperature field). Note: gravity (PLANETARY) is along -Z, so
+  +Y buoyancy is horizontal in VEPA's 3D space - switch to +Z on request.
+- Tests: `tests/audit/batch_07.test.js` extended to 25 (crystallization
+  same-species bonus, thermal jitter gate/threshold/value/integration, cold
+  damping gate/threshold/value/integration). Full suite 547/547 green;
+  `vite build` clean.
+- HELP_DB synced for all four laws; RRP manifest + telemetry in
+  `audit-suite/laws-rrp/batch_07.md`.
+
+
 ## [4.6.7] - 2026-08-05
 
 ### Law RRP batch 06 — OXIDATION / POLYMER / ISOMERIZATION / CHIRALITY confirmed semantics

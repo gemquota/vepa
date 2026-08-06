@@ -982,6 +982,32 @@ export function applyHeatTransfer(lawState, view, iBase, jBase, dist, dt, synerg
 }
 
 // ============================================================================
+// 21b. THERMAL JITTER (HEAT) — hot particles get kinetic-theory random kicks
+// ============================================================================
+export function applyThermalJitter(lawState, view, base, dt, synergy, prng) {
+  if (!isSet(lawState, LAW_INDEXES.HEAT)) return; // HEAT=25
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp <= 0.5) return;
+  const kick = temp * 0.01 * dt * synergy;
+  view[base + S.VEL_X] += (prng() - 0.5) * 2 * kick;
+  view[base + S.VEL_Y] += (prng() - 0.5) * 2 * kick;
+  view[base + S.VEL_Z] += (prng() - 0.5) * 2 * kick;
+}
+
+// ============================================================================
+// 21c. COLD DAMPING — cold particles (< 0.5 TEMP) are slowed toward stillness
+// ============================================================================
+export function applyColdDamping(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, LAW_INDEXES.COLD)) return; // COLD=26
+  const temp = view[base + S.TEMPERATURE];
+  if (!Number.isFinite(temp) || temp >= 0.5) return;
+  const damp = Math.max(0, 1 - (0.5 - temp) * 0.1 * dt * synergy);
+  view[base + S.VEL_X] *= damp;
+  view[base + S.VEL_Y] *= damp;
+  view[base + S.VEL_Z] *= damp;
+}
+
+// ============================================================================
 // 22. CONVECTION
 // ============================================================================
 export function applyConvection(lawState, view, base, dt, synergy) {
@@ -1754,9 +1780,12 @@ export function applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, d
   const targetX = Math.round(dx / gridSize) * gridSize;
   const targetY = Math.round(dy / gridSize) * gridSize;
   const targetZ = Math.round(dz / gridSize) * gridSize;
-  const pullX = (targetX - dx) * 0.01 * synergy;
-  const pullY = (targetY - dy) * 0.01 * synergy;
-  const pullZ = (targetZ - dz) * 0.01 * synergy;
+  // Same-species pairs crystallize 3x stronger (batch-07 confirmation)
+  const sameSpecies = view[iBase + S.SPECIES_ID] === view[jBase + S.SPECIES_ID];
+  const pullScale = sameSpecies ? 3.0 : 1.0;
+  const pullX = (targetX - dx) * 0.01 * synergy * pullScale;
+  const pullY = (targetY - dy) * 0.01 * synergy * pullScale;
+  const pullZ = (targetZ - dz) * 0.01 * synergy * pullScale;
   return {
     ax: pullX,
     ay: pullY,

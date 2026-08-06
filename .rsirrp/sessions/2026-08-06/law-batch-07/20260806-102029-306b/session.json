@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "session_id": "20260806-102029-306b",
+  "artifact": "law-batch-07",
+  "artifact_slug": "law-batch-07",
+  "date": "2026-08-06",
+  "variant": "linear",
+  "root": "/data/data/com.termux/files/home/dev/codex/vepa-feature-nuclear-rewrite/.rsirrp",
+  "started_at": "2026-08-06T00:20:29+00:00",
+  "finished_at": "2026-08-06T00:20:50+00:00",
+  "status": "converged",
+  "iterations": 1,
+  "issues_found": 4,
+  "issues_resolved": 4,
+  "convergence_reason": "user-confirmed spec (same-species 3x crystallization bonus, thermal jitter for hot particles, cold velocity damping, convection kept documented +Y buoyancy); applyThermalJitter + applyColdDamping + species bonus wired, 547/547 tests green",
+  "remaining_issues": [],
+  "duration_s": 21.0
+}

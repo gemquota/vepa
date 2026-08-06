@@ -27,6 +27,8 @@ import {
   applyChemistry,
   applyPolymer,
   applyHeatTransfer,
+  applyThermalJitter,
+  applyColdDamping,
   applyConvection,
   applyTimeDilation,
   applyDimensionality,
@@ -1373,6 +1375,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Sublimation ──
     applySublimation(lawState, view, iBase, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.SUBLIMATION));
+
+    // ── Thermal jitter (HEAT) ──
+
+    applyThermalJitter(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.HEAT), prng);
+
+    // ── Cold damping (COLD) ──
+
+    applyColdDamping(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.COLD));
 
     // ── Convection ──
 

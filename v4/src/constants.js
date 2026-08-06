@@ -923,23 +923,23 @@ export const LAW_HELP_DB = {
   },
   CRYSTALLIZATION: {
     hint: "Crystallization: same-species rigid lattice formation.",
-    explanation: "Same-species particles damp relative velocity when close, forming rigid clusters.",
-    system: "Damps relative velocity between same-species neighbors. Creates crystalline structures.",
+    explanation: "Confirmed batch-07: any nearby pair is pulled toward an 8-unit lattice grid, and same-species pairs crystallize 3x stronger (rigid clusters).",
+    system: "Quantizes pair separation to an 8-unit grid (pull 0.01 x synergy); same-species pairs pull 3x harder. Creates crystalline structures.",
   },
   HEAT: {
     hint: "Thermal motion: heat adds random jitter to hot particles.",
-    explanation: "Particles with high TEMPERATURE receive random velocity kicks proportional to temperature.",
-    system: "TEMPERATURE field drives thermal noise. Heat spreads through neighbor conduction.",
+    explanation: "Confirmed batch-07: particles above 0.5 TEMPERATURE receive random velocity kicks proportional to temperature (kinetic-theory thermal noise), and heat conducts pairwise toward equilibrium.",
+    system: "Thermal jitter = +/-(temp x 0.01 x dt x synergy) per axis for temp > 0.5; conduction rate 0.01 x dt x synergy / HEAT_CAPACITY, hot flows to cold.",
   },
   COLD: {
     hint: "Cold slows particles down.",
-    explanation: "Particles with low TEMPERATURE have their velocity damped. Cold = less motion.",
-    system: "Slows particles below 0.5 temperature. Temperature trends toward equilibrium.",
+    explanation: "Confirmed batch-07: particles below 0.5 TEMPERATURE have their velocity damped each tick, and cold conducts heat from warmer neighbours toward equilibrium.",
+    system: "Velocity x= max(0, 1 - (0.5 - temp) x 0.1 x dt x synergy) for temp < 0.5; conduction cools the hotter neighbour (rate 0.015 x dt x synergy / HEAT_CAPACITY).",
   },
   CONVECTION: {
     hint: "Convection: buoyant vertical motion from temperature.",
-    explanation: "Hot particles rise (positive Y velocity), creating convection currents.",
-    system: "Buoyancy = (temp - 0.5) * 0.001. Drives large-scale circulation patterns.",
+    explanation: "Confirmed batch-07: hot particles get positive Y velocity (buoyancy), creating convection currents. Buoyancy is deliberately not scaled by HEAT_CAPACITY — conduction already encodes capacity into the temperature field.",
+    system: "Buoyancy = (temp - 0.5) * 0.001 * dt * synergy on VEL_Y. Drives large-scale circulation patterns.",
   },
   PHASE_RADIATION: {
     hint: "Blackbody radiation: hot particles emit energy.",

@@ -13,6 +13,8 @@ import { solve } from '../../src/physics/solver.js';
 import {
   applyCrystallization,
   applyHeatTransfer,
+  applyThermalJitter,
+  applyColdDamping,
   applyConvection,
 } from '../../src/physics/laws.js';
 
@@ -71,12 +73,24 @@ describe('Batch 07 audit — CRYSTALLIZATION / HEAT / COLD / CONVECTION', () => 
       expect(isSet(lawsOn('CRYSTALLIZATION'), LAW_INDEXES.CRYSTALLIZATION)).toBe(true);
     });
 
-    it('pulls neighbours toward the 8-unit lattice grid', () => {
+    it('pulls cross-species neighbours toward the 8-unit lattice grid', () => {
       const buf = view(2);
+      buf[S.SPECIES_ID] = 0;
+      buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
       const f = applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 4, 4, 0, 5.657, 1);
       // round(4/8)*8 = 8 → pull = (8−4)*0.01 = 0.04
       expect(f.ax).toBeCloseTo(0.04, 5);
       expect(f.ay).toBeCloseTo(0.04, 5);
+      expect(f.az).toBe(0);
+    });
+
+    it('gives same-species pairs a 3x crystallization bonus (0.04 → 0.12)', () => {
+      const buf = view(2);
+      buf[S.SPECIES_ID] = 2;
+      buf[PARTICLE_STRIDE + S.SPECIES_ID] = 2;
+      const f = applyCrystallization(lawsOn('CRYSTALLIZATION'), buf, 0, PARTICLE_STRIDE, 4, 4, 0, 5.657, 1);
+      expect(f.ax).toBeCloseTo(0.12, 5);
+      expect(f.ay).toBeCloseTo(0.12, 5);
       expect(f.az).toBe(0);
     });
 
@@ -119,6 +133,35 @@ describe('Batch 07 audit — CRYSTALLIZATION / HEAT / COLD / CONVECTION', () => 
       expect(world.view[S.TEMPERATURE]).toBeLessThan(1);
       expect(world.view[PARTICLE_STRIDE + S.TEMPERATURE]).toBeGreaterThan(0);
     });
+
+    it('adds kinetic-theory jitter to hot particles (temp 1, prng 0.75, dt 1 → ±0.005)', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 1;
+      applyThermalJitter(lawsOn('HEAT'), buf, 0, 1, 1, () => 0.75);
+      expect(buf[S.VEL_X]).toBeCloseTo(0.005, 6);
+      expect(buf[S.VEL_Y]).toBeCloseTo(0.005, 6);
+      expect(buf[S.VEL_Z]).toBeCloseTo(0.005, 6);
+    });
+
+    it('does not jitter particles at or below 0.5 temperature', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 0.5;
+      applyThermalJitter(lawsOn('HEAT'), buf, 0, 1, 1, () => 0.75);
+      expect(buf[S.VEL_X]).toBe(0);
+    });
+
+    it('gates: no jitter without the law', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 1;
+      applyThermalJitter(createLawState(), buf, 0, 1, 1, () => 0.75);
+      expect(buf[S.VEL_X]).toBe(0);
+    });
+
+    it('integration: solve() kicks hot particles with thermal noise', () => {
+      const world = makeWorld(1, { temperature: 1 });
+      solve(world.view, 1, PARTICLE_STRIDE, lawsOn('HEAT'), world.dna, WORLD, DT, () => 0.75);
+      expect(world.view[S.VEL_X]).toBeGreaterThan(0);
+    });
   });
 
   describe('COLD (26)', () => {
@@ -153,6 +196,41 @@ describe('Batch 07 audit — CRYSTALLIZATION / HEAT / COLD / CONVECTION', () => 
       solve(world.view, 2, PARTICLE_STRIDE, lawsOn('COLD'), world.dna, WORLD, DT, () => 0.5);
       expect(world.view[PARTICLE_STRIDE + S.TEMPERATURE]).toBeLessThan(1);
       expect(world.view[PARTICLE_STRIDE + S.TEMPERATURE]).toBeGreaterThan(world.view[S.TEMPERATURE]);
+    });
+
+    it('damps cold particle velocity (temp 0, dt 1 → × 0.95)', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 0;
+      buf[S.VEL_X] = 1;
+      buf[S.VEL_Y] = 1;
+      buf[S.VEL_Z] = 1;
+      applyColdDamping(lawsOn('COLD'), buf, 0, 1, 1);
+      expect(buf[S.VEL_X]).toBeCloseTo(0.95, 5);
+      expect(buf[S.VEL_Y]).toBeCloseTo(0.95, 5);
+      expect(buf[S.VEL_Z]).toBeCloseTo(0.95, 5);
+    });
+
+    it('does not damp particles at or above 0.5 temperature', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 1;
+      buf[S.VEL_X] = 1;
+      applyColdDamping(lawsOn('COLD'), buf, 0, 1, 1);
+      expect(buf[S.VEL_X]).toBe(1);
+    });
+
+    it('gates: no damping without the law', () => {
+      const buf = view(1);
+      buf[S.TEMPERATURE] = 0;
+      buf[S.VEL_X] = 10;
+      applyColdDamping(createLawState(), buf, 0, 1, 1);
+      expect(buf[S.VEL_X]).toBe(10);
+    });
+
+    it('integration: solve() slows cold particles', () => {
+      const world = makeWorld(1, { temperature: 0 });
+      world.view[S.VEL_X] = 10;
+      solve(world.view, 1, PARTICLE_STRIDE, lawsOn('COLD'), world.dna, WORLD, DT, () => 0.5);
+      expect(world.view[S.VEL_X]).toBeLessThan(10);
     });
   });
 
