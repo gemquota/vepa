@@ -10,7 +10,7 @@
 //   DNA values accessed via: buffer[p1Ptr + DNA_CACHE_START + DNA_INDEX]
 // ============================================================================
 
-import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES } from '../constants.js';
+import { PARTICLE_STRIDE, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, DNA_COUNT, LAW_INDEXES } from '../constants.js';
 import { isSet } from '../state/lawState.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
 import { getDNAFloat } from '../dna/dnaBuffer.js';
@@ -528,7 +528,7 @@ export function applyPlanetary(lawState, view, base, px, py, pz, worldSize, syne
 // ============================================================================
 // 15. LIFE CYCLE
 // ============================================================================
-export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synergy) {
+export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synergy, dnaBuffer) {
   if (!isSet(lawState, LAW_INDEXES.LIFE)) return; // LAW_INDEXES.LIFE = 7
 
   // AGE is advanced by the solver core each tick (frame count), not here.
@@ -587,7 +587,9 @@ export function applyLifeCycle(lawState, view, base, dnaParams, dt, prng, synerg
 
   // Senescence (LAW_INDEXES.SENESCENCE = 12)
   if (isSet(lawState, LAW_INDEXES.SENESCENCE)) {
-    const deathRate = dnaParams[11] * 0.001 * (1.0 + ageNorm * 0.5); // Older = higher death chance
+    // TELOMERE_LENGTH (60, genome-only) — longer telomeres resist aging death.
+    const telomere = dnaBuffer ? readSpeciesDNAParam(dnaBuffer, view[base + S.SPECIES_ID] || 0, 60) : 0.5;
+    const deathRate = dnaParams[11] * 0.001 * (1.0 + ageNorm * 0.5) * (1 - telomere * 0.5);
     if (age > 500 && prng() < deathRate * dt) {
       view[base + S.DEAD] = 1.0;
       return;
@@ -776,15 +778,24 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
   const heterozygosity = readSpeciesDNAParam(dnaBuffer, speciesId, 45);
   const geneFlow = readSpeciesDNAParam(dnaBuffer, speciesId, 46);
   const repressor = readSpeciesDNAParam(dnaBuffer, speciesId, 47);
+  // Genetics & regulatory params (48-63, genome-only).
+  const alleleCount = readSpeciesDNAParam(dnaBuffer, speciesId, 48);
+  const epigeneticRate = readSpeciesDNAParam(dnaBuffer, speciesId, 49);
+  const hgtRate = readSpeciesDNAParam(dnaBuffer, speciesId, 50);
+  const repairEfficiency = readSpeciesDNAParam(dnaBuffer, speciesId, 51);
+  const transposonRate = readSpeciesDNAParam(dnaBuffer, speciesId, 56);
+  const geneSilencing = readSpeciesDNAParam(dnaBuffer, speciesId, 57);
+  const recombinationBias = readSpeciesDNAParam(dnaBuffer, speciesId, 58);
+  const ploidyLevel = readSpeciesDNAParam(dnaBuffer, speciesId, 61);
 
   const mutationRate = dnaParams[12] * 0.1; // MUTATION=12
-  const offspringDna = new Array(48);
+  const offspringDna = new Array(DNA_COUNT);
 
   // --- Genetics: Crossover ---
   // Check BOND_PARTNER_1 for a potential second parent
   const partnerIdx = view[base + S.BOND_PARTNER_1];
   let hasTwoParents = false;
-  const partnerDna = new Array(48);
+  const partnerDna = new Array(DNA_COUNT);
 
   // SEX_CHANCE DNA (35): multi-parent reproduction probability — boosts the
   // crossover/second-parent chance above the species CROSSOVER_RATE baseline.
@@ -798,15 +809,15 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
       for (let d = 0; d < 42; d++) {
         partnerDna[d] = view[partnerBase + S.DNA_CACHE_START + d];
       }
-      // Fill genetics params (42-47) from species DNA buffer
-      for (let d = 42; d < 48; d++) {
+      // Fill genetics params (42-63) from species DNA buffer
+      for (let d = 42; d < DNA_COUNT; d++) {
         partnerDna[d] = readSpeciesDNAParam(dnaBuffer, speciesId, d);
       }
     }
   }
 
   // --- Build offspring DNA with crossover, dominance, mutation ---
-  for (let d = 0; d < 48; d++) {
+  for (let d = 0; d < DNA_COUNT; d++) {
     let parentA, parentB;
 
     if (d < 42) {
@@ -814,18 +825,20 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
       parentA = dnaParams[d] || 0;
       parentB = hasTwoParents ? (partnerDna[d] || 0) : parentA;
     } else {
-      // Genetics params (42-47): read from species DNA buffer
+      // Genetics params (42-63): read from species DNA buffer
       parentA = readSpeciesDNAParam(dnaBuffer, speciesId, d);
       parentB = hasTwoParents ? readSpeciesDNAParam(dnaBuffer, speciesId, d) : parentA;
     }
 
     let val;
-    if (hasTwoParents && prng() < 0.5) {
-      // Sexual reproduction with dominance
-      if (prng() < 0.3) {
+    // PLOIDY_LEVEL (default 2) raises recombination; stays neutral at default.
+    if (hasTwoParents && prng() < 0.5 + (ploidyLevel - 2) * 0.05) {
+      // Sexual reproduction with dominance; ALLELE_COUNT (default 2) widens
+      // the blend window; RECOMBINATION_BIAS skews which parent dominates.
+      if (prng() < 0.3 + (alleleCount - 2) * 0.05) {
         // Crossover: blend both parents
         val = (parentA + parentB) * 0.5;
-      } else if (prng() < dominance) {
+      } else if (prng() < Math.max(0, Math.min(1, dominance + recombinationBias * 0.3))) {
         // Dominant: favor higher magnitude
         val = Math.abs(parentA) > Math.abs(parentB) ? parentA : parentB;
       } else {
@@ -837,15 +850,20 @@ export function applyReproduction(lawState, view, base, dnaParams, prng, synergy
       val = parentA;
     }
 
-    // Apply mutation (scaled by repressor)
-    const effectiveMutation = mutationRate * (1 - repressor * 0.5) * (worldParams().MUTATION_RATE ?? 1);
+    // Apply mutation (scaled by repressor, REPAIR_EFFICIENCY, GENE_SILENCING;
+    // TRANSPOSON_RATE amplifies the leap — a mobile-element burst).
+    const effectiveMutation = mutationRate * (1 - repressor * 0.5)
+      * (1 - repairEfficiency * 0.5)
+      * (1 - geneSilencing * 0.3)
+      * (1 + transposonRate * 4)
+      * (worldParams().MUTATION_RATE ?? 1);
     val += (prng() - 0.5) * effectiveMutation * 10;
 
-    // Apply epigenetic drift (non-heritable noise)
-    val += (prng() - 0.5) * epigeneticDrift * 5;
+    // Apply epigenetic drift (non-heritable noise; EPIGENETIC_RATE scales it)
+    val += (prng() - 0.5) * epigeneticDrift * 5 * (1 + epigeneticRate * 3);
 
-    // Gene flow: horizontal transfer from other species
-    if (prng() < geneFlow * 0.01) {
+    // Gene flow: horizontal transfer from other species (GENE_FLOW + HGT_RATE)
+    if (prng() < geneFlow * 0.01 + hgtRate * 0.02) {
       const otherSpecies = Math.floor(prng() * 5) % 64;
       if (otherSpecies !== speciesId) {
         const foreignGene = readSpeciesDNAParam(dnaBuffer, otherSpecies, d);
@@ -1707,14 +1725,33 @@ export function applyGenotypeMutation(lawState, view, base, dt, synergy, prng, d
   const heterozygosity = readSpeciesDNAParam(dnaBuffer, speciesId, 45);
   const geneFlow = readSpeciesDNAParam(dnaBuffer, speciesId, 46);
   const repressor = readSpeciesDNAParam(dnaBuffer, speciesId, 47);
+  // Genetics & regulatory params (48-63, genome-only).
+  const alleleCount = readSpeciesDNAParam(dnaBuffer, speciesId, 48);
+  const epigeneticRate = readSpeciesDNAParam(dnaBuffer, speciesId, 49);
+  const hgtRate = readSpeciesDNAParam(dnaBuffer, speciesId, 50);
+  const repairEfficiency = readSpeciesDNAParam(dnaBuffer, speciesId, 51);
+  const driftRate = readSpeciesDNAParam(dnaBuffer, speciesId, 52);
+  const selectionSensitivity = readSpeciesDNAParam(dnaBuffer, speciesId, 53);
+  const speciationThreshold = readSpeciesDNAParam(dnaBuffer, speciesId, 54);
+  const adaptationRate = readSpeciesDNAParam(dnaBuffer, speciesId, 55);
+  const transposonRate = readSpeciesDNAParam(dnaBuffer, speciesId, 56);
+  const geneSilencing = readSpeciesDNAParam(dnaBuffer, speciesId, 57);
+  const mutagenSensitivity = readSpeciesDNAParam(dnaBuffer, speciesId, 59);
+  const ploidyLevel = readSpeciesDNAParam(dnaBuffer, speciesId, 61);
+  const codonBias = readSpeciesDNAParam(dnaBuffer, speciesId, 62);
+  const regulatoryDepth = readSpeciesDNAParam(dnaBuffer, speciesId, 63);
 
   // Accumulated radiation dose (RADIATION law) ramps the mutation rate —
   // radiation increases mutation chance more and more over time.
   const exposure = view[base + S.RADIATION_EXPOSURE] || 0;
 
   let mutProb = mutationRate * (1.0 + temperature) * dt * 0.01 * synergy
-    * (1 - repressor * 0.5)   // REPRESSOR dampens genetic drift
-    * (1 + exposure * 0.05);  // radiation dose ramps mutation over time
+    * (1 - repressor * 0.5)            // REPRESSOR dampens genetic drift
+    * (1 - repairEfficiency * 0.6)     // REPAIR_EFFICIENCY mends damage
+    * (1 / (1 + regulatoryDepth * 0.03)) // REGULATORY_DEPTH stabilizes expression
+    * (1 + driftRate * 0.5)            // DRIFT_RATE adds neutral drift
+    // MUTAGEN_SENSITIVITY scales how hard radiation dose ramps mutation
+    * (1 + exposure * 0.05 * (0.5 + mutagenSensitivity * 1.5));
   if (mutProb < 0.001) return;
 
   const numMutations = Math.floor(mutProb * 3) + 1;
@@ -1725,26 +1762,39 @@ export function applyGenotypeMutation(lawState, view, base, dt, synergy, prng, d
     const hashVal = Math.sin(base * 127.1 + m * 311.7 + performance.now() * 0.001) * 43758.5453;
     const dnaIdx = Math.abs(Math.floor(hashVal)) % 42;
     const perturbHash = Math.sin(base * 269.5 + dnaIdx * 183.3) * 43758.5453;
-    const varScale = 1 + heterozygosity * 2; // HETEROZYGOSITY widens variance
-    const perturb = ((perturbHash - Math.floor(perturbHash)) * 2.0 - 1.0) * mutationRate * 0.05 * varScale;
+    // HETEROZYGOSITY + ALLELE_COUNT + PLOIDY_LEVEL widen variance;
+    // GENE_SILENCING damps expression; CODON_BIAS biases the direction.
+    const varScale = (1 + heterozygosity * 2
+      + (alleleCount - 2) * 0.25
+      + (ploidyLevel - 2) * 0.15)
+      * (1 - geneSilencing * 0.4);
+    const perturb = ((perturbHash - Math.floor(perturbHash)) * 2.0 - 1.0)
+      * mutationRate * 0.05 * varScale * (0.5 + codonBias);
     const newVal = view[base + dnaStart + dnaIdx] + perturb;
     if (Number.isFinite(newVal)) {
       view[base + dnaStart + dnaIdx] = newVal;
     }
 
     // Epigenetic drift — extra non-heritable noise on the cache.
-    if (epigeneticDrift > 0 && prng && prng() < 0.5) {
+    if ((epigeneticDrift + epigeneticRate) > 0 && prng && prng() < 0.5) {
       const epiIdx = Math.abs(Math.floor(Math.sin(base * 91.7 + m * 173.1) * 43758.5453)) % 42;
-      const epiNoise = (prng() - 0.5) * epigeneticDrift * 2;
+      const epiNoise = (prng() - 0.5) * (epigeneticDrift + epigeneticRate * 2) * 2;
       view[base + dnaStart + epiIdx] += epiNoise;
     }
 
     // Gene flow — horizontal transfer of a foreign gene into the cache.
-    if (dnaBuffer && prng && prng() < geneFlow * 0.01) {
+    if (dnaBuffer && prng && prng() < geneFlow * 0.01 + hgtRate * 0.02) {
       const otherSpecies = (Math.floor(prng() * 63) >= speciesId) ? (Math.floor(prng() * 63) + 1) : Math.floor(prng() * 63);
       const r = DNA_RANGES[dnaIdx] || { min: -1, max: 1 };
       const foreign = readSpeciesDNAParam(dnaBuffer, otherSpecies, dnaIdx);
       view[base + dnaStart + dnaIdx] += (foreign - view[base + dnaStart + dnaIdx]) * 0.1;
+    }
+
+    // Transposon jump — TRANSPOSON_RATE: a mobile element leaps to a random
+    // locus with a larger, directionally-biased perturbation.
+    if (prng && prng() < transposonRate * 0.05) {
+      const jumpIdx = Math.abs(Math.floor(Math.sin(base * 137.9 + m * 219.7) * 43758.5453)) % 42;
+      view[base + dnaStart + jumpIdx] += (prng() - 0.5) * mutationRate * 0.2 * (0.5 + codonBias);
     }
   }
 
@@ -1752,10 +1802,14 @@ export function applyGenotypeMutation(lawState, view, base, dt, synergy, prng, d
   // species DNA buffer, so evolution accumulates at the species level for
   // future spawns and offspring genetics. DNA and genetics are a major part
   // of VEPA, so this is slow but persistent.
-  if (dnaBuffer && prng && prng() < crossoverRate * 0.0002 * dt) {
+  // SELECTION_SENSITIVITY strengthens heritable change; SPECIATION_THRESHOLD
+  // (low = easy divergence) gates the write-back; ADAPTATION_RATE scales the leap.
+  if (dnaBuffer && prng && prng() < crossoverRate * 0.0002 * dt
+      * (0.2 + selectionSensitivity * 0.8)
+      * (1 - speciationThreshold * 0.4)) {
     const gIdx = Math.abs(Math.floor(Math.sin(base * 53.7 + performance.now() * 0.0007) * 43758.5453)) % 42;
     const current = readSpeciesDNAParam(dnaBuffer, speciesId, gIdx);
-    const gPerturb = (prng() - 0.5) * mutationRate * 0.02;
+    const gPerturb = (prng() - 0.5) * mutationRate * 0.02 * (0.5 + adaptationRate * 1.5);
     writeSpeciesDNAParam(dnaBuffer, speciesId, gIdx, current + gPerturb);
   }
 }

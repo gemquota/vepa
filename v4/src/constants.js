@@ -124,9 +124,28 @@ export const DNA_INDEXES = {
   HETEROZYGOSITY:     45,
   GENE_FLOW:          46,
   REPRESSOR:          47,
+  // ── Genetics & regulatory expansion (batch: DNA 64) — indices 48-63 ──
+  // Genome-only params: stored in the 64×64 species DNA buffer, read on
+  // demand via readSpeciesDNAParam (never cached in the particle stride).
+  ALLELE_COUNT:       48,
+  EPIGENETIC_RATE:    49,
+  HGT_RATE:           50,
+  REPAIR_EFFICIENCY:  51,
+  DRIFT_RATE:         52,
+  SELECTION_SENSITIVITY: 53,
+  SPECIATION_THRESHOLD:  54,
+  ADAPTATION_RATE:    55,
+  TRANSPOSON_RATE:    56,
+  GENE_SILENCING:     57,
+  RECOMBINATION_BIAS: 58,
+  MUTAGEN_SENSITIVITY: 59,
+  TELOMERE_LENGTH:    60,
+  PLOIDY_LEVEL:       61,
+  CODON_BIAS:         62,
+  REGULATORY_DEPTH:   63,
 };
 
-export const DNA_COUNT = 48;
+export const DNA_COUNT = 64;
 
 // --- Human-readable names for each DNA index ---
 
@@ -179,9 +198,25 @@ export const DNA_META = [
   'Heterozygosity',
   'Gene Flow',
   'Repressor',
+  'Allele Count',
+  'Epigenetic Rate',
+  'HGT Rate',
+  'Repair Efficiency',
+  'Drift Rate',
+  'Selection Sensitivity',
+  'Speciation Threshold',
+  'Adaptation Rate',
+  'Transposon Rate',
+  'Gene Silencing',
+  'Recombination Bias',
+  'Mutagen Sensitivity',
+  'Telomere Length',
+  'Ploidy Level',
+  'Codon Bias',
+  'Regulatory Depth',
 ];
 
-// --- DNA Ranges [min, max, default] for each of the 42 parameters ---
+// --- DNA Ranges [min, max, default] for each of the 64 parameters ---
 
 export const DNA_RANGES = [
   { min: -100,  max: 100,  default: 1.0    },   // 0  FORCE
@@ -232,6 +267,22 @@ export const DNA_RANGES = [
   { min: 0.0,   max: 1.0,  default: 0.5     },   // 45 HETEROZYGOSITY
   { min: 0.0,   max: 1.0,  default: 0.2     },   // 46 GENE_FLOW
   { min: -1.0,  max: 1.0,  default: 0.0     },   // 47 REPRESSOR
+  { min: 1,     max: 8,    default: 2        },   // 48 ALLELE_COUNT
+  { min: 0,     max: 1,    default: 0.1      },   // 49 EPIGENETIC_RATE
+  { min: 0,     max: 1,    default: 0.05     },   // 50 HGT_RATE
+  { min: 0,     max: 1,    default: 0.5      },   // 51 REPAIR_EFFICIENCY
+  { min: 0,     max: 1,    default: 0.1      },   // 52 DRIFT_RATE
+  { min: 0,     max: 1,    default: 0.5      },   // 53 SELECTION_SENSITIVITY
+  { min: 0,     max: 1,    default: 0.5      },   // 54 SPECIATION_THRESHOLD
+  { min: 0,     max: 1,    default: 0.2      },   // 55 ADAPTATION_RATE
+  { min: 0,     max: 1,    default: 0.05     },   // 56 TRANSPOSON_RATE
+  { min: 0,     max: 1,    default: 0.1      },   // 57 GENE_SILENCING
+  { min: -1,    max: 1,    default: 0        },   // 58 RECOMBINATION_BIAS
+  { min: 0,     max: 1,    default: 0.5      },   // 59 MUTAGEN_SENSITIVITY
+  { min: 0,     max: 1,    default: 0.5      },   // 60 TELOMERE_LENGTH
+  { min: 1,     max: 4,    default: 2        },   // 61 PLOIDY_LEVEL
+  { min: 0,     max: 1,    default: 0.5      },   // 62 CODON_BIAS
+  { min: 1,     max: 10,   default: 3        },   // 63 REGULATORY_DEPTH
 ];
 
 // --- Law Indexes (64 laws) ---

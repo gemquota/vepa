@@ -1378,7 +1378,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Life cycle ──
 
     applyLifeCycle(lawState, view, iBase, dnaI, localTimeStep, prng,
-      computeSynergy(lawState, LAW_INDEXES.LIFE) * runtimeConfig.deathRate);
+      computeSynergy(lawState, LAW_INDEXES.LIFE) * runtimeConfig.deathRate, dnaBuffer);
 
     // ── Glow ──
     applyGlowEffect(lawState, view, iBase, dnaI, localTimeStep,

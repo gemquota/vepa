@@ -62,6 +62,7 @@ describe('Batch 15 — DNA.MUTATION / DNA.ENERGY_EFFICIENCY / DNA.SEX_CHANCE / D
       // Zero the genetic noise sources so the asexual control is a pure clone.
       setDNAFloat(dna, 0, 44, 0, 0, 0.1); // EPIGENETIC_DRIFT → 0
       setDNAFloat(dna, 0, 46, 0, 0, 1);   // GENE_FLOW → 0
+      setDNAFloat(dna, 0, 50, 0, 0, 1);   // HGT_RATE → 0 (new genetics batch: default 0.05 would seed a 0.001 gene-flow gate that the deterministic PRNG hits)
       const laws = lawsWith(LAW_INDEXES.REPRO, LAW_INDEXES.WRAP);
       // repro gate (0.001) → crossover gate (0.6) → sexual blend (0.2, 0.2) → noiseless rest
       const seq = [0.001, 0.6, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5];

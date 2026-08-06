@@ -60,6 +60,7 @@ describe('Batch 04 — SENESCENCE / ENERGY / RADIATION / GENOTYPE (indices 12-15
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.AGE] = 1000;
       v[b + S.DNA_CACHE_START + 11] = 500; // DEATH_RATE → death chance 0.55 > prng 0.5
+      dna[0 * 64 + 60] = 0;                // TELOMERE_LENGTH → 0 (full aging; default 0.5 would damp the chance below 0.5)
     });
     const laws = createLawState();
     set(laws, LAW_INDEXES.LIFE);

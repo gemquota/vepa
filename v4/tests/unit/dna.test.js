@@ -51,4 +51,28 @@ describe('DNABuffer', () => {
         expect(getDNA(buf, 0, 0)).toBe(100);
         expect(getDNA(buf, 1, 0)).toBe(200);
     });
+
+    it('exposes 64 DNA parameters — the 64-wide genome stride is fully utilized', () => {
+        expect(DNA_RANGES.length).toBe(64);
+        expect(Object.keys(DNA_INDEXES).length).toBe(64);
+        expect(DNA_INDEXES.ALLELE_COUNT).toBe(48);
+        expect(DNA_INDEXES.REGULATORY_DEPTH).toBe(63);
+    });
+
+    it('loadDefaults fills the new genetics/regulatory params with their defaults', () => {
+        const buf = createDNABuffer();
+        loadDefaults(buf, DNA_RANGES);
+        const telomere = getDNAFloat(buf, 0, DNA_INDEXES.TELOMERE_LENGTH, DNA_RANGES[60].min, DNA_RANGES[60].max);
+        expect(telomere).toBeCloseTo(0.5, 2);
+        const ploidy = getDNAFloat(buf, 0, DNA_INDEXES.PLOIDY_LEVEL, DNA_RANGES[61].min, DNA_RANGES[61].max);
+        expect(ploidy).toBeCloseTo(2, 2);
+    });
+
+    it('new params round-trip through the 64-wide species genome', () => {
+        const buf = createDNABuffer();
+        const idx = DNA_INDEXES.PLOIDY_LEVEL;
+        const range = DNA_RANGES[idx];
+        setDNAFloat(buf, 0, idx, 3, range.min, range.max);
+        expect(getDNAFloat(buf, 0, idx, range.min, range.max)).toBeCloseTo(3, 2);
+    });
 });

@@ -1,5 +1,16 @@
 # Changelog: VEPA v4
 
+## [4.6.19] - 2026-08-06
+
+### DNA parameter space expanded 48 → 64 — 16 new genetics & regulatory params (genome-only)
+- `DNA_COUNT` 48 → 64; `DNA_INDEXES`/`DNA_META`/`DNA_RANGES` all carry 64 entries. New params (indices 48-63): ALLELE_COUNT, EPIGENETIC_RATE, HGT_RATE, REPAIR_EFFICIENCY, DRIFT_RATE, SELECTION_SENSITIVITY, SPECIATION_THRESHOLD, ADAPTATION_RATE, TRANSPOSON_RATE, GENE_SILENCING, RECOMBINATION_BIAS, MUTAGEN_SENSITIVITY, TELOMERE_LENGTH, PLOIDY_LEVEL, CODON_BIAS, REGULATORY_DEPTH.
+- Genome-only: the new params live in the 64-wide species DNA buffer (`readSpeciesDNAParam`/`writeSpeciesDNAParam`), never in the per-particle stride cache (which stays 42 floats, offsets 8-49).
+- REPRO — ploidy/allele/recombination wiring: PLOIDY_LEVEL raises the recombination gate, ALLELE_COUNT widens the crossover blend window, RECOMBINATION_BIAS skews dominance; mutation is scaled by REPAIR_EFFICIENCY (repair) and GENE_SILENCING, amplified by TRANSPOSON_RATE (mobile-element bursts); EPIGENETIC_RATE scales epigenetic drift; HGT_RATE enables horizontal gene transfer alongside GENE_FLOW.
+- GENOTYPE — DRIFT_RATE adds neutral drift, SELECTION_SENSITIVITY strengthens heritable change, SPECIATION_THRESHOLD gates divergence write-back, ADAPTATION_RATE scales the leap, MUTAGEN_SENSITIVITY scales radiation-driven mutation, GENE_SILENCING/CODON_BIAS shape expression, REGULATORY_DEPTH stabilizes expression.
+- SENESCENCE — TELOMERE_LENGTH damps aging death (`applyLifeCycle` now receives `dnaBuffer`; longer telomeres resist death, default 0.5).
+- UI — new "Genetics & Regulation" slider group in the DNA panel and "GENETICS" group in the species panel covering indices 42-63.
+- Tests — `dna.test.js` +3 (64-param exposure, defaults, genome round-trip); `params_batch_15.test.js` asexual-control test zeroes the new HGT_RATE noise source. Full suite 579/579 green; `vite build` clean.
+
 ## [4.6.18] - 2026-08-06
 
 ### Law RRP batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT confirmed
