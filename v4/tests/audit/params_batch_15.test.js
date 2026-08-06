@@ -90,6 +90,7 @@ describe('Batch 15 — DNA.MUTATION / DNA.ENERGY_EFFICIENCY / DNA.SEX_CHANCE / D
         } else {
           v[b + S.POS_X] = 1000;
           v[b + S.MASS] = 1;
+          v[b + S.SPECIES_ID] = 1; // prey is a different species (predation is cross-species only)
         }
       });
       const laws = lawsWith(LAW_INDEXES.PREDATION, LAW_INDEXES.WRAP);

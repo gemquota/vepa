@@ -1,5 +1,13 @@
 # Changelog: VEPA v4
 
+## [4.6.17] - 2026-08-06
+
+### Law RRP batch 13 — CLAIRVOYANCE / PRECOGNITION / ASTRAL / PREDATION confirmed
+- CLAIRVOYANCE — slight cost: predictive steering toward 3-tick velocity-extrapolated positions stays, but sensing the future drains ENERGY −= 0.02×synergy×dt per prediction (floor 0).
+- PRECOGNITION — ditto: perpendicular collision-course dodges (dist 1-50, closing pairs only) now cost ENERGY −= 0.02×synergy×dt per dodge; no drain when moving apart.
+- ASTRAL — kept ghosting and expanded it: ghosts (DEAD=0.5, fading SOUL) now exert a soft soul-pull on nearby living particles (80-unit range, bounded via the spatial grid) and same-species kin receive a conserved sliver of the ghost's soul before it dissipates — the HELP_DB's "still exert forces on the living" is finally wired.
+- PREDATION — jitter flee kept (JITTER DNA = erratic escape), and now matches the docs: a predator never hunts its own kind (cross-species only, per TRACK's documented ecosystem rule) and DNA trait sampling uses the sim PRNG instead of Math.random().
+- Tests: `batch_13.test.js` rewritten to the confirmed specs (6 cases); `params_batch_15.test.js` PREDATION_BIAS updated to a cross-species pair. Full suite 572/572 green; `npx vite build` clean.
 ## [4.6.16] - 2026-08-06
 
 ### Law RRP batch 12 — CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY confirmed + 4 more multiplexer live settings

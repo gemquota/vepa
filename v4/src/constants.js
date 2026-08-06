@@ -851,8 +851,8 @@ export const LAW_HELP_DB = {
   },
   PREDATION: {
     hint: "Predation: mass-difference pursuit and gene absorption.",
-    explanation: "Larger particles pursue smaller ones based on PREDATION_BIAS DNA, absorbing DNA traits and mass on contact.",
-    system: "Predator chases prey when mass difference > 0.5; prey flee with jitter-based repulsion. On contact, 5 random DNA traits blend toward the prey at 5% plus mass transfer.",
+    explanation: "Confirmed batch-13 (match docs): larger particles pursue smaller ones based on PREDATION_BIAS DNA, absorbing DNA traits and mass on contact. A predator never hunts its own kind — predation is strictly cross-species (matches TRACK). Prey flee with jitter-based repulsion.",
+    system: "Cross-species pairs with mass difference > 0.5: predator pull = PREDATION_BIAS×0.1×preyMass/dist; prey flee = JITTER×0.2/dist. On contact, 5 PRNG-sampled DNA traits blend 5% toward the prey plus mass transfer.",
     advanced: "Pairs with TRACK and REPRO for full ecosystem cycles. High PREDATION_BIAS species act as apex predators; prey species benefit from JITTER for escape.",
   },
   COMMS: {
@@ -1023,18 +1023,18 @@ export const LAW_HELP_DB = {
   },
   CLAIRVOYANCE: {
     hint: "Clairvoyance: particles sense future positions.",
-    explanation: "Particles adjust their velocity toward where neighbors will be, not where they are.",
-    system: "Predictive steering: uses velocity extrapolation for neighbor targeting.",
+    explanation: "Confirmed batch-13 (slight cost): particles steer toward where neighbors will be (3-tick velocity extrapolation) instead of where they are, and sensing the future drains a little energy.",
+    system: "Predictive steering: velocity extrapolation targeting; ENERGY −= 0.02 × synergy × dt per prediction (floor 0).",
   },
   PRECOGNITION: {
     hint: "Precognition: collision anticipation and avoidance.",
-    explanation: "Particles predict upcoming collisions and adjust course to avoid them.",
-    system: "Anticipatory collision avoidance. Reduces collision frequency at the cost of smoothness.",
+    explanation: "Confirmed batch-13 (slight cost): when a neighbor is closing in (1-50 units) the particle steers perpendicular to slip past, and anticipating the collision drains a little energy. Reduces collisions at the cost of smoothness.",
+    system: "Collision course (dot < 0): lateral avoidance force 0.05 × synergy; ENERGY −= 0.02 × synergy × dt per dodge (floor 0).",
   },
   ASTRAL: {
     hint: "Astral projection: souls leave bodies on death.",
-    explanation: "When a particle dies, its SOUL persists as a ghost, continuing to influence nearby particles.",
-    system: "DEAD=0.5 soul state. Ghosts have reduced alpha but still exert forces on the living.",
+    explanation: "Confirmed batch-13 (expanded): when a particle dies its SOUL persists as a translucent ghost that fades over time. The ghost exerts a soft soul-pull on nearby living particles, and same-species kin receive a conserved sliver of its soul before it dissipates.",
+    system: "DEAD=0.5 soul state: ALPHA=soul×0.5, MASS=soul×0.1, SOUL ×= 0.999/tick, removed < 0.001. Ghost pull = soul×0.02×synergy×dt within 80 units; same-species gift = soul×0.002×synergy×dt (conserved, both clamped).",
   },
   REDUCTION: {
     hint: "Reduction: charge is neutralized between particles.",

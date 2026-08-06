@@ -288,8 +288,13 @@ export function applyTracking(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
 // ============================================================================
 // 6b. PREDATION (Mass-difference based pursuit/flee + gene absorption on contact)
 // ============================================================================
-export function applyPredation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
+export function applyPredation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist, prng) {
   const buf = buffer_global;
+  // A predator never hunts its own kind (matches TRACK's documented
+  // ecosystem behavior — predation is strictly cross-species).
+  if (buf[p1Ptr + S.SPECIES_ID] === buf[p2Ptr + S.SPECIES_ID]) {
+    return { ax: 0, ay: 0, az: 0 };
+  }
   const mass1 = buf[p1Ptr + S.MASS];
   const mass2 = buf[p2Ptr + S.MASS];
   const massDiff = mass1 - mass2;
@@ -311,8 +316,9 @@ export function applyPredation(p1Ptr, p2Ptr, stride, dx, dy, dz, dist) {
     // Gene absorption on contact
     if (dist < r1 + r2 && predBias > 0.1) {
       const absorpRate = 0.05;
+      const roll = (prng && typeof prng === 'function') ? prng : Math.random;
       for (let t = 0; t < 5; t++) {
-        const trait = Math.floor(Math.random() * 42);
+        const trait = Math.floor(roll() * 42);
         const preyVal = buf[p2Ptr + S.DNA_CACHE_START + trait] || 0;
         const predVal = buf[p1Ptr + S.DNA_CACHE_START + trait] || 0;
         buf[p1Ptr + S.DNA_CACHE_START + trait] = predVal + (preyVal - predVal) * absorpRate;
@@ -1460,7 +1466,7 @@ export function applyTelepathy(lawState, view, iBase, jBase, distSq, synergy, dt
 // ============================================================================
 // 41. CLAIRVOYANCE — Predictive steering toward future positions
 // ============================================================================
-export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy, dt) {
   if (!isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)) return null;
   if (dist < 1) return null;
   // Predict where neighbor will be based on its velocity
@@ -1472,6 +1478,11 @@ export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist
   const predDz = (dz + vz_j * 3) - dz;
   const strength = 0.02 * synergy;
   const invDist = 1.0 / dist;
+  // Sensing the future costs a little energy (confirmed batch-13).
+  const energy = view[iBase + S.ENERGY];
+  if (Number.isFinite(energy)) {
+    view[iBase + S.ENERGY] = Math.max(0, energy - 0.02 * synergy * (dt || 1));
+  }
   return {
     ax: predDx * invDist * strength,
     ay: predDy * invDist * strength,
@@ -1482,7 +1493,7 @@ export function applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist
 // ============================================================================
 // 42. PRECOGNITION — Collision anticipation and avoidance
 // ============================================================================
-export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy) {
+export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, synergy, dt) {
   if (!isSet(lawState, LAW_INDEXES.PRECOGNITION)) return null;
   if (dist < 1 || dist > 50) return null;
   // Check if on collision course
@@ -1496,6 +1507,11 @@ export function applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist
   if (dot > 0) return null; // Moving apart
   const strength = 0.05 * synergy;
   const invDist = 1.0 / dist;
+  // Anticipating the collision costs a little energy (confirmed batch-13).
+  const energy = view[iBase + S.ENERGY];
+  if (Number.isFinite(energy)) {
+    view[iBase + S.ENERGY] = Math.max(0, energy - 0.02 * synergy * (dt || 1));
+  }
   // Avoid by steering perpendicular to approach
   return {
     ax: -(dy * invDist) * strength,
@@ -1519,6 +1535,32 @@ export function applyAstral(lawState, view, base, dt, synergy) {
   view[base + S.SOUL] *= 0.999;
   if (view[base + S.SOUL] < 0.001) {
     view[base + S.DEAD] = 1.0; // Fully dead, remove
+  }
+}
+
+/**
+ * ASTRAL ghost influence on one living neighbour (called from the solver's
+ * soul pass over the spatial grid): the ghost exerts a soft soul-pull on the
+ * living, and same-species kin receive a sliver of its soul before it fades
+ * away (soul is conserved, matching SOUL_LAW's transfer semantics).
+ */
+export function applyAstralInfluence(lawState, view, ghostBase, livingBase, dx, dy, dz, dist, synergy, dt) {
+  if (!isSet(lawState, LAW_INDEXES.ASTRAL)) return;
+  const soul = view[ghostBase + S.SOUL];
+  if (!Number.isFinite(soul) || soul < 0.01) return;
+  const invDist = 1.0 / Math.max(dist, 0.01);
+  const step = (dt || 1);
+  // Soft soul-pull: the living drift gently toward the ghost (dx points
+  // ghost → living, so negate it).
+  const pull = soul * 0.02 * synergy * step;
+  view[livingBase + S.VEL_X] -= dx * invDist * pull;
+  view[livingBase + S.VEL_Y] -= dy * invDist * pull;
+  view[livingBase + S.VEL_Z] -= dz * invDist * pull;
+  // Same-species blessing: a conserved sliver of soul passes to living kin.
+  if (view[ghostBase + S.SPECIES_ID] === view[livingBase + S.SPECIES_ID]) {
+    const gift = soul * 0.002 * synergy * step;
+    view[ghostBase + S.SOUL] = Math.max(0, soul - gift);
+    view[livingBase + S.SOUL] = Math.min(1, (view[livingBase + S.SOUL] || 0) + gift);
   }
 }
 

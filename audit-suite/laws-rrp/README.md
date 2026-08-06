@@ -23,7 +23,7 @@
 | [10](batch_10.md) | SOUL_LAW / MIND / VOID / BOND | ✅ |
 | [11](batch_11.md) | REDUCTION / ALLOY / MELT / BOIL | ✅ |
 | [12](batch_12.md) | CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY | ✅ |
-| [13](batch_13.md) | CLAIRVOYANCE / PRECOGNITION / ASTRAL / PREDATION | ⏳ |
+| [13](batch_13.md) | CLAIRVOYANCE / PRECOGNITION / ASTRAL / PREDATION | ✅ |
 | [14](batch_14.md) | COMMS / CHARGE_LAW / FIELD / CURRENT | ⏳ |
 | [15](batch_15.md) | RESISTANCE / CAPACITANCE / INDUCTANCE / MAGNETISM | ⏳ |
 | [16](batch_16.md) | RESONANCE / FLUX / IONIZATION / DISCHARGE | ⏳ |

@@ -53,6 +53,7 @@ import {
   applyDeposit,
   applyExothermic,
   applyAstral,
+  applyAstralInfluence,
   applyGlowEffect,
   applyEnergyTransfer,
   applyRadiationDamage,
@@ -238,6 +239,33 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const base = i * stride;
       if (view[base + S.DEAD] >= 0.5) {
         applyAstral(lawState, view, base, dt, astralSynergy);
+        // Ghost influence on living neighbours (bounded by the spatial grid,
+        // which only contains alive particles).
+        const gx = view[base + S.POS_X];
+        const gy = view[base + S.POS_Y];
+        const gz = view[base + S.POS_Z];
+        if (!Number.isFinite(gx) || !Number.isFinite(gy) || !Number.isFinite(gz)) continue;
+        const soul = view[base + S.SOUL];
+        if (!Number.isFinite(soul) || soul < 0.01) continue;
+        const gCount = getNeighbors(grid, gx, gy, gz, worldSize, _neighborBuf);
+        const gLimit = Math.min(gCount, MAX_INTERACTIONS);
+        for (let n = 0; n < gLimit; n++) {
+          const l = _neighborBuf[n];
+          const lBase = l * stride;
+          if (view[lBase + S.DEAD] >= 0.5) continue;
+          let gdx = view[lBase + S.POS_X] - gx;
+          let gdy = view[lBase + S.POS_Y] - gy;
+          let gdz = view[lBase + S.POS_Z] - gz;
+          if (gdx > halfWorld) gdx -= worldSize;
+          else if (gdx < -halfWorld) gdx += worldSize;
+          if (gdy > halfWorld) gdy -= worldSize;
+          else if (gdy < -halfWorld) gdy += worldSize;
+          if (gdz > halfWorld) gdz -= worldSize;
+          else if (gdz < -halfWorld) gdz += worldSize;
+          const gDist = Math.sqrt(gdx * gdx + gdy * gdy + gdz * gdz);
+          if (gDist < 1 || gDist > 80) continue;
+          applyAstralInfluence(lawState, view, base, lBase, gdx, gdy, gdz, gDist, astralSynergy, dt);
+        }
       }
     }
   }
@@ -659,7 +687,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Predation (mass-difference pursuit + gene absorption) ──
       if (isSet(lawState, LAW_INDEXES.PREDATION)) {
-        const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist);
+        const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist, prng);
         if (predForce) {
           ax += predForce.ax;
           ay += predForce.ay;
@@ -676,7 +704,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // Clairvoyance
       if (isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)) {
         const clairvoyanceSynergy = computeSynergy(lawState, LAW_INDEXES.CLAIRVOYANCE);
-        const clairForce = applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, clairvoyanceSynergy);
+        const clairForce = applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, clairvoyanceSynergy, localTimeStep);
         if (clairForce) {
           ax += clairForce.ax;
           ay += clairForce.ay;
@@ -687,7 +715,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // Precognition
       if (isSet(lawState, LAW_INDEXES.PRECOGNITION)) {
         const precogSynergy = computeSynergy(lawState, LAW_INDEXES.PRECOGNITION);
-        const precogForce = applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, precogSynergy);
+        const precogForce = applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, precogSynergy, localTimeStep);
         if (precogForce) {
           ax += precogForce.ax;
           ay += precogForce.ay;
