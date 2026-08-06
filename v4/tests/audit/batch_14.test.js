@@ -1,4 +1,9 @@
-// AUDIT AGENT 4 — Batch 14: COMMS(52) / CHARGE_LAW(53) / FIELD(54) / CURRENT(55)
+// Batch 14 (RRP) — COMMS(52) / CHARGE_LAW(53) / FIELD(54) / CURRENT(55)
+// Confirmed spec (2026-08-06): 1. COMMS sender pays emission cost, receiver
+// keeps homing force + memory, free energy gain removed. 2. CHARGE_LAW match
+// irl — real Coulomb on effective charge (POLARITY + stored CHARGE), equal
+// weighting. 3. FIELD uniform 3D, POLARITY sign, stored CHARGE scales drift.
+// 4. CURRENT min conductivity (both sides must conduct).
 import { describe, it, expect } from 'vitest';
 import {
   LAW_INDEXES,
@@ -96,6 +101,21 @@ describe('Batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT', () => {
     expect(w.view[PARTICLE_STRIDE + S.SIGNAL]).toBeGreaterThan(0.1);
   });
 
+  it('COMMS sender pays the emission cost — no free energy for receivers', () => {
+    const w = makeWorld(2, 20);
+    w.view[S.SIGNAL] = 1.0; // particle 0 is the sender
+    w.view[S.AGE] = 0;
+    w.view[PARTICLE_STRIDE + S.AGE] = 0;
+    const st = createLawState();
+    set(st, LAW_INDEXES.COMMS);
+    for (let t = 0; t < 10; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[S.ENERGY]).toBeLessThan(100);                  // sender pays
+    // Receiver never gains energy from receiving (it only pays once it
+    // re-emits its own signal) — the old delivered×resp×0.5 gain is gone.
+    expect(w.view[PARTICLE_STRIDE + S.ENERGY]).toBeLessThanOrEqual(100);
+    expect(w.view[PARTICLE_STRIDE + S.SIGNAL]).toBeGreaterThan(0.1); // but still receives
+  });
+
   it('CHARGE_LAW repels like charges and attracts opposite charges', () => {
     // Like charges repel
     const w = makeWorld(2, 10);
@@ -127,6 +147,35 @@ describe('Batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT', () => {
     expect(w3.view[S.VEL_X]).toBe(0);
   });
 
+  it('CHARGE_LAW stored CHARGE contributes equally to the effective charge', () => {
+    // POLARITY 0 + stored CHARGE: old formula gave no force (q1×q2 = 0,
+    // c1×c2×0.5 weighted half); real Coulomb uses the full product.
+    const repel = makeWorld(2, 10);
+    setDNA(repel.view, 0, D.POLARITY, 1);
+    repel.view[PARTICLE_STRIDE + S.CHARGE] = 1; // p1 has only stored charge
+    const st = createLawState();
+    set(st, LAW_INDEXES.CHARGE_LAW);
+    const d0 = pairDist(repel.view);
+    for (let t = 0; t < 60; t++) solve(repel.view, 2, PARTICLE_STRIDE, st, repel.dna, WORLD, DT, rng);
+    expect(pairDist(repel.view)).toBeGreaterThan(d0 + 0.05); // (1)(0+1)=+1 → repel
+
+    const attract = makeWorld(2, 10);
+    setDNA(attract.view, 0, D.POLARITY, 1);
+    attract.view[PARTICLE_STRIDE + S.CHARGE] = -1;
+    const st2 = createLawState();
+    set(st2, LAW_INDEXES.CHARGE_LAW);
+    const d20 = pairDist(attract.view);
+    for (let t = 0; t < 60; t++) solve(attract.view, 2, PARTICLE_STRIDE, st2, attract.dna, WORLD, DT, rng);
+    expect(pairDist(attract.view)).toBeLessThan(d20 - 0.05); // (1)(0−1)=−1 → attract
+
+    // Both zero effective charge → no force at all
+    const zero = makeWorld(2, 10);
+    const st3 = createLawState();
+    set(st3, LAW_INDEXES.CHARGE_LAW);
+    solve(zero.view, 2, PARTICLE_STRIDE, st3, zero.dna, WORLD, DT, rng);
+    expect(Math.abs(zero.view[S.VEL_X])).toBeLessThan(1e-6);
+  });
+
   it('FIELD drifts particles along their POLARITY sign', () => {
     // Positive polarity → +y drift
     const w = makeWorld(2, 10);
@@ -153,6 +202,28 @@ describe('Batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT', () => {
     expect(w3.view[S.VEL_Y]).toBe(0);
   });
 
+  it('FIELD is uniform in 3D and stored CHARGE scales the drift', () => {
+    // Uniform: positive polarity accelerates on all three axes
+    const w = makeWorld(2, 10);
+    setDNA(w.view, 0, D.POLARITY, 1);
+    const st = createLawState();
+    set(st, LAW_INDEXES.FIELD);
+    solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[S.VEL_X]).toBeGreaterThan(0);
+    expect(w.view[S.VEL_Y]).toBeGreaterThan(0);
+    expect(w.view[S.VEL_Z]).toBeGreaterThan(0);
+
+    // Stored charge scales: CHARGE=2 → twice the drift of CHARGE=0
+    const charged = makeWorld(2, 10);
+    setDNA(charged.view, 0, D.POLARITY, 1);
+    charged.view[S.CHARGE] = 2;
+    const st2 = createLawState();
+    set(st2, LAW_INDEXES.FIELD);
+    solve(charged.view, 2, PARTICLE_STRIDE, st2, charged.dna, WORLD, DT, rng);
+    expect(charged.view[S.VEL_X]).toBeGreaterThan(w.view[S.VEL_X] * 1.5);
+    expect(charged.view[S.VEL_Z]).toBeGreaterThan(w.view[S.VEL_Z] * 1.5);
+  });
+
   it('CURRENT diffuses stored charge between conductive neighbours', () => {
     const w = makeWorld(2, 10);
     w.view[S.CHARGE] = 2.0;
@@ -176,5 +247,18 @@ describe('Batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT', () => {
     solve(w2.view, 2, PARTICLE_STRIDE, none, w2.dna, WORLD, DT, rng);
     expect(w2.view[S.CHARGE]).toBe(2.0);
     expect(w2.view[PARTICLE_STRIDE + S.CHARGE]).toBe(0.0);
+  });
+
+  it('CURRENT requires both particles to be conductive', () => {
+    // One conductor + one insulator → no current (real materials)
+    const w = makeWorld(2, 10);
+    w.view[S.CHARGE] = 2.0;
+    setDNA(w.view, 0, D.CONDUCTIVITY, 1.0);
+    setDNA(w.view, 1, D.CONDUCTIVITY, 0.0);
+    const st = createLawState();
+    set(st, LAW_INDEXES.CURRENT);
+    for (let t = 0; t < 10; t++) solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rng);
+    expect(w.view[S.CHARGE]).toBe(2.0);
+    expect(w.view[PARTICLE_STRIDE + S.CHARGE]).toBe(0.0);
   });
 });

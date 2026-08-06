@@ -632,19 +632,19 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 export const LAW_HELP_DB = {
   // Electromagnetism (Cyan)
   CHARGE_LAW: {
-    hint: "Coulomb force: charged particles attract or repel by POLARITY.",
-    explanation: "Inverse-square electrostatic force between particles using POLARITY (C1) plus stored stride CHARGE. Opposite charges attract, like charges repel.",
-    system: "Uses POLARITY DNA and the CHARGE stride slot (filled by IONIZATION and CAPACITANCE). Zero charge particles feel no force.",
+    hint: "Coulomb force: charged particles attract or repel.",
+    explanation: "Confirmed batch-14 (match irl): real inverse-square Coulomb force on the effective charge = POLARITY DNA + stored stride CHARGE — opposite signs attract, like signs repel, with no weighting between the two charge sources.",
+    system: "qq = (POLARITY₁ + CHARGE₁) × (POLARITY₂ + CHARGE₂); force = −k×qq/(dist² + 0.5). Zero effective charge feels no force.",
   },
   FIELD: {
     hint: "Uniform electric field drift along the particle's polarity.",
-    explanation: "Every charged particle receives a constant acceleration along its POLARITY sign — positive charge drifts one way, negative the other.",
-    system: "Acts as a global E-field. Combined with CHARGE_LAW it separates species by polarity into opposing drift lanes.",
+    explanation: "Confirmed batch-14: every polarized particle receives a constant uniform acceleration (same on all three axes) along its POLARITY sign — positive drifts one way, negative the other. Stored CHARGE scales the drift strength, so a charged particle feels the field harder.",
+    system: "POLARITY ≠ 0: acceleration = POLARITY × k × (1 + |CHARGE| × 0.5) on each axis. Combined with CHARGE_LAW it separates species by polarity into opposing drift lanes.",
   },
   CURRENT: {
     hint: "Charge transport: charge diffuses between conductive particles.",
-    explanation: "Neighboring particles exchange stored charge proportionally to CONDUCTIVITY DNA, smoothing charge gradients like electric current through a conductor.",
-    system: "Charge flows from high to low. Pairs with CAPACITANCE and IONIZATION to build charge dynamics over time.",
+    explanation: "Confirmed batch-14: neighboring particles exchange stored charge proportionally to CONDUCTIVITY DNA, smoothing charge gradients like electric current through a conductor — but both particles must be conductive for current to flow (real materials).",
+    system: "Within 17 units: dq = (CHARGE_j − CHARGE_i) × min(CONDUCTIVITY_i, CONDUCTIVITY_j) × k; charge flows from high to low. Pairs with CAPACITANCE and IONIZATION.",
   },
   RESISTANCE: {
     hint: "Electrical resistance: fast motion converts kinetic energy into heat.",
@@ -857,8 +857,8 @@ export const LAW_HELP_DB = {
   },
   COMMS: {
     hint: "Communication: particles emit and exchange channel-filtered signals.",
-    explanation: "Oscillator pulses (PULSE_RATE × SIGNAL_STRENGTH DNA) build a SIGNAL field each tick; neighbors within NEIGHBORHOOD_RADIUS exchange signal filtered by TUNING_CH1-4, converting delivery into response forces, energy, and memory.",
-    system: "The only law that drives signal emission, decay, and pairwise signal exchange. With COMMS off, SIGNAL and MEMORY fields freeze and no communication forces exist — nothing moves or interacts through the comms channel.",
+    explanation: "Confirmed batch-14: oscillator pulses (PULSE_RATE × SIGNAL_STRENGTH DNA) build a SIGNAL field each tick; neighbors within NEIGHBORHOOD_RADIUS exchange signal filtered by TUNING_CH1-4, converting delivery into homing force + memory. The sender pays the emission cost — signalling is no longer a free energy source.",
+    system: "The only law that drives signal emission, decay, and pairwise signal exchange. Delivery: receiver SIGNAL/MEMORY += delivered, homing force = SIGNAL_RESP × delivered × 0.05; sender ENERGY −= delivered × 0.5 (floor 0). With COMMS off, SIGNAL and MEMORY fields freeze.",
     advanced: "Receiver sensitivity is SIGNAL_RESP, range is NEIGHBORHOOD_RADIUS, persistence is SIGNAL_DECAY, and channel tuning is TUNING_CH1-4. Because COMMS is the sole gate for the communication DNA group, toggling it off guarantees zero signal-driven movement even when other laws are active.",
   },
   SENESCENCE: {

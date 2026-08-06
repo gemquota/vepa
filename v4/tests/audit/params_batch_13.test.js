@@ -22,9 +22,8 @@ describe('Batch 13 — DNA.ALPHA / DNA.CONDUCTIVITY / DNA.MAGNETIC_MOMENT / DNA.
     const run = (conductivity) => {
       const { view, dna } = makeWorld(2, (v, d, b) => {
         v[b + S.CHARGE] = b === 0 ? 1 : 0;
-        if (b === 0) {
-          v[b + S.DNA_CACHE_START + 32] = conductivity; // CONDUCTIVITY
-        }
+        // Both particles conduct (CURRENT needs both sides — confirmed batch-14).
+        v[b + S.DNA_CACHE_START + 32] = conductivity; // CONDUCTIVITY
       });
       const laws = lawsWith(LAW_INDEXES.CURRENT, LAW_INDEXES.WRAP);
       for (let t = 0; t < 10; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);

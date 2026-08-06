@@ -5,7 +5,7 @@ import { solve } from '../../src/physics/solver.js';
 
 describe('Batch 18 — DNA.TUNING_CH2 / DNA.TUNING_CH3 / DNA.TUNING_CH4 / DNA.MEMORY_DECAY', () => {
   // Emitter/receiver pair: receiver tuned to `receiverCh`, emitter tuned via `emitterTuning`.
-  const transferEnergy = (receiverCh, emitterTuning) => {
+  const transferSignal = (receiverCh, emitterTuning) => {
     const { view, dna } = makeWorld(2, (v, d, b) => {
       if (b === 0) {
         v[b + S.POS_X] = 950;
@@ -28,22 +28,22 @@ describe('Batch 18 — DNA.TUNING_CH2 / DNA.TUNING_CH3 / DNA.TUNING_CH4 / DNA.ME
     });
     const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
     for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-    return view[S.ENERGY];
+    return view[S.SIGNAL];
   };
 
   it('TUNING_CH2: channel-2 tuned pairs pass signal; mismatched channels block it', () => {
-    expect(transferEnergy(2, [0, 1, 0, 0])).toBeGreaterThan(100.2);
-    expect(transferEnergy(2, [1, 0, 0, 0])).toBeCloseTo(100, 3);
+    expect(transferSignal(2, [0, 1, 0, 0])).toBeGreaterThan(0.01);
+    expect(transferSignal(2, [1, 0, 0, 0])).toBeCloseTo(0, 3);
   });
 
   it('TUNING_CH3: channel-3 tuned pairs pass signal; mismatched channels block it', () => {
-    expect(transferEnergy(3, [0, 0, 1, 0])).toBeGreaterThan(100.2);
-    expect(transferEnergy(3, [0, 1, 0, 0])).toBeCloseTo(100, 3);
+    expect(transferSignal(3, [0, 0, 1, 0])).toBeGreaterThan(0.01);
+    expect(transferSignal(3, [0, 1, 0, 0])).toBeCloseTo(0, 3);
   });
 
   it('TUNING_CH4: channel-4 tuned pairs pass signal; mismatched channels block it', () => {
-    expect(transferEnergy(4, [0, 0, 0, 1])).toBeGreaterThan(100.2);
-    expect(transferEnergy(4, [0, 0, 1, 0])).toBeCloseTo(100, 3);
+    expect(transferSignal(4, [0, 0, 0, 1])).toBeGreaterThan(0.01);
+    expect(transferSignal(4, [0, 0, 1, 0])).toBeCloseTo(0, 3);
   });
 
   it('MEMORY_DECAY: low persistence erases memory traces faster (COMMS)', () => {

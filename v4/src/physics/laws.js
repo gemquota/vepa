@@ -668,24 +668,28 @@ export function applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, di
   const scale = runtimeConfig.signalScale;
   let ax = 0, ay = 0, az = 0;
 
-  // j → i
+  // j → i: the receiver gains signal + memory + homing force, the sender
+  // pays the emission cost (confirmed batch-14: signalling is no longer a
+  // free energy source).
   if (sJ > 0.01 && respI > 0.01) {
     const delivered = sJ * strJ * propI * chI * dt * scale;
     view[iBase + S.SIGNAL] = Math.min(1, (view[iBase + S.SIGNAL] || 0) + delivered);
     view[iBase + S.MEMORY] = (view[iBase + S.MEMORY] || 0) + delivered;
-    view[iBase + S.ENERGY] = (view[iBase + S.ENERGY] || 0) + delivered * respI * 0.5;
+    const eJ = view[jBase + S.ENERGY];
+    if (Number.isFinite(eJ)) view[jBase + S.ENERGY] = Math.max(0, eJ - delivered * 0.5);
     const forceMag = respI * delivered * 0.05;
     ax += dx * invDist * forceMag;
     ay += dy * invDist * forceMag;
     az += dz * invDist * forceMag;
   }
 
-  // i → j
+  // i → j: symmetric — i pays when j receives.
   if (sI > 0.01 && respJ > 0.01) {
     const delivered = sI * strI * propJ * chJ * dt * scale;
     view[jBase + S.SIGNAL] = Math.min(1, (view[jBase + S.SIGNAL] || 0) + delivered);
     view[jBase + S.MEMORY] = (view[jBase + S.MEMORY] || 0) + delivered;
-    view[jBase + S.ENERGY] = (view[jBase + S.ENERGY] || 0) + delivered * respJ * 0.5;
+    const eI = view[iBase + S.ENERGY];
+    if (Number.isFinite(eI)) view[iBase + S.ENERGY] = Math.max(0, eI - delivered * 0.5);
     const forceMag = respJ * delivered * 0.05;
     ax -= dx * invDist * forceMag;
     ay -= dy * invDist * forceMag;
@@ -2002,14 +2006,12 @@ export function applySublimation(lawState, view, base, dt, synergy, prng) {
 // 11. ELECTROMAGNETISM (cyan)
 // ============================================================================
 
-/** CHARGE_LAW — Coulomb force from POLARITY DNA + stored stride CHARGE. */
+/** CHARGE_LAW — real Coulomb force on effective charge = POLARITY + stored CHARGE. */
 export function applyChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   const buf = buffer_global;
-  const q1 = readDNA(p1Ptr, D.POLARITY) || 0;
-  const q2 = readDNA(p2Ptr, D.POLARITY) || 0;
-  const c1 = buf[p1Ptr + S.CHARGE] || 0;
-  const c2 = buf[p2Ptr + S.CHARGE] || 0;
-  const qq = q1 * q2 + c1 * c2 * 0.5;
+  const q1 = (readDNA(p1Ptr, D.POLARITY) || 0) + (buf[p1Ptr + S.CHARGE] || 0);
+  const q2 = (readDNA(p2Ptr, D.POLARITY) || 0) + (buf[p2Ptr + S.CHARGE] || 0);
+  const qq = q1 * q2;
   if (qq === 0) return null;
   const force = -k * qq / (dist * dist + 0.5); // like charges repel, opposite attract
   const invDist = 1.0 / (dist + 0.001);
@@ -2020,18 +2022,22 @@ export function applyChargeForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** FIELD — uniform drift along POLARITY sign (per-particle). */
+/** FIELD — uniform 3D drift along POLARITY sign, scaled by stored charge. */
 export function applyFieldDrift(p1Ptr, k) {
+  const buf = buffer_global;
   const q = readDNA(p1Ptr, D.POLARITY) || 0;
   if (q === 0) return null;
-  return { ax: q * k * 0.7, ay: q * k, az: 0 };
+  const c = buf[p1Ptr + S.CHARGE] || 0;
+  const f = k * (1 + Math.abs(c) * 0.5); // charged particles feel the field harder
+  return { ax: q * f, ay: q * f, az: q * f };
 }
 
 /** CURRENT — charge diffusion between conductive neighbors. */
 export function applyCurrentTransfer(p1Ptr, p2Ptr, distSq, k) {
   const buf = buffer_global;
   if (distSq > 300) return;
-  const cond = Math.max(readDNA(p1Ptr, D.CONDUCTIVITY) || 0, readDNA(p2Ptr, D.CONDUCTIVITY) || 0);
+  // Real conduction needs both materials to conduct (confirmed batch-14).
+  const cond = Math.min(readDNA(p1Ptr, D.CONDUCTIVITY) || 0, readDNA(p2Ptr, D.CONDUCTIVITY) || 0);
   if (cond <= 0) return;
   const dq = (buf[p2Ptr + S.CHARGE] - buf[p1Ptr + S.CHARGE]) * cond * k;
   if (dq === 0) return;

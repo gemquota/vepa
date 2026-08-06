@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.18] - 2026-08-06
+
+### Law RRP batch 14 — COMMS / CHARGE_LAW / FIELD / CURRENT confirmed
+- COMMS — the sender pays: signal delivery still gives the receiver homing force + memory, but the free receiver energy gain is gone and the sender pays ENERGY −= delivered×0.5 per delivered signal (floor 0).
+- CHARGE_LAW — match irl: real Coulomb on effective charge = POLARITY DNA + stored stride CHARGE with no weighting — qq = (q1+c1)×(q2+c2), opposite signs attract, like repel.
+- FIELD — uniform 3D drift (was az=0 with an x/y asymmetry): POLARITY sets the sign, stored CHARGE scales the drift k×(1+|c|×0.5) so charged particles feel the field harder.
+- CURRENT — both sides must conduct: charge diffusion uses min(CONDUCTIVITY_i, CONDUCTIVITY_j) so a conductor can't drain an insulator (real materials); high→low flow + 17-unit range unchanged.
+- Tests: `batch_14.test.js` rewritten to confirmed specs (9 cases); `signal.test.js` + `params_batch_13/16/17/18` regressions updated (COMMS DNA tests assert delivered SIGNAL, not receiver energy; CURRENT needs both conductive). Full suite 576/576 green; `npx vite build` clean.
+- ⚠️ Preserved a concurrent session's uncommitted "DNA 64" genetics WIP (genome params 48-63, REPRO/lifecycle rewrite) to `.concurrent-dna64-wip-20260806.patch` + `.concurrent-dna64-backup-20260806/` and reverted it so this release ships clean — re-apply with `git apply`.
 ## [4.6.17] - 2026-08-06
 
 ### Law RRP batch 13 — CLAIRVOYANCE / PRECOGNITION / ASTRAL / PREDATION confirmed

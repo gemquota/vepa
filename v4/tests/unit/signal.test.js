@@ -71,7 +71,10 @@ describe('VEPA v4 Signal System', () => {
         expect(force).not.toBeNull();
         expect(view[1 * PARTICLE_STRIDE + S.SIGNAL]).toBeGreaterThan(0);
         expect(view[1 * PARTICLE_STRIDE + S.MEMORY]).toBeGreaterThan(0);
-        expect(view[1 * PARTICLE_STRIDE + S.ENERGY]).toBeGreaterThan(50);
+        // Batch-14 confirmed: the sender pays the emission cost, receivers
+        // gain no free energy.
+        expect(view[0 * PARTICLE_STRIDE + S.ENERGY]).toBeLessThan(50);
+        expect(view[1 * PARTICLE_STRIDE + S.ENERGY]).toBe(50);
     });
 
     it('filters signals that do not match tuning channels', () => {

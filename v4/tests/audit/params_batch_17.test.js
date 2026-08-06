@@ -4,7 +4,7 @@ import { LAW_INDEXES } from '../../src/constants.js';
 import { solve } from '../../src/physics/solver.js';
 
 describe('Batch 17 — DNA.SIGNAL_STRENGTH / DNA.SIGNAL_DECAY / DNA.PROPAGATION_SPEED / DNA.TUNING_CH1', () => {
-  it('SIGNAL_STRENGTH: stronger emitters deliver more energy (COMMS)', () => {
+  it('SIGNAL_STRENGTH: stronger emitters deliver more signal (COMMS)', () => {
     const run = (strength) => {
       const { view, dna } = makeWorld(2, (v, d, b) => {
         if (b === 0) {
@@ -20,7 +20,7 @@ describe('Batch 17 — DNA.SIGNAL_STRENGTH / DNA.SIGNAL_DECAY / DNA.PROPAGATION_
       });
       const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
       for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-      return view[S.ENERGY];
+      return view[S.SIGNAL];
     };
     expect(run(1)).toBeGreaterThan(run(0.2));
   });
@@ -56,7 +56,7 @@ describe('Batch 17 — DNA.SIGNAL_STRENGTH / DNA.SIGNAL_DECAY / DNA.PROPAGATION_
       });
       const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
       for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-      return view[S.ENERGY];
+      return view[S.SIGNAL];
     };
     expect(run(1)).toBeGreaterThan(run(0.1));
   });
@@ -85,9 +85,9 @@ describe('Batch 17 — DNA.SIGNAL_STRENGTH / DNA.SIGNAL_DECAY / DNA.PROPAGATION_
       });
       const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
       for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-      return view[S.ENERGY];
+      return view[S.SIGNAL];
     };
-    expect(run([1, 0, 0, 0])).toBeGreaterThan(100.2); // aligned on channel 1
-    expect(run([0, 0, 0, 1])).toBeCloseTo(100, 3);    // orthogonal tuning → blocked
+    expect(run([1, 0, 0, 0])).toBeGreaterThan(0.01); // aligned on channel 1
+    expect(run([0, 0, 0, 1])).toBeCloseTo(0, 3);      // orthogonal tuning → blocked
   });
 });

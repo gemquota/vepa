@@ -20,7 +20,7 @@ describe('Batch 16 — DNA.SPECIES_AFFINITY / DNA.SIGNAL_RESP / DNA.PULSE_RATE /
     expect(run(0)).toBeCloseTo(990, 3);
   });
 
-  it('SIGNAL_RESP: receiver responsiveness converts signal into energy (COMMS)', () => {
+  it('SIGNAL_RESP: receiver responsiveness gates signal delivery and homing force (COMMS)', () => {
     const run = (resp) => {
       const { view, dna } = makeWorld(2, (v, d, b) => {
         if (b === 0) {
@@ -36,10 +36,10 @@ describe('Batch 16 — DNA.SPECIES_AFFINITY / DNA.SIGNAL_RESP / DNA.PULSE_RATE /
       });
       const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
       for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-      return view[S.ENERGY];
+      return view[S.SIGNAL];
     };
-    expect(run(0.8)).toBeGreaterThan(100);
-    expect(run(0)).toBeCloseTo(100, 3);
+    expect(run(0.8)).toBeGreaterThan(0.01);
+    expect(run(0)).toBeCloseTo(0, 3);
   });
 
   it('PULSE_RATE: faster pulse emits more signal over time (COMMS)', () => {
@@ -73,9 +73,9 @@ describe('Batch 16 — DNA.SPECIES_AFFINITY / DNA.SIGNAL_RESP / DNA.PULSE_RATE /
       });
       const laws = lawsWith(LAW_INDEXES.COMMS, LAW_INDEXES.WRAP);
       for (let t = 0; t < 1; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
-      return view[S.ENERGY];
+      return view[S.SIGNAL];
     };
-    expect(run(500)).toBeGreaterThan(100);
-    expect(run(50)).toBeCloseTo(100, 3);
+    expect(run(500)).toBeGreaterThan(0.01);
+    expect(run(50)).toBeCloseTo(0, 3);
   });
 });
