@@ -410,7 +410,7 @@ export const LAW_COUNT = 128;
 
 export const LAW_CATEGORIES = {
   physics: {
-    color: 'BLUE',
+    color: 'RED',
     laws: [
       LAW_INDEXES.GRAV,
       LAW_INDEXES.DRAG,
@@ -431,7 +431,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   biology: {
-    color: 'GREEN',
+    color: 'ORANGE',
     laws: [
       LAW_INDEXES.LIFE,
       LAW_INDEXES.GLOW,
@@ -452,7 +452,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   chemistry: {
-    color: 'PURPLE',
+    color: 'YELLOW',
     laws: [
       LAW_INDEXES.CATALYSIS_LAW,
       LAW_INDEXES.SOLVATION,
@@ -473,7 +473,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   thermodynamics: {
-    color: 'ORANGE',
+    color: 'GREEN',
     laws: [
       LAW_INDEXES.HEAT,
       LAW_INDEXES.COLD,
@@ -494,7 +494,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   metaphysics: {
-    color: 'RED',
+    color: 'TEAL',
     laws: [
       LAW_INDEXES.TIME_DILATION,
       LAW_INDEXES.DIMENSIONALITY,
@@ -515,7 +515,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   electromagnetism: {
-    color: 'TEAL',
+    color: 'BLUE',
     laws: [
       LAW_INDEXES.CHARGE_LAW,
       LAW_INDEXES.FIELD,
@@ -536,7 +536,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   information: {
-    color: 'YELLOW',
+    color: 'VIOLET',
     laws: [
       LAW_INDEXES.MEMORY,
       LAW_INDEXES.PATTERN,
@@ -557,7 +557,7 @@ export const LAW_CATEGORIES = {
     ],
   },
   quantum: {
-    color: 'VIOLET',
+    color: 'PURPLE',
     laws: [
       LAW_INDEXES.SUPERPOSITION,
       LAW_INDEXES.TUNNELING,

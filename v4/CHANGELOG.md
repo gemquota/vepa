@@ -1,5 +1,20 @@
 # Changelog: VEPA v4
 
+## [4.6.11] - 2026-08-06
+
+### Law grid recoloured top-to-bottom rainbow (user request)
+- Category colours now run red → orange → yellow → green → teal → blue → violet
+  → purple from the top law row to the bottom row (physics → biology → chemistry
+  → thermodynamics → metaphysics → electromagnetism → information → quantum),
+  replacing the old per-category colour map.
+- Each category band stays 10 points wide on the 0-100 hue spectrum and the
+  per-law step inside each band is unchanged, so every one of the 128 laws keeps
+  its own hue — just re-ordered into a full rainbow top-to-bottom.
+- `LAW_CATEGORIES` colour fields updated; `LAW_HUE_BY_INDEX` recomputes
+  automatically. Category tabs and labels follow (they read the same mapping).
+- Full suite 550/550 green; `vite build` clean.
+
+
 ## [4.6.10] - 2026-08-06
 
 ### Law RRP batch 09 — CHAOS / ORDER / FATE / WILL confirmed semantics
