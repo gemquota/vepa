@@ -20,7 +20,7 @@
 | [07](batch_07.md) | CRYSTALLIZATION / HEAT / COLD / CONVECTION | ✅ |
 | [08](batch_08.md) | PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIMENSIONALITY | ✅ |
 | [09](batch_09.md) | CHAOS / ORDER / FATE / WILL | ✅ |
-| [10](batch_10.md) | SOUL_LAW / MIND / VOID / BOND | ⏳ |
+| [10](batch_10.md) | SOUL_LAW / MIND / VOID / BOND | ✅ |
 | [11](batch_11.md) | REDUCTION / ALLOY / MELT / BOIL | ⏳ |
 | [12](batch_12.md) | CONDENSE / DEPOSIT / EXOTHERMIC / TELEPATHY | ⏳ |
 | [13](batch_13.md) | CLAIRVOYANCE / PRECOGNITION / ASTRAL / PREDATION | ⏳ |

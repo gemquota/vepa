@@ -816,13 +816,13 @@ export const LAW_HELP_DB = {
   },
   VOID: {
     hint: "Vacuum pressure: empty space pushes particles apart.",
-    explanation: "Creates an outward pressure gradient, opposing gravity. Prevents complete gravitational collapse.",
-    system: "Acts as cosmological constant / dark energy. Balances gravitational clustering with expansion.",
+    explanation: "Confirmed batch-10 (yes): strengthened and dark-energy scaled — the outward push grows with distance from the world centre, opposing gravitational clustering harder at the edges.",
+    system: "Strength = 0.004 x synergy x (0.3 + dist/(worldSize/2)) along the radial direction from the world centre.",
   },
   BOND: {
     hint: "Molecular bonding between nearby particles.",
-    explanation: "Particles can form bonds when close. Bonded pairs experience spring-like restorative forces.",
-    system: "Bonds are tracked via BOND_COUNT and BOND_PARTNER slots. Spring force based on STIFFNESS DNA.",
+    explanation: "Confirmed batch-10: molecular bonds prefer dense neighbourhoods — the more neighbours nearby, the stronger and longer-range the bond — instead of chain ends (that is POLYMER's job). Stretched bonds break past 3x the rest length.",
+    system: "Density boost = min(2, 1 + nCount x 0.05) scales spring force and range (30 x boost). Rest length = (r1+r2) x 1.1, spring k = STIFFNESS DNA x 0.05 x synergy x boost. Bonds register in all 6 shared slots; break when dist > rest x 3.",
   },
   LIFE: {
     hint: "Biological lifecycle: energy cost, aging, death.",
@@ -908,8 +908,8 @@ export const LAW_HELP_DB = {
   },
   POLYMER: {
     hint: "Polymerization: particles form chain bonds.",
-    explanation: "Particles link into polymer chains by establishing mutual bond connections with neighbors (confirmed batch-06: match documentation).",
-    system: "Bond slots (BOND_PARTNER_1..6, stride 59/60/81-84) track chain topology — max 6 bonds per particle, tracked mutually (i records j, j records i). Bond when dist < 10×synergy; spring force stiffness 0.02×synergy with rest length 4 holds the chain.",
+    explanation: "Confirmed batch-10: polymers prefer to extend chains — free/tip particles (0-1 bonds) bond eagerly while well-connected particles (3+) are avoided, so POLYMER grows linear chains instead of cross-linked webs.",
+    system: "Bond slots (BOND_PARTNER_1..6, stride 59/60/81-84), max 6 mutual bonds. Bond range = 10 x synergy x chainBias, where chainBias = 1.0 (0-1 bonds), 0.5 (2), 0.25 (3+). Spring force stiffness 0.02 x synergy, rest length 4.",
   },
   ISOMERIZATION: {
     hint: "Isomerization: bond topology rearrangement.",
@@ -1008,13 +1008,13 @@ export const LAW_HELP_DB = {
   },
   SOUL_LAW: {
     hint: "Soul: ethereal energy shared between same-species.",
-    explanation: "Same-species particles share SOUL energy. Soul accumulates from neighbors.",
-    system: "Soul acts as a secondary energy field. Used by TIME_DILATION for local time control.",
+    explanation: "Confirmed batch-10 (agent decision): SOUL is a conserved shared field — the giver loses what the receiver gains, both capped to [0, 1], and souls decay slowly unless replenished. Keeps TIME_DILATION's 70% max slowdown as the ceiling.",
+    system: "Same-species transfer: receiver += soul x 0.001 x synergy, giver -= same (cap 1.0, range ~100 units). Per-particle decay: soul x= 1 - 0.002 x dt x synergy.",
   },
   MIND: {
     hint: "Hivemind: collective consciousness signal boost.",
-    explanation: "Same-species particles share signal strength, amplifying communication.",
-    system: "Signal boost propagates through same-species networks. Creates emergent group behavior.",
+    explanation: "Confirmed batch-10 (synergies are the interesting part): same-species pairs amplify each other's SIGNAL, and the hivemind is shaped by law synergies — COMMS x1.5, TELEPATHY x2.0, ENERGY x0.5 (drain), POLYMER x0.5 (overhead).",
+    system: "signalBoost = 0.01 x synergy / dist for same-species within ~200 units. Synergy: COMMS +1.5x, TELEPATHY +2.0x, ENERGY 0.5x, POLYMER 0.5x.",
   },
   TELEPATHY: {
     hint: "Telepathy: instant information sharing across species.",

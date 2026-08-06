@@ -1,5 +1,15 @@
 # Changelog: VEPA v4
 
+## [4.6.12] - 2026-08-06
+
+### Law RRP batch 10 — SOUL conserved + decay, MIND synergy stack, VOID dark-energy scaling, BOND density bias, POLYMER chain bias
+- SOUL_LAW — conserved shared field: same-species transfer drains the giver and credits the receiver (both capped to [0,1]), plus slow per-particle decay (0.2%/tick) so souls must be replenished.
+- MIND — hivemind is now synergy-shaped: COMMS ×1.5, TELEPATHY ×2.0, ENERGY ×0.5 (hive-mind drain), POLYMER ×0.5 (polymerized overhead). The documented MIND+ENER −2.0 synergy was never wired before — now it is, in v4's multiplier form.
+- VOID — strengthened base (0.0005 → 0.004) + dark-energy distance scaling `(0.3 + dist/(worldSize/2))`: the outward push grows from the world centre.
+- BOND — molecular bonds prefer dense neighbourhoods over chain ends: bond range and spring force scale with `min(2, 1 + nCount×0.05)`, bonds break when stretched past range, registration uses all 6 bond slots.
+- POLYMER — chain bias: bond range ×1.0 for free/tip partners, ×0.5 (2 bonds), ×0.25 (3+) so polymers grow linear chains instead of cross-linked webs.
+- Tests: `batch_10.test.js` 14 cases; full suite 556/556 green; `npx vite build` clean.
+
 ## [4.6.11] - 2026-08-06
 
 ### Law grid recoloured top-to-bottom rainbow (user request)

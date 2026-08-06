@@ -38,6 +38,7 @@ import {
   advanceFateClock,
   applyWill,
   applySoul,
+  applySoulDecay,
   applyMind,
   applyVoid,
   applyBond,
@@ -525,7 +526,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       if (isSet(lawState, LAW_INDEXES.BOND)) {
         const bondSynergy = computeSynergy(lawState, LAW_INDEXES.BOND);
-        const bondForce = applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, bondSynergy);
+        const bondForce = applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, bondSynergy, nCount);
         if (bondForce) {
           ax += bondForce.ax;
           ay += bondForce.ay;
@@ -931,6 +932,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // Chaos
     applyChaos(lawState, view, iBase, prng, localTimeStep,
       computeSynergy(lawState, LAW_INDEXES.CHAOS));
+
+    // Soul decay — souls dissipate slowly unless replenished
+    applySoulDecay(lawState, view, iBase, localTimeStep,
+      computeSynergy(lawState, LAW_INDEXES.SOUL_LAW));
 
     // Fate — per-species drifting destiny point
     const fateForce = applyFate(lawState, view, iBase, px, py, pz, worldSize,

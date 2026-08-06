@@ -104,6 +104,28 @@ export function computeSynergy(lawState, lawIndex) {
     mult *= 1.8;
   }
 
+  // ── Metaphysics: MIND hivemind synergies (batch-10) ──
+
+  // MIND + ENERGY → hive-mind energy drain (boost ×0.5)
+  if (lawIndex === LAW_INDEXES.MIND && isSet(lawState, LAW_INDEXES.ENERGY)) {
+    mult *= 0.5;
+  }
+
+  // MIND + COMMS → amplified hivemind communication (×1.5)
+  if (lawIndex === LAW_INDEXES.MIND && isSet(lawState, LAW_INDEXES.COMMS)) {
+    mult *= 1.5;
+  }
+
+  // MIND + TELEPATHY → global thought sharing (×2.0)
+  if (lawIndex === LAW_INDEXES.MIND && isSet(lawState, LAW_INDEXES.TELEPATHY)) {
+    mult *= 2.0;
+  }
+
+  // MIND + POLYMER → polymerized hivemind overhead (×0.5)
+  if (lawIndex === LAW_INDEXES.MIND && isSet(lawState, LAW_INDEXES.POLYMER)) {
+    mult *= 0.5;
+  }
+
   // ── Electromagnetism synergies ──
 
   // CHARGE_LAW + MAGNETISM → unified electromagnetic force ×1.5

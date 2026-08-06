@@ -926,7 +926,11 @@ export function applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, syn
       break;
     }
   }
-  if (!alreadyBonded && bondCount < 6 && jBondCount < 6 && dist < 10 * synergy) {
+  // Batch-10: chain bias — polymers prefer extending chains: free/tip
+  // particles (0-1 bonds) bond eagerly, well-connected particles (3+) are
+  // avoided, so POLYMER grows linear chains instead of cross-linked webs.
+  const chainBias = jBondCount <= 1 ? 1.0 : (jBondCount >= 3 ? 0.25 : 0.5);
+  if (!alreadyBonded && bondCount < 6 && jBondCount < 6 && dist < 10 * synergy * chainBias) {
     for (const slot of BOND_SLOTS) {
       if (view[iBase + slot] < 0) {
         view[iBase + slot] = jIdx;
@@ -1141,10 +1145,23 @@ export function applySoul(lawState, view, iBase, jBase, distSq, synergy) {
   if (speciesI !== speciesJ) return;
 
   const soulJ = view[jBase + S.SOUL];
-  const soulBoost = soulJ * 0.001 * synergy;
-  if (Number.isFinite(soulBoost)) {
-    view[iBase + S.SOUL] += soulBoost;
+  const soulI = view[iBase + S.SOUL];
+  const transfer = soulJ * 0.001 * synergy;
+  if (Number.isFinite(transfer) && transfer > 0) {
+    // Batch-10 (agent decision): soul is a conserved shared field — the giver
+    // loses what the receiver gains, and both are capped to [0, 1] so
+    // TIME_DILATION's 70% max slowdown stays the ceiling.
+    view[iBase + S.SOUL] = Math.min(1, soulI + transfer);
+    view[jBase + S.SOUL] = Math.max(0, soulJ - transfer);
   }
+}
+
+// Soul dissipates slowly when it is not being replenished (batch-10 decision).
+export function applySoulDecay(lawState, view, base, dt, synergy) {
+  if (!isSet(lawState, LAW_INDEXES.SOUL_LAW)) return; // SOUL_LAW=36
+  const soul = view[base + S.SOUL];
+  if (!Number.isFinite(soul) || soul <= 0) return;
+  view[base + S.SOUL] = Math.max(0, soul * (1 - 0.002 * dt * synergy));
 }
 
 // ============================================================================
@@ -1177,8 +1194,13 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
   const dz = pz - cz;
   const distSq = dx * dx + dy * dy + dz * dz;
   if (distSq < 1) return null;
-  const strength = 0.0005 * synergy;
-  const invDist = 1 / Math.sqrt(distSq);
+  // Batch-10 ("yes"): strengthened and dark-energy scaled — the push grows
+  // with distance from the centre, opposing gravitational clustering harder
+  // at the edges.
+  const dist = Math.sqrt(distSq);
+  const norm = dist / (worldSize * 0.5);
+  const strength = 0.004 * synergy * (0.3 + norm);
+  const invDist = 1 / dist;
   return {
     ax: dx * invDist * strength,
     ay: dy * invDist * strength,
@@ -1189,9 +1211,32 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
 // ============================================================================
 // 32. BOND — Spring-like molecular bonding
 // ============================================================================
-export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy) {
+// Clear a bilateral bond between i and j if one exists.
+function breakBondPair(view, iBase, jBase, stride) {
+  const jIdx = jBase / stride;
+  const iIdx = iBase / stride;
+  for (const slot of BOND_SLOTS) {
+    if (view[iBase + slot] === jIdx) {
+      view[iBase + slot] = -1;
+      view[iBase + S.BOND_COUNT] = Math.max(0, view[iBase + S.BOND_COUNT] - 1);
+      break;
+    }
+  }
+  for (const slot of BOND_SLOTS) {
+    if (view[jBase + slot] === iIdx) {
+      view[jBase + slot] = -1;
+      view[jBase + S.BOND_COUNT] = Math.max(0, view[jBase + S.BOND_COUNT] - 1);
+      break;
+    }
+  }
+}
+
+export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, synergy, nCount) {
   if (!isSet(lawState, LAW_INDEXES.BOND)) return null;
-  if (dist < 0.1 || dist > 30) return null;
+  // Batch-10: molecular bonds prefer dense neighbourhoods — places with more
+  // neighbours to bond to — instead of chain ends (that is POLYMER's job).
+  const densityBoost = Math.min(2.0, 1 + (nCount || 0) * 0.05);
+  if (dist < 0.1) return null;
   const stiffness = view[iBase + S.DNA_CACHE_START + 8]; // STIFFNESS
   if (!Number.isFinite(stiffness) || stiffness < 0.01) return null;
   // Edge-to-edge rest length: particles touch at their radii
@@ -1199,37 +1244,44 @@ export function applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist
   const r2 = view[jBase + S.RADIUS];
   if (!Number.isFinite(r1) || !Number.isFinite(r2)) return null;
   const restLength = (r1 + r2) * 1.1; // slight buffer to avoid overlap
-  // Spring force: F = -k * (dist - restLength)
+  // Molecular bonds are short-range: they form within ~2x the rest length
+  // (extended by local density) and break when stretched beyond that, instead
+  // of holding forever.
+  const bondRange = restLength * 2 * densityBoost;
+  if (dist > bondRange) {
+    breakBondPair(view, iBase, jBase, stride);
+    return null;
+  }
+  // Spring force: F = -k * (dist - restLength); denser neighbourhoods bond harder
   const displacement = dist - restLength;
-  const forceMag = stiffness * displacement * 0.05 * synergy;
+  const forceMag = stiffness * displacement * 0.05 * synergy * densityBoost;
   const invDist = 1.0 / Math.max(dist, 0.01);
   const fx = dx * invDist * forceMag;
   const fy = dy * invDist * forceMag;
   const fz = dz * invDist * forceMag;
   if (!Number.isFinite(fx)) return null;
-  // Register bond bilaterally
+  // Register bond bilaterally across all 6 shared slots (consistent with POLYMER)
   const jIdx = jBase / stride;
   const iIdx = iBase / stride;
-  // Check if already bonded
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
+  for (const slot of BOND_SLOTS) {
     if (view[iBase + slot] === jIdx || view[jBase + slot] === iIdx) {
       return { ax: fx, ay: fy, az: fz };
     }
   }
-  // Find empty slot on i
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
-    if (view[iBase + slot] < 0) {
-      view[iBase + slot] = jIdx;
-      view[iBase + S.BOND_COUNT] += 1;
-      break;
+  if (view[iBase + S.BOND_COUNT] < 6 && view[jBase + S.BOND_COUNT] < 6) {
+    for (const slot of BOND_SLOTS) {
+      if (view[iBase + slot] < 0) {
+        view[iBase + slot] = jIdx;
+        view[iBase + S.BOND_COUNT] += 1;
+        break;
+      }
     }
-  }
-  // Find empty slot on j
-  for (let slot = S.BOND_PARTNER_1; slot <= S.BOND_PARTNER_1 + 1; slot++) {
-    if (view[jBase + slot] < 0) {
-      view[jBase + slot] = iIdx;
-      view[jBase + S.BOND_COUNT] += 1;
-      break;
+    for (const slot of BOND_SLOTS) {
+      if (view[jBase + slot] < 0) {
+        view[jBase + slot] = iIdx;
+        view[jBase + S.BOND_COUNT] += 1;
+        break;
+      }
     }
   }
   return { ax: fx, ay: fy, az: fz };
