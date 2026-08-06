@@ -38,8 +38,11 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   initTooltip(bus, lawStateObj);
 }
 
-function setupTabSwitching() {
-  document.querySelectorAll('#main-panel .tab-btn').forEach((btn) => {
+export function setupTabSwitching() {
+  // Only real tabs carry a data-tab — the drawer's zoom/hide/minimize buttons
+  // share the .tab-btn class and must not be treated as tabs (that used to
+  // strip the active tab and leave the drawer blank on expand).
+  document.querySelectorAll('#main-panel .tab-btn[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#main-panel .tab-btn').forEach((b) => b.classList.remove('active'));
       document.querySelectorAll('#main-panel .tab-content').forEach((c) => c.classList.remove('active'));
@@ -63,28 +66,65 @@ function setupTabSwitching() {
   });
 }
 
+/** Shared drawer state — minimize/expand/hide all keep the active tab intact. */
+function minimizeDrawer(drawer) {
+  drawer.classList.add('minimized');
+  drawer.classList.remove('hidden');
+  // Clear the custom resize height while minimized, restore it on expand
+  drawer.dataset.prevHeight = drawer.style.height || '';
+  drawer.style.height = '';
+  drawer.style.maxHeight = '';
+  const btn = document.getElementById('drawer-minimize-btn');
+  if (btn) {
+    btn.textContent = '▔';
+    btn.title = 'Expand drawer';
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  const showBtn = document.getElementById('drawer-show-btn');
+  if (showBtn) showBtn.hidden = true;
+}
+
+function expandDrawer(drawer) {
+  drawer.classList.remove('hidden', 'minimized');
+  if (drawer.dataset.prevHeight) {
+    drawer.style.height = drawer.dataset.prevHeight;
+    drawer.style.maxHeight = drawer.dataset.prevHeight;
+  }
+  const btn = document.getElementById('drawer-minimize-btn');
+  if (btn) {
+    btn.textContent = '▁';
+    btn.title = 'Minimize drawer';
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  const showBtn = document.getElementById('drawer-show-btn');
+  if (showBtn) showBtn.hidden = true;
+  ensureActiveTab();
+}
+
+/** If no drawer tab is active (stale state), re-activate the setup tab. */
+function ensureActiveTab() {
+  if (document.querySelector('#main-panel .tab-content.active')) return;
+  let tab = 'tab-setup';
+  const activeBtn = document.querySelector('#main-panel .tab-btn.active[data-tab]');
+  if (activeBtn) tab = activeBtn.dataset.tab;
+  const btn = document.querySelector(`#main-panel .tab-btn[data-tab="${tab}"]`);
+  const content = document.getElementById(tab);
+  if (btn) btn.classList.add('active');
+  if (content) content.classList.add('active');
+}
+
 export function setupDrawerMinimize() {
   const drawer = document.getElementById('drawer-container');
   const btn = document.getElementById('drawer-minimize-btn');
   if (!drawer || !btn) return;
   btn.addEventListener('click', () => {
-    const minimized = drawer.classList.toggle('minimized');
-    btn.textContent = minimized ? '▔' : '▁';
-    btn.title = minimized ? 'Expand drawer' : 'Minimize drawer';
-    btn.setAttribute('aria-expanded', String(!minimized));
-    // Clear the custom resize height while minimized, restore it on expand
-    if (minimized) {
-      drawer.dataset.prevHeight = drawer.style.height || '';
-      drawer.style.height = '';
-      drawer.style.maxHeight = '';
-    } else if (drawer.dataset.prevHeight) {
-      drawer.style.height = drawer.dataset.prevHeight;
-      drawer.style.maxHeight = drawer.dataset.prevHeight;
-    }
+    if (drawer.classList.contains('minimized')) expandDrawer(drawer);
+    else minimizeDrawer(drawer);
   });
 }
 
 /** Drag the top edge handle to resize the drawer height. */
+let drawerResizeActive = false;
 function setupDrawerResize() {
   const drawer = document.getElementById('drawer-container');
   const handle = document.getElementById('drawer-resize-handle');
@@ -93,6 +133,7 @@ function setupDrawerResize() {
   let startY = 0;
   let startH = 0;
   handle.addEventListener('pointerdown', (e) => {
+    drawerResizeActive = true;
     dragging = true;
     startY = e.clientY;
     startH = drawer.getBoundingClientRect().height;
@@ -106,6 +147,7 @@ function setupDrawerResize() {
     drawer.style.maxHeight = h + 'px';
   });
   window.addEventListener('pointerup', () => {
+    drawerResizeActive = false;
     dragging = false;
     handle.classList.remove('dragging');
   });
@@ -123,43 +165,40 @@ function setupDrawerZoom() {
   plus.addEventListener('click', () => { zoom = Math.min(1.6, zoom + 0.1); apply(); });
 }
 
-/** Swipe the drawer tabs up to open, down to close (touch + mouse drag). */
-function setupDrawerSwipe() {
+/** Swipe the drawer tabs or its top edge up to expand, down to minimize. */
+export function setupDrawerSwipe() {
   const drawer = document.getElementById('drawer-container');
-  const tabs = document.querySelector('#main-panel .tabs');
-  if (!drawer || !tabs) return;
+  const zones = document.querySelectorAll('#main-panel .tabs, #drawer-resize-handle');
+  if (!drawer || zones.length === 0) return;
   let startY = null;
   let startX = null;
   let dragging = false;
-  tabs.addEventListener('pointerdown', (e) => {
+  const down = (e) => {
+    if (drawerResizeActive) return;
     startY = e.clientY;
     startX = e.clientX;
     dragging = false;
-  });
-  tabs.addEventListener('pointermove', (e) => {
+  };
+  const move = (e) => {
     if (startY == null) return;
     if (Math.abs(e.clientY - startY) > 12) dragging = true;
-  });
-  tabs.addEventListener('pointerup', (e) => {
+  };
+  const up = (e) => {
     if (startY == null) return;
     const dy = e.clientY - startY;
     const dx = e.clientX - startX;
     startY = null;
     if (!dragging || Math.abs(dy) < 24 || Math.abs(dy) < Math.abs(dx)) return;
-    if (dy < 0) openDrawer(drawer); else closeDrawer(drawer);
+    if (dy < 0) expandDrawer(drawer);
+    else minimizeDrawer(drawer);
+  };
+  const cancel = () => { startY = null; };
+  zones.forEach((zone) => {
+    zone.addEventListener('pointerdown', down);
+    zone.addEventListener('pointermove', move);
+    zone.addEventListener('pointerup', up);
+    zone.addEventListener('pointercancel', cancel);
   });
-}
-
-function openDrawer(drawer) {
-  drawer.classList.remove('hidden', 'minimized');
-  const minBtn = document.getElementById('drawer-minimize-btn');
-  const showBtn = document.getElementById('drawer-show-btn');
-  if (minBtn) {
-    minBtn.textContent = '▁';
-    minBtn.title = 'Minimize drawer';
-    minBtn.setAttribute('aria-expanded', 'true');
-  }
-  if (showBtn) showBtn.hidden = true;
 }
 
 function closeDrawer(drawer) {
@@ -179,8 +218,7 @@ export function setupDrawerHideShow() {
     resetCamera();
   });
   showBtn.addEventListener('click', () => {
-    drawer.classList.remove('hidden');
-    showBtn.hidden = true;
+    expandDrawer(drawer);
     resetCamera();
   });
 }

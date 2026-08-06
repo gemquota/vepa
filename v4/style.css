@@ -656,6 +656,7 @@ body {
     display: flex;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    touch-action: none;
 }
 #main-panel .tab-btn {
     flex: 1;
@@ -2126,13 +2127,6 @@ body {
 .view-mode-group { display: inline-flex; gap: 2px; margin-left: auto; }
 .view-mode-group .view-mode-toggle { margin-left: 0; }
 .view-mode-toggle.law-mode-icon { min-width: 24px; text-align: center; }
-.view-mode-toggle.law-mode-hide { min-width: 20px; text-align: center; }
-.view-mode-toggle.law-mode-hide.active {
-  border-color: var(--accent-red);
-  color: var(--accent-red);
-  background: rgba(255,74,74,0.10);
-  box-shadow: 0 0 6px rgba(255,74,74,0.2);
-}
 
 /* ── Law set bar (save / load presets) ── */
 .law-set-bar {

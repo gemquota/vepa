@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.13] - 2026-08-06
+
+### Drawer fixes — reopen after minimize, swipe up/down, LAWS + WORLD sub-tabs, laws hide button removed
+- **Minimize reopen bug fixed**: the drawer control buttons (▁ minimize, ▼ hide, −/+ zoom) share the `.tab-btn` class, so the generic tab-switching handler treated them as tabs and stripped the active tab — expanding later left the drawer blank with no way back. Tab switching now only binds real tabs (`[data-tab]`), and expand restores the active tab if it was ever lost.
+- **Swipe up / swipe down**: swiping up on the tab strip or top edge expands the drawer, swiping down minimizes it (touch + mouse drag). The resize handle is excluded while actively resizing.
+- **LAWS and WORLD are now separate sub-tabs** in the Setup panel: ⚖️ LAWS (category filters, icon/list law grid, law-set bar) and 🌍 WORLD (world parameter sliders). The network panel still mounts in WORLD.
+- **Laws panel close button removed**: the ✕ hide toggle and `lawsHidden` state are gone — the law grid can no longer be hidden, only switched between icon and list view (◈ / ABC).
+- Tests: new `tests/unit/drawer.test.js` (5 cases — tab switching, minimize/expand keeps active tab, swipe down/up, tap passthrough, hide/show roundtrip). Full suite 561/561 green; `npx vite build` clean.
+
 ## [4.6.12] - 2026-08-06
 
 ### Law RRP batch 10 — SOUL conserved + decay, MIND synergy stack, VOID dark-energy scaling, BOND density bias, POLYMER chain bias

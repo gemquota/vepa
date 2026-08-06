@@ -58,7 +58,6 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 // Track which law is currently selected for info display
 let selectedLawIdx = -1;
 let viewMode = 'icon';  // 'icon' | 'word' — which mode the law grid shows
-let lawsHidden = false; // hide the law grid entirely
 
 // ── Law set presets (theorycrafted) ─────────────────────────────
 // Each preset lists law names; indices resolve via LAW_INDEXES at load.
@@ -141,47 +140,33 @@ export function createWorldPanel(bus, lawStateObj) {
       });
     });
 
-    // [◈ icon] [ABC list] [✕ hide] — exactly one mode active at a time;
-    // tapping the already-selected mode hides the law grid instead.
+    // [◈ icon] [ABC list] — toggle between the icon grid and the word list.
     let group = filterRow.querySelector('.view-mode-group');
     if (!group) {
       group = document.createElement('div');
       group.className = 'view-mode-group';
       const btnIcon = document.createElement('button');
       btnIcon.className = 'view-mode-toggle law-mode-icon';
-      btnIcon.title = 'Icon mode — tap again to hide laws';
+      btnIcon.title = 'Icon view';
       btnIcon.textContent = '◈';
       const btnWord = document.createElement('button');
       btnWord.className = 'view-mode-toggle law-mode-abc';
-      btnWord.title = 'List mode — tap again to hide laws';
+      btnWord.title = 'List view';
       btnWord.textContent = 'ABC';
-      const btnHide = document.createElement('button');
-      btnHide.className = 'view-mode-toggle law-mode-hide';
-      btnHide.title = 'Show / hide laws';
-      btnHide.textContent = '✕';
-      group.append(btnIcon, btnWord, btnHide);
+      group.append(btnIcon, btnWord);
       filterRow.appendChild(group);
 
       const sync = () => {
-        btnIcon.classList.toggle('active', !lawsHidden && viewMode === 'icon');
-        btnWord.classList.toggle('active', !lawsHidden && viewMode === 'word');
-        btnHide.classList.toggle('active', lawsHidden);
+        btnIcon.classList.toggle('active', viewMode === 'icon');
+        btnWord.classList.toggle('active', viewMode === 'word');
         renderLawGrid(grid, lawStateObj, bus);
       };
       btnIcon.addEventListener('click', () => {
-        if (lawsHidden) lawsHidden = false;
-        else if (viewMode === 'icon') lawsHidden = true;
         viewMode = 'icon';
         sync();
       });
       btnWord.addEventListener('click', () => {
-        if (lawsHidden) lawsHidden = false;
-        else if (viewMode === 'word') lawsHidden = true;
         viewMode = 'word';
-        sync();
-      });
-      btnHide.addEventListener('click', () => {
-        lawsHidden = !lawsHidden;
         sync();
       });
     }
@@ -215,8 +200,7 @@ export function setSelectedLaw(idx) {
 
 function renderLawGrid(grid, lawStateObj, bus) {
   const isWordMode = viewMode === 'word';
-  grid.className = lawsHidden ? 'law-grid hidden'
-    : isWordMode ? 'law-grid word-mode' : 'law-icon-grid';
+  grid.className = isWordMode ? 'law-grid word-mode' : 'law-icon-grid';
 
   let html = '';
   // One row per law category (physics / biology / chemistry / thermo / meta)
