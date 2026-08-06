@@ -81,12 +81,36 @@ describe('Batch 18 audit — STIGMERGY / SIGNAL_BOOST / LEARN / SYMBOL', () => {
       expect(b[S.TRAIL_Z]).toBe(100);
     });
 
-    it('follows a neighbour trail marker (dx 8, k 0.3 → ax ≈ 0.2667)', () => {
+    it('evaporates a stopped particle\'s trail back toward it', () => {
+      const b = buf(1);
+      b[S.POS_X] = 100;
+      b[S.TRAIL_X] = 108;
+      applyTrailWrite(0, 100, 100, 100, 0, 0, 0); // stopped → no new marker
+      expect(b[S.TRAIL_X]).toBeCloseTo(107.36, 5); // 108 + (100−108)·0.08
+    });
+
+    it('follows a fresh trail marker along the pheromone gradient', () => {
       const b = buf(2);
       b[S.POS_X] = 100;
+      b[PARTICLE_STRIDE + S.POS_X] = 100; // owner here → marker 8 ahead is fresh
       b[PARTICLE_STRIDE + S.TRAIL_X] = 108;
       const f = applyStigmergyForce(0, PARTICLE_STRIDE, 0.3);
-      expect(f.ax).toBeCloseTo(0.266667, 4);
+      expect(f.ax).toBeGreaterThan(0);
+      expect(f.ax).toBeLessThan(0.3); // gradient falloff, not constant strength
+    });
+
+    it('stale markers (far from their owner) pull weaker than fresh ones', () => {
+      const fresh = buf(2);
+      fresh[S.POS_X] = 100;
+      fresh[PARTICLE_STRIDE + S.POS_X] = 100; // owner here → marker 8 ahead is fresh
+      fresh[PARTICLE_STRIDE + S.TRAIL_X] = 108;
+      const fFresh = applyStigmergyForce(0, PARTICLE_STRIDE, 0.3);
+      const stale = buf(2);
+      stale[S.POS_X] = 100;
+      stale[PARTICLE_STRIDE + S.POS_X] = 0; // marker 108 units from owner = evaporated
+      stale[PARTICLE_STRIDE + S.TRAIL_X] = 108;
+      const fStale = applyStigmergyForce(0, PARTICLE_STRIDE, 0.3);
+      expect(fFresh.ax).toBeGreaterThan(fStale.ax);
     });
 
     it('integration: solve() steers toward a pre-existing trail marker', () => {
@@ -104,11 +128,25 @@ describe('Batch 18 audit — STIGMERGY / SIGNAL_BOOST / LEARN / SYMBOL', () => {
       expect(isSet(lawsOn('SIGNAL_BOOST'), LAW_INDEXES.SIGNAL_BOOST)).toBe(true);
     });
 
-    it('relays a strong signal to a neighbour (s1 0.5, k 0.08 → s2 +0.04)', () => {
+    it('relays a strong signal scaled by SIGNAL_STRENGTH (s1 0.5, strength 0.5, k 0.08 → +0.03)', () => {
       const b = buf(2);
       b[S.SIGNAL] = 0.5;
+      b[S.DNA_CACHE_START + D.SIGNAL_STRENGTH] = 0.5; // default → ×0.75
       applySignalBoost(0, PARTICLE_STRIDE, 0.08);
-      expect(b[PARTICLE_STRIDE + S.SIGNAL]).toBeCloseTo(0.04, 5);
+      expect(b[PARTICLE_STRIDE + S.SIGNAL]).toBeCloseTo(0.03, 5);
+    });
+
+    it('stronger emitters relay more (strength 1.0 → ×1.0, strength 0 → ×0.5)', () => {
+      const strong = buf(2);
+      strong[S.SIGNAL] = 0.5;
+      strong[S.DNA_CACHE_START + D.SIGNAL_STRENGTH] = 1.0;
+      applySignalBoost(0, PARTICLE_STRIDE, 0.08);
+      const weak = buf(2);
+      weak[S.SIGNAL] = 0.5;
+      weak[S.DNA_CACHE_START + D.SIGNAL_STRENGTH] = 0.0;
+      applySignalBoost(0, PARTICLE_STRIDE, 0.08);
+      expect(strong[PARTICLE_STRIDE + S.SIGNAL]).toBeCloseTo(0.04, 5);
+      expect(weak[PARTICLE_STRIDE + S.SIGNAL]).toBeCloseTo(0.02, 5);
     });
 
     it('does nothing for silent particles', () => {

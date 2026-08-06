@@ -89,6 +89,24 @@ describe('Batch 17 audit — PLASMA / SUPERCONDUCTIVITY / MEMORY / PATTERN', () 
       expect(b[S.TEMPERATURE]).toBe(0.5);
     });
 
+    it('recombines cooled plasma: stored charge releases as heat below 0.5', () => {
+      const b = buf(1);
+      b[S.TEMPERATURE] = 0.4;
+      b[S.CHARGE] = 1.0;
+      applyPlasma(0, 0.02);
+      expect(b[S.CHARGE]).toBe(0);
+      expect(b[S.TEMPERATURE]).toBeCloseTo(0.44, 5); // 0.4 + 1.0·0.02·2
+    });
+
+    it('keeps charge in the 0.5–0.6 hysteresis band (no ionize, no recombine)', () => {
+      const b = buf(1);
+      b[S.TEMPERATURE] = 0.55;
+      b[S.CHARGE] = 1.0;
+      applyPlasma(0, 0.02);
+      expect(b[S.CHARGE]).toBe(1.0);
+      expect(b[S.TEMPERATURE]).toBeCloseTo(0.55, 5);
+    });
+
     it('integration: solve() ionizes a hot particle', () => {
       const world = makeWorld(1, { temperature: 1 });
       solve(world.view, 1, PARTICLE_STRIDE, lawsOn('PLASMA'), world.dna, WORLD, DT, () => 0.5);

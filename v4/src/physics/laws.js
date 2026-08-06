@@ -2028,7 +2028,10 @@ export function applyPhaseRadiation(lawState, view, base, dt, synergy) {
   if (temp > 0.05) {
     const radiated = temp * temp * temp * temp * 0.05 * dt * synergy;
     if (radiated > 0) {
-      view[base + S.ENERGY] -= radiated;
+      // Energy floor 0: radiation cools and dims a body, it can never drive
+      // ENERGY negative (the unclamped drain let hot bodies crater ENERGY
+      // below zero every tick once multiple heat sources compounded).
+      view[base + S.ENERGY] = Math.max(0, energy - radiated);
       view[base + S.TEMPERATURE] = Math.max(0, view[base + S.TEMPERATURE] - radiated);
       view[base + S.SIGNAL] = Math.min(1, view[base + S.SIGNAL] + radiated);
     }
@@ -2284,15 +2287,29 @@ export function applyDischarge(p1Ptr, prng, k, aimX, aimY, aimZ) {
   return { ax: nanGuard(ax), ay: nanGuard(ay), az: nanGuard(az) };
 }
 
-/** PLASMA — hot particles ionize: surplus heat becomes stored charge. */
+/** PLASMA — the thermal-EM bridge with hysteresis (batch-17, match irl).
+ * Above 0.6 surplus heat ionizes into stored charge, cooling the gas. Below
+ * 0.5 a cooled plasma recombines: stored charge converts back to heat and the
+ * ion resets — real plasma never keeps its charge after it cools. The 0.6/0.5
+ * band prevents rapid ionize/recombine oscillation. */
 export function applyPlasma(p1Ptr, k) {
   const buf = buffer_global;
   const temp = buf[p1Ptr + S.TEMPERATURE] || 0;
   const excess = temp - 0.6;
-  if (excess <= 0) return;
-  const conv = excess * k;
-  buf[p1Ptr + S.CHARGE] = clamp((buf[p1Ptr + S.CHARGE] || 0) + conv, -2, 2);
-  buf[p1Ptr + S.TEMPERATURE] = temp - conv * 0.5;
+  if (excess > 0) {
+    const conv = excess * k;
+    buf[p1Ptr + S.CHARGE] = clamp((buf[p1Ptr + S.CHARGE] || 0) + conv, -2, 2);
+    buf[p1Ptr + S.TEMPERATURE] = temp - conv * 0.5;
+    return;
+  }
+  // Recombination: below the ionization threshold, charge releases as heat.
+  if (temp < 0.5) {
+    const c = buf[p1Ptr + S.CHARGE] || 0;
+    if (c !== 0) {
+      buf[p1Ptr + S.TEMPERATURE] = Math.min(1, temp + Math.abs(c) * k * 2);
+      buf[p1Ptr + S.CHARGE] = 0;
+    }
+  }
 }
 
 /** SUPERCONDUCTIVITY — cold pairs couple: relative motion damped + charge equalized. */
@@ -2346,15 +2363,29 @@ export function applyPatternForce(p1Ptr, p2Ptr, dx, dy, dz, dist, k) {
   };
 }
 
-/** STIGMERGY — write a predicted-path trail marker (per-particle). */
+/** STIGMERGY — lay a predicted-path trail marker, or let it evaporate.
+ * Batch-17 (match irl): only moving particles lay pheromone (speed gate);
+ * a stopped particle's marker melts back toward it (evaporation), so trails
+ * fade instead of persisting forever. */
 export function applyTrailWrite(p1Ptr, px, py, pz, vx, vy, vz) {
   const buf = buffer_global;
-  buf[p1Ptr + S.TRAIL_X] = px + vx * 8.0;
-  buf[p1Ptr + S.TRAIL_Y] = py + vy * 8.0;
-  buf[p1Ptr + S.TRAIL_Z] = pz + vz * 8.0;
+  const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  if (speed >= 0.5) {
+    buf[p1Ptr + S.TRAIL_X] = px + vx * 8.0;
+    buf[p1Ptr + S.TRAIL_Y] = py + vy * 8.0;
+    buf[p1Ptr + S.TRAIL_Z] = pz + vz * 8.0;
+  } else {
+    // Evaporation: the marker melts back toward the owner's position.
+    buf[p1Ptr + S.TRAIL_X] += (px - buf[p1Ptr + S.TRAIL_X]) * 0.08;
+    buf[p1Ptr + S.TRAIL_Y] += (py - buf[p1Ptr + S.TRAIL_Y]) * 0.08;
+    buf[p1Ptr + S.TRAIL_Z] += (pz - buf[p1Ptr + S.TRAIL_Z]) * 0.08;
+  }
 }
 
-/** STIGMERGY — follow a neighbor's trail marker. */
+/** STIGMERGY — follow a neighbor's trail marker along the pheromone gradient.
+ * Batch-17 (match irl): the pull falls off with distance to the marker and
+ * scales with freshness — a marker far from its owner's current position is
+ * stale (evaporated) and pulls weakly. */
 export function applyStigmergyForce(p1Ptr, p2Ptr, k) {
   const buf = buffer_global;
   const tx = buf[p2Ptr + S.TRAIL_X] || 0;
@@ -2364,19 +2395,31 @@ export function applyStigmergyForce(p1Ptr, p2Ptr, k) {
   const ddy = ty - buf[p1Ptr + S.POS_Y];
   const ddz = tz - buf[p1Ptr + S.POS_Z];
   const dd = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz) + 1.0;
+  // Freshness: how close the marker is to its owner's current position.
+  const ownerDx = tx - buf[p2Ptr + S.POS_X];
+  const ownerDy = ty - buf[p2Ptr + S.POS_Y];
+  const ownerDz = tz - buf[p2Ptr + S.POS_Z];
+  const ownerDist = Math.sqrt(ownerDx * ownerDx + ownerDy * ownerDy + ownerDz * ownerDz);
+  const freshness = 1.0 / (1.0 + ownerDist * 0.02);
+  // Distance falloff: pheromone strength drops with distance from the marker.
+  const falloff = 1.0 / (1.0 + dd * 0.1);
   return {
-    ax: nanGuard((ddx / dd) * k),
-    ay: nanGuard((ddy / dd) * k),
-    az: nanGuard((ddz / dd) * k),
+    ax: nanGuard((ddx / dd) * k * freshness * falloff),
+    ay: nanGuard((ddy / dd) * k * freshness * falloff),
+    az: nanGuard((ddz / dd) * k * freshness * falloff),
   };
 }
 
-/** SIGNAL_BOOST — relay signal to a neighbor on contact. */
+/** SIGNAL_BOOST — relay signal to a neighbor on contact.
+ * Batch-17: the relay scales with the sender's SIGNAL_STRENGTH DNA (0.5..1.5×),
+ * consistent with GLOW/COMMS — stronger emitters relay more. */
 export function applySignalBoost(p1Ptr, p2Ptr, k) {
   const buf = buffer_global;
   const s1 = buf[p1Ptr + S.SIGNAL] || 0;
   if (s1 > 0.01) {
-    buf[p2Ptr + S.SIGNAL] = Math.min(1, (buf[p2Ptr + S.SIGNAL] || 0) + s1 * k);
+    const strengthRaw = readDNA(p1Ptr, D.SIGNAL_STRENGTH);
+    const strength = Number.isFinite(strengthRaw) ? strengthRaw : 0.5;
+    buf[p2Ptr + S.SIGNAL] = Math.min(1, (buf[p2Ptr + S.SIGNAL] || 0) + s1 * k * (0.5 + strength * 0.5));
   }
 }
 

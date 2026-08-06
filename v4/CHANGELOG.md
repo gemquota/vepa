@@ -1,5 +1,14 @@
 # Changelog: VEPA v4
 
+## [4.6.22] - 2026-08-06
+
+### Law RRP batches 17-19 (triple batch, 12 laws)
+- PLASMA — hysteresis (match irl): above 0.6 surplus heat ionizes into stored CHARGE (cooling the gas); below 0.5 a cooled plasma recombines — stored charge converts back to heat (TEMP += |c|·k·2) and the ion resets. The 0.5–0.6 band prevents rapid ionize/recombine oscillation. The thermal-EM cycle now closes.
+- STIGMERGY — real pheromone trails: only moving particles lay a predicted-path marker (speed ≥ 0.5); stopped particles' markers evaporate (lerp 8%/tick back to the owner); followers are pulled along the gradient — force falls off with distance to the marker and scales with freshness (stale markers pull weakly).
+- SIGNAL_BOOST — relay now scales with the sender's SIGNAL_STRENGTH DNA (0.5–1.5×), consistent with GLOW/COMMS; fixed a `|| 0.5` fallback that swallowed a legitimate strength 0.
+- SUPERCONDUCTIVITY / MEMORY / PATTERN / LEARN / SYMBOL / METRIC / PREDICT / CODE / PROTOCOL — confirmed as-is against docs, HELP_DB entries updated with confirmed specs and synergy notes.
+- Tests: `batch_17/18/19.test.js` updated to confirmed specs (+2/+3 cases; total 50 across the three files). Full suite 594/594 green; `npx vite build` clean.
+
 ## [4.6.21] - 2026-08-06
 
 ### Law RRP batch 16 — RESONANCE / FLUX / IONIZATION / DISCHARGE confirmed
