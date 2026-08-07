@@ -1,5 +1,15 @@
 # Changelog: VEPA v4
 
+## [4.6.24] - 2026-08-07
+
+### Chaos Multiplex expansion — world import, FIT tab, iteration controls
+- **IMPORT ON EXIT** — exiting the multiplex now imports the selected shard into the main sim: particles, species DNA and the law state are copied into the world buffers (`copyShardToWorld`), then the particle/species counts, offspring ring and intelligence engines reset, and the UI re-syncs (`species:sync` / `dna:sync` / `law:sync`).
+- **Fitness engine** — 14 weighted metrics per shard (population, growth, longevity, stability, energy, reserves, armor, mobility, signal, bonds, diversity, exploration, novelty, delta), min-max normalized across shards with per-metric MAX/MIN modes; DELTA = mean deviation from the other shards; composite = Σ wᵢ·scoreᵢ / Σ wᵢ (falls back to population when all weights are 0). `getFitnessReport` rolls an `avgDelta` history (cap 32) for the FIT tab.
+- **FIT tab** — the drawer is now tabbed LIVE/FIT: 14 weight sliders + MAX/MIN toggles, a scrollable per-shard score readout (`S01 0.74`, click to select), and a live `ALIVE · CAP · ΔSEL · ΔAVG` stats row.
+- **Iteration modes** — AFTER ITERATE = NONE | FITTEST | FOLLOW (FOLLOW picks the shard closest to the previous selection's metric profile); KEEP SELECTED anchors the selected shard through regeneration via full view/DNA/laws/PRNG-state snapshots.
+- **LIVE tab additions** — POP SCALE (0.25–1 dynamic per-shard population cap, applies immediately), SEED (0 = random, > 0 = deterministic lineage), SUBSTEPS (1–8 solver sub-steps per tick), per-aspect LAW/DNA/POP VAR knobs, IMPORT ON EXIT toggle (replaces AUTO-SELECT FITTEST with the AFTER ITERATE select).
+- Tests: `tests/unit/multiplex.test.js` +9 cases (population cap, per-aspect variation blocks, substep invariance for linear laws, copy-to-world, snapshot/restore, keep-selected, follow-selection, weighted fitness MAX/MIN, report shape + default-weight ranking, deterministic seed). `vepa4 syntax` + `vepa4 build` clean; full suite 607/607 green at this commit (the 3 failures seen in the dirty working tree come from the separate uncommitted law RRP WIP, which stays outside this release).
+
 ## [4.6.23] - 2026-08-06
 
 ### Law RRP batches 20-22 (triple batch, 12 laws)

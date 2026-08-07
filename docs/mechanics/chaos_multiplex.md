@@ -18,3 +18,33 @@ The master UI communicates with sandboxed iframes via `postMessage`.
 
 ---
 *Experimental Physics Spec v2.1*
+
+---
+
+## 4. Drawer expansion (v4.6.24)
+
+The right-edge drawer is now tabbed **LIVE / FIT**.
+
+### LIVE tab
+- **POP SCALE** (0.25–1) — dynamic per-shard population cap (`computeShardPopulationCap`: inverse-square-root curve, floor 250); applies immediately (rebuilds the grid).
+- **SEED** (0 = random, > 0 = deterministic) — a fixed seed reproduces the exact same shard lineage across runs.
+- **SUBSTEPS** (1–8) — solver sub-steps per shard tick; a linear law's per-step effect is invariant to the substep count.
+- **LAW / DNA / POP VAR** — per-aspect multipliers on the master VARIATION knob; 0 blocks that aspect entirely.
+- **AFTER ITERATE** — `NONE | FITTEST | FOLLOW`:
+  - FITTEST — select the shard with the highest weighted fitness (default weights = alive-only).
+  - FOLLOW — select the shard whose metric profile is closest to the previous selection.
+- **KEEP SELECTED** — anchors the selected shard through regeneration (full view/DNA/laws/PRNG snapshot restore).
+- **IMPORT ON EXIT** — imports the selected shard into the main simulation when exiting the multiplex (default on).
+
+### FIT tab
+- 14 weighted metrics per shard: population, growth, longevity, stability, energy, reserves, armor, mobility, signal, bonds, diversity, exploration, novelty, delta.
+- Metrics are min-max normalized across shards; each row has a 0–1 weight slider and a MAX/MIN mode toggle (MIN flips to 1−norm).
+- DELTA = mean |score − mean(others)| over the base metrics — "how different is this world from the pack".
+- Composite fitness = Σ wᵢ·scoreᵢ / Σ wᵢ (falls back to population when all weights are 0).
+- Scrollable per-shard score readout (`S01 0.74`) — click a row to select that shard.
+- Stats row shows `ALIVE · CAP · ΔSEL · ΔAVG` (selected-shard delta and the rolling mean delta across shards).
+
+### Import protocol
+`exit()` → if `importOnExit`, the selected shard is copied into the main world buffers
+(particles + species DNA + law state via `copyShardToWorld`), then the main loop resets the
+offspring ring and intelligence engines and re-syncs species/DNA/law panels.

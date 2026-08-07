@@ -26,6 +26,7 @@ import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageT
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
+import { copyShardToWorld } from './multiplex/multiplex.js';
 initDebug();
 logDebug('main module loaded');
 
@@ -112,7 +113,18 @@ async function boot() {
         dna: dnaBuffer,
         laws: lawState,
         speciesCount,
-    }));
+    }), (shard) => {
+        // Import the selected multiplex shard into the main world.
+        const imported = copyShardToWorld(shard, { view: particleView, dna: dnaBuffer, laws: lawState });
+        particleCount = imported.count;
+        speciesCount = imported.speciesCount;
+        resetOffspringRing();
+        resetIntelligence();
+        bus.emit('species:sync', { count: speciesCount });
+        bus.emit('dna:sync');
+        bus.emit('law:sync');
+        logDebug(`multiplex import: ${imported.count} particles / ${imported.speciesCount} species`);
+    });
     window.openChaosMultiplex = () => { if (multiplexController) multiplexController.openModal(); };
     bus.on('multiplex:started', () => {
         paused = true;

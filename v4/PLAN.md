@@ -51,3 +51,11 @@ npx vite build                                        # clean bundle
 - Timeline snapshots are raw buffer copies; with recording on and large
   populations, memory grows (20 snapshots × buffer). REC is off by default.
 - Main-thread physics remains the default; worker mode is future work.
+
+## Milestone note (v4.6.24 — 2026-08-07)
+
+- **Chaos Multiplex expansion** implemented: world import on exit (`copyShardToWorld`),
+  a 14-metric weighted fitness engine (`computeShardMetrics` / `getFitnessReport`), LIVE/FIT
+  drawer tabs with per-aspect variation, POP SCALE, SEED, SUBSTEPS, AFTER ITERATE
+  (NONE/FITTEST/FOLLOW), KEEP SELECTED, and IMPORT ON EXIT. See `v4/CHANGELOG.md` [4.6.24]
+  and `docs/mechanics/chaos_multiplex.md` §4.
