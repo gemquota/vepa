@@ -25,20 +25,43 @@ const GRID_DIVISIONS = 8;   // grid lines per axis
 // ── Canvas2D Renderer ──────────────────────────────────────────────────────
 
 /**
+ * Zero-copy particle view for the draw hot path.
+ *
+ * The render loop is called every frame with either a raw (Shared)ArrayBuffer
+ * or an existing Float32Array view. Wrapping a buffer into `new Float32Array`
+ * is free, but doing it over an existing Float32Array would copy 1MB+ per
+ * frame — and multiplex mode renders up to 16 shards a frame. This helper
+ * returns the typed array itself when one is passed in.
+ *
+ * @param {SharedArrayBuffer|ArrayBuffer|Float32Array} buffer - Particle storage
+ * @returns {Float32Array} A live view over the same memory (never a copy)
+ */
+export function asParticleView(buffer) {
+    return buffer instanceof Float32Array ? buffer : new Float32Array(buffer);
+}
+
+/**
  * Create a Canvas2D renderer bound to the given canvas element.
  *
  * @param {HTMLCanvasElement} canvas      - Target canvas
  * @param {number}           maxParticles - Upper bound on particle count (unused
  *                                          for Canvas2D, reserved for pool sizing)
+ * @param {object}           [opts]       - { maxDpr, eco } — cap the device
+ *   pixel ratio (multiplex previews run at 1.25×) and start in eco mode
+ *   (no glow halos, no reference grid) to cut fill-rate and draw calls.
  * @returns {object} Renderer state object
- *   { ctx, canvas, width, height, mode: 'canvas2d' }
+ *   { ctx, canvas, width, height, dpr, maxDpr, eco, mode: 'canvas2d' }
  */
-export function createRenderer(canvas, maxParticles) {
+export function createRenderer(canvas, maxParticles, opts = {}) {
     const ctx = canvas.getContext('2d');
     if (!ctx) {
         throw new Error('Canvas2D renderer: failed to acquire 2d context');
     }
-    const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+    const maxDpr = Math.max(1, Math.min(2, parseFloat(opts.maxDpr) || 2));
+    const dpr = Math.min(
+        typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+        maxDpr,
+    );
     const rect = canvas.getBoundingClientRect();
 
     canvas.width  = Math.round(rect.width  * dpr);
@@ -51,6 +74,8 @@ export function createRenderer(canvas, maxParticles) {
         width:  rect.width,
         height: rect.height,
         dpr,
+        maxDpr,
+        eco: opts.eco === true,
         mode: 'canvas2d',
         sprites: null,   // Canvas2D has no sprite pool
     };
@@ -62,7 +87,11 @@ export function createRenderer(canvas, maxParticles) {
  * @param {object} renderer - Renderer state from createRenderer
  */
 export function resize(renderer) {
-    const { ctx, canvas, dpr } = renderer;
+    const { ctx, canvas } = renderer;
+    const dpr = Math.min(
+        typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+        renderer.maxDpr || 2,
+    );
     const rect = canvas.getBoundingClientRect();
     const w = Math.round(rect.width  * dpr);
     const h = Math.round(rect.height * dpr);
@@ -108,11 +137,9 @@ export function destroy(renderer) {
  * @param {number}        stride         - Floats per particle
  * @param {number}        worldSize      - World coordinate extent
  */
-export function renderFrame(renderer, particleBuffer, particleCount, stride, worldSize) {
+export function renderFrame(renderer, particleBuffer, particleCount, stride, worldSize, opts = {}) {
     const { ctx, width, height } = renderer;
     if (!ctx) return;
-
-    const view = new Float32Array(particleBuffer);
 
     // ── 1. Clear frame ──
     // The simulation canvas is transparent and sits above the atmospheric
@@ -120,11 +147,34 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
     // cleanly — no motion trails.
     ctx.clearRect(0, 0, width, height);
 
-    // ── 2. Reference grid ──
-    drawGrid(ctx, width, height);
+    // ── 2. Reference grid (skipped in eco mode — multiplex previews) ──
+    const eco = opts.eco === true || renderer.eco === true;
+    if (!eco) drawGrid(ctx, width, height);
 
     // ── 3. Particles ──
+    drawParticles(renderer, particleBuffer, particleCount, stride, worldSize, { ...opts, eco });
+}
+
+/**
+ * Draw just the particle layer (no clear, no grid) — used for the main world
+ * inside renderFrame and for the remote phone's particles (multiplayer world
+ * extension) so both halves render over the same canvas.
+ *
+ * @param {object} renderer  Renderer state (ctx, width, height)
+ * @param {Float32Array} particleBuffer stride-N particle view
+ * @param {number} particleCount active slots
+ * @param {number} stride floats per particle
+ * @param {number} worldSize world coordinate extent
+ * @param {object} [opts] { ring: boolean } — draw a subtle outline on each
+ *   particle (used to mark particles owned by the remote phone)
+ */
+export function drawParticles(renderer, particleBuffer, particleCount, stride, worldSize, opts = {}) {
+    const { ctx, width, height } = renderer;
+    if (!ctx) return;
+
+    const view = asParticleView(particleBuffer);
     const uniformScale = Math.min(width, height) / worldSize;
+    const eco = opts.eco === true || renderer.eco === true;
 
     for (let i = 0; i < particleCount; i++) {
         const base = i * stride;
@@ -179,18 +229,31 @@ export function renderFrame(renderer, particleBuffer, particleCount, stride, wor
           ctx.arc(sx, sy, Math.max(screenR * 0.7, 0.5), 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // Soft glow halo — bloom under the crisp core
-          ctx.globalAlpha = depthAlpha * 0.3;
-          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, screenR * 2.4, 0, Math.PI * 2);
-          ctx.fill();
+          if (!eco) {
+            // Soft glow halo — bloom under the crisp core (skipped in eco)
+            ctx.globalAlpha = depthAlpha * 0.3;
+            ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, screenR * 2.4, 0, Math.PI * 2);
+            ctx.fill();
+          }
           // Crisp core
           ctx.globalAlpha = depthAlpha;
           ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
           ctx.beginPath();
           ctx.arc(sx, sy, Math.max(screenR, 0.5), 0, Math.PI * 2);
           ctx.fill();
+        }
+
+        // Remote-owned marker (multiplayer world extension): a thin ring so
+        // you can see which particles live on the other phone.
+        if (opts.ring) {
+          ctx.globalAlpha = Math.min(1, depthAlpha + 0.15);
+          ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(screenR + 1.5, 2), 0, Math.PI * 2);
+          ctx.stroke();
         }
     }
 

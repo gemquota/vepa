@@ -2141,6 +2141,77 @@ body {
 }
 .mpx-fit-shard span { color: var(--text-primary); }
 
+/* ── Multiplex metrics bottom drawer (v4.6.25) ── */
+#mpx-metrics {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 8px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+#mpx-metrics > * { pointer-events: auto; }
+.mpx-metrics-toggle {
+  background: rgba(8,8,16,0.85);
+  border: 1px solid rgba(255,74,74,0.5);
+  border-radius: 4px;
+  color: var(--accent-red);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mpx-metrics-toggle:hover { background: rgba(255,74,74,0.16); }
+.mpx-metrics-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 92vw;
+  background: rgba(8,8,16,0.9);
+  border: 1px solid rgba(255,74,74,0.4);
+  border-radius: 6px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+}
+#mpx-metrics.collapsed .mpx-metrics-body { display: none; }
+.mpx-metrics-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+.mpx-metric-chip {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mpx-metric-chip:hover { border-color: var(--accent-red); color: var(--accent-red); }
+.mpx-metric-chip.selected {
+  background: rgba(255,74,74,0.16);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+.mpx-metrics-stats {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
 /* Chaos Multiplex settings modal */
 #chaos-modal {
   position: fixed;

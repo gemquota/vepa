@@ -802,7 +802,7 @@ function renderLoop(now) {
     // Render (always, even when paused)
     if (renderer && particleBuffer) {
         renderer.paused = paused;
-        syncSprites(renderer, particleBuffer, particleCount, PARTICLE_STRIDE, worldSize, lawState);
+        syncSprites(renderer, particleView, particleCount, PARTICLE_STRIDE, worldSize, lawState);
     }
 }
 

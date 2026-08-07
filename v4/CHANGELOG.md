@@ -1,5 +1,16 @@
 # Changelog: VEPA v4
 
+## [4.6.25] - 2026-08-07
+
+### GPU performance & multiplex metrics drawer
+- **Zero-copy render path** — `asParticleView(buffer)` in `renderer.js` wraps raw `ArrayBuffer`/`SharedArrayBuffer` in a live `Float32Array` view instead of allocating a fresh copy every frame; `drawParticles` and `syncSprites` now consume the typed view directly (was ~1 MB/frame in the main sim, ~16 MB/frame across 16 multiplex shards).
+- **DPR cap** — renderers accept `opts.maxDpr` (default 2); multiplex previews run at 1.25× device-pixel-ratio. High-DPI displays no longer thrash the GPU during multiplexing.
+- **ECO render mode** — `renderFrame`/`drawParticles` support `{ eco }`: skips the reference grid and the soft-glow halo (2 arcs → 1 per particle). Multiplex defaults to `renderQuality: 'eco'`.
+- **GPU ECO toggle** — LIVE tab of the multiplex drawer (`#mpx-drawer-eco`, default on) switches previews between eco and full rendering live; the per-frame `shard.renderer.eco` sync makes the toggle fully reversible.
+- **Metrics bottom drawer** — collapsible `#mpx-metrics` bar on the multiplex overlay: per-shard fitness chips (`S01 0.74`, click to select) plus a `ALIVE · CAP · ΔSEL · ΔAVG · ITER` stats line, refreshed every 24 frames.
+- **Main sim** — `syncSprites` now takes `particleView` (typed array) instead of the raw buffer, dropping the per-frame copy on the main render path.
+- Tests: `tests/unit/renderer.test.js` +3 (`asParticleView`: same-instance, raw-buffer live view, SharedArrayBuffer view); `tests/unit/multiplex.test.js` +1 (`renderQuality` defaults to `eco`). `vepa4 syntax` + `vepa4 build` clean; full suite 608/611 at this commit (the 3 failures come from the separate uncommitted law RRP WIP, which stays outside this release).
+
 ## [4.6.24] - 2026-08-07
 
 ### Chaos Multiplex expansion — world import, FIT tab, iteration controls

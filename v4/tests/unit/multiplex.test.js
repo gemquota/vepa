@@ -254,6 +254,12 @@ describe('Multiplex fitness + iteration (v4.6.24)', () => {
     return laws;
   }
 
+  it('renderQuality defaults to eco for multiplex previews', () => {
+    expect(MULTIPLEX_DEFAULTS.renderQuality).toBe('eco');
+    const mx = createMultiplex(null);
+    expect(mx.config.renderQuality).toBe('eco');
+  });
+
   it('new defaults: pop scale, seed, substeps, keep-selected, iterate mode, import-on-exit', () => {
     expect(MULTIPLEX_DEFAULTS.populationScale).toBe(1);
     expect(MULTIPLEX_DEFAULTS.seed).toBe(0);

@@ -39,6 +39,8 @@ export function createMultiplexController(bus, getSource, applyShard) {
   let overlay = null;
   let grid = null;
   let drawer = null;
+  let metricsDrawer = null;
+  let metricsFrame = 0;
   let domReady = false;
 
   // ── DOM scaffolding (created lazily on first use) ──
@@ -54,6 +56,23 @@ export function createMultiplexController(bus, getSource, applyShard) {
     grid.id = GRID_ID;
     overlay.appendChild(grid);
     document.body.appendChild(overlay);
+
+    // Metrics bottom drawer — collapsible per-shard scores + live stats.
+    metricsDrawer = document.createElement('div');
+    metricsDrawer.id = 'mpx-metrics';
+    metricsDrawer.className = 'expanded';
+    metricsDrawer.innerHTML = `
+      <button id="mpx-metrics-toggle" class="mpx-metrics-toggle" type="button">▼ METRICS</button>
+      <div class="mpx-metrics-body">
+        <div id="mpx-metrics-chips" class="mpx-metrics-chips"></div>
+        <div id="mpx-metrics-stats" class="mpx-metrics-stats"></div>
+      </div>`;
+    overlay.appendChild(metricsDrawer);
+    metricsDrawer.querySelector('#mpx-metrics-toggle').addEventListener('click', () => {
+      metricsDrawer.classList.toggle('collapsed');
+      const btn = metricsDrawer.querySelector('#mpx-metrics-toggle');
+      if (btn) btn.textContent = metricsDrawer.classList.contains('collapsed') ? '▲ METRICS' : '▼ METRICS';
+    });
 
     // Right-edge drawer
     drawer = document.createElement('div');
@@ -173,6 +192,9 @@ export function createMultiplexController(bus, getSource, applyShard) {
               <span class="mpx-set-label">DRIFT</span>
               <input id="mpx-drawer-drift" type="range" min="0" max="0.05" step="0.005" value="0">
               <span class="mpx-set-value" id="mpx-drawer-drift-value">0</span>
+            </div>
+            <div class="mpx-set-row">
+              <label class="mpx-check"><input id="mpx-drawer-eco" type="checkbox" checked><span>GPU ECO</span></label>
             </div>
             <div class="mpx-set-row">
               <label class="mpx-check"><input id="mpx-drawer-import-on-exit" type="checkbox" checked><span>IMPORT ON EXIT</span></label>
@@ -363,6 +385,11 @@ export function createMultiplexController(bus, getSource, applyShard) {
     importOnExit.addEventListener('change', (e) => {
       mx.config.importOnExit = e.target.checked;
     });
+
+    const eco = drawer.querySelector('#mpx-drawer-eco');
+    eco.addEventListener('change', (e) => {
+      mx.config.renderQuality = e.target.checked ? 'eco' : 'full';
+    });
   }
 
   function syncDrawerSettings() {
@@ -425,6 +452,8 @@ export function createMultiplexController(bus, getSource, applyShard) {
     if (drv) drv.textContent = String(mx.config.variationDrift ?? 0);
     const io = drawer.querySelector('#mpx-drawer-import-on-exit');
     if (io) io.checked = mx.config.importOnExit !== false;
+    const eco = drawer.querySelector('#mpx-drawer-eco');
+    if (eco) eco.checked = mx.config.renderQuality !== 'full';
   }
 
   /** Build the 14 metric weight/mode rows (FIT tab). */
@@ -647,6 +676,28 @@ export function createMultiplexController(bus, getSource, applyShard) {
     updateDrawer();
   }
 
+  /** Per-shard fitness chips + live stats in the metrics bottom drawer. */
+  function updateMetricsDrawer() {
+    if (!metricsDrawer || !mx.active || !mx.shards.length) return;
+    const chips = metricsDrawer.querySelector('#mpx-metrics-chips');
+    const stats = metricsDrawer.querySelector('#mpx-metrics-stats');
+    const report = getFitnessReport(mx);
+    if (chips) {
+      chips.innerHTML = report.perShard.map((e) => {
+        const sel = e.id === mx.selected ? ' selected' : '';
+        return `<button class="mpx-metric-chip${sel}" data-shard="${e.id}" type="button">S${String(e.id + 1).padStart(2, '0')} ${e.fitness.toFixed(2)}</button>`;
+      }).join('');
+      chips.querySelectorAll('.mpx-metric-chip').forEach((c) => {
+        c.addEventListener('click', () => selectShard(mx, parseInt(c.dataset.shard, 10)));
+      });
+    }
+    if (stats) {
+      const sum = summarizeMultiplex(mx);
+      const sel = report.perShard.find((e) => e.id === mx.selected);
+      stats.textContent = `ALIVE ${sum.alive} · CAP ${sum.populationCap} · ΔSEL ${sel ? sel.metrics.delta.toFixed(2) : '—'} · ΔAVG ${report.avgDelta.toFixed(2)} · ITER ${mx.iteration}`;
+    }
+  }
+
   function updateDrawer() {
     if (!drawer) return;
     syncDrawerSettings();
@@ -657,6 +708,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
     if (selStat) selStat.textContent = `SELECTED S${String(mx.selected + 1).padStart(2, '0')}`;
     if (iterStat) iterStat.textContent = `ITERATION ${mx.iteration}`;
     updateFitReadout();
+    updateMetricsDrawer();
   }
 
   // Re-select / stats refresh comes through the bus too.
@@ -672,7 +724,9 @@ export function createMultiplexController(bus, getSource, applyShard) {
     iterate,
     isActive: () => mx.active,
     step: (dt, simSpeed, worldSize) => {
-      if (mx.active) stepMultiplex(mx, dt, simSpeed, worldSize);
+      if (!mx.active) return;
+      stepMultiplex(mx, dt, simSpeed, worldSize);
+      if (++metricsFrame % 24 === 0) updateMetricsDrawer();
     },
     render: (worldSize) => {
       if (mx.active) renderMultiplex(mx, worldSize);

@@ -48,3 +48,19 @@ The right-edge drawer is now tabbed **LIVE / FIT**.
 `exit()` → if `importOnExit`, the selected shard is copied into the main world buffers
 (particles + species DNA + law state via `copyShardToWorld`), then the main loop resets the
 offspring ring and intelligence engines and re-syncs species/DNA/law panels.
+
+
+## 5. GPU performance & metrics drawer (v4.6.25)
+
+Multiplex rendering is tuned for GPU headroom so 16 parallel realities stay smooth.
+
+- **Zero-copy views** — preview canvases consume the shard's `Float32Array` view
+  (`asParticleView`) instead of a per-frame buffer copy.
+- **DPR cap** — previews render at 1.25× device-pixel-ratio (`maxDpr`), the main sim at 2×.
+- **ECO render mode** — skips the reference grid and the per-particle soft-glow halo;
+  on by default for previews (`renderQuality: 'eco'`).
+- **GPU ECO toggle** — LIVE tab switch (`#mpx-drawer-eco`) flips previews between
+  eco and full rendering live.
+- **Metrics drawer** — the collapsible bottom bar (`#mpx-metrics`) shows per-shard
+  fitness chips (`S01 0.74`, click to select) and a `ALIVE · CAP · ΔSEL · ΔAVG · ITER`
+  stats line, refreshed every 24 frames.

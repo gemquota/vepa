@@ -48,6 +48,7 @@ export const MULTIPLEX_DEFAULTS = {
   keepSelected: false,       // iterate leaves the selected shard untouched (anchor)
   selectAfterIterate: 'none', // 'none' | 'fittest' | 'follow'
   importOnExit: true,        // exit imports the selected shard into the main world
+  renderQuality: 'eco',      // 'eco' | 'full' — previews skip halos/grid, DPR 1.25
   fitnessWeights: {
     population: 1,
     growth: 0,
@@ -650,10 +651,13 @@ export function copyShardToWorld(shard, target) {
 
 /** Render every shard to its canvas (shared camera). */
 export function renderMultiplex(mx, worldSize) {
+  const eco = (mx.config && mx.config.renderQuality) !== 'full';
   for (const shard of mx.shards) {
     if (!shard.renderer) continue;
     if (shard.count > 0) {
-      renderFrame(shard.renderer, shard.buffer, shard.count, PARTICLE_STRIDE, worldSize);
+      // Pass the typed view (zero-copy) + eco flags for the preview canvases.
+      shard.renderer.eco = eco;
+      renderFrame(shard.renderer, shard.view, shard.count, PARTICLE_STRIDE, worldSize, { eco });
     } else {
       const { ctx, width, height } = shard.renderer;
       ctx.clearRect(0, 0, width, height);
@@ -944,7 +948,7 @@ function mountShards(mx) {
 
     shard.wrapper = wrap;
     shard.canvas = canvas;
-    shard.renderer = createRenderer(canvas, MAX_PARTICLES);
+    shard.renderer = createRenderer(canvas, MAX_PARTICLES, { maxDpr: 1.25, eco: true });
     // The camera module keeps a single shared camera object, so gestures on
     // any shard move every shard (and the main sim) simultaneously.
     initCamera(canvas, WORLD_SIZE);

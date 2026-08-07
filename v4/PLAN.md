@@ -59,3 +59,12 @@ npx vite build                                        # clean bundle
   drawer tabs with per-aspect variation, POP SCALE, SEED, SUBSTEPS, AFTER ITERATE
   (NONE/FITTEST/FOLLOW), KEEP SELECTED, and IMPORT ON EXIT. See `v4/CHANGELOG.md` [4.6.24]
   and `docs/mechanics/chaos_multiplex.md` §4.
+
+## Milestone note (v4.6.25 — 2026-08-07)
+
+- **GPU performance & multiplex metrics drawer**: zero-copy particle views
+  (`asParticleView`) on the main + multiplex render paths, DPR caps (main 2×, previews
+  1.25×), ECO render mode (no grid/halo) with a live GPU ECO toggle in the LIVE tab, and
+  a collapsible metrics bottom drawer with per-shard fitness chips and an
+  ALIVE/CAP/ΔSEL/ΔAVG/ITER stats line. See `v4/CHANGELOG.md` [4.6.25] and
+  `docs/mechanics/chaos_multiplex.md` §5.
