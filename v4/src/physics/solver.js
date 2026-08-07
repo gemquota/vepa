@@ -9,6 +9,7 @@ import {
   STRIDE_INDEXES,
   DNA_INDEXES,
   LAW_INDEXES,
+  LAW_COUNT,
   WORLD_SIZE,
 } from '../constants.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
@@ -109,7 +110,7 @@ import {
   applyHistoryCalc,
   setBuffer,
 } from './laws.js';
-import { computeSynergy } from './synergy.js';
+import { createSynergyCache } from './synergy.js';
 import { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation } from './lawgroups/physicsLaws.js';
 import { applyAdiabatic, applyCompression, applyExpansion, applyEquilibrium, applyLatentHeat, applyRunaway } from './lawgroups/thermoLaws.js';
 import { applySymbiosis, applyParasite, applyHibernation, applyImmunity } from './lawgroups/biologyLaws.js';
@@ -191,6 +192,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true)
   ) return;
 
+  // Per-tick law cache — the law state is fixed for the whole tick, so the
+  // synergy multipliers and on/off flags are pure functions of it. Computing
+  // them once (128 entries) instead of per particle/pair removes tens of
+  // thousands of branch chains per tick from the hot loops.
+  const syn = createSynergyCache(lawState);
+  const active = new Uint8Array(LAW_COUNT);
+  for (let i = 0; i < LAW_COUNT; i++) active[i] = isSet(lawState, i) ? 1 : 0;
+
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
   const WP = runtimeConfig.worldParams || {};
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
@@ -226,15 +235,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   for (let i = 0; i < particleCount; i++) {
     localDt[i] = applyTimeDilation(
       lawState, view, i * stride,
-      computeSynergy(lawState, LAW_INDEXES.TIME_DILATION)
+      syn[LAW_INDEXES.TIME_DILATION]
     );
   }
 
   // ── Phase 2b: Astral souls — ghosts persist and fade. Soul particles
   //    (DEAD=0.5) are excluded from the pairwise/integration loop, so they
   //    are processed here when the ASTRAL law governs them. ──
-  if (isSet(lawState, LAW_INDEXES.ASTRAL)) {
-    const astralSynergy = computeSynergy(lawState, LAW_INDEXES.ASTRAL);
+  if (active[LAW_INDEXES.ASTRAL]) {
+    const astralSynergy = syn[LAW_INDEXES.ASTRAL];
     for (let i = 0; i < particleCount; i++) {
       const base = i * stride;
       if (view[base + S.DEAD] >= 0.5) {
@@ -345,8 +354,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Gravity ──
 
-      if (isSet(lawState, LAW_INDEXES.GRAV)) {
-        const gravSynergy = computeSynergy(lawState, LAW_INDEXES.GRAV);
+      if (active[LAW_INDEXES.GRAV]) {
+        const gravSynergy = syn[LAW_INDEXES.GRAV];
         const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy);
         if (gravForce) {
           // Gravitational collapse: stars pull nearby matter much harder
@@ -374,15 +383,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       //    instead. FUSION_TIME DNA is how long sub-threshold pairs must stay
       //    in very close proximity before they fuse anyway (proximity dwell,
       //    tracked in the free MITOSIS_TIMER / PARTNER_ID stride fields).
-      if (isSet(lawState, LAW_INDEXES.COLL) || isSet(lawState, LAW_INDEXES.ACCR)) {
+      if (active[LAW_INDEXES.COLL] || active[LAW_INDEXES.ACCR]) {
         const m1 = view[iBase + S.MASS];
         const m2 = view[jBase + S.MASS];
         if (m1 <= 0 || m2 <= 0) continue;
         const r1 = view[iBase + S.RADIUS];
         const r2 = view[jBase + S.RADIUS];
         const overlap = (r1 + r2) - dist;
-        const collOn = isSet(lawState, LAW_INDEXES.COLL);
-        const accrOn = isSet(lawState, LAW_INDEXES.ACCR);
+        const collOn = active[LAW_INDEXES.COLL];
+        const accrOn = active[LAW_INDEXES.ACCR];
 
         // ACCR proximity-dwell bookkeeping: reset the timer whenever the
         // tracked partner leaves overlap range so "very close proximity"
@@ -527,28 +536,35 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Affinity ──
 
-      const affinitySynergy = computeSynergy(lawState, LAW_INDEXES.AFFINITY);
-      const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, affinitySynergy);
-      if (affinityForce) {
-        ax += affinityForce.ax;
-        ay += affinityForce.ay;
-        az += affinityForce.az;
+      if (active[LAW_INDEXES.AFFINITY]) {
+        const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, syn[LAW_INDEXES.AFFINITY]);
+        if (affinityForce) {
+          ax += affinityForce.ax;
+          ay += affinityForce.ay;
+          az += affinityForce.az;
+        }
       }
 
       // ── Chemistry modifier ──
 
-      const chemSynergy = computeSynergy(lawState, LAW_INDEXES.CATALYSIS_LAW);
-      const chemMult = applyChemistry(lawState, view, iBase, jBase, distSq, chemSynergy);
-      if (chemMult !== 1.0) {
-        ax *= chemMult;
-        ay *= chemMult;
-        az *= chemMult;
+      if (
+        active[LAW_INDEXES.CATALYSIS_LAW] ||
+        active[LAW_INDEXES.SOLVATION] ||
+        active[LAW_INDEXES.ACIDITY] ||
+        active[LAW_INDEXES.CRYSTALLIZATION]
+      ) {
+        const chemMult = applyChemistry(lawState, view, iBase, jBase, distSq, syn[LAW_INDEXES.CATALYSIS_LAW]);
+        if (chemMult !== 1.0) {
+          ax *= chemMult;
+          ay *= chemMult;
+          az *= chemMult;
+        }
       }
 
       // ── Polymer ──
 
-      if (isSet(lawState, LAW_INDEXES.POLYMER)) {
-        const polySynergy = computeSynergy(lawState, LAW_INDEXES.POLYMER);
+      if (active[LAW_INDEXES.POLYMER]) {
+        const polySynergy = syn[LAW_INDEXES.POLYMER];
         applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, polySynergy, stride);
       }
 
@@ -556,8 +572,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Bond ──
 
-      if (isSet(lawState, LAW_INDEXES.BOND)) {
-        const bondSynergy = computeSynergy(lawState, LAW_INDEXES.BOND);
+      if (active[LAW_INDEXES.BOND]) {
+        const bondSynergy = syn[LAW_INDEXES.BOND];
         const bondForce = applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, bondSynergy, nCount);
         if (bondForce) {
           ax += bondForce.ax;
@@ -568,46 +584,47 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       // ── Reduction ──
 
-      if (isSet(lawState, LAW_INDEXES.REDUCTION)) {
-        const redSynergy = computeSynergy(lawState, LAW_INDEXES.REDUCTION);
+      if (active[LAW_INDEXES.REDUCTION]) {
+        const redSynergy = syn[LAW_INDEXES.REDUCTION];
         applyReduction(iBase, jBase, stride, redSynergy);
       }
 
       // ── Alloy ──
 
-      if (isSet(lawState, LAW_INDEXES.ALLOY)) {
-        const alloySynergy = computeSynergy(lawState, LAW_INDEXES.ALLOY);
+      if (active[LAW_INDEXES.ALLOY]) {
+        const alloySynergy = syn[LAW_INDEXES.ALLOY];
         applyAlloy(lawState, view, iBase, jBase, stride, dist, alloySynergy);
       }
 
       // ── Heat Transfer ──
 
-      if (isSet(lawState, LAW_INDEXES.HEAT) || isSet(lawState, LAW_INDEXES.COLD)) {
-        const heatSynergy = computeSynergy(lawState, LAW_INDEXES.HEAT);
+      if (active[LAW_INDEXES.HEAT] || active[LAW_INDEXES.COLD]) {
+        const heatSynergy = syn[LAW_INDEXES.HEAT];
         applyHeatTransfer(lawState, view, iBase, jBase, dist, localTimeStep, heatSynergy);
       }
 
       // ── Order ──
 
-      const orderSynergy = computeSynergy(lawState, LAW_INDEXES.ORDER);
-      const orderForce = applyOrder(lawState, view, iBase, jBase, distSq, orderSynergy);
-      if (orderForce) {
-        ax += orderForce.ax;
-        ay += orderForce.ay;
-        az += orderForce.az;
+      if (active[LAW_INDEXES.ORDER]) {
+        const orderForce = applyOrder(lawState, view, iBase, jBase, distSq, syn[LAW_INDEXES.ORDER]);
+        if (orderForce) {
+          ax += orderForce.ax;
+          ay += orderForce.ay;
+          az += orderForce.az;
+        }
       }
 
       // ── Soul ──
 
-      if (isSet(lawState, LAW_INDEXES.SOUL_LAW)) {
-        const soulSynergy = computeSynergy(lawState, LAW_INDEXES.SOUL_LAW);
+      if (active[LAW_INDEXES.SOUL_LAW]) {
+        const soulSynergy = syn[LAW_INDEXES.SOUL_LAW];
         applySoul(lawState, view, iBase, jBase, distSq, soulSynergy);
       }
 
       // ── Mind ──
 
-      if (isSet(lawState, LAW_INDEXES.MIND)) {
-        const mindSynergy = computeSynergy(lawState, LAW_INDEXES.MIND);
+      if (active[LAW_INDEXES.MIND]) {
+        const mindSynergy = syn[LAW_INDEXES.MIND];
         const mindEffect = applyMind(lawState, view, iBase, jBase, distSq, mindSynergy);
         if (mindEffect && mindEffect.signalBoost) {
           view[iBase + S.SIGNAL] += mindEffect.signalBoost;
@@ -615,14 +632,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Energy Transfer ──
-      if (isSet(lawState, LAW_INDEXES.ENERGY)) {
-        const energySynergy = computeSynergy(lawState, LAW_INDEXES.ENERGY);
+      if (active[LAW_INDEXES.ENERGY]) {
+        const energySynergy = syn[LAW_INDEXES.ENERGY];
         applyEnergyTransfer(lawState, view, iBase, jBase, distSq, energySynergy);
       }
 
       // ── Solvation ──
-      if (isSet(lawState, LAW_INDEXES.SOLVATION)) {
-        const solvSynergy = computeSynergy(lawState, LAW_INDEXES.SOLVATION);
+      if (active[LAW_INDEXES.SOLVATION]) {
+        const solvSynergy = syn[LAW_INDEXES.SOLVATION];
         const solvMult = applySolvationEffect(lawState, view, iBase, jBase, distSq, solvSynergy);
         if (solvMult !== 1.0) {
           ax *= solvMult;
@@ -640,14 +657,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Acidity ──
-      if (isSet(lawState, LAW_INDEXES.ACIDITY)) {
-        const acidSynergy = computeSynergy(lawState, LAW_INDEXES.ACIDITY);
+      if (active[LAW_INDEXES.ACIDITY]) {
+        const acidSynergy = syn[LAW_INDEXES.ACIDITY];
         applyAcidityEffect(lawState, view, iBase, jBase, localTimeStep, acidSynergy);
       }
 
       // ── Chirality ──
-      if (isSet(lawState, LAW_INDEXES.CHIRALITY)) {
-        const chirSynergy = computeSynergy(lawState, LAW_INDEXES.CHIRALITY);
+      if (active[LAW_INDEXES.CHIRALITY]) {
+        const chirSynergy = syn[LAW_INDEXES.CHIRALITY];
         const chirForce = applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, chirSynergy);
         if (chirForce) {
           ax += chirForce.ax;
@@ -657,8 +674,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Crystallization ──
-      if (isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)) {
-        const crysSynergy = computeSynergy(lawState, LAW_INDEXES.CRYSTALLIZATION);
+      if (active[LAW_INDEXES.CRYSTALLIZATION]) {
+        const crysSynergy = syn[LAW_INDEXES.CRYSTALLIZATION];
         const crysForce = applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, dist, crysSynergy);
         if (crysForce) {
           ax += crysForce.ax;
@@ -668,7 +685,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Signal exchange (communication DNA, gated by COMMS law) ──
-      if (isSet(lawState, LAW_INDEXES.COMMS) && ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01)) {
+      if (active[LAW_INDEXES.COMMS] && ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01)) {
         readDNAFromCache(view, jBase, _dnaJ);
         const sigForce = applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, dist, dnaI, _dnaJ, localTimeStep);
         if (sigForce) {
@@ -679,8 +696,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Track ──
-      if (isSet(lawState, LAW_INDEXES.TRACK)) {
-        const trackSynergy = computeSynergy(lawState, LAW_INDEXES.TRACK);
+      if (active[LAW_INDEXES.TRACK]) {
+        const trackSynergy = syn[LAW_INDEXES.TRACK];
         const trackForce = applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, dist, trackSynergy);
         if (trackForce) {
           ax += trackForce.ax;
@@ -690,7 +707,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Predation (mass-difference pursuit + gene absorption) ──
-      if (isSet(lawState, LAW_INDEXES.PREDATION)) {
+      if (active[LAW_INDEXES.PREDATION]) {
         const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist, prng);
         if (predForce) {
           ax += predForce.ax;
@@ -700,14 +717,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // Telepathy
-      if (isSet(lawState, LAW_INDEXES.TELEPATHY)) {
-        const telepathySynergy = computeSynergy(lawState, LAW_INDEXES.TELEPATHY);
+      if (active[LAW_INDEXES.TELEPATHY]) {
+        const telepathySynergy = syn[LAW_INDEXES.TELEPATHY];
         applyTelepathy(lawState, view, iBase, jBase, distSq, telepathySynergy, localTimeStep);
       }
 
       // Clairvoyance
-      if (isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)) {
-        const clairvoyanceSynergy = computeSynergy(lawState, LAW_INDEXES.CLAIRVOYANCE);
+      if (active[LAW_INDEXES.CLAIRVOYANCE]) {
+        const clairvoyanceSynergy = syn[LAW_INDEXES.CLAIRVOYANCE];
         const clairForce = applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, clairvoyanceSynergy, localTimeStep);
         if (clairForce) {
           ax += clairForce.ax;
@@ -717,8 +734,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // Precognition
-      if (isSet(lawState, LAW_INDEXES.PRECOGNITION)) {
-        const precogSynergy = computeSynergy(lawState, LAW_INDEXES.PRECOGNITION);
+      if (active[LAW_INDEXES.PRECOGNITION]) {
+        const precogSynergy = syn[LAW_INDEXES.PRECOGNITION];
         const precogForce = applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, precogSynergy, localTimeStep);
         if (precogForce) {
           ax += precogForce.ax;
@@ -728,15 +745,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Electromagnetism (pairwise) ──
-      if (isSet(lawState, LAW_INDEXES.CHARGE_LAW)) {
-        const chargeForce = applyChargeForce(iBase, jBase, dx, dy, dz, dist, 0.8 * computeSynergy(lawState, LAW_INDEXES.CHARGE_LAW));
+      if (active[LAW_INDEXES.CHARGE_LAW]) {
+        const chargeForce = applyChargeForce(iBase, jBase, dx, dy, dz, dist, 0.8 * syn[LAW_INDEXES.CHARGE_LAW]);
         if (chargeForce) {
           ax += chargeForce.ax;
           ay += chargeForce.ay;
           az += chargeForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.CAPACITANCE)) {
+      if (active[LAW_INDEXES.CAPACITANCE]) {
         const capForce = applyStoredChargeForce(iBase, jBase, dx, dy, dz, dist, 0.4);
         if (capForce) {
           ax += capForce.ax;
@@ -744,15 +761,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += capForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.MAGNETISM)) {
-        const magForce = applyMagneticForce(iBase, jBase, dx, dy, dz, dist, 0.4 * computeSynergy(lawState, LAW_INDEXES.MAGNETISM));
+      if (active[LAW_INDEXES.MAGNETISM]) {
+        const magForce = applyMagneticForce(iBase, jBase, dx, dy, dz, dist, 0.4 * syn[LAW_INDEXES.MAGNETISM]);
         if (magForce) {
           ax += magForce.ax;
           ay += magForce.ay;
           az += magForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.RESONANCE)) {
+      if (active[LAW_INDEXES.RESONANCE]) {
         const resForce = applyResonanceForce(iBase, jBase, dx, dy, dz, dist, 0.2);
         if (resForce) {
           ax += resForce.ax;
@@ -760,7 +777,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += resForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.FLUX)) {
+      if (active[LAW_INDEXES.FLUX]) {
         const fluxForce = applyFluxForce(iBase, jBase, dx, dy, dz, dist, 0.4);
         if (fluxForce) {
           ax += fluxForce.ax;
@@ -768,17 +785,17 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += fluxForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.INDUCTANCE)) applyInductance(iBase, jBase, dist, 0.05 * computeSynergy(lawState, LAW_INDEXES.INDUCTANCE));
-      if (isSet(lawState, LAW_INDEXES.CURRENT)) applyCurrentTransfer(iBase, jBase, distSq, 0.05 * computeSynergy(lawState, LAW_INDEXES.CURRENT));
-      if (isSet(lawState, LAW_INDEXES.IONIZATION)) {
+      if (active[LAW_INDEXES.INDUCTANCE]) applyInductance(iBase, jBase, dist, 0.05 * syn[LAW_INDEXES.INDUCTANCE]);
+      if (active[LAW_INDEXES.CURRENT]) applyCurrentTransfer(iBase, jBase, distSq, 0.05 * syn[LAW_INDEXES.CURRENT]);
+      if (active[LAW_INDEXES.IONIZATION]) {
         const relSpeed = Math.sqrt(
           (view[iBase + S.VEL_X] - view[jBase + S.VEL_X]) ** 2 +
           (view[iBase + S.VEL_Y] - view[jBase + S.VEL_Y]) ** 2 +
           (view[iBase + S.VEL_Z] - view[jBase + S.VEL_Z]) ** 2,
         );
-        applyIonization(iBase, jBase, dist, relSpeed, 0.6 * computeSynergy(lawState, LAW_INDEXES.IONIZATION));
+        applyIonization(iBase, jBase, dist, relSpeed, 0.6 * syn[LAW_INDEXES.IONIZATION]);
       }
-      if (isSet(lawState, LAW_INDEXES.DISCHARGE)) {
+      if (active[LAW_INDEXES.DISCHARGE]) {
         // Spark direction: toward the neighbor whose stored charge is most
         // opposite to this particle's (the potential difference it will bridge).
         const ci = view[iBase + S.CHARGE] || 0;
@@ -795,15 +812,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Information (pairwise) ──
-      if (isSet(lawState, LAW_INDEXES.SYMBOL)) {
-        const symForce = applySymbolForce(iBase, jBase, dx, dy, dz, dist, 0.3 * computeSynergy(lawState, LAW_INDEXES.SYMBOL));
+      if (active[LAW_INDEXES.SYMBOL]) {
+        const symForce = applySymbolForce(iBase, jBase, dx, dy, dz, dist, 0.3 * syn[LAW_INDEXES.SYMBOL]);
         if (symForce) {
           ax += symForce.ax;
           ay += symForce.ay;
           az += symForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.METRIC)) {
+      if (active[LAW_INDEXES.METRIC]) {
         const metForce = applyMetricForce(iBase, jBase, dx, dy, dz, dist, 0.2);
         if (metForce) {
           ax += metForce.ax;
@@ -811,15 +828,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += metForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.PREDICT)) {
-        const predForce = applyPredictForce(iBase, jBase, dx, dy, dz, dist, 0.3 * computeSynergy(lawState, LAW_INDEXES.PREDICT));
+      if (active[LAW_INDEXES.PREDICT]) {
+        const predForce = applyPredictForce(iBase, jBase, dx, dy, dz, dist, 0.3 * syn[LAW_INDEXES.PREDICT]);
         if (predForce) {
           ax += predForce.ax;
           ay += predForce.ay;
           az += predForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.PATTERN)) {
+      if (active[LAW_INDEXES.PATTERN]) {
         const patForce = applyPatternForce(iBase, jBase, dx, dy, dz, dist, 0.2);
         if (patForce) {
           ax += patForce.ax;
@@ -827,98 +844,98 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           az += patForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.STIGMERGY)) {
-        const stigForce = applyStigmergyForce(iBase, jBase, 0.3 * computeSynergy(lawState, LAW_INDEXES.STIGMERGY));
+      if (active[LAW_INDEXES.STIGMERGY]) {
+        const stigForce = applyStigmergyForce(iBase, jBase, 0.3 * syn[LAW_INDEXES.STIGMERGY]);
         if (stigForce) {
           ax += stigForce.ax;
           ay += stigForce.ay;
           az += stigForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.LEARN)) applyLearnAlign(iBase, jBase, 0.05 * computeSynergy(lawState, LAW_INDEXES.LEARN));
-      if (isSet(lawState, LAW_INDEXES.MEMORY)) applyMemoryRefresh(iBase, jBase);
-      if (isSet(lawState, LAW_INDEXES.CODE)) applyCodeBlend(iBase, jBase, distSq, 0.05 * computeSynergy(lawState, LAW_INDEXES.CODE));
-      if (isSet(lawState, LAW_INDEXES.PROTOCOL)) applyProtocolSync(iBase, jBase, 0.1 * computeSynergy(lawState, LAW_INDEXES.PROTOCOL));
-      if (isSet(lawState, LAW_INDEXES.SIGNAL_BOOST)) applySignalBoost(iBase, jBase, 0.08 * computeSynergy(lawState, LAW_INDEXES.SIGNAL_BOOST));
-      if (isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY)) {
-        const scForce = applySuperconductivity(iBase, jBase, 0.05 * computeSynergy(lawState, LAW_INDEXES.SUPERCONDUCTIVITY));
+      if (active[LAW_INDEXES.LEARN]) applyLearnAlign(iBase, jBase, 0.05 * syn[LAW_INDEXES.LEARN]);
+      if (active[LAW_INDEXES.MEMORY]) applyMemoryRefresh(iBase, jBase);
+      if (active[LAW_INDEXES.CODE]) applyCodeBlend(iBase, jBase, distSq, 0.05 * syn[LAW_INDEXES.CODE]);
+      if (active[LAW_INDEXES.PROTOCOL]) applyProtocolSync(iBase, jBase, 0.1 * syn[LAW_INDEXES.PROTOCOL]);
+      if (active[LAW_INDEXES.SIGNAL_BOOST]) applySignalBoost(iBase, jBase, 0.08 * syn[LAW_INDEXES.SIGNAL_BOOST]);
+      if (active[LAW_INDEXES.SUPERCONDUCTIVITY]) {
+        const scForce = applySuperconductivity(iBase, jBase, 0.05 * syn[LAW_INDEXES.SUPERCONDUCTIVITY]);
         if (scForce) {
           ax += scForce.ax;
           ay += scForce.ay;
           az += scForce.az;
         }
       }
-      if (isSet(lawState, LAW_INDEXES.LANGUAGE)) applyLanguage(iBase, jBase, 0.25 * computeSynergy(lawState, LAW_INDEXES.LANGUAGE));
-      if (isSet(lawState, LAW_INDEXES.CULTURE)) applyCulture(iBase, jBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.CULTURE));
+      if (active[LAW_INDEXES.LANGUAGE]) applyLanguage(iBase, jBase, 0.25 * syn[LAW_INDEXES.LANGUAGE]);
+      if (active[LAW_INDEXES.CULTURE]) applyCulture(iBase, jBase, 0.5 * syn[LAW_INDEXES.CULTURE]);
 
       // ── 8x16 expansion (pairwise) ──
 
       // Physics
-      if (isSet(lawState, LAW_INDEXES.TIDE)) {
+      if (active[LAW_INDEXES.TIDE]) {
         const tideForce = applyTide(view, iBase, jBase, dx, dy, dz, dist, 0.3);
         if (tideForce) { ax += tideForce.ax; ay += tideForce.ay; az += tideForce.az; }
       }
-      if (isSet(lawState, LAW_INDEXES.ELASTICITY)) {
+      if (active[LAW_INDEXES.ELASTICITY]) {
         const elasForce = applyElasticity(view, iBase, jBase, dx, dy, dz, dist, 1.0);
         if (elasForce) { ax += elasForce.ax; ay += elasForce.ay; az += elasForce.az; }
       }
 
       // Biology
-      if (isSet(lawState, LAW_INDEXES.SYMBIOSIS)) applySymbiosis(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.PARASITE)) applyParasite(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.SYMBIOSIS]) applySymbiosis(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.PARASITE]) applyParasite(view, iBase, jBase, 0.5);
 
       // Chemistry
-      if (isSet(lawState, LAW_INDEXES.ELECTROLYSIS)) applyElectrolysis(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.PRECIPITATION)) applyPrecipitation(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.NEUTRALIZATION)) applyNeutralization(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.STOICHIOMETRY)) applyStoichiometry(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.AUTOCATALYSIS)) applyAutocatalysis(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.ELECTROLYSIS]) applyElectrolysis(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.PRECIPITATION]) applyPrecipitation(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.NEUTRALIZATION]) applyNeutralization(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.STOICHIOMETRY]) applyStoichiometry(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.AUTOCATALYSIS]) applyAutocatalysis(view, iBase, jBase, 0.5);
 
       // Thermodynamics
-      if (isSet(lawState, LAW_INDEXES.COMPRESSION)) applyCompression(view, iBase, jBase, dist, 0.5);
-      if (isSet(lawState, LAW_INDEXES.EQUILIBRIUM)) applyEquilibrium(view, iBase, jBase, 0.3);
+      if (active[LAW_INDEXES.COMPRESSION]) applyCompression(view, iBase, jBase, dist, 0.5);
+      if (active[LAW_INDEXES.EQUILIBRIUM]) applyEquilibrium(view, iBase, jBase, 0.3);
 
       // Electromagnetism
-      if (isSet(lawState, LAW_INDEXES.POLARIZATION)) applyPolarization(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.POLARIZATION]) applyPolarization(view, iBase, jBase, 0.5);
 
       // Information
-      if (isSet(lawState, LAW_INDEXES.NAVIGATION)) {
+      if (active[LAW_INDEXES.NAVIGATION]) {
         const navForce = applyNavigation(view, iBase, jBase, dx, dy, dz, dist, 0.5);
         if (navForce) { ax += navForce.ax; ay += navForce.ay; az += navForce.az; }
       }
 
       // Metaphysics
-      if (isSet(lawState, LAW_INDEXES.PERCEPTION)) {
+      if (active[LAW_INDEXES.PERCEPTION]) {
         const perForce = applyPerception(view, iBase, jBase, dist, 0.5);
         if (perForce) { ax += perForce.ax; ay += perForce.ay; az += perForce.az; }
       }
-      if (isSet(lawState, LAW_INDEXES.SYNCHRONICITY)) {
+      if (active[LAW_INDEXES.SYNCHRONICITY]) {
         const syncForce = applySynchronicity(view, iBase, jBase, 0.5);
         if (syncForce) { ax += syncForce.ax; ay += syncForce.ay; az += syncForce.az; }
       }
 
       // Quantum
-      if (isSet(lawState, LAW_INDEXES.COHERENCE)) {
+      if (active[LAW_INDEXES.COHERENCE]) {
         const cohForce = applyCoherence(view, iBase, jBase, 0.5);
         if (cohForce) { ax += cohForce.ax; ay += cohForce.ay; az += cohForce.az; }
       }
-      if (isSet(lawState, LAW_INDEXES.BOSONIC)) {
+      if (active[LAW_INDEXES.BOSONIC]) {
         const bosForce = applyBosonic(view, iBase, jBase, dx, dy, dz, dist, 0.5);
         if (bosForce) { ax += bosForce.ax; ay += bosForce.ay; az += bosForce.az; }
       }
-      if (isSet(lawState, LAW_INDEXES.FERMIONIC)) {
+      if (active[LAW_INDEXES.FERMIONIC]) {
         const ferForce = applyFermionic(view, iBase, jBase, dx, dy, dz, dist, 0.5);
         if (ferForce) { ax += ferForce.ax; ay += ferForce.ay; az += ferForce.az; }
       }
-      if (isSet(lawState, LAW_INDEXES.OBSERVER)) applyObserver(view, iBase, jBase, 0.5);
-      if (isSet(lawState, LAW_INDEXES.ANTIMATTER)) applyAntimatter(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.OBSERVER]) applyObserver(view, iBase, jBase, 0.5);
+      if (active[LAW_INDEXES.ANTIMATTER]) applyAntimatter(view, iBase, jBase, 0.5);
 
       // ── New law types (pairwise) ──
 
       // Singularity — extreme inward pull from a supermassive neighbour,
       // then absorption if i crosses the hole's event horizon.
-      if (isSet(lawState, LAW_INDEXES.SINGULARITY)) {
-        const singSynergy = computeSynergy(lawState, LAW_INDEXES.SINGULARITY);
+      if (active[LAW_INDEXES.SINGULARITY]) {
+        const singSynergy = syn[LAW_INDEXES.SINGULARITY];
         const singForce = applySingularityForce(iBase, jBase, dx, dy, dz, dist, 0.5 * singSynergy);
         if (singForce) {
           ax += singForce.ax;
@@ -932,7 +949,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // Entanglement — touching particles forge a non-local quantum link.
-      if (isSet(lawState, LAW_INDEXES.ENTANGLEMENT)) {
+      if (active[LAW_INDEXES.ENTANGLEMENT]) {
         applyEntanglePair(iBase, jBase, dist);
       }
     }
@@ -955,7 +972,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Non-pairwise laws ──
 
     // Planetary gravity
-    const planetSynergy = computeSynergy(lawState, LAW_INDEXES.PLANETARY);
+    const planetSynergy = syn[LAW_INDEXES.PLANETARY];
     const planetForce = applyPlanetary(lawState, view, iBase, px, py, pz, worldSize, planetSynergy);
     if (planetForce) {
       ax += planetForce.ax;
@@ -964,7 +981,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // Void
-    const voidSynergy = computeSynergy(lawState, LAW_INDEXES.VOID);
+    const voidSynergy = syn[LAW_INDEXES.VOID];
     const voidForce = applyVoid(lawState, view, iBase, px, py, pz, worldSize, voidSynergy);
     if (voidForce) {
       ax += voidForce.ax;
@@ -974,19 +991,19 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // Dimensionality
     vz += applyDimensionality(lawState, view, iBase, prng, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.DIMENSIONALITY));
+      syn[LAW_INDEXES.DIMENSIONALITY]);
 
     // Chaos
     applyChaos(lawState, view, iBase, prng, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.CHAOS));
+      syn[LAW_INDEXES.CHAOS]);
 
     // Soul decay — souls dissipate slowly unless replenished
     applySoulDecay(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.SOUL_LAW));
+      syn[LAW_INDEXES.SOUL_LAW]);
 
     // Fate — per-species drifting destiny point
     const fateForce = applyFate(lawState, view, iBase, px, py, pz, worldSize,
-      computeSynergy(lawState, LAW_INDEXES.FATE));
+      syn[LAW_INDEXES.FATE]);
     if (fateForce) {
       ax += fateForce.ax;
       ay += fateForce.ay;
@@ -994,46 +1011,46 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // ── Electromagnetism (per-particle) ──
-    if (isSet(lawState, LAW_INDEXES.FIELD)) {
-      const fieldForce = applyFieldDrift(iBase, 0.3 * computeSynergy(lawState, LAW_INDEXES.FIELD));
+    if (active[LAW_INDEXES.FIELD]) {
+      const fieldForce = applyFieldDrift(iBase, 0.3 * syn[LAW_INDEXES.FIELD]);
       if (fieldForce) {
         ax += fieldForce.ax;
         ay += fieldForce.ay;
         az += fieldForce.az;
       }
     }
-    if (isSet(lawState, LAW_INDEXES.RESISTANCE)) {
-      const resForce = applyResistance(iBase, vx, vy, vz, 0.03 * computeSynergy(lawState, LAW_INDEXES.RESISTANCE));
+    if (active[LAW_INDEXES.RESISTANCE]) {
+      const resForce = applyResistance(iBase, vx, vy, vz, 0.03 * syn[LAW_INDEXES.RESISTANCE]);
       if (resForce) {
         ax += resForce.ax;
         ay += resForce.ay;
         az += resForce.az;
       }
     }
-    if (isSet(lawState, LAW_INDEXES.CAPACITANCE)) {
+    if (active[LAW_INDEXES.CAPACITANCE]) {
       applyCapacitanceStore(iBase, 0.002);
     }
-    if (isSet(lawState, LAW_INDEXES.DISCHARGE)) {
-      const discForce = applyDischarge(iBase, prng, 0.8 * computeSynergy(lawState, LAW_INDEXES.DISCHARGE), ddx, ddy, ddz);
+    if (active[LAW_INDEXES.DISCHARGE]) {
+      const discForce = applyDischarge(iBase, prng, 0.8 * syn[LAW_INDEXES.DISCHARGE], ddx, ddy, ddz);
       if (discForce) {
         ax += discForce.ax;
         ay += discForce.ay;
         az += discForce.az;
       }
     }
-    if (isSet(lawState, LAW_INDEXES.PLASMA)) {
-      applyPlasma(iBase, 0.02 * computeSynergy(lawState, LAW_INDEXES.PLASMA));
+    if (active[LAW_INDEXES.PLASMA]) {
+      applyPlasma(iBase, 0.02 * syn[LAW_INDEXES.PLASMA]);
     }
 
     // ── Information (per-particle) ──
-    if (isSet(lawState, LAW_INDEXES.STIGMERGY)) {
+    if (active[LAW_INDEXES.STIGMERGY]) {
       applyTrailWrite(iBase, px, py, pz, vx, vy, vz);
     }
-    if (isSet(lawState, LAW_INDEXES.MEMORY)) {
+    if (active[LAW_INDEXES.MEMORY]) {
       applyMemoryDecay(iBase, 0.995, 0.5);
     }
-    if (isSet(lawState, LAW_INDEXES.FEEDBACK)) {
-      const fbForce = applyFeedback(iBase, 0.5 * computeSynergy(lawState, LAW_INDEXES.FEEDBACK));
+    if (active[LAW_INDEXES.FEEDBACK]) {
+      const fbForce = applyFeedback(iBase, 0.5 * syn[LAW_INDEXES.FEEDBACK]);
       if (fbForce) {
         ax += fbForce.ax;
         ay += fbForce.ay;
@@ -1045,78 +1062,78 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     const center = worldSize * 0.5;
 
     // Physics
-    if (isSet(lawState, LAW_INDEXES.FRICTION)) {
+    if (active[LAW_INDEXES.FRICTION]) {
       const frForce = applyFriction(view, iBase, 0.05);
       if (frForce) { ax += frForce.ax; ay += frForce.ay; az += frForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.TURBULENCE)) {
+    if (active[LAW_INDEXES.TURBULENCE]) {
       const tbForce = applyTurbulence(view, iBase, 0.05, prng);
       if (tbForce) { ax += tbForce.ax; ay += tbForce.ay; az += tbForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.CENTRIPETAL)) {
+    if (active[LAW_INDEXES.CENTRIPETAL]) {
       const cpForce = applyCentripetal(view, iBase, center, center, center, 0.0005);
       if (cpForce) { ax += cpForce.ax; ay += cpForce.ay; az += cpForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.ROTATION)) {
+    if (active[LAW_INDEXES.ROTATION]) {
       const rotForce = applyRotation(view, iBase, center, center, center, 0.002);
       if (rotForce) { ax += rotForce.ax; ay += rotForce.ay; az += rotForce.az; }
     }
 
     // Biology
-    if (isSet(lawState, LAW_INDEXES.HIBERNATION)) {
+    if (active[LAW_INDEXES.HIBERNATION]) {
       const hibForce = applyHibernation(view, iBase, 0.5);
       if (hibForce) { ax += hibForce.ax; ay += hibForce.ay; az += hibForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.IMMUNITY)) applyImmunity(view, iBase, 0.5);
+    if (active[LAW_INDEXES.IMMUNITY]) applyImmunity(view, iBase, 0.5);
 
     // Chemistry
-    if (isSet(lawState, LAW_INDEXES.PHOTOLYSIS)) applyPhotolysis(view, iBase, 0.5);
+    if (active[LAW_INDEXES.PHOTOLYSIS]) applyPhotolysis(view, iBase, 0.5);
 
     // Thermodynamics
-    if (isSet(lawState, LAW_INDEXES.ADIABATIC)) {
+    if (active[LAW_INDEXES.ADIABATIC]) {
       const adForce = applyAdiabatic(view, iBase, 0.1);
       if (adForce) { ax += adForce.ax; ay += adForce.ay; az += adForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.LATENT_HEAT)) applyLatentHeat(view, iBase, 0.1);
-    if (isSet(lawState, LAW_INDEXES.RUNAWAY)) applyRunaway(view, iBase, 0.1);
+    if (active[LAW_INDEXES.LATENT_HEAT]) applyLatentHeat(view, iBase, 0.1);
+    if (active[LAW_INDEXES.RUNAWAY]) applyRunaway(view, iBase, 0.1);
 
     // Metaphysics
-    if (isSet(lawState, LAW_INDEXES.CONSCIOUSNESS)) applyConsciousness(view, iBase, 0.5);
+    if (active[LAW_INDEXES.CONSCIOUSNESS]) applyConsciousness(view, iBase, 0.5);
 
     // Electromagnetism
-    if (isSet(lawState, LAW_INDEXES.ANTENNA)) applyAntenna(view, iBase, 0.5);
-    if (isSet(lawState, LAW_INDEXES.SHIELDING)) applyShielding(view, iBase, 0.5);
+    if (active[LAW_INDEXES.ANTENNA]) applyAntenna(view, iBase, 0.5);
+    if (active[LAW_INDEXES.SHIELDING]) applyShielding(view, iBase, 0.5);
 
     // Information
-    if (isSet(lawState, LAW_INDEXES.ENCRYPTION)) applyEncryption(view, iBase, 0.5);
+    if (active[LAW_INDEXES.ENCRYPTION]) applyEncryption(view, iBase, 0.5);
 
     // Quantum
-    if (isSet(lawState, LAW_INDEXES.SUPERPOSITION)) {
+    if (active[LAW_INDEXES.SUPERPOSITION]) {
       const supForce = applySuperposition(view, iBase, 0.05, prng);
       if (supForce) { ax += supForce.ax; ay += supForce.ay; az += supForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.TUNNELING)) applyTunneling(view, iBase, 0.5, prng);
-    if (isSet(lawState, LAW_INDEXES.DECOHERENCE)) {
+    if (active[LAW_INDEXES.TUNNELING]) applyTunneling(view, iBase, 0.5, prng);
+    if (active[LAW_INDEXES.DECOHERENCE]) {
       const decForce = applyDecoherence(view, iBase, 0.1);
       if (decForce) { ax += decForce.ax; ay += decForce.ay; az += decForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.WAVE_PARTICLE)) {
+    if (active[LAW_INDEXES.WAVE_PARTICLE]) {
       const wpForce = applyWaveParticle(view, iBase, 0.1);
       if (wpForce) { ax += wpForce.ax; ay += wpForce.ay; az += wpForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.UNCERTAINTY)) {
+    if (active[LAW_INDEXES.UNCERTAINTY]) {
       const uncForce = applyUncertainty(view, iBase, 0.1, prng);
       if (uncForce) { ax += uncForce.ax; ay += uncForce.ay; az += uncForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.TELEPORT)) applyTeleport(view, iBase, worldSize, 0.5, prng);
-    if (isSet(lawState, LAW_INDEXES.PLANCK)) applyPlanck(view, iBase, 0.5);
-    if (isSet(lawState, LAW_INDEXES.SPIN)) {
+    if (active[LAW_INDEXES.TELEPORT]) applyTeleport(view, iBase, worldSize, 0.5, prng);
+    if (active[LAW_INDEXES.PLANCK]) applyPlanck(view, iBase, 0.5);
+    if (active[LAW_INDEXES.SPIN]) {
       const spinForce = applySpin(view, iBase, 0.05, prng);
       if (spinForce) { ax += spinForce.ax; ay += spinForce.ay; az += spinForce.az; }
     }
-    if (isSet(lawState, LAW_INDEXES.SPECTRAL)) applySpectral(view, iBase, 0.5);
-    if (isSet(lawState, LAW_INDEXES.WAVEFUNCTION)) applyWavefunction(view, iBase, 0.5);
-    if (isSet(lawState, LAW_INDEXES.HYPERPLANE)) {
+    if (active[LAW_INDEXES.SPECTRAL]) applySpectral(view, iBase, 0.5);
+    if (active[LAW_INDEXES.WAVEFUNCTION]) applyWavefunction(view, iBase, 0.5);
+    if (active[LAW_INDEXES.HYPERPLANE]) {
       const hypForce = applyHyperplane(view, iBase, 1.0);
       if (hypForce) { ax += hypForce.ax; ay += hypForce.ay; az += hypForce.az; }
     }
@@ -1133,8 +1150,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // Entanglement — non-local momentum/signal coupling with the partner
     // at any distance; snaps with a recoil when the partner dies.
-    if (isSet(lawState, LAW_INDEXES.ENTANGLEMENT)) {
-      const entForce = applyEntanglement(iBase, 0.1 * computeSynergy(lawState, LAW_INDEXES.ENTANGLEMENT), prng);
+    if (active[LAW_INDEXES.ENTANGLEMENT]) {
+      const entForce = applyEntanglement(iBase, 0.1 * syn[LAW_INDEXES.ENTANGLEMENT], prng);
       if (entForce) {
         ax += entForce.ax;
         ay += entForce.ay;
@@ -1144,9 +1161,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // History — write presence into the spatial memory field, then drift
     // toward the field's centre of mass (archaeology as a force).
-    if (isSet(lawState, LAW_INDEXES.HISTORY)) {
+    if (active[LAW_INDEXES.HISTORY]) {
       applyHistoryWrite(iBase, px, py, pz, worldSize);
-      const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * computeSynergy(lawState, LAW_INDEXES.HISTORY));
+      const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * syn[LAW_INDEXES.HISTORY]);
       if (histForce) {
         ax += histForce.ax;
         ay += histForce.ay;
@@ -1156,7 +1173,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Drag ──
 
-    if (isSet(lawState, LAW_INDEXES.DRAG)) {
+    if (active[LAW_INDEXES.DRAG]) {
       const viscosity = (dnaI[DNA_INDEXES.VISCOSITY] || 0.98) * (Number.isFinite(WP.VISCOSITY) ? WP.VISCOSITY : 1);
       const dragFactor = Math.pow(viscosity, localTimeStep);
       ax -= vx * (1 - dragFactor) * 10;
@@ -1172,9 +1189,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // Entropy (jitter)
-    if (isSet(lawState, LAW_INDEXES.ENTR)) {
+    if (active[LAW_INDEXES.ENTR]) {
       const jitter = (dnaI[DNA_INDEXES.JITTER] || 0.05) * (Number.isFinite(WP.ENTROPY) ? WP.ENTROPY : 1);
-      const jitterMult = computeSynergy(lawState, LAW_INDEXES.ENTR);
+      const jitterMult = syn[LAW_INDEXES.ENTR];
       ax += (prng() - 0.5) * jitter * jitterMult * localTimeStep;
       ay += (prng() - 0.5) * jitter * jitterMult * localTimeStep;
       az += (prng() - 0.5) * jitter * jitterMult * 0.3 * localTimeStep;
@@ -1213,7 +1230,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     const preWillVy = view[iBase + S.VEL_Y];
     const preWillVz = view[iBase + S.VEL_Z];
     applyWill(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.WILL));
+      syn[LAW_INDEXES.WILL]);
     // Fold Will's in-place boost into the local velocity copy.
     vx += view[iBase + S.VEL_X] - preWillVx;
     vy += view[iBase + S.VEL_Y] - preWillVy;
@@ -1221,7 +1238,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Global drag multiplier (goal-engine tunable) — gated by DRAG ──
 
-    if (isSet(lawState, LAW_INDEXES.DRAG)) {
+    if (active[LAW_INDEXES.DRAG]) {
       vx *= runtimeConfig.dragMultiplier;
       vy *= runtimeConfig.dragMultiplier;
       vz *= runtimeConfig.dragMultiplier;
@@ -1273,7 +1290,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Toroidal wrapping ──
 
-    if (isSet(lawState, LAW_INDEXES.WRAP)) {
+    if (active[LAW_INDEXES.WRAP]) {
       px = ((px % worldSize) + worldSize) % worldSize;
       py = ((py % worldSize) + worldSize) % worldSize;
       pz = ((pz % worldSize) + worldSize) % worldSize;
@@ -1308,7 +1325,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Write back to buffer ──
 
     // Bond/Polymer non-overlap constraint
-    if (isSet(lawState, LAW_INDEXES.BOND) || isSet(lawState, LAW_INDEXES.POLYMER)) {
+    if (active[LAW_INDEXES.BOND] || active[LAW_INDEXES.POLYMER]) {
       const nCount2 = getNeighbors(grid, px, py, pz, worldSize, _neighborBuf);
       for (let n2 = 0; n2 < Math.min(nCount2, MAX_INTERACTIONS); n2++) {
         const bj = _neighborBuf[n2];
@@ -1340,7 +1357,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
         
         // Bond equilibrium distance
-        if (isSet(lawState, LAW_INDEXES.BOND)) {
+        if (active[LAW_INDEXES.BOND]) {
           const sI = view[iBase + S.SPECIES_ID];
           const sB = view[bPtr + S.SPECIES_ID];
           const aff = dnaI[DNA_INDEXES.SPECIES_AFFINITY] || 0;
@@ -1390,66 +1407,66 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Signal decay (emission + decay, gated by COMMS law) ──
 
-    if (isSet(lawState, LAW_INDEXES.COMMS)) {
+    if (active[LAW_INDEXES.COMMS]) {
       applySignalDecay(lawState, view, iBase, dnaI, localTimeStep);
     }
 
     // ── Life cycle ──
 
     applyLifeCycle(lawState, view, iBase, dnaI, localTimeStep, prng,
-      computeSynergy(lawState, LAW_INDEXES.LIFE) * runtimeConfig.deathRate, dnaBuffer);
+      syn[LAW_INDEXES.LIFE] * runtimeConfig.deathRate, dnaBuffer);
 
     // ── Glow ──
     applyGlowEffect(lawState, view, iBase, dnaI, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.GLOW));
+      syn[LAW_INDEXES.GLOW]);
 
     // ── Genotype ──
     applyGenotypeMutation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.GENOTYPE), prng, dnaBuffer);
+      syn[LAW_INDEXES.GENOTYPE], prng, dnaBuffer);
 
     // ── Radiation ──
     applyRadiationDamage(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.RADIATION), prng);
+      syn[LAW_INDEXES.RADIATION], prng);
 
     // ── Phenotype ──
     applyPhenotype(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.PHENOTYPE));
+      syn[LAW_INDEXES.PHENOTYPE]);
 
     // ── Oxidation ──
     applyOxidationEffect(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.OXIDATION));
+      syn[LAW_INDEXES.OXIDATION]);
 
     // ── Isomerization ──
     applyIsomerization(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.ISOMERIZATION), prng, stride);
+      syn[LAW_INDEXES.ISOMERIZATION], prng, stride);
 
     // ── Phase Radiation ──
     applyPhaseRadiation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.PHASE_RADIATION));
+      syn[LAW_INDEXES.PHASE_RADIATION]);
 
     // ── Sublimation ──
     applySublimation(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.SUBLIMATION), prng);
+      syn[LAW_INDEXES.SUBLIMATION], prng);
 
     // ── Thermal jitter (HEAT) ──
 
     applyThermalJitter(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.HEAT), prng);
+      syn[LAW_INDEXES.HEAT], prng);
 
     // ── Cold damping (COLD) ──
 
     applyColdDamping(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.COLD));
+      syn[LAW_INDEXES.COLD]);
 
     // ── Convection ──
 
     applyConvection(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.CONVECTION));
+      syn[LAW_INDEXES.CONVECTION]);
 
     // ── Reproduction ──
 
     const offspring = applyReproduction(lawState, view, iBase, dnaI, prng,
-      computeSynergy(lawState, LAW_INDEXES.REPRO) * runtimeConfig.birthRate, dnaBuffer, localTimeStep);
+      syn[LAW_INDEXES.REPRO] * runtimeConfig.birthRate, dnaBuffer, localTimeStep);
     if (offspring) {
       _offspringRing[_ringWrite] = offspring;
       _ringWrite = (_ringWrite + 1) % OFFSPRING_RING_SIZE;
@@ -1459,42 +1476,42 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     const baseRadius = dnaI[DNA_INDEXES.BASE_RADIUS] || 2.0;
     let radiusOut = baseRadius * Math.pow(mass, 0.333);
-    if (isSet(lawState, LAW_INDEXES.PHENOTYPE)) {
+    if (active[LAW_INDEXES.PHENOTYPE]) {
       const energy = view[iBase + S.ENERGY];
       if (Number.isFinite(energy)) {
-        radiusOut *= 1 + (energy / 200 - 0.5) * 0.5 * computeSynergy(lawState, LAW_INDEXES.PHENOTYPE);
+        radiusOut *= 1 + (energy / 200 - 0.5) * 0.5 * syn[LAW_INDEXES.PHENOTYPE];
       }
     }
     view[iBase + S.RADIUS] = radiusOut;
 
     // ── Expansion (runs after the mass-derived radius update so its growth
     //    toward the DNA base radius is not overwritten) ──
-    if (isSet(lawState, LAW_INDEXES.EXPANSION)) applyExpansion(view, iBase, 0.1);
+    if (active[LAW_INDEXES.EXPANSION]) applyExpansion(view, iBase, 0.1);
 
     // ── Melt ──
     applyMelt(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.MELT), dnaBuffer);
+      syn[LAW_INDEXES.MELT], dnaBuffer);
 
     // ── Boil ──
     applyBoil(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.BOIL), prng);
+      syn[LAW_INDEXES.BOIL], prng);
 
     // ── Condense ──
     applyCondense(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.CONDENSE));
+      syn[LAW_INDEXES.CONDENSE]);
 
     // ── Deposit ──
     applyDeposit(lawState, view, iBase, localTimeStep,
-      computeSynergy(lawState, LAW_INDEXES.DEPOSIT));
+      syn[LAW_INDEXES.DEPOSIT]);
 
     // ── Exothermic ──
     applyExothermic(lawState, view, iBase,
-      localTimeStep, computeSynergy(lawState, LAW_INDEXES.EXOTHERMIC));
+      localTimeStep, syn[LAW_INDEXES.EXOTHERMIC]);
 
   }
 
   // ── History — advance the memory-field clock once per solve ──
-  if (isSet(lawState, LAW_INDEXES.HISTORY)) {
+  if (active[LAW_INDEXES.HISTORY]) {
     applyHistoryCalc();
   }
 }

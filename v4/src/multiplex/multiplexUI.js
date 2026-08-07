@@ -694,7 +694,8 @@ export function createMultiplexController(bus, getSource, applyShard) {
     if (stats) {
       const sum = summarizeMultiplex(mx);
       const sel = report.perShard.find((e) => e.id === mx.selected);
-      stats.textContent = `ALIVE ${sum.alive} · CAP ${sum.populationCap} · ΔSEL ${sel ? sel.metrics.delta.toFixed(2) : '—'} · ΔAVG ${report.avgDelta.toFixed(2)} · ITER ${mx.iteration}`;
+      const ms = mx.lastTickMs === undefined ? 0 : mx.lastTickMs;
+      stats.textContent = `ALIVE ${sum.alive} · CAP ${sum.populationCap} · ΔSEL ${sel ? sel.metrics.delta.toFixed(2) : '—'} · ΔAVG ${report.avgDelta.toFixed(2)} · ITER ${mx.iteration} · MS ${ms.toFixed(2)}`;
     }
   }
 

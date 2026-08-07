@@ -20,7 +20,7 @@ let statsEl = null;
 let countEl = null;
 let copyEl = null;
 
-const liveStats = { fps: 0, tick: 0, particles: 0, species: 0, laws: 0 };
+const liveStats = { fps: 0, tick: 0, particles: 0, species: 0, laws: 0, frameMs: 0, tickMs: 0, renderMs: 0 };
 
 function fmtClock(t) {
   const d = new Date(t);
@@ -111,8 +111,12 @@ export function isDebugVisible() {
 export function updateLiveStats(stats) {
   Object.assign(liveStats, stats);
   if (overlayEl && visible && statsEl) {
+    const perf =
+      liveStats.frameMs || liveStats.tickMs || liveStats.renderMs
+        ? ` · f:${liveStats.frameMs.toFixed(1)}ms t:${liveStats.tickMs.toFixed(2)}ms r:${liveStats.renderMs.toFixed(2)}ms`
+        : '';
     statsEl.textContent =
-      `fps:${liveStats.fps} tick:${liveStats.tick} n:${liveStats.particles} sp:${liveStats.species} laws:${liveStats.laws}`;
+      `fps:${liveStats.fps} tick:${liveStats.tick} n:${liveStats.particles} sp:${liveStats.species} laws:${liveStats.laws}` + perf;
   }
 }
 

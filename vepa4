@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # VEPA v4 launcher — works from any working directory.
-# Usage:  vepa4 [dev|build|preview|test|syntax|multiplayer] [port]
+# Usage:  vepa4 [dev|build|preview|test|syntax|bench|multiplayer] [port]
 #   dev     start dev server with COOP/COEP headers (default)
 #   build   production build into v4/.dist
 #   preview serve the built app
 #   test    run the vitest unit suite
 #   syntax  node --check every JS file in v4/src and v4/tests
+#   bench   headless physics-solver benchmark (v4/bench/solver.bench.mjs)
 #   multiplayer  run the LAN multiplayer hub (v4/server/server.js) — needs build
 set -euo pipefail
 
@@ -88,6 +89,11 @@ case "$CMD" in
     find src tests -name '*.js' -exec node --check {} +
     echo "✅ VEPA v4 syntax OK"
     ;;
+  bench)
+    # Pass through extra flags (--laws, --all, --json, --particles, ...)
+    shift
+    node bench/solver.bench.mjs "$@"
+    ;;
   multiplayer)
     PORT="$(find_free_port "$PORT")"
     echo "🚀 VEPA v4 multiplayer hub → http://<this-phone-ip>:${PORT} (open on every phone)"
@@ -99,7 +105,7 @@ case "$CMD" in
     PORT="$PORT" node "$V4_DIR/server/server.js"
     ;;
   *)
-    echo "Usage: $0 [dev|build|preview|test|syntax|multiplayer] [port]" >&2
+    echo "Usage: $0 [dev|build|preview|test|syntax|bench|multiplayer] [port]" >&2
     exit 1
     ;;
 esac

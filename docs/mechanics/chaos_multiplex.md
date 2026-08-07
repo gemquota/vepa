@@ -62,5 +62,5 @@ Multiplex rendering is tuned for GPU headroom so 16 parallel realities stay smoo
 - **GPU ECO toggle** — LIVE tab switch (`#mpx-drawer-eco`) flips previews between
   eco and full rendering live.
 - **Metrics drawer** — the collapsible bottom bar (`#mpx-metrics`) shows per-shard
-  fitness chips (`S01 0.74`, click to select) and a `ALIVE · CAP · ΔSEL · ΔAVG · ITER`
-  stats line, refreshed every 24 frames.
+  fitness chips (`S01 0.74`, click to select) and a `ALIVE · CAP · ΔSEL · ΔAVG · ITER · MS`
+  stats line (MS = EMA-smoothed shard tick time), refreshed every 24 frames.

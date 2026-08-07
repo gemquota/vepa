@@ -234,6 +234,7 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
   const effDt = dt * simSpeed * Math.max(0.05, cfg.simSpeed || 1);
   const substeps = Math.max(1, Math.min(8, Math.round(cfg.substeps) || 1));
   const subDt = effDt / substeps;
+  const t0 = performance.now();
   for (const shard of mx.shards) {
     if (shard.count <= 0) continue;
     for (let s = 0; s < substeps; s++) {
@@ -252,6 +253,8 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
     updateShardWindow(shard);
     shard.tick++;
   }
+  const tickMs = performance.now() - t0;
+  mx.lastTickMs = mx.lastTickMs === undefined ? tickMs : mx.lastTickMs * 0.85 + tickMs * 0.15;
   mx.tick++;
   mx.worldSize = worldSize;
   // Auto-iterate: hands-off guided evolution — regenerate every shard on a

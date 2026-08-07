@@ -1,5 +1,16 @@
 # Changelog: VEPA v4
 
+## [4.6.26] - 2026-08-07
+
+### Solver performance, debug perf stats & benchmark harness
+- **Per-tick law cache** — `createSynergyCache(lawState)` precomputes all 128 synergy multipliers once per `solve()` (the law state is fixed mid-tick) instead of ~70 branch-chain `computeSynergy` calls per particle/neighbor pair; a `Uint8Array` active-law cache replaces 115 inline `isSet()` calls. Float64-exact (plain array, not Float32Array), so physics results are bit-identical to the old path.
+- **Law gating** — the unconditional per-pair AFFINITY / chemistry / ORDER calls (and their synergy lookups) are now gated on the cached active flags; the law functions self-gate internally and return no-ops when off, so behavior is unchanged.
+- **Benchmark before/after** (identical scenarios — 60 ticks, 20 warmup, PRIME_DEFAULT 10-law set): 500 particles 30.5 → 10.8 ms/tick (2.8×), 1000 particles 99.1 → 19.9 ms/tick (5.0×), 2500 particles 428.7 → 103.6 ms/tick (4.1×).
+- **`vepa4 bench`** — new headless solver benchmark (`v4/bench/solver.bench.mjs`): throughput table at 500/1000/2500, `--laws` per-law overhead breakdown (frozen-world, median-of-rounds methodology), `--all` 128-law stress, `--json` machine-readable output.
+- **Debug perf stats** — the debug overlay stats line now shows `· f:xx.xms t:x.xxms r:x.xxms` (EMA-smoothed full-frame / physics-tick / render times) in both the main sim and multiplex mode.
+- **Multiplex metrics** — the metrics bottom drawer stats line gains `· MS x.xx` (EMA-smoothed shard tick time).
+- Tests: `tests/unit/synergyCache.test.js` +4 (`createSynergyCache` matches `computeSynergy` for empty/full/mixed synergy states; plain-array float64). `vepa4 syntax` + `vepa4 build` clean; full suite 612/615 at this commit (the 3 failures come from the separate uncommitted law RRP WIP, which stays outside this release).
+
 ## [4.6.25] - 2026-08-07
 
 ### GPU performance & multiplex metrics drawer

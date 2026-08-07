@@ -26,7 +26,7 @@ import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageT
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
-import { copyShardToWorld } from './multiplex/multiplex.js';
+import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
 initDebug();
 logDebug('main module loaded');
 
@@ -595,6 +595,12 @@ function setDNAFromProfile(species, profile) {
 }
 
 let lastFrameTime = 0, frameCount = 0, fps = 0;
+// Performance telemetry — exponentially-smoothed phase timings fed to the
+// debug overlay (updateLiveStats) so the render loop's cost profile is
+// visible live: f = full frame, t = physics tick, r = render.
+let perfFrameMs = 0, perfTickMs = 0, perfRenderMs = 0;
+const PERF_EMA = 0.15;
+function emaPerf(prev, next) { return prev + (next - prev) * PERF_EMA; }
 
 // ── v4: Intelligence engine orchestration ────────────────────────────────
 
@@ -714,6 +720,7 @@ function resetIntelligence() {
 }
 
 function renderLoop(now) {
+    const loopStart = performance.now();
     requestAnimationFrame(renderLoop);
     frameCount++;
     if (now - lastFrameTime >= 1000) {
@@ -724,8 +731,26 @@ function renderLoop(now) {
 
     // Chaos Multiplex mode — step + render every shard, shared camera.
     if (multiplexController && multiplexController.isActive()) {
+        const stepStart = loopStart;
         multiplexController.step(DT, runtimeConfig.simSpeed, worldSize);
+        const stepEnd = performance.now();
         multiplexController.render(worldSize);
+        const loopEnd = performance.now();
+        perfTickMs = emaPerf(perfTickMs, stepEnd - stepStart);
+        perfRenderMs = emaPerf(perfRenderMs, loopEnd - stepEnd);
+        perfFrameMs = emaPerf(perfFrameMs, loopEnd - loopStart);
+        const mx = multiplexController.mx || {};
+        // summarizeMultiplex scans every shard particle — throttle to ~5 Hz.
+        if (frameCount % 12 === 0) updateLiveStats({
+            fps,
+            tick: mx.tick || 0,
+            particles: summarizeMultiplex(mx).alive,
+            species: 0,
+            laws: 0,
+            frameMs: perfFrameMs,
+            tickMs: perfTickMs,
+            renderMs: perfRenderMs,
+        });
         return;
     }
 
@@ -734,6 +759,7 @@ function renderLoop(now) {
     if (!paused) {
     // Main-thread physics
     if (particleView) {
+        const tickStart = performance.now();
         solve(particleView, particleCount, PARTICLE_STRIDE, lawState, dnaBuffer, worldSize, DT * runtimeConfig.simSpeed, rng);
         spawnOffspring();
         // Regular population feed — SPAWN_RATE particles per second, placed
@@ -752,7 +778,8 @@ function renderLoop(now) {
         }
         tick++;
         updateIntelligence();
-        updateLiveStats({ fps, tick, particles: particleCount, species: speciesCount, laws: getLawCount(lawState) });
+        perfTickMs = emaPerf(perfTickMs, performance.now() - tickStart);
+        updateLiveStats({ fps, tick, particles: particleCount, species: speciesCount, laws: getLawCount(lawState), frameMs: perfFrameMs, tickMs: perfTickMs, renderMs: perfRenderMs });
         // On-screen canvas debug overlay (first 2 seconds, debug overlay only)
         if (isDebugVisible() && tick <= 130) {
             const dbg = renderer.ctx;
@@ -801,8 +828,11 @@ function renderLoop(now) {
 
     // Render (always, even when paused)
     if (renderer && particleBuffer) {
+        const renderStart = performance.now();
         renderer.paused = paused;
         syncSprites(renderer, particleView, particleCount, PARTICLE_STRIDE, worldSize, lawState);
+        perfRenderMs = emaPerf(perfRenderMs, performance.now() - renderStart);
+        perfFrameMs = emaPerf(perfFrameMs, performance.now() - loopStart);
     }
 }
 

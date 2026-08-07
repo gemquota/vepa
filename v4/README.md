@@ -41,6 +41,7 @@ The repo-root launcher `./vepa4` works from any directory (no `cd` needed):
 /path/to/vepa-feature-nuclear-rewrite/vepa4 preview  # serve the build
 /path/to/vepa-feature-nuclear-rewrite/vepa4 test     # unit tests
 /path/to/vepa-feature-nuclear-rewrite/vepa4 syntax   # node --check all JS
+/path/to/vepa-feature-nuclear-rewrite/vepa4 bench    # headless solver benchmark (--laws / --all / --json)
 ```
 
 The launcher is also installed as a global command in Termux

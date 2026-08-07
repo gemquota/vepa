@@ -68,3 +68,12 @@ npx vite build                                        # clean bundle
   a collapsible metrics bottom drawer with per-shard fitness chips and an
   ALIVE/CAP/ΔSEL/ΔAVG/ITER stats line. See `v4/CHANGELOG.md` [4.6.25] and
   `docs/mechanics/chaos_multiplex.md` §5.
+
+## Milestone note (v4.6.26 — 2026-08-07)
+
+- **Solver performance**: per-tick synergy cache (`createSynergyCache`) + active-law
+  byte cache in `solve()` cut per-particle/pair branch chains, delivering 2.8–5× solver
+  throughput (benchmarked: 2500 particles 428.7 → 103.6 ms/tick on the default law set).
+- **`vepa4 bench`** headless harness (throughput / per-law / all-law stress / JSON).
+- **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
+  metrics drawer. See `v4/CHANGELOG.md` [4.6.26].

@@ -4,7 +4,7 @@
 // effects through multiplier synergies. Returns a multiplier in [0.0, 2.0].
 // ============================================================================
 
-import { LAW_INDEXES } from '../constants.js';
+import { LAW_INDEXES, LAW_COUNT } from '../constants.js';
 import { isSet } from '../state/lawState.js';
 
 /**
@@ -289,4 +289,22 @@ export function computeSynergy(lawState, lawIndex) {
   if (mult > 2.0) mult = 2.0;
 
   return mult;
+}
+
+/**
+ * Precompute every law's synergy multiplier for a fixed law state.
+ *
+ * The law state never changes mid-tick, so synergy values are constant for
+ * the whole solve. Computing them once (128 entries) instead of per particle
+ * or per neighbor pair removes tens of thousands of branch chains per tick
+ * from the solver hot loop. Uses a plain array (not Float32Array) so the
+ * float64 results are bit-identical to repeated computeSynergy calls.
+ *
+ * @param {object} lawState - Active-law bitmask state
+ * @returns {number[]} 128-element synergy multiplier table
+ */
+export function createSynergyCache(lawState) {
+  const cache = new Array(LAW_COUNT);
+  for (let i = 0; i < LAW_COUNT; i++) cache[i] = computeSynergy(lawState, i);
+  return cache;
 }
