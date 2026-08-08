@@ -10,6 +10,7 @@
 - **Debug perf stats** — the debug overlay stats line now shows `· f:xx.xms t:x.xxms r:x.xxms` (EMA-smoothed full-frame / physics-tick / render times) in both the main sim and multiplex mode.
 - **Multiplex metrics** — the metrics bottom drawer stats line gains `· MS x.xx` (EMA-smoothed shard tick time).
 - Tests: `tests/unit/synergyCache.test.js` +4 (`createSynergyCache` matches `computeSynergy` for empty/full/mixed synergy states; plain-array float64). `vepa4 syntax` + `vepa4 build` clean; full suite 612/615 at this commit (the 3 failures come from the separate uncommitted law RRP WIP, which stays outside this release).
+- **Deploy**: production live at https://vepa-v4.vercel.app/ (Vercel, 2026-08-08, deployed from the clean `v4.6.26` tag).
 
 ## [4.6.25] - 2026-08-07
 
