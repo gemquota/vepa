@@ -1,5 +1,9 @@
 # 🧭 The Architect's Field Manual: Engineering Emergence
 
+> **Status:** VEPA4-current (design guidance — DNA trait names and recipes apply
+> to the v4-line 64-parameter genome; exact slider ranges live in
+> `src/constants.js` `DNA_RANGES`).
+
 This guide is not a manual for sliders; it is a strategic framework for **Universal Design**. In VEPA, the species are your clay, and the DNA rules are your tools.
 
 ---

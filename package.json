@@ -1,33 +1,23 @@
 {
-  "name": "vepa2",
-  "version": "4.6.26",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "python3 .tests/validate_engine.py",
-    "validate": "python3 .tests/validate_engine.py",
-    "syntax-check": "find src -name \"*.js\" -exec node --check {} +"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gemquota/vepa.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "name": "vepa-v4",
+  "version": "7.0.0",
+  "description": "VEPA4 \u2014 Vector Emergent Physics Automata (Integrated Intelligence release)",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/gemquota/vepa/issues"
-  },
-  "homepage": "https://github.com/gemquota/vepa#readme",
-  "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "vite": "^8.0.8"
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "syntax-check": "find src -name '*.js' -exec node --check {} +"
   },
   "dependencies": {
     "pixi.js": "^8.18.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "vite": "^8.0.8",
+    "vitest": "^3.2.7"
   }
 }

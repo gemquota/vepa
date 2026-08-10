@@ -1,613 +1,520 @@
 # AGENTS.md — VEPA Workspace Initialization & Codebase Audit
 
 > **Project:** VEPA — Vector Emergent Physics Automata
-> **Version:** 3.3.0 (Working Tree: `new` branch, based on `master`)
-> **Audit Hash:** `NUCLEAR_REWRITE_INIT_v3.3.0`
+> **Active Target:** **VEPA4 v7.0.0** (legacy label `4.7.0`; working tree; HEAD `7ddb832` = v4.6.26, 2026-08-07; 7.0.0 release draft uncommitted)
+> **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
+> archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
+> **Working Branch:** `feature/multiplayer-investigation`
+> **Audit Hash:** `AGENTS_SYNC_v7.0.0_2026-08-10`
 >
-> This file is the canonical initialization prompt for any agent entering this workspace. It contains a complete codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification.
+> This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
+>
+> ⚠️ **Live workspace:** concurrent agent sessions commit releases frequently (4.6.11 → 4.6.18 all landed on 2026-08-06; the 4.6.19+ DNA-64 / law-RRP / multiplex WIP is uncommitted). This file is a **snapshot** — re-run the §10.4 sync check and `git log --oneline -3` before every task. **The code is the truth; this file is the map.**
 
 ---
 
 ## 1. PROJECT IDENTITY
 
-VEPA is a **GPU-accelerated (Web Workers + Canvas2D/PixiJS) emergent physics simulation** — a synthetic petri dish where particles governed by 42-parameter DNA profiles interact under 64 global laws. A **Narrative Consciousness** layer acts as the functional "ink," rewriting physics based on the unfolding story of simulated species.
+VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics simulation** — a synthetic petri dish where particles governed by DNA profiles interact under global laws. A **Narrative Consciousness** layer acts as the functional "ink," rewriting physics based on the unfolding story of simulated species.
 
 | Attribute | Value |
 |-----------|-------|
 | **Repository** | `github.com/gemquota/vepa.git` |
-| **Branches** | `master` (stable), `new` (active development — **current**) |
-| **Current Version | 2.5.0 |
-| **License** | ISC |
-| **Package Manager** | npm (with `package-lock.json`) |
-| **Runtime** | Browser (ESM), Node.js (scripts only) |
-| **Key Dependencies** | `pixi.js` ^8.18.1, `@playwright/test` ^1.60.0, `vite` ^8.0.8 |
-| **Module System** | ESM (`"type": "module"` in `package.json`) |
-| **Git Author** | ACE Sovereign Bot (`ace-bot@example.com`) |
+| **Active version** | **VEPA4 v7.0.0** (legacy label `4.7.0`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
+| **Active tree** | repo root (VEPA v4 — "Integrated Intelligence"; `v4/` promoted to root 2026-08-10) |
+| **Legacy trees** | archived 2026-08-10 → `gemquota/vepa-archive` (root `src/` v2.5.0-era · `v3/`, `v3-backup/`, `v3-persistence-design/` · `vaa/`) |
+| **Branches** | `master` (stable) · `new` · `feature/multiplayer-investigation` (**current**) · `feature/nuclear-rewrite` |
+| **Backup branches** | `backup/pre-*` — cut before risky work (see §10.4) |
+| **License** | ISC (`package.json`) |
+| **Package Manager** | npm (`package-lock.json`, `node_modules/` installed) |
+| **Runtime** | Browser (ESM) + Node.js (scripts, `bench/`, `audit-suite/`) |
+| **Key Dependencies** | `pixi.js` ^8.18.1 · `vite` ^8.0.8 · `vitest` ^3.2.7 · `@playwright/test` ^1.60.0 |
+| **Module System** | ESM (`"type": "module"`) |
+| **Deploys** | Vercel prod `https://vepa-v4.vercel.app/` · GitHub Pages `/vepa/vepar/` |
+
+**Version alignment (new schema since 2026-08-10):** the product is **VEPA4**; versions use `major.minor.build` (npm-semver-native). `VERSION`, the top section of `CHANGELOG.md` (arrow token), `package.json#version`, and this file **must all read 7.0.0**. Since the 2026-08-10 restructure the root manifest IS the v4 manifest (the legacy v2 root `package.json` was archived with the legacy trees).
+
+**GEMINI.md mandates (take precedence over this file):** every significant change must sync `CHANGELOG.md`, `README.md`, `SPEC.md`/`PLAN.md`, `GUIDE.md`, `LAW_HELP_DB`, and `audit-suite/` per GEMINI.md §1.1 (legacy `ENGINE_SSOT.md` / `docs/fullaudit.md` / `codex/` parity were archived 2026-08-10); the B-4RK principle (documentation as a feature — 4-tier `LAW_HELP_DB` for every law); bitmask discipline (`LAW_INDEXES` never hardcoded); and verify doc sync before declaring completion or you incur **Documentation Debt**. Read `GEMINI.md` on entry (§10.1).
 
 ---
 
 ## 2. COMPLETE CODEBASE AUDIT
 
-### 2.1 Directory Tree & File Inventory
+### 2.1 Active Tree (repo root — v4 promoted here 2026-08-10)
 
 ```
-vepa-feature-nuclear-rewrite/
-├── AGENTS.md                          ← THIS FILE (workspace initialization)
-├── CHANGELOG.md                       ← Versioned change history (current: 3.4.0)
-├── COMPENDIUM.md                      ← Master project compendium / clone specification
-├── ENGINE_SSOT.md                     ← Single Source of Truth for engine parameters & laws
-├── GEMINI.md                          ← Foundational project mandates (takes precedence)
-├── GUIDE.md                           ← Architect's field manual / emergent behavior recipes
-├── README.md                          ← Project overview & quick-start
-├── VERSION                            ← Plain-text version string ("3.3.0")
-├── combined.txt                       ← Monolithic concatenated context file (29K+ lines)
-├── index.html                         ← Main application entry point (Particle God UI shell)
-├── package.json                       ← npm manifest
-├── package-lock.json                  ← npm lockfile
-├── style.css                          ← Main application styles (~1,469 lines)
+.                            ← repo root
+├── CHANGELOG.md            ← RELEASE LEDGER — single source of truth (§10.4)
+├── README.md               ← v4 overview, commands, deploy targets
+├── SPEC.md                 ← v4 architecture spec (4.0.0 base)
+├── PLAN.md                 ← v4 plan + milestone history
+├── GUIDE.md / GEMINI.md    ← user design guide + project mandates
+├── index.html              ← app shell
+├── style.css
+├── package.json            ← v4 manifest (4.7.0 — MUST match changelog top)
+├── package-lock.json
+├── vercel.json             ← Vercel static build + COOP/COEP headers
+├── vite.config.js / vitest.config.js
+├── vepa4                   ← launcher: dev|build|preview|test|syntax|bench
 │
-├── src/                               ← APPLICATION SOURCE (~6,914 LOC JS)
-│   ├── main.js                        ← Central orchestrator, VepaEngine class (1,251 LOC)
-│   ├── ui.js                          ← UI layer — menus, sliders, panels (2,224 LOC)
-│   ├── constants.js                   ← All engine constants, HELP_DB, DNA_META (1,180 LOC)
-│   ├── insightEngine.js               ← Spatio-temporal cluster detection & pattern logging
-│   ├── narrativeConsciousness.js      ← Multi-voice internal monologue
-│   ├── narrativeEngine.js             ← Narrative generation engine
-│   ├── goalEngine.js                  ← Auto-adjusts world constraints
-│   ├── personalityEngine.js           ← Systemic bias (Curiosity, Stability, Chaos)
-│   ├── emergentParamEngine.js         ← Emergent parameter discovery
-│   ├── lineageTracker.js              ← Evolutionary history tracking
-│   ├── persistenceEngine.js           ← Save/load state persistence
-│   ├── timelineEngine.js              ← Timeline / history playback engine
-│   ├── levelEngine.js                 ← Level/scenario configuration (34 LOC)
-│   │
-│   ├── core/
-│   │   ├── eventBus.js                ← Simple pub/sub event bus (16 LOC)
-│   │   └── prng.js                    ← SplitMix32 PRNG implementation
-│   │
-│   ├── system/
-│   │   └── integration.js             ← System wiring / bootstrap integration
-│   │
-│   ├── worker/
-│   │   └── physics.worker.js          ← Web Worker: O(N²) physics with spatial hashing (296 LOC)
-│   │
-│   └── engines/
-│       ├── analysis/analysisEngine.js
-│       ├── cluster/clusterEngine.js
-│       ├── memory/memoryEngine.js
-│       ├── metrics/metricsEngine.js + derivedMetrics.js
-│       ├── policy/policyEngine.js
-│       └── prediction/predictionEngine.js
+├── src/                    ← v4 application source (51 JS files, ~15.2k LOC)
+│   ├── main.js             ← orchestrator, law shuffling, worker bridge
+│   ├── constants.js        ← SSOT: STRIDE_INDEXES, DNA_INDEXES (64) / DNA_COUNT
+│   │                          (64), DNA_META, DNA_RANGES, LAW_INDEXES (128),
+│   │                          LAW_CATEGORIES, LAW_SPECTRUM
+│   │                          (4pt bands), LAW_HUE_BY_INDEX, LAW_HELP_DB (4 tiers),
+│   │                          LAW_SUBGROUPS, LAW_DEPENDENCIES, DNA_RANGES
+│   ├── debug.js            ← on-canvas debug overlay
+│   ├── core/               ← eventBus.js, prng.js (SplitMix32)
+│   ├── state/              ← lawState.js (128-bit bitmask), particleBuffer.js,
+│   │                          worldParams.js, runtimeConfig.js,
+│   │                          defaultPresets.js, presetManager.js
+│   ├── dna/                ← dnaBuffer.js (species genome), expression.js
+│   ├── physics/            ← solver.js (MAX_FORCE 50, MAX_INTERACTIONS 500),
+│   │   │                      laws.js, synergy.js, spatialGrid.js (GRID_DIM 12)
+│   │   └── lawgroups/      ← 8 per-category law files + SPEC.md (law SSOT)
+│   ├── render/             ← renderer.js, spriteSync.js (PixiJS)
+│   ├── ui/                 ← 13 files: world, law, species, dna, dnaAnalytics,
+│   │                          preset, settings, intel, narrative, hud,
+│   │                          camera, tooltip + ui.js
+│   ├── engines/            ← goal, insight, lineage, narrative, timeline
+│   ├── multiplex/          ← multiplex.js + multiplexUI.js + multiplexHelp.js (chaos multiplex)
+│   ├── spawn/              ← distribution.js (initial population)
+│   └── worker/             ← physics.worker.js (SharedArrayBuffer loop)
 │
-├── scripts/                           ← BUILD TOOLS (Python + Node.js)
-│   ├── build_codex.js                 ← Builds Codex JSON from HELP_DB + synergy data
-│   ├── build_ssot.py                  ← SSOT documentation generator from constants
-│   ├── inject_physics_bus.py          ← Physics bus code injection
-│   ├── restore_from_combined.py       ← Restore source from combined.txt backup
-│   ├── run.py                         ← Python runner utility
-│   ├── run.sh                         ← Shell runner utility
-│   └── setup_vepa_architecture.py     ← Architecture setup scaffolding
-│
-├── codex/                             ← IN-ENGINE DOCUMENTATION (standalone HTML app)
-│   ├── index.html                     ← Codex app shell (HG2G database style)
-│   ├── main.js                        ← Codex app logic (169 LOC)
-│   ├── style.css                      ← Codex-specific styles (144 LOC)
-│   ├── entries.json                   ← Encyclopedia entries (1,453 lines)
-│   ├── synergyData.js                 ← Law synergy definitions (419 LOC)
-│   └── synergyGraph.js                ← Synergy graph visualization (205 LOC)
-│
-├── docs/                              ← EXTENDED DOCUMENTATION
-│   ├── fullaudit.md                   ← Ultra-system audit — all 42 traits + 28 world params
-│   ├── lawaudit.md                    ← Comprehensive law audit — all 64 laws with code proof
-│   ├── stubs.md                       ← Documentation stubs & roadmap (prioritized gaps)
-│   ├── EXPANSION_PROGRESS.md          ← Doc expansion batch progress (1-3 done, 4-15 pending)
-│   ├── arch/                          ← (Stubs) spatial_grid, worker_sync, law_bitmask
-│   ├── mechanics/                     ← (Stubs) metaphysics, chaos_multiplex, thermodynamics
-│   ├── ui/                            ← (Stubs) drone_logic, codex_links, preset_routing
-│   ├── dev/                           ← (Stubs) intelligence_bus, custom_agents
-│   ├── nlm/                           ← NLM documentation (10 docs + glossary + performance)
-│   ├── meta/                          ← Persona docs (ADVERSARY, ARCHITECT, EVALUATOR, TEAM_LEAD)
-│   └── expansion/batches/             ← Deep-dive encyclopedia batches (01-03 done)
-│
-├── archive/                           ← HISTORICAL ARTIFACTS
-│   ├── PICKLE_JAR.md                  ← Historical roadmap
-│   ├── legacy_index.html              ← Legacy app shell
-│   ├── new.html                       ← Previous-gen app shell
-│   ├── synergy_graph.html             ← Standalone synergy graph
-│   └── ssot/ENGINE_SSOT_v1.1.0.md     ← Archived SSOT version
-│
-├── .git/                              ← Git repo (1 commit on `new`)
-├── .gitignore                         ← node_modules/, *.log, __pycache__/, *.pyc, .DS_Store
-├── .dist/                             ← Vite build output (gitignored)
-├── .node_modules/                     ← Pre-vendored node_modules
-├── .tests/                            ← Test artifacts (screenshots, video, validate_engine.py)
-├── .tickets/                          ← Linear-style tickets (done/ + active)
-└── .omg/                              ← OMG framework state (learn-watch.json)
+├── tests/                  ← vitest: 69 files / 617 tests (unit + audit + params);
+│                               legacy `run.mjs` node:test runner — do not use
+├── bench/                  ← headless solver benchmark (vepa4 bench)
+├── docs/                   ← v4 docs (mechanics/, dev/)
+├── audit-suite/            ← law fidelity audit (fidelity-audit-v4.6.29.md + historical/)
+├── node_modules/           ← installed (vite/vitest/playwright/pixi)
+└── .dist/                  ← vite build output (gitignored)
 ```
 
-### 2.2 Source Code Size Breakdown
+### 2.2 Archived Legacy Trees (read-only — in `gemquota/vepa-archive`)
 
-| File | Lines | Role |
-|------|-------|------|
-| `src/ui.js` | 2,224 | UI rendering, panels, accordions, HUD |
-| `src/main.js` | 1,251 | Engine orchestrator, init, render loop |
-| `src/constants.js` | 1,180 | All constants, HELP_DB, DNA_META, LAW_INDEXES |
-| `src/worker/physics.worker.js` | 296 | Physics solver (spatial grid, laws, forces) |
-| `src/insightEngine.js` | 296 | Pattern detection & logging |
-| `src/persistenceEngine.js` | 368 | Save/load to localStorage |
-| `src/ui.js (codex/main.js)` | 169 | Standalone codex app |
-| Total `src/` | ~6,914 | All application logic |
-| `style.css` | 1,469 | Application styles |
-| `index.html` | 488 | Application HTML shell |
-| Combined total (JS+CSS+HTML) | ~8,871 | Source surface area |
+- **Root `src/` (v2.5.0-era)**, **`v3/` / `v3-backup/` / `v3-persistence-design/`** and
+  **`vaa/`** were archived on 2026-08-10 (compressed into `vepa-archive-20260810.tar.gz`,
+  hosted in the `gemquota/vepa-archive` repo; also recoverable from git history).
+  Notable v2-era differences to never reintroduce: `PARTICLE_STRIDE = 64` (v4 uses 100)
+  and nested `this.laws.pure/biol/chem/thermo/meta` config objects — **v4 replaced that
+  with the `lawState` bitmask (§3.5); never write v2-style nested law config**.
+- The legacy root `package.json` (name `vepa2`, dead `test` script) and root
+  `README.md`/`CHANGELOG.md`/`VERSION` were archived too; the root manifest is now the v4 one.
+- **Archived support dirs:** `codex/` (in-engine encyclopedia app), `scripts/`
+  (build_codex.js, build_ssot.py, …), `archive/`, `audit/`, `public/` (legacy).
+- **Restored docs (2026-08-10):** `docs/` now holds only v4-appropriate docs
+  (`docs/mechanics/chaos_multiplex.md`, `docs/dev/`); legacy audit
+  docs (`docs/fullaudit.md`, `docs/lawaudit.md`, `docs/LAW_AUDIT.md`, `docs/arch/`, …)
+  were re-archived individually — the v4 law audit lives in `audit-suite/`.
 
 ### 2.3 Git State
 
 | Property | Value |
 |----------|-------|
-| **Current Branch** | `new` (diverged from `master`) |
-| **Commits** | 1 (`0938645 VEPA: Nuclear Rewrite Initial State`) |
-| **Working Tree** | Dirty — 105 files changed (+19,036 / -25,855) |
-| **Untracked** | ~40+ files (.dist/, .tests/, .tickets/, docs/, scripts/, restored files) |
-| **Remote** | `origin` → `github.com:gemquota/vepa.git` |
+| **Current Branch** | `feature/multiplayer-investigation` |
+| **HEAD** | `7ddb832` — `v4.6.26: record production deploy URL` |
+| **Previous releases** | `d5f5692` — `v4.6.26: solver perf` · `20df5ec` — `v4.6.25: GPU performance` · `28e9a16` — `v4.6.24: chaos multiplex expansion` · `f1407e6` — `v4.6.23: law RRP batches 20-22` · `d0aba7e` — `v4.6.22` · `32b6750` — `v4.6.21` · `446855b` — `v4.6.20` · `dbb4a0f` — `v4.6.18` |
+| **Release tags** | **None yet** — adopt `vM.N.B` tagging per §10.4 (e.g. `v7.0.0`) |
+| **Backup branches** | `backup/pre-archive-restructure-20260810` (cut before the 2026-08-10 restructure), `backup/pre-multiplex-20260807`, `backup/pre-metrics-20260807`, `backup/pre-perf-20260807`, `backup/pre-cleanup-20260726`, `backup/pre-lpsbs-20260728`, `backup/pre-vepa4-20260801` |
+| **Working tree** | Dirty — **7.0.0 (legacy 4.7.0) release draft**: law RRP WIP (8 rewritten laws in `lawgroups/`, `laws.js`, `solver.js`, `constants.js` stride 85-95, `lawState.js` dependencies) + multiplex 4.6.27/4.6.28 WIP + the 2026-08-10 archive/restructure + docs restore/triage (staged, uncommitted). **Planned multiplayer update dropped** — P1 phone-grid WIP (`src/net/`, `src/ui/networkPanel.js`, `tests/unit/net.test.js`), LAN hub (`server/`), protocol lab (`multiplayer/`, `net-poc/`) and `docs/multiplayer/` removed from the tree (recoverable from `730f5dc` / backup branches) |
+| **Remote** | `origin` → `github.com:gemquota/vepa.git` (`origin/HEAD` → `master`) |
 
-**Important:** The working tree has a large diff because this is a "nuclear rewrite" state. Many files were removed from tracking (old dist, old tickets, old tests) and new files are untracked. Changes should be committed to the `new` branch.
+**Release cadence:** 4.6.11 → … → 4.6.18 all landed 2026-08-06; 4.6.24-4.6.26 landed 2026-08-07/08. The 4.6.27/4.6.28 changelog sections, the v4.6.29 law RRP WIP and the 7.0.0 release draft are uncommitted (not yet released). Always re-check HEAD and the changelog top on entry — do not assume this table is current.
 
 ---
 
 ## 3. MEMORY & DATA ARCHITECTURE (THE STRIDE SYSTEM)
 
-This is the **most critical architectural concept** in VEPA. All particle state is stored in flat `SharedArrayBuffer` / `Float32Array` buffers. Each particle occupies exactly **100 floats** (the STRIDE).
+**Critical:** all particle state lives in flat `SharedArrayBuffer` / `Float32Array` buffers. **In v4, each particle occupies exactly 100 floats (`PARTICLE_STRIDE = 100`, `src/constants.js:9`).** The legacy root tree uses 64 — never mix the two. Base pointer is always `index * PARTICLE_STRIDE`.
 
-### 3.1 Particle Stride Layout (0-99)
+### 3.1 Particle Stride Layout (v4 — offsets 0-84, 85-99 reserved)
 
-| Offset(s) | Key | Type | Description |
-|-----------|-----|------|-------------|
-| 0 | `POS_X` | f32 | X coordinate (toroidal) |
-| 1 | `POS_Y` | f32 | Y coordinate |
-| 2 | `POS_Z` | f32 | Z coordinate (3D aware) |
-| 3 | `VEL_X` | f32 | Velocity X |
-| 4 | `VEL_Y` | f32 | Velocity Y |
-| 5 | `VEL_Z` | f32 | Velocity Z |
-| 6 | `MASS` | f32 | Physical mass |
-| 7 | `SPECIES_ID` | f32 | Species index (0-63) |
-| 8-71 | `DNA_CACHE` | f32 | Cached DNA (64 params at 8+idx) |
-| 72 | `ENERGY` | f32 | Internal energy (0-200) |
-| 73 | `AGE` | f32 | Frame count since birth |
-| 74 | `DEAD` | f32 | 0=Alive, 1=Dead, 0.5=Soul |
-| 75-77 | `COLOR_R/G/B` | f32 | Color channels |
-| 78 | `MEMORY` | f32 | Internal memory state |
-| 79 | `SIGNAL` | f32 | Pulse intensity |
-| 80 | `RADIUS` | f32 | Physical extent (phenotype derived) |
-| 81 | `ALPHA` | f32 | Visual transparency |
-| 82 | `MITOSIS_TIMER` | f32 | Dual-system countdown |
-| 83 | `PARTNER_ID` | f32 | Breeding partner reference |
-| 84 | `HUNGER` | f32 | Starvation counter (0-100) |
-| 85 | `ARMOR` | f32 | Defense/integrity rating |
-| 86 | `BOND_COUNT` | f32 | Active valence connections |
-| 87 | `CHAIN_LENGTH` | f32 | Polymerization chain length |
-| 88-93 | `BOND_PARTNER_1-6` | f32 | Bond partner indices |
-| 94 | `SPECIES_CLASS` | f32 | Tier (0=Base...4=Polymer) |
-| 95 | `COMBAT_STATE` | f32 | 0=Idle, 1=Pursuit, 2=Attack, 3=Flee |
-| 96-98 | `STIGMERGY_X/Y/Z` | f32 | Local pheromone field readings |
-| 99 | `RESERVED_3` | f32 | Future expansion |
+Source of truth: `STRIDE_INDEXES` in `src/constants.js` and `src/physics/lawgroups/SPEC.md`.
 
-### 3.2 Species DNA Buffer (64 × 64)
+| Offset(s) | Key | Description |
+|-----------|-----|-------------|
+| 0-2 | `POS_X/Y/Z` | Toroidal position |
+| 3-5 | `VEL_X/Y/Z` | Velocity |
+| 6 | `MASS` | Physical mass |
+| 7 | `SPECIES_ID` | Species index (0-63) |
+| 8-49 | `DNA_CACHE_START..END` | 42 cached DNA floats (normalized) |
+| 50 | `ENERGY` | Metabolic/life energy pool |
+| 51 | `AGE` | Frame count since birth |
+| 52 | `DEAD` | 0 alive / 1 dead |
+| 53-55 | `COLOR_R/G/B` | Color channels |
+| 56 | `RADIUS` | Physical extent |
+| 57 | `SIGNAL` | Pulse/signal strength |
+| 58 | `BOND_COUNT` | Active valence bonds |
+| 59-60 | `BOND_PARTNER_1/2` | Primary bond partners |
+| 61 | `MEMORY` | Internal memory state |
+| 62 | `HUNGER` | Starvation counter |
+| 63 | `ARMOR` | Defense rating |
+| 64 | `MITOSIS_TIMER` | Dual-system countdown |
+| 65 | `PARTNER_ID` | Breeding partner |
+| 66 | `TEMPERATURE` | Thermal state |
+| 67 | `CHARGE` | Electrical charge |
+| 68-69 | `PHASE_1/2` | Phase/state fields |
+| 70 | `SOUL` | Soul-state marker |
+| 71-73 | `TRAIL_X/Y/Z` | Trail/persistence |
+| 74 | `ALPHA` | Transparency |
+| 75-76 | `ENTANGLE_ID/PHASE` | Quantum entanglement |
+| 77 | `ELECTRIC_ENERGY` | Electrical potential energy |
+| 78 | `STORED_ENERGY` | Reserve pool (capacitance/fusion) |
+| 79 | `REPRO_DRIVE` | Reproduction drive (REPRO law gate) |
+| 80 | `RADIATION_EXPOSURE` | Accumulated radiation dose |
+| 81-84 | `BOND_PARTNER_3-6` | Polymer chain expansion (max 6 bonds) |
+| 85-99 | *(reserved)* | Future expansion |
 
-A separate `SharedArrayBuffer` of shape `[64 species][64 DNA values]`. Each species has 42 DNA parameters (indices 0-41), stored as `Uint16Array` (packed 0-65535, mapped to float ranges via `DNA_RANGES`).
+### 3.2 Species DNA Buffers
+
+- `DNA_INDEXES` — **64 parameters, indices 0-63** (`DNA_COUNT = 64`): the 42 core traits (0-41) plus 22 genetics & regulatory traits (42-63). Genetics 42-47: DOMINANCE, CROSSOVER_RATE, EPIGENETIC_DRIFT, HETEROZYGOSITY, GENE_FLOW, REPRESSOR; genetics & regulatory 48-63: ALLELE_COUNT, EPIGENETIC_RATE, HGT_RATE, REPAIR_EFFICIENCY, DRIFT_RATE, SELECTION_SENSITIVITY, SPECIATION_THRESHOLD, ADAPTATION_RATE, TRANSPOSON_RATE, GENE_SILENCING, RECOMBINATION_BIAS, MUTAGEN_SENSITIVITY, TELOMERE_LENGTH, PLOIDY_LEVEL, CODON_BIAS, REGULATORY_DEPTH.
+- `DEFAULT_DNA_STRIDE = 64` — **allocation width of the species genome buffer** (Uint16Array, `species * 64 + index`). The stride width and the parameter count both equal 64 since v4.6.19; do not confuse it with the v2-era 64-parameter DNA set (22 genetics traits) — v4's 22 genetics traits live at indices 42-63.
+- Per-particle cache: the stride holds **42** normalized floats (offsets 8-49); all 22 genetics traits (42-63) live **only** in the species genome (`readSpeciesDNAParam`/`writeSpeciesDNAParam` in `src/physics/laws.js`). Per-particle cache copies stay at 42 — never widen them.
+- `MAX_SPECIES = 64`; `MAX_PARTICLES = 2500`.
 
 ### 3.3 Concurrency Model
 
-- **Main Thread:** UI (PixiJS sprites), orchestrator (`VepaEngine`), rendering loop
-- **Worker Thread:** Physics loop (`physics.worker.js`), spatial grid, law computation
-- **Shared Memory:** `SharedArrayBuffer` for zero-copy particle state. Worker writes, main thread reads via double-buffering with Transferable Objects
-- **Sync Protocol:** Message passing via `postMessage` with `{type, data, config, version}` envelope
+- **Main thread:** UI (PixiJS sprites), orchestrator (`src/main.js`), render loop.
+- **Worker thread:** physics loop (`src/worker/physics.worker.js`), solver (`src/physics/solver.js`), spatial grid, lawgroups.
+- **Shared memory:** `SharedArrayBuffer` zero-copy particle state; worker writes, main reads via double-buffering with Transferable objects.
+- **Sync protocol:** `postMessage` with `{type, data, config, version}` envelope; law state passed to the worker (INIT / TOGGLE_LAW / CONFIG messages).
 
-### 3.4 Spatial Grid (N-Body Optimization)
+### 3.4 Spatial Grid & Solver
 
-- 12×12×12 grid partitioning
-- `MAX_CELL_CAPACITY = 100` particles per cell
-- Toroidal coordinate re-mapping within grid
-- Forces only computed for particles in same or adjacent cells (27-cell neighborhood)
-- `MAX_INTERACTIONS = 500` per particle (relativistic stability layer)
+- `GRID_DIM = 12` → 12×12×12 cells (`src/physics/spatialGrid.js:8`).
+- `MAX_INTERACTIONS = 500` per particle; `MAX_FORCE = 50.0` stability clamp (`src/physics/solver.js:123-124`).
+- Forces computed for neighborhood cells; toroidal coordinate remapping.
 
-### 3.5 Law Bitmask System
+### 3.5 Law State (Bitmask) System — VERIFIED v4 ARCHITECTURE
 
-Laws are 64-bit flags split into `lowFlags` (bits 0-31) and `highFlags` (bits 32-63). Never hardcode law indices — always use `LAW_INDEXES` from `constants.js`. The `computeFlags()` function in `main.js` builds the bitmask from the `this.laws` state object.
+Laws are bit flags in a **128-bit state: four `Uint32Array(1)` words — `lowFlags` (0-31), `highFlags` (32-63), `extFlags` (64-95), `quadFlags` (96-127)** (`src/state/lawState.js`). This covers `LAW_COUNT = 128`. Never hardcode law indices — always use `LAW_INDEXES` from `src/constants.js` (128 keys).
 
-**Categories & bit ranges:**
+- **Helpers:** `createLawState()`, `set()`, `clear()`, `toggle()`, `isSet()`, `getActiveCount()` (popcount), `getStateVector()`, `fromVector()`, `serialize()` (`{low,high,ext,quad}`), `deserialize()` (accepts legacy 3-word objects, quad defaults 0).
+- **Worker consumption:** `src/worker/physics.worker.js` imports the lawState helpers, keeps its own `lawState`, and passes it to `solve(particleView, particleCount, stride, lawState, dnaBuffer, worldSize, dt, rng)`.
+- **Dispatch:** `src/physics/solver.js` gates every law with `isSet(lawState, LAW_INDEXES.X)` and calls the stateless lawgroup functions (`applyTide`, `applySuperposition`, … imported from `lawgroups/*.js`); per-law forces live in `src/physics/laws.js`.
+- **Synergy:** multipliers come from `computeSynergy()` in `src/physics/synergy.js` (returns [0.0, 2.0], e.g. GRAV+PLANETARY ×1.5). The v2-era fixed-penalty synergy table is gone.
+- **⚠ Do not backport:** v4 has **no** nested `this.laws.pure/biol/chem/thermo/meta` config object (that is the v2-era pattern). `LAW_INDEXES` and `isSet()` are **live v4 modules**, not deleted root-`src/` methods; `computeFlags()` does not exist anywhere in this repo.
 
-| Category | Bits | Indices | Count |
-|----------|------|---------|-------|
-| Physics | 0-15 | `GRAV`–`BOIL` | 16+ |
-| Biology | 16-31 | `LIFE`–`EXOP` | 13 |
-| Chemistry | 32-47 | `CATA`–`ALLO` | 10 |
-| Metaphysics | 48-63 | `TIME`–`ASTR` | 12 |
+### 3.6 Worker Message Protocol (`src/worker/physics.worker.js`)
 
----
+Messages use the `{type, ...}` envelope. The worker owns the physics loop and replies on every command.
 
-## 4. DNA PARAMETER SYSTEM (42 INDICES)
+| Direction | Type | Payload / purpose |
+|-----------|------|-------------------|
+| → worker | `INIT` | `{buffer, count, config, dnaBuffer}` — `SharedArrayBuffer` (or `ArrayBuffer` fallback) + species genome; replies `INIT_COMPLETE` |
+| → worker | `CONFIG` | `{config, buffer?, dnaBuffer?}` — config may set `particleCount`/`worldSize`/`dt`/`stride`, restore lawState from serialized `{low,high,ext,quad}` or a 128-boolean `laws` array; replies `CONFIG_COMPLETE` |
+| → worker | `TOGGLE_LAW` | `{lawIndex, forceOn?, forceOff?}` — `forceOn`=set, `forceOff`=clear, else toggle; replies `LAW_TOGGLED {lawIndex, active, lawState}` |
+| → worker | `TICK` | `{dt?, particleCount?}` — runs `solve(...)`; replies `TICK_COMPLETE` with `tickCount`, `tickDuration`, optional `offspring` |
+| → worker | `GET_STATE` | replies `STATE` with `particleCount`, `worldSize`, … |
+| → worker | `RESTORE` | restore serialized state; replies `RESTORE_COMPLETE` |
+| → worker | `PING` | replies `PONG {tickCount}` |
+| ← worker | `WORKER_READY` | posted once at worker startup |
+| ← worker | `ERROR` | unknown message type or invalid payload |
 
-Each species has 42 DNA parameters divided into 6 functional groups. All indices are defined in `DNA_INDEXES` in `src/constants.js` and accessed via `DNA_OFFSETS` in the worker.
-
-### 4.1 Physics & Motion (Indices 0-3, 15, 26-28)
-- `FORCE(0)`: Primary attraction/repulsion (±)
-- `VISCOSITY(1)`: Kinetic dampening (0-1)
-- `TORQUE(2)`: Rotational momentum
-- `JITTER(3)`: Brownian motion entropy
-- `TIDAL(15)`: Differential structural forces
-- `INERTIA(26)`: Acceleration resistance
-- `FRICTION(27)`: Velocity-dependent drag
-- `MAX_VELOCITY(28)`: Terminal speed
-
-### 4.2 Matter & Morphology (Indices 6-9, 16-17, 29-31)
-- `SYMMETRY(6)`: C3 interaction shape distortion
-- `HIDDEN_MASS(7)`: Invisible mass multiplier
-- `STIFFNESS(8)`: Structural rigidity
-- `FUSION(9)`: Mass-merging efficiency
-- `FUSION_MOMENTUM(16)`: Minimum collision strength for merging
-- `FUSION_TIME(17)`: Temporal gating to growth
-- `BASE_RADIUS(29)`: Starting size
-- `ELASTICITY(30)`: Collision bounciness
-- `BOND_ANGLE(31)`: Favored cluster geometry
-
-### 4.3 Electromagnetism & Chemistry (Indices 4-5, 32-33, 37-39)
-- `POLARITY(4)`: Charge (C1)
-- `ALPHA(5)`: Visual matter density (C2)
-- `CONDUCTIVITY(32)`: Charge/energy transfer rate
-- `MAGNETIC_MOMENT(33)`: Neighbor charge alignment
-- `REACTION_THRESHOLD(37)`: Mass limit for phase change
-- `CATALYSIS(38)`: Reaction speed multiplier
-- `HEAT_OUTPUT(39)`: Interaction energy byproduct
-
-### 4.4 Biology & Life (Indices 10-12, 34-36, 41)
-- `BIRTH_RATE(10)`: Spontaneous reproduction chance
-- `DEATH_RATE(11)`: Spontaneous decay chance
-- `MUTATION(12)`: Offspring DNA randomness
-- `ENERGY_EFFICIENCY(34)`: Mass→energy conversion
-- `SEX_CHANCE(35)`: Multi-parent reproduction probability
-- `PREDATION_BIAS(36)`: Attraction to lower-mass species
-- `SPECIES_AFFINITY(41)`: Same/different species bias
-
-### 4.5 Communication & Memory (Indices 13-14, 18-25, 40)
-- `SIGNAL_RESP(13)`: Neighbor pulse sensitivity
-- `PULSE_RATE(14)`: Internal oscillator frequency
-- `NEIGHBORHOOD_RADIUS(18)`: Range of influence
-- `SIGNAL_STRENGTH(19)`: Communication intensity
-- `SIGNAL_DECAY(20)`: Signal persistence
-- `PROPAGATION_SPEED(21)`: Signal travel speed
-- `TUNING_CH1-CH4(22-25)`: Receptor filtering channels
-- `MEMORY_DECAY(40)`: Internal state persistence
+The main thread wires this in `src/main.js` (`sendToWorker`/`worker.onmessage`); the worker owns its lawState copy and receives serialized law state via `CONFIG` + per-law changes via `TOGGLE_LAW`.
 
 ---
 
-## 5. LAW SYSTEM (64 GLOBAL LAWS)
+## 4. DNA PARAMETER SYSTEM (64 INDICES)
 
-Laws are multi-state toggles organized in 5 categories. Each law has a `HELP_DB` entry in `src/constants.js` with 4 tiers (HINT, EXPLANATION, SYSTEM, ADVANCED).
+All indices are defined in `DNA_INDEXES` (`src/constants.js`); ranges live in `DNA_RANGES` (64 entries `[min, max, default]`) and display names in `DNA_META`. The 42 core traits (0-41) match the classic layout below; genetics traits 42-63 are listed in §4.6.
 
-### 5.1 Physics Laws (Blue — UI color)
-`grav`, `drag`, `entr`, `wrap`(4-state), `coll`, `accr`, `planet`, `void`, `bond`
+### 4.1 Physics & Motion (0-3, 15, 26-28)
+- `FORCE(0)` · `VISCOSITY(1)` · `TORQUE(2)` · `JITTER(3)` · `TIDAL(15)` · `INERTIA(26)` · `FRICTION(27)` · `MAX_VELOCITY(28)`
 
-### 5.2 Biology Laws (Green)
-`life`, `glow`, `affinity`, `reproduction`(4-tier), `tracking`, `senescence`, `genotype`, `phenotype`, `ener`, `rad`
+### 4.2 Matter & Morphology (6-9, 16-17, 29-31)
+- `SYMMETRY(6)` · `HIDDEN_MASS(7)` · `STIFFNESS(8)` · `FUSION(9)` · `FUSION_MOMENTUM(16)` · `FUSION_TIME(17)` · `BASE_RADIUS(29)` · `ELASTICITY(30)` · `BOND_ANGLE(31)`
 
-### 5.3 Chemistry Laws (Purple)
-`cata`, `solv`, `acid`, `oxid`, `redu`, `poly`, `isom`, `chir`, `crys`, `allo`
+### 4.3 Electromagnetism & Chemistry (4-5, 32-33, 37-39)
+- `POLARITY(4)` · `ALPHA(5)` · `CONDUCTIVITY(32)` · `MAGNETIC_MOMENT(33)` · `REACTION_THRESHOLD(37)` · `CATALYSIS(38)` · `HEAT_OUTPUT(39)`
 
-### 5.4 Thermodynamics Laws (Orange)
-`heat`, `cold`, `conv`, `radi`, `subl`, `melt`, `boil`, `cond`, `depo`, `exop`
+### 4.4 Biology & Life (10-12, 34-36, 41)
+- `BIRTH_RATE(10)` · `DEATH_RATE(11)` · `MUTATION(12)` · `ENERGY_EFFICIENCY(34)` · `SEX_CHANCE(35)` · `PREDATION_BIAS(36)` · `SPECIES_AFFINITY(41)`
 
-### 5.5 Metaphysics Laws (Red)
-`time`, `dime`, `harmony`(3-state), `fate`, `will`, `soul`, `mind`, `tele`, `clai`, `preo`, `astr`
+### 4.5 Communication & Memory (13-14, 18-25, 40)
+- `SIGNAL_RESP(13)` · `PULSE_RATE(14)` · `NEIGHBORHOOD_RADIUS(18)` · `SIGNAL_STRENGTH(19)` · `SIGNAL_DECAY(20)` · `PROPAGATION_SPEED(21)` · `TUNING_CH1-CH4(22-25)` · `MEMORY_DECAY(40)`
 
-### 5.6 Synergy System (from `physics.worker.js`)
+### 4.6 Genetics & Regulation (42-63) — genome-only
+- **Classic genetics (42-47):** `DOMINANCE(42)` · `CROSSOVER_RATE(43)` · `EPIGENETIC_DRIFT(44)` · `HETEROZYGOSITY(45)` · `GENE_FLOW(46)` · `REPRESSOR(47)`
+- **Genetics & regulatory (48-63, added v4.6.19):** `ALLELE_COUNT(48)` · `EPIGENETIC_RATE(49)` · `HGT_RATE(50)` · `REPAIR_EFFICIENCY(51)` · `DRIFT_RATE(52)` · `SELECTION_SENSITIVITY(53)` · `SPECIATION_THRESHOLD(54)` · `ADAPTATION_RATE(55)` · `TRANSPOSON_RATE(56)` · `GENE_SILENCING(57)` · `RECOMBINATION_BIAS(58)` · `MUTAGEN_SENSITIVITY(59)` · `TELOMERE_LENGTH(60)` · `PLOIDY_LEVEL(61)` · `CODON_BIAS(62)` · `REGULATORY_DEPTH(63)`
 
-Law synergies via `computeSynergyBonus()` — specific law combinations produce emergent bonus/penalty effects:
+**Engine wiring:** REPRO consumes ploidy/allele/recombination/mutation-scale params (48-51, 56-58, 61); GENOTYPE consumes drift/selection/speciation/adaptation/mutagen/silencing/codon/regulation (52-55, 57, 59, 62-63); SENESCENCE damps aging death with TELOMERE_LENGTH (60) — `applyLifeCycle` receives `dnaBuffer` from the solver.
 
-| Synergy | Effect |
-|---------|--------|
-| `MIND + ENER` | −2.0 (hive mind energy drain) |
-| `GRAV + TIME` | −1.5 (relativistic pull slowdown) |
-| `ENTR + CRYS` | −1.0 (entropy fights crystallization) |
-| `COLL + RAD` | −0.5 (collisions in radiation field lose energy) |
-| `RAD + GENO` | −1.0 (radiation damages genotype stability) |
-| `POLY + MIND` | −2.0 (polymerized hivemind overhead) |
-| `ASTR + SOUL` | −1.5 (astral soul projection cost) |
+---
+
+## 5. LAW SYSTEM (128 GLOBAL LAWS — 8 CATEGORIES × 16)
+
+Laws are multi-state toggles in the 128-bit `lawState` bitmask (§3.5), each with a 4-tier `LAW_HELP_DB` entry (hint, explanation, system, advanced) in `src/constants.js` (export name is **`LAW_HELP_DB`**). Categories are implemented as **stateless functions** in `src/physics/lawgroups/*.js` (see `lawgroups/SPEC.md`).
+
+| Category | Spectrum color | Lawgroup file |
+|----------|---------------|---------------|
+| Physics | RED | `physicsLaws.js` (GRAV, DRAG, ENTR, WRAP, COLL, ACCR, PLANETARY, VOID, BOND, SINGULARITY, TIDE, FRICTION, ELASTICITY, TURBULENCE, CENTRIPETAL, ROTATION) |
+| Biology | ORANGE | `biologyLaws.js` |
+| Chemistry | YELLOW | `chemistryLaws.js` |
+| Thermodynamics | GREEN | `thermoLaws.js` |
+| Metaphysics | TEAL | `metaLaws.js` |
+| Electromagnetism | BLUE | `emLaws.js` |
+| Information | VIOLET | `infoLaws.js` |
+| Quantum | PURPLE | `quantumLaws.js` |
+
+The law grid renders as a top-to-bottom rainbow in this order (v4.6.11+). `LAW_CATEGORIES` (category → color + 16 indices) and `LAW_SPECTRUM` + `LAW_HUE_BY_INDEX` (128 hues, hue = spectrum position × 3.6) hold the mapping. Since v4.6.14 each category band is **4 spectrum points wide** (center ± 2; RED wraps 98%→102% through 0 — was 10 points before); all 128 laws keep distinct hues. An earlier EM-spectrum draft mapping (physics=BLUE, etc.) was superseded — the verified current mapping is the table above.
 
 ---
 
 ## 6. CODING CONVENTIONS & STANDARDS
 
-### 6.1 JavaScript Conventions
+### 6.1 JavaScript
+- **Commits:** Conventional Commits 1.0.0 — `<type>(<scope>): <description>` (types `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`; `!`/`BREAKING CHANGE:` for breaking). Never write bare-subject or legacy `vX.Y.Z:` prefixed commits — see §10.4.
+- **Module system:** ESM (`import`/`export`) throughout; no file extensions in import paths.
+- **Naming:** classes `PascalCase`, functions/vars `camelCase`, constants `UPPER_SNAKE_CASE`, files `snake_case.js`.
+- **Events:** use `bus` (`src/core/eventBus.js`) for decoupled communication.
+- **PRNG:** use `SplitMix32` (`src/core/prng.js`) — never `Math.random()` for simulation-critical randomness.
+- **Laws:** always `LAW_INDEXES.X`; state via `lawState.js` helpers (`set`/`clear`/`toggle`); test with `isSet()`. Never v2-style nested `this.laws.*` config.
+- **Stride access:** always `index * PARTICLE_STRIDE + STRIDE_INDEXES.X` — no magic numbers.
+- **NaN guards:** every physics sub-step validates coordinates and velocities; clamp `MAX_FORCE`/`MAX_VELOCITY`.
+- **Law functions are stateless** — no module-level mutable state (per `lawgroups/SPEC.md`).
 
-- **Module System:** ESM (`import`/`export`) throughout
-- **Formatting:** No formatter configured; maintain consistent style with existing codebase
-- **Naming:**
-  - Classes: `PascalCase` (e.g., `VepaEngine`, `InsightEngine`, `LineageTracker`)
-  - Functions/variables: `camelCase`
-  - Constants: `UPPER_SNAKE_CASE` (e.g., `DNA_STRIDE`, `LAW_INDEXES`, `MAX_FORCE`)
-  - Files: `snake_case.js` (lowercase, underscores)
-- **Event System:** Use `bus` (EventBus) from `./core/eventBus.js` for decoupled communication
-- **PRNG:** Use `SplitMix32` from `./core/prng.js` — never use `Math.random()` for simulation-critical randomness
-- **State Objects:** Engine state is in `this` (VepaEngine instance). Worker state is module-scoped
-- **Flags:** Never hardcode law bit indices — always reference `LAW_INDEXES.GRAV` etc.
-- **DNA Offsets:** In the worker, use `DNA_OFFSETS` (built from `DNA_INDEXES + STRIDE_INDEXES.DNA_CACHE_START`)
-- **Stride Access:** Always compute particle pointer as `i * STRIDE` where `i` is particle index
-- **NaN Guards:** Every physics sub-step must validate coordinates and velocities for NaN
-- **No file extensions** in import paths (bare module specifiers resolve via Node.js/bundler)
-
-### 6.2 UI Conventions
-
-- UI is built programmatically in `src/ui.js` — no framework
-- All UI elements use the `chunk-type-*` CSS class system for menu panel theming
-- Every interactive element should have a `data-help-key` attribute linking to `HELP_DB`
-- SVG icons preferred over emoji for toolbar buttons
-- DNA sliders must use `DNA_RANGES` from `constants.js` for min/max/default/step
-- HUD updates flow through `updateHUD()` → stats display
-- Color categories: BLUE=Physics, GREEN=Biology, PURPLE=Chemistry, ORANGE=Thermodynamics, RED=Metaphysics
-- Law toggle icons show numeric state indicators for multi-state laws (0-3 for Wrap, 0-2 for Thermal/Harmony)
-- `window.*` globals for function callbacks from inline HTML event handlers
-
-### 6.3 CSS Conventions
-
-- CSS custom properties (variables) in `:root` / `.theme-sanguine`
-- `.bolt` pseudo-elements for corner decorations on menu panels
-- `.chunk-inner` for panel content containers
-- BEM-ish naming: `.side-bar`, `.playback-bar-container`, `.quick-presets-container`
-- Neon-noir aesthetic: glow effects, scanlines, high-contrast borders
-
-### 6.4 HTML Conventions
-
-- Single-page app architecture (`index.html` as shell)
-- Dynamic content injected by `ui.js`
-- Codex is a separate standalone HTML app (`codex/index.html`)
+### 6.2 UI / CSS / HTML
+- Programmatic UI in `src/ui/`; no framework.
+- Interactive elements use `data-help-key` linking to `LAW_HELP_DB`.
+- DNA sliders use `DNA_RANGES` from `src/constants.js`.
+- HUD updates flow through `updateHUD()`.
+- Setup drawer (v4.6.13): LAWS and WORLD are separate sub-tabs (network panel mounts in WORLD); the law grid can't be hidden anymore — only toggled icon/list view.
+- Neon-noir aesthetic: CSS custom properties, `.bolt` corners, scanlines; law colors are per-law HSL (`--law-h`).
 
 ---
 
 ## 7. DOCUMENTATION & SSOT MANDATES
 
-### 7.1 Documentation Synchronization (GEMINI.md Mandate)
-
 Every significant code change **MUST** be synchronized across these files:
 
-| File | Content | Sync Trigger |
+| File | Content | Sync trigger |
 |------|---------|--------------|
-| `CHANGELOG.md` | Versioned change log | Any functional change |
-| `README.md` | Project overview | Architecture shifts, new features |
-| `GUIDE.md` | User-facing recipes | New emergent behaviors |
-| `ENGINE_SSOT.md` | Technical SSOT | Law/DNA changes, parameter shifts |
-| `docs/fullaudit.md` | System audit | Parameter/law index changes |
-| `docs/lawaudit.md` | Law audit | New laws, law behavior changes |
-| `src/constants.js` (HELP_DB) | 4-tier documentation | New laws or parameters |
-| `codex/entries.json` | In-engine encyclopedia | After HELP_DB changes |
+| `CHANGELOG.md` | Release ledger — **strict §10.4** | ANY functional change / release |
+| `package.json` | Version manifest — must match changelog top | Every release |
+| `README.md` | Project overview + commands | Architecture shifts, new features |
+| `SPEC.md`, `PLAN.md` | Architecture spec + plan | Major milestones |
+| `src/physics/lawgroups/SPEC.md` | Law implementation SSOT | Law changes |
+| `src/constants.js` (LAW_HELP_DB) | 4-tier documentation | New laws or parameters |
+| `GUIDE.md` | User-facing design guide | Significant parameter/DNA recipe shifts |
+| `audit-suite/fidelity-audit-*.md` | Law fidelity audit (updated duplicate) | Law behavior changes (see `audit-suite/README.md`) |
+| `VERSION` | Version marker — must match changelog top + `package.json` | Every release (see §10.4) |
 
-### 7.2 The B-4RK Principle
-Documentation is not an afterthought; it is a feature. All new laws **must** be accompanied by `HELP_DB` entries covering all four tiers (HINT, EXPLANATION, SYSTEM, ADVANCED).
-
-### 7.3 Codex Parity
-The Codex (`codex/index.html`) must remain the primary in-engine source of truth. Changes to `ENGINE_SSOT.md` should be reflected in `codex/entries.json` via `scripts/build_codex.js`.
-
-### 7.4 Documentation Expansion
-See `docs/stubs.md` for the prioritized list of documentation gaps. Expansion progress is tracked in `docs/EXPANSION_PROGRESS.md` across 15 batches (batches 01-03 complete, 04-15 pending).
+The **B-4RK principle** stands: documentation is not an afterthought; it is a feature. New laws must ship with all four `LAW_HELP_DB` tiers. The law audit lives in `audit-suite/` (fidelity audit + frozen historical copies of `laws-rrp/batch_*.md`); legacy audit docs (`docs/fullaudit.md`, `docs/lawaudit.md`) are archived.
 
 ---
 
 ## 8. TESTING & QUALITY ASSURANCE
 
-### 8.1 Test Infrastructure
-
-- **Playwright** (`@playwright/test` ^1.60.0) available as dev dependency
-- **Python validator** at `.tests/validate_engine.py` — runs three test suites:
-  1. `test_js_syntax()` — `node --check` on all `src/**/*.js` files
-  2. `test_ssot_alignment()` — Verifies DNA params and law names match between `ENGINE_SSOT.md` and `src/constants.js`
-  3. `test_law_coverage()` — Checks all laws have `HELP_DB` entries
-
-### 8.2 How to Run Tests
-
-```bash
-# Python validation suite
-python3 .tests/validate_engine.py
-
-# JavaScript syntax check (all modules)
-find src -name '*.js' -exec node --check {} \;
-
-# Vite build check
-npx vite build 2>&1 | head -30
-```
-
-### 8.3 Testing Principles
-
-- Always run `python3 .tests/validate_engine.py` after any constants/DNA/law changes
-- Verify syntax after any JS edits: `find src -name '*.js' -exec node --check {} +`
-- Test the app by opening `index.html` in a browser (or use `npx serve .`)
-- Use Playwright for headless integration tests if adding complex UI flows
-- Do not fix unrelated test failures or bugs
+- **Unit/audit:** `vepa4 test` (vitest 3.2.7, `tests/`). **69 files / 617 tests** (verified 2026-08-10 — 597 green; the 20 failures are the uncommitted v4.6.29 law-RRP stale assertions, see `audit-suite/fidelity-audit-v4.6.29.md`). Config: `vitest.config.js` includes `tests/**/*.test.js`, node environment, 15 s timeout. Suite layout: `tests/unit/` (19 files incl. `drawer.test.js`), `tests/audit/` (`batch_01-32.test.js` + `params_batch_01-18.test.js` + `paramsHelpers.js`).
+- **E2E:** `npm run test:e2e` (Playwright) — ⚠️ **no `playwright.config.*` or `*.spec.js` files are committed yet**, so the script is currently unconfigured; treat e2e as aspirational until specs land.
+- **Syntax:** `vepa4 syntax` (`node --check` on `src` + `tests`).
+- **Audit docs:** `audit-suite/` — `fidelity-audit-v4.6.29.md` (updated duplicate for the 8 rewritten laws) + `historical/2026-08-10-v4.6.28/` (frozen pre-rewrite audit incl. `laws-rrp/batch_*.md`).
+- **Build smoke:** `vepa4 build`.
+- **Legacy runner:** `tests/run.mjs` (node:test) is a v3-era artifact — do not use; `vepa4 test` is the suite.
+- `npm test` runs the v4 vitest suite (the legacy v2 root manifest with the dead validator was archived).
 
 ---
 
 ## 9. BUILD SYSTEM & DEPLOYMENT
 
-### 9.1 Vite Build
-
-```bash
-npx vite build          # Produces .dist/ with optimized bundles
-npx vite build --watch  # Watch mode for development
-```
-
-Output goes to `.dist/` (gitignored). PixiJS is tree-shaken during build. Cross-origin isolation headers (COOP/COEP) needed for `SharedArrayBuffer`.
-
-### 9.2 Scripts
-
-| Script | Purpose | Runtime |
-|--------|---------|---------|
-| `scripts/build_codex.js` | Builds `codex/entries.json` from HELP_DB + synergy data | Node.js |
-| `scripts/build_ssot.py` | Generates SSOT markdown from constants | Python 3 |
-| `scripts/inject_physics_bus.py` | Physics bus code injection | Python 3 |
-| `scripts/restore_from_combined.py` | Restore source from `combined.txt` | Python 3 |
-| `scripts/run.py` | Python runner for simulation control | Python 3 |
-| `scripts/run.sh` | Shell runner | Bash |
-| `scripts/setup_vepa_architecture.py` | Architecture scaffolding | Python 3 |
-
-Python scripts require stdlib only (Python 3.10+). All paths are relative to repo root.
-
-### 9.3 Static Server (Development)
-
-```bash
-npx serve .             # Serves on localhost:3000
-npx vite                # Vite dev server with HMR
-```
-
-Necessary HTTP headers for SharedArrayBuffer:
-```
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
+- **Launcher:** `./vepa4 [dev|build|preview|test|syntax|bench] [port]` from any directory (symlinked as `vepa4` on this device). Default dev port 5180.
+- **Vite config** (`vite.config.js`): base `'/'` when `VERCEL=1`, else `'/vepa/vepar/'` (GitHub Pages); dev server sets COOP/COEP headers (`host: true`); worker format `es`.
+- **Build:** `vepa4 build` → `.dist` (gitignored). PixiJS tree-shaken; COOP/COEP headers required for `SharedArrayBuffer`.
+- **Deploys:** Vercel production (`vercel.json` — static build, COOP/COEP) → `https://vepa-v4.vercel.app/`. ⚠️ GitHub Pages `.github/workflows/deploy.yml` was archived with the legacy trees — re-add a root-layout workflow (base `/vepa/`) if Pages deploys are wanted.
+- **World parameters:** 23 definitions in `src/state/worldParams.js` (`WORLD_PARAM_DEFS`); live values live in `runtimeConfig.worldParams` and are passed to the worker.
+- Every deploy must follow §10.4.
 
 ---
 
 ## 10. WORKFLOW & OPERATIONAL PROTOCOLS
 
 ### 10.1 Agent Entry Procedure
-
-1. **Read this file** (AGENTS.md) — you are doing this now ✓
-2. **Audit git state:** `git status` to see current dirty/untracked state
-3. **Verify branch:** Should be on `new` — if on `master`, switch
-4. **Check src/constants.js** for the current HELP_DB and LAW_INDEXES — this is the runtime SSOT
-5. **Check ENGINE_SSOT.md** for the documented SSOT — ensure parity with code
-6. **Check docs/stubs.md** for known documentation gaps
-7. **Read GEMINI.md** for project mandates (takes precedence over general instructions)
+1. **Read this file** ✓
+2. **Audit state:** `git status` + `git log --oneline -3`; verify HEAD prefix matches top of `CHANGELOG.md`
+3. **Verify branch:** `feature/multiplayer-investigation` is current — never commit to `master`
+4. **Read context:** `README.md`, `SPEC.md`, `PLAN.md`
+5. **Read the runtime SSOT:** `src/constants.js` (STRIDE_INDEXES, DNA_INDEXES, LAW_INDEXES, LAW_CATEGORIES)
+6. **Read `src/physics/lawgroups/SPEC.md`** before touching law code
+7. **Run the §10.4 version-sync check**
+8. **Read `GEMINI.md`** (project mandates take precedence)
+9. **Legacy trees are archived** (root `src/`, `v3/`, `vaa/` → `gemquota/vepa-archive`); never reintroduce v2-era code
 
 ### 10.2 Change Protocol
-
-1. **Make the change** in source files
-2. **Validate syntax:** `find src -name '*.js' -exec node --check {} +`
-3. **Run tests:** `python3 .tests/validate_engine.py`
-4. **Update documentation** per Section 7 (minimum: CHANGELOG.md + ENGINE_SSOT.md)
-5. **Rebuild Codex** if HELP_DB changed: `node scripts/build_codex.js`
-6. **Verify no regressions:** open `index.html` and check the simulation loads
-7. **Stage and commit:** `git add -A && git commit -m "description"`
+1. Make the change in `src`
+2. `vepa4 syntax`
+3. `vepa4 test` (+ targeted audit/e2e where relevant)
+4. `vepa4 build` — verify no build regression
+5. Update docs per §7 (minimum: `CHANGELOG.md` via §10.4)
+6. Cut backup branch, commit, tag, deploy per §10.4
 
 ### 10.3 Common Pitfalls
 
 | Pitfall | Resolution |
 |---------|------------|
-| **SharedArrayBuffer not supported** | Ensure page served with COOP/COEP headers; check browser support |
-| **Worker postMessage size limits** | Use `Transferable` objects for buffer transfers |
-| **Physics NaN explosion** | Check NaN shields in worker; verify MAX_VELOCITY clamp |
-| **UI/DNA slider mismatch** | Verify DNA_RANGES matches 42-parameter layout; check STRIDE_INDEXES |
-| **Law toggle not working** | Check `computeFlags()` in main.js; ensure law is in correct category map |
-| **Codex entries stale** | Re-run `node scripts/build_codex.js` after HELP_DB changes |
-| **Memory/stride corruption** | Verify all buffer accesses use `STRIDE * index + offset` pattern |
-| **Race condition in buffer sync** | Check double-buffering sync lock in main.js render loop |
-| **Flickering particles** | Check zero-alpha coercion bug (see CHANGELOG 2.4.4); verify Z-sorting |
-| **Planetary law not working** | Historical naming bug: key is `planet` not `planetary` |
+| **Stride mismatch** | v4 = 100, legacy root = 64 — always import `PARTICLE_STRIDE` from `src/constants.js` |
+| **DNA count confusion** | v4 has **48** DNA params (0-47); `DEFAULT_DNA_STRIDE = 64` is the genome buffer width, not a param count; the 42-param claim applies to the per-particle stride cache only |
+| **Law bitmask width** | The v4 law state is **128 bits** (4 × u32: low/high/ext/**quad**Flags) — not 96 bits. Serialized form is `{low, high, ext, quad}` |
+| **v2 law config** | Do not write nested `this.laws.pure/biol/chem/thermo/meta` objects — that is v2-era; v4 uses `lawState` + `LAW_INDEXES` + `isSet()` |
+| **Version drift (fixed 2026-08-06, re-based 2026-08-10)** | `VERSION`/changelog arrow token/`package.json#version` all read 7.0.0 (VEPA4 `major.minor.build`); keep them matched per §10.4 |
+| **Stale root manifest** | The legacy v2 root manifest is archived — `npm test` / `npm run build` now run the v4 suite from the root |
+| SharedArrayBuffer blocked | Serve with COOP/COEP (`vepa4 dev` handles; `vercel.json` ships them) |
+| Worker postMessage limits | Use Transferable objects for buffer transfers |
+| Physics NaN explosion | NaN shields in solver; MAX_FORCE/MAX_VELOCITY clamps |
+| Law toggle not working | Check `LAW_INDEXES` + `lawState.js` set/clear + `isSet` in solver |
+| HELP_DB / audit drift | After law changes, sync `LAW_HELP_DB` (4 tiers) + `audit-suite/fidelity-audit-*.md` (see GEMINI.md §1.1) |
+| Memory/stride corruption | Every access = `index * PARTICLE_STRIDE + STRIDE_INDEXES.X` |
+| Planet law key | v4 key is `LAW_INDEXES.PLANETARY` |
+| Stale changelog drafts | An earlier `[4.7.0]` draft was removed from the ledger on 2026-08-06 (snapshot: `CHANGELOG.md.bak-20260806`); the current `[4.7.0]` release draft (2026-08-10) drops the planned multiplayer update entirely |
 
-### 10.4 Adding a New Law (Step-by-Step)
+### 10.4 VERSION HISTORY CONTROL PROTOCOL (STRICT — MANDATORY)
 
-1. Add index to `LAW_INDEXES` in `src/constants.js`
-2. Add to `LAW_MAP` category array
-3. Add `HELP_DB` entry with all 4 tiers
-4. Add default state in `VepaEngine.laws` in `src/main.js`
-5. Add logic in `physics.worker.js` (use `isSet(LAW_INDEXES.YOUR_LAW)`)
-6. Register in `computeFlags()` in `src/main.js`
-7. Add UI toggle in `src/ui.js` (category section)
-8. Update `ENGINE_SSOT.md` and `docs/fullaudit.md`
-9. Rebuild codex: `node scripts/build_codex.js`
-10. Run validation: `python3 .tests/validate_engine.py`
-11. Update `CHANGELOG.md`
+**Product & schema (adopted 2026-08-10):** the product is **VEPA4** (formerly
+styled "VEPA v4"); versions use **`major.minor.build`** (npm-semver-native, e.g.
+`7.0.0`). Retroactive mapping of the v4 line: old `4.M.N` → `M.N.0` — the
+generation `4` moved into the product name, the old minor became the new major,
+the old patch became the new minor, and every historical release gets build `0`
+(builds increment only for future same-minor rebuilds/hotfixes). Changelog
+headers carry both labels: `## [4.6.28] - date → 6.28.0`. v2/v3-era entries keep
+their historical labels.
 
-### 10.5 Important Architecture Constraints
+**Authority:** `CHANGELOG.md` is the single source of truth for release history.
+`VERSION`, the changelog top section's arrow token, and `package.json#version`
+MUST all equal the newest version (`7.0.0`). From here on, drift is a release
+blocker.
 
-- **Species limit:** 64 species (DNA buffer `[64 × 64]`)
-- **Particle stride:** 64 floats per particle
-- **Grid resolution:** 12×12×12 cells
-- **Max cell capacity:** 100 particles/cell
-- **Max interactions:** 500/particle/frame (worker throttle)
-- **Max sub-steps:** 10 per frame (tunneling prevention)
-- **Max force clamp:** 50.0 (stability layer)
-- **DNA buffer type:** `Uint16Array` (packed 0-65535)
-- **Particle buffer type:** `Float32Array`
-- **Color evolution:** Accretion (mass-weighted), Predation (shift toward prey), Breeding (averaged + hue mutation)
-- **Reproduction tiers:** Cloning → Sexual → Mitosis → Hybridization
+**Commit standard (Conventional Commits 1.0.0 — mandatory for all commits from
+2026-08-10):** `<type>(<scope>): <description>` with types
+`feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`; breaking changes
+append `!` to the type/scope or use a `BREAKING CHANGE:` footer. Release commits
+use `chore(release): v7.0.0 — <summary>`; tags are `v7.0.0`. Past commit messages
+(legacy `vX.Y.Z:` prefixes) are immutable — never rewrite history; the changelog
+restates releases under the new schema.
+
+**Release checklist — every deploy, no exceptions:**
+1. **Changelog first.** Add `## [4.7.0] - YYYY-MM-DD → 7.0.0` at the top of
+   `CHANGELOG.md` (legacy label + arrow + new-schema token), with
+   conventional-style bullets summarizing what/why/files.
+2. **Sync the manifests.** Bump `package.json#version` + `VERSION` to the arrow
+   token (`7.0.0`). Drift is never allowed.
+3. **Back up before editing.** Cut a `backup/pre-<slug>-YYYYMMDD` git branch
+   (e.g. `backup/pre-700-20260810`) before risky work. For changelog surgery
+   specifically, also snapshot the file: `cp CHANGELOG.md CHANGELOG.md.bak-<date>`.
+4. **Commit with Conventional Commits.** `chore(release): v7.0.0 — <summary>` —
+   releases are never bare feature commits.
+5. **Tag the release.** `git tag v7.0.0` (repo has no tags yet — adopt from the
+   next release).
+6. **Record the deploy.** Add the deployed URL(s) (Vercel/Pages) to the changelog
+   entry so history maps to artifacts.
+7. **Sync version markers.** Keep `VERSION` + `package.json#version` aligned with
+   the changelog top (since 2026-08-10 the root manifest IS the v4 manifest —
+   there are no separate root pointers anymore).
+
+**Changelog backup rules:**
+- The changelog is the release ledger — protect it like a database. Snapshot
+  (step 3) before ANY bulk edit, and confirm `git diff CHANGELOG.md` shows only
+  intended changes afterward.
+- Never force-push, rebase, or `git reset` over a committed changelog entry. Fix
+  history with a new entry, never by rewriting.
+- A release is not real until committed AND tagged. Deploy without a ledger entry
+  = it didn't happen.
+
+**Post-release verification:**
+```bash
+grep -m1 '^## .*→ ' CHANGELOG.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+$'   # → 7.0.0
+grep '"version"' package.json      # 7.0.0 — must match
+cat VERSION                        # 7.0.0 — must match
+git log --oneline -1               # chore(release): v7.0.0
+git tag | tail -1                  # v7.0.0
+```
+
+**Non-negotiable rules:**
+- No release commit without a changelog section.
+- No changelog section without a matching `package.json` version.
+- No deploy without a `backup/pre-*` branch from the pre-release state.
+- One section per release; newest version number first (branch experiments get
+  `M.N.B-<tag>` suffixes, e.g. `7.0.0-mp`).
+- Every commit (release or feature) follows Conventional Commits 1.0.0.
+
+### 10.5 Architecture Constraints (v4)
+- `PARTICLE_STRIDE` = 100 · `MAX_SPECIES` = 64 · `MAX_PARTICLES` = 2500
+- `DEFAULT_DNA_STRIDE` = 64 (species genome width) · `DNA_COUNT` = 64 (42 cached per particle, 22 genome-only)
+- `LAW_COUNT` = 128 (8 categories × 16) · `GRID_DIM` = 12 (12³ cells)
+- `MAX_INTERACTIONS` = 500 · `MAX_FORCE` = 50.0
+- Particle buffer: `Float32Array` over `SharedArrayBuffer`
+
+### 10.6 Adding a New Law (v4)
+1. Add index to `LAW_INDEXES` + `LAW_HELP_DB` (all 4 tiers) in `src/constants.js`
+2. Add to `LAW_CATEGORIES` (16-per-category cap; `LAW_COUNT` ≤ 128) and confirm `LAW_SPECTRUM`/`LAW_HUE_BY_INDEX` coverage
+3. Implement a stateless function in `src/physics/lawgroups/<category>Laws.js` per `lawgroups/SPEC.md`
+4. Wire dispatch with `isSet(LAW_INDEXES.X)` in `src/physics/solver.js` (worker consumes via `solve()`)
+5. Add the toggle in `src/ui/lawPanel.js`
+6. Update `lawgroups/SPEC.md` + `audit-suite/laws-rrp/batch_*.md`
+7. Update `audit-suite/fidelity-audit-*.md` + the historical batch copy if the law behavior changed
+8. `vepa4 syntax` + `vepa4 test`
+9. Changelog + version + backup + tag per §10.4
 
 ---
 
-## 11. KEY PRESET PROFILES (PRIME_DEFAULT)
+## 11. PRESET PROFILES
 
-| Species | Color | Role | Force | Viscosity | Key Traits |
-|---------|-------|------|-------|-----------|------------|
-| **Predator** | Red | Aggressive hunter | 0.4 | — | High predation bias, negative affinity |
-| **Sol** | Yellow | Stellar core | 1.0 | 0.99 | High fusion, stable attractor |
-| **Life** | Green | Biological reproducer | — | — | High birth rate, energy efficiency |
-| **Aether** | Cyan | Social swarmer | 0.4 | — | High signal response, positive affinity |
-| **Void** | Purple | Ethereal field | 0.05 | 0.995 | Low alpha, near-static, minimal influence |
-
-**Other built-in presets:** VOID_CORE, NEURAL_DRIFT, SOLAR_FLARE, CRYSTAL_LATTICE, PREDATOR_SWARM, KINETIC_GAS, SYMBIOTIC_LOOP, CHRONOS_FLUX
+Built-ins live in `src/state/defaultPresets.js`: **PRIME_DEFAULT** (default world) plus species presets **PREDATOR, SOL, LIFE, AETHER, VOID**; managed by `src/state/presetManager.js` with `src/ui/presetPanel.js`. (The classic v2 table had 12 presets — verify current names in `defaultPresets.js` before relying on any.)
 
 ---
 
 ## 12. INTELLIGENCE ENGINES
 
-VEPA contains several "intelligence" engines that operate above the physics layer:
-
-- **Insight Engine** (`src/insightEngine.js`): Spatio-temporal cluster detection and "interestingness" scoring with pattern logging
-- **Narrative Consciousness** (`src/narrativeConsciousness.js`): 4-voice monologue (Stabilizer, Diverger, Observer, Dissolver)
-- **Goal Engine** (`src/goalEngine.js`): Auto-tunes world constraints toward stability/complexity targets
-- **Personality Engine** (`src/personalityEngine.js`): Drives systemic bias (Curiosity, Stability, Chaos)
-- **Lineage Tracker** (`src/lineageTracker.js`): Tracks evolutionary genealogy
-- **Timeline Engine** (`src/timelineEngine.js`): History recording and scrubbing playback
-- **Emergent Param Engine** (`src/emergentParamEngine.js`): Discovers emergent parameter configurations
+- **v4 (`src/engines/`):** `goalEngine.js` (world-constraint tuning), `insightEngine.js` (cluster detection / pattern logging), `lineageTracker.js` (genealogy), `narrativeEngine.js` (narrative generation), `timelineEngine.js` (history playback).
+- **Legacy (archived):** `personalityEngine.js`, `emergentParamEngine.js`, `narrativeConsciousness.js`, `persistenceEngine.js`, `levelEngine.js`, plus v2 `engines/` — archived 2026-08-10 with the legacy trees (in `gemquota/vepa-archive`).
 
 ---
 
-## 13. CURRENT DOCUMENTATION GAPS (from `docs/stubs.md`)
+## 13. CURRENT DOCUMENTATION & WORK TRACKS
 
-| Priority | Topic | Stub Location |
-|----------|-------|---------------|
-| **CRITICAL** | Spatial Grid & N-Body Optimization | `docs/arch/spatial_grid.md` |
-| **CRITICAL** | SharedArrayBuffer & Worker Sync | `docs/arch/worker_sync.md` |
-| **CRITICAL** | Law Bitmask System (64-bit) | `docs/arch/law_bitmask.md` |
-| **HIGH** | Metaphysical Laws Practitioner Guide | `docs/mechanics/metaphysics.md` |
-| **HIGH** | Chaos Multiplex & Parallel Realities | `docs/mechanics/chaos_multiplex.md` |
-| **HIGH** | Thermodynamics & Phase Transitions | `docs/mechanics/thermodynamics.md` |
-| **MEDIUM** | Expansion Batch 04 (spread, seed, entropy) | `docs/expansion/batches/batch_04.md` |
-| **MEDIUM** | Expansion Batch 05 (DNA Kinetic Traits) | `docs/expansion/batches/batch_05.md` |
+- `docs/multiplayer/` — **removed with the 4.7.0 release draft (2026-08-10)**; the LAN-hub P0 + phone-grid P1 WIP (`server/`, `multiplayer/`, `net-poc/`, `src/net/`, `src/ui/networkPanel.js`, `tests/unit/net.test.js`) is recoverable from `730f5dc` / backup branches if the multiplayer track is ever resumed.
+- `audit-suite/laws-rrp/` — per-law RRP batches 01-32 (batches 01-14 shipped through v4.6.18; batches 15+ pending).
+- `tests/audit/` — `batch_01-32.test.js` + `params_batch_01-18.test.js`.
+- `docs/stubs.md` — legacy doc gaps; `docs/LAW_AUDIT.md`, `docs/LAW_PARAMETER_RELATIONSHIPS.md` — law/param analysis.
+- `PLAN.md` — milestone plan.
 
 ---
 
 ## 14. QUICK REFERENCE
 
 ```bash
-# Git
-git log --oneline                        # View history
-git diff --stat HEAD                     # Uncommitted changes
-git status                               # Working tree state
+# State & version sync (run on entry — §10.4)
+git status && git log --oneline -3
+grep -m1 '^## .*→ ' CHANGELOG.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+$'   # → 7.0.0
+grep '"version"' package.json      # must match changelog
+cat VERSION                           # root marker — must match too
 
-# Validation
-python3 .tests/validate_engine.py        # Run test suite
-find src -name '*.js' -exec node --check {} +  # Syntax check
+# Trust-but-verify (workspace moves fast — code is truth)
+node -e "const c=require('./src/constants.js'); console.log(c.PARTICLE_STRIDE, c.DNA_COUNT, c.LAW_COUNT)"  # → 100 64 128
+grep -c '^export const' src/constants.js
+ls src/physics/lawgroups/*.js | wc -l    # → 8 lawgroup files + SPEC.md
+git log --oneline -3 -- CHANGELOG.md     # confirm HEAD = changelog top
 
-# Build
-npx vite build                           # Production build
-node scripts/build_codex.js              # Rebuild codex entries from HELP_DB
-python3 scripts/build_ssot.py            # Regenerate SSOT from constants
+# v4 workflow
+vepa4 dev                             # dev server (COOP/COEP), port 5180
+vepa4 test                            # vitest unit suite (67 files / 579 tests)
+vepa4 syntax                          # node --check all v4 JS
+vepa4 build                           # vite build → .dist
+npx playwright test          # e2e suite
 
-# Serve
-npx serve .                              # Static HTTP server
+# Release (strict — §10.4)
+git switch -c backup/pre-<slug>-$(date +%Y%m%d)   # backup branch first
+# ... edit CHANGELOG.md + package.json (+ VERSION) ...
+git commit -m "chore(release): v7.0.0 — <summary>"
+git tag v7.0.0
 
-# File counts
-find src -name '*.js' | wc -l            # → 20 source files
-wc -l src/**/*.js src/*.js               # → ~6,914 LOC total
-wc -l style.css index.html               # → ~1,957 LOC UI surface
-
-# Verify key constants before editing
-grep "PARTICLE_STRIDE" src/constants.js              # → 100
-grep 'DNA_STRIDE' src/constants.js       # → 64
-grep 'MAX_CELL_CAPACITY' src/worker/physics.worker.js  # → 100
-grep 'MAX_INTERACTIONS' src/worker/physics.worker.js   # → 500
-grep 'MAX_FORCE' src/worker/physics.worker.js           # → 50.0
+# Key constants
+grep 'PARTICLE_STRIDE' src/constants.js   # → 100
+grep 'LAW_COUNT'       src/constants.js   # → 128
+grep 'MAX_SPECIES'     src/constants.js   # → 64
+grep 'DNA_COUNT'       src/constants.js   # → 64
 ```
 
 ---
 
-*Generated 2026-06-13 | Workspace initialization audit complete. Verify SSOT parity before any code change.*
+*Reviewed 2026-08-06 | Workspace state: v4.6.19 @ `dbb4a0f` (v4.6.18 committed) on `feature/multiplayer-investigation`. Version labels synced 4.6.19; DNA-64 expansion (indices 48-63) in the working tree; changelog snapshots `CHANGELOG.md.bak-20260806` + `CHANGELOG.md.bak-20260806-2`. Verify SSOT parity before any code change.*

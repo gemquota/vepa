@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# VEPA v4 launcher — works from any working directory.
-# Usage:  vepa4 [dev|build|preview|test|syntax|bench|multiplayer] [port]
+# VEPA4 launcher — works from any working directory.
+# Usage:  vepa4 [dev|build|preview|test|syntax|bench] [port]
 #   dev     start dev server with COOP/COEP headers (default)
-#   build   production build into v4/.dist
+#   build   production build into .dist
 #   preview serve the built app
 #   test    run the vitest unit suite
 #   syntax  node --check every JS file in v4/src and v4/tests
-#   bench   headless physics-solver benchmark (v4/bench/solver.bench.mjs)
-#   multiplayer  run the LAN multiplayer hub (v4/server/server.js) — needs build
+#   bench   headless physics-solver benchmark (bench/solver.bench.mjs)
 set -euo pipefail
 
 # Resolve the real script location even when invoked through a symlink
@@ -19,14 +18,14 @@ while [ -h "$_SRC" ]; do
   [[ $_SRC != /* ]] && _SRC="$_DIR/$_SRC"
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$_SRC")" && pwd)"
-V4_DIR="$SCRIPT_DIR/v4"
+V4_DIR="$SCRIPT_DIR"
 CMD="${1:-dev}"
 PORT="${2:-5180}"
 
 cd "$V4_DIR"
 
 if [ ! -d node_modules ] || [ ! -e node_modules/.bin/vite ]; then
-  echo "📦 v4 dependencies missing — running npm install..."
+  echo "📦 v4 (root) dependencies missing — running npm install..."
   npm install --no-audit --no-fund
 fi
 
@@ -50,7 +49,7 @@ find_free_port() {
 run_server() {
   local cmd="$1" log="$2"
   shift 2
-  echo "🚀 VEPA v4 ${cmd} → $BASE_URL"
+  echo "🚀 VEPA4 ${cmd} → $BASE_URL"
   echo "   logs: $log  ·  Ctrl-C to stop"
   "$@" > "$log" 2>&1 &
   local pid=$!
@@ -74,7 +73,7 @@ case "$CMD" in
     run_server "dev server" "$V4_DIR/server.log" "$VITE_BIN" --port "$PORT" --strictPort --host
     ;;
   build)
-    echo "🏗️  Building VEPA v4..."
+    echo "🏗️  Building VEPA4..."
     "$VITE_BIN" build
     ;;
   preview)
@@ -87,25 +86,15 @@ case "$CMD" in
     ;;
   syntax)
     find src tests -name '*.js' -exec node --check {} +
-    echo "✅ VEPA v4 syntax OK"
+    echo "✅ VEPA4 syntax OK"
     ;;
   bench)
     # Pass through extra flags (--laws, --all, --json, --particles, ...)
     shift
     node bench/solver.bench.mjs "$@"
     ;;
-  multiplayer)
-    PORT="$(find_free_port "$PORT")"
-    echo "🚀 VEPA v4 multiplayer hub → http://<this-phone-ip>:${PORT} (open on every phone)"
-    echo "   build the app first with:  vepa4 build"
-    if [ ! -d "$V4_DIR/server/node_modules" ]; then
-      echo "📦 installing hub deps (ws, bonjour-service)..."
-      (cd "$V4_DIR/server" && npm install --no-audit --no-fund)
-    fi
-    PORT="$PORT" node "$V4_DIR/server/server.js"
-    ;;
   *)
-    echo "Usage: $0 [dev|build|preview|test|syntax|bench|multiplayer] [port]" >&2
+    echo "Usage: $0 [dev|build|preview|test|syntax|bench] [port]" >&2
     exit 1
     ;;
 esac
