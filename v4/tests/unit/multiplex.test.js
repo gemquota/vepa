@@ -357,10 +357,10 @@ describe('Multiplex fitness + iteration (v4.6.24)', () => {
     restoreShard(shard, snap);
     expect(shard.count).toBe(4);
     expect(shard.offspring).toBe(0);
-    expect(shard.view[0]).toBe(snap.view[0]);
-    expect(shard.view[1]).toBe(snap.view[1]);
+    expect(shard.view[0]).toBe(snap.particle.buffer[0]);
+    expect(shard.view[1]).toBe(snap.particle.buffer[1]);
     expect(shard.dna[0]).toBe(snap.dna[0]);
-    expect(shard.laws.lowFlags[0]).toBe(snap.laws.lowFlags);
+    expect(shard.laws.lowFlags[0]).toBe(snap.lawState.low);
     // PRNG continues from the snapshotted state.
     shard.view[0] = 100;
     const after = shard.prng.next();

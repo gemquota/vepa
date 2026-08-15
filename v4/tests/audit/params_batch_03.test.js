@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, lcg } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, lcg, simContext } from './paramsHelpers.js';
 import { createWorldParams } from '../../src/state/worldParams.js';
 import { sampleSpawnPosition, buildSpawnCentres } from '../../src/spawn/distribution.js';
 import { LAW_INDEXES } from '../../src/constants.js';
@@ -31,7 +31,7 @@ describe('Batch 03 — SPAWN_CENTRE_BIAS / GLOBAL_G / WIND / DAMPING', () => {
     });
     const laws = lawsWith(LAW_INDEXES.GRAV);
     withWorldParam('GLOBAL_G', 0, () => {
-      for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+      for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
     });
     expect(view[S.VEL_X]).toBeCloseTo(0, 6);
     expect(view[S.POS_X]).toBeCloseTo(990, 3);
@@ -44,7 +44,7 @@ describe('Batch 03 — SPAWN_CENTRE_BIAS / GLOBAL_G / WIND / DAMPING', () => {
       });
       const laws = lawsWith(LAW_INDEXES.GRAV);
       withWorldParam('GLOBAL_G', g, () => {
-        for (let t = 0; t < 10; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 10; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.POS_X];
     };
@@ -55,7 +55,7 @@ describe('Batch 03 — SPAWN_CENTRE_BIAS / GLOBAL_G / WIND / DAMPING', () => {
     const { view, dna } = makeWorld(1);
     const laws = lawsWith(LAW_INDEXES.WRAP); // gate law so the solver runs
     withWorldParam('WIND', 2, () => {
-      for (let t = 0; t < 10; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+      for (let t = 0; t < 10; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
     });
     // vx ≈ 0.5 * 2 * 10 = 10 (clamped at MAX_VELOCITY=10)
     expect(view[S.VEL_X]).toBeGreaterThan(5);
@@ -65,7 +65,7 @@ describe('Batch 03 — SPAWN_CENTRE_BIAS / GLOBAL_G / WIND / DAMPING', () => {
     const { view, dna } = makeWorld(1);
     const laws = lawsWith(LAW_INDEXES.WRAP);
     withWorldParam('WIND', 0, () => {
-      for (let t = 0; t < 10; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+      for (let t = 0; t < 10; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
     });
     expect(view[S.VEL_X]).toBeCloseTo(0, 6);
   });
@@ -75,7 +75,7 @@ describe('Batch 03 — SPAWN_CENTRE_BIAS / GLOBAL_G / WIND / DAMPING', () => {
       const { view, dna } = makeWorld(1, (v, d, b) => { v[b + S.VEL_X] = 5; });
       const laws = lawsWith(LAW_INDEXES.WRAP);
       withWorldParam('DAMPING', damp, () => {
-        for (let t = 0; t < 20; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 20; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.VEL_X];
     };

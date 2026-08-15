@@ -9,6 +9,7 @@ import { createLawState, set as lawSet, isSet } from '../../src/state/lawState.j
 import { createDNABuffer, loadDefaults } from '../../src/dna/dnaBuffer.js';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import { createWorldParams } from '../../src/state/worldParams.js';
+import { simContextFromRuntimeConfig } from '../../src/physics/simContext.js';
 
 export const WORLD = 2000;
 export const DT = 0.25;
@@ -66,6 +67,11 @@ export function withWorldParam(key, value, fn) {
 /** Reset world params to the neutral defaults. */
 export function resetWorldParams() {
   runtimeConfig.worldParams = createWorldParams();
+}
+
+/** Build an explicit simulation context mirroring the live runtimeConfig. */
+export function simContext() {
+  return simContextFromRuntimeConfig(runtimeConfig);
 }
 
 /** Fresh law state with the given law indices enabled. */

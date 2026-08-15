@@ -1,8 +1,9 @@
 // ============================================================================
-// VEPA v3 — Physics Worker
+// VEPA v4 — Physics Worker
 // Web Worker that runs the physics simulation off the main thread.
-// Handles INIT, CONFIG, TOGGLE_LAW, and TICK messages.
-// Falls back to main-thread tick loop if SharedArrayBuffer is unavailable.
+// Handles INIT, CONFIG, TOGGLE_LAW, TICK, GET_STATE, RESTORE, and PING
+// messages. Falls back to ArrayBuffer + main-thread copy-back if
+// SharedArrayBuffer is unavailable.
 // ============================================================================
 
 import { solve, drainOffspring, resetOffspringRing } from '../physics/solver.js';
@@ -15,6 +16,7 @@ import {
   serialize as serializeLawState,
   deserialize as deserializeLawState,
 } from '../state/lawState.js';
+import { createWorld, snapshotWorld, restoreWorld } from '../world/world.js';
 import {
   PARTICLE_STRIDE,
   MAX_PARTICLES,
@@ -120,6 +122,12 @@ function handleInit(msg) {
   resetOffspringRing();
   tickCount = 0;
 
+  // Deterministic seed — same seed ⇒ identical world evolution. Falls back
+  // to Date.now() when the caller does not supply one.
+  if (msg.seed !== undefined) {
+    _prngState = msg.seed | 0;
+  }
+
   // Apply initial config
   if (config) {
     applyConfig(config);
@@ -194,6 +202,7 @@ function applyConfig(config) {
   if (config.worldSize !== undefined) worldSize = config.worldSize;
   if (config.dt !== undefined) dt = config.dt;
   if (config.stride !== undefined) stride = config.stride;
+  if (config.seed !== undefined) _prngState = config.seed | 0;
 
   // Restore law state from serialized form
   if (config.lawState) {
@@ -292,30 +301,60 @@ function handleTick(msg) {
 }
 
 // ── GET_STATE Handler ──
+//
+// The worker's state is defined in terms of the World aggregate (P2): build a
+// world wrapper over the live buffers, then snapshot it. The particle payload
+// is omitted (includeParticles:false) because the caller can read the shared
+// buffer directly — the snapshot carries counters, law state and DNA, which is
+// all a sync point needs.
+
+function buildWorkerWorld() {
+  return createWorld({
+    particle: {
+      buffer: particleBuffer,
+      view: particleView,
+      isShared: hasSharedArrayBuffer,
+      stride,
+      maxParticles: MAX_PARTICLES,
+    },
+    dna: dnaView,
+    lawState,
+    count: particleCount,
+    worldSize,
+    tick: tickCount,
+  });
+}
 
 function handleGetState() {
+  const snap = snapshotWorld(buildWorkerWorld(), { includeParticles: false });
   self.postMessage({
     type: 'STATE',
-    particleCount,
-    worldSize,
-    tickCount,
-    lawState: serializeLawState(lawState),
+    particleCount: snap.particleCount,
+    worldSize: snap.worldSize,
+    tickCount: snap.tick,
+    lawState: snap.lawState,
+    speciesCount: snap.speciesCount,
     hasSharedArrayBuffer,
   });
 }
 
 // ── RESTORE Handler ──
+//
+// restoreWorld writes the snapshot back into the worker's live buffers and
+// law state, then the loose counters are re-synced for the TICK path.
 
 function handleRestore(msg) {
-  if (msg.lawState) {
-    lawState = deserializeLawState(msg.lawState);
+  // Protocol field name: tickCount (legacy) vs aggregate field: tick.
+  const payload = { ...msg };
+  if (payload.tickCount !== undefined && payload.tick === undefined) {
+    payload.tick = payload.tickCount;
   }
-  if (msg.particleCount !== undefined) {
-    particleCount = msg.particleCount;
-  }
-  if (msg.tickCount !== undefined) {
-    tickCount = msg.tickCount;
-  }
+  const world = buildWorkerWorld();
+  restoreWorld(world, payload);
+  lawState = world.lawState;
+  particleCount = world.population.count;
+  tickCount = world.time.tick;
+  worldSize = world.worldSize;
 
   self.postMessage({
     type: 'RESTORE_COMPLETE',
@@ -326,7 +365,11 @@ function handleRestore(msg) {
 
 // ── PRNG for Worker ──
 
-// SplitMix32-style PRNG (deterministic, fast, no Math.random dependency)
+// SplitMix32-style PRNG (deterministic, fast, no Math.random dependency).
+// Identical algorithm to src/core/prng.js SplitMix32, so a worker tick with
+// seed S evolves the world byte-identically to a main-thread solve using
+// `new SplitMix32(S)`. Default seed stays wall-clock for callers that do not
+// opt into determinism.
 let _prngState = Date.now() | 0;
 
 function prng() {

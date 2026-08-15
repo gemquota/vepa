@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
+import { simContext } from './paramsHelpers.js';
 import {
   PARTICLE_STRIDE, MAX_PARTICLES, STRIDE_INDEXES as S, DNA_RANGES, LAW_INDEXES,
 } from '../../src/constants.js';
@@ -215,7 +216,7 @@ describe('Batch 02 — COLL / ACCR / PLANETARY / LIFE (indices 4-7)', () => {
     set(laws, LAW_INDEXES.LIFE);
     expect(isSet(laws, LAW_INDEXES.LIFE)).toBe(true);
     runtimeConfig.worldParams.LIGHT_LEVEL = 0; // isolate metabolic decay from photosynthesis
-    for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
+    for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng, simContext());
     expect(view[S.ENERGY]).toBeLessThan(100);
     expect(view[S.ENERGY]).toBeCloseTo(99.0, 3);
     runtimeConfig.worldParams.LIGHT_LEVEL = 0.5; // restore default
@@ -230,7 +231,7 @@ describe('Batch 02 — COLL / ACCR / PLANETARY / LIFE (indices 4-7)', () => {
     const laws = createLawState();
     set(laws, LAW_INDEXES.LIFE);
     runtimeConfig.worldParams.LIGHT_LEVEL = 0; // no photosynthesis subsidy
-    for (let t = 0; t < 20; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
+    for (let t = 0; t < 20; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng, simContext());
     expect(view[S.DEAD]).toBe(1);
     runtimeConfig.worldParams.LIGHT_LEVEL = 0.5; // restore default
   });

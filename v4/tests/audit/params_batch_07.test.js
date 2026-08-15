@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, simContext } from './paramsHelpers.js';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import { LAW_INDEXES } from '../../src/constants.js';
 import { solve } from '../../src/physics/solver.js';
@@ -16,7 +16,7 @@ describe('Batch 07 — starMass / simSpeed / focalLength / ortho', () => {
       });
       const laws = lawsWith(LAW_INDEXES.GRAV);
       runtimeConfig.starMass = starMass;
-      for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+      for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       runtimeConfig.starMass = 12;
       return view[S.POS_X];
     };
@@ -32,7 +32,7 @@ describe('Batch 07 — starMass / simSpeed / focalLength / ortho', () => {
     const { view, dna } = makeWorld(1, (v, d, b) => { v[b + S.VEL_X] = 2; });
     const laws = lawsWith(LAW_INDEXES.WRAP);
     withWorldParam('WIND', 2, () => {
-      solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+      solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
     });
     expect(view[S.VEL_X]).toBeGreaterThan(2); // dt-scaled integration path active
   });

@@ -4,117 +4,45 @@
 // Each shard is an independent { buffer, dna, laws, prng } derived from a
 // source simulation (the selected shard) with per-aspect variation, so the
 // guided-evolution workflow can compare many futures side by side.
+//
+// P1 decomposition: pure shard construction (shards.js), fitness metrics
+// (metrics.js) and the configuration surface (defaults.js) are extracted;
+// this module keeps the controller lifecycle, the DOM grid, and the selection
+// policies, and re-exports the shared surface so every importer of
+// ./multiplex.js keeps working unchanged.
 // ============================================================================
 
 import {
   WORLD_SIZE,
   PARTICLE_STRIDE,
   MAX_PARTICLES,
-  STRIDE_INDEXES,
-  DNA_RANGES,
-  LAW_COUNT,
 } from '../constants.js';
-import { createParticleBuffer } from '../state/particleBuffer.js';
-import { createDNABuffer, getDNAFloat, setDNAFloat } from '../dna/dnaBuffer.js';
-import { createLawState } from '../state/lawState.js';
-import { solve, drainOffspring } from '../physics/solver.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
+import { solve } from '../physics/solver.js';
+import { simContextFromRuntimeConfig } from '../physics/simContext.js';
 import { createRenderer, renderFrame, resize as resizeRenderer } from '../render/renderer.js';
 import { initCamera } from '../ui/camera.js';
-import { SplitMix32 } from '../core/prng.js';
-
-const S = STRIDE_INDEXES;
-
-export const MULTIPLEX_DEFAULTS = {
-  cols: 2,
-  rows: 2,
-  randomizeLaws: true,
-  randomizeDNA: true,
-  randomizePopulation: true,
-  variation: 0.5,
-  deriveMode: 'clone', // 'clone' | 'spawn'
-  autoIterate: false,        // regenerate all shards every autoIterateInterval ticks
-  autoIterateInterval: 400,  // ticks between auto-iterations
-  autoSelectFittest: false,  // after each iteration, select the shard with the most life
-  simSpeed: 1.0,             // timescale multiplier for the shard grid
-  paused: false,             // freeze shard stepping (main sim keeps running)
-  maxIterations: 0,          // 0 = unlimited; auto-iterate stops at this count
-  variationDrift: 0,         // per-iteration variation increase (evolutionary pressure)
-  populationScale: 1.0,      // scales the dynamic per-shard population cap (0.25–1)
-  seed: 0,                   // 0 = random source seed; >0 = deterministic runs
-  substeps: 1,               // solver sub-steps per shard tick (1–8)
-  lawVariation: 1,           // per-aspect multipliers on the master VARIATION knob
-  dnaVariation: 1,
-  popVariation: 1,
-  keepSelected: false,       // iterate leaves the selected shard untouched (anchor)
-  selectAfterIterate: 'none', // 'none' | 'fittest' | 'follow'
-  importOnExit: true,        // exit imports the selected shard into the main world
-  renderQuality: 'eco',      // 'eco' | 'full' — previews skip halos/grid, DPR 1.25
-  fitnessWeights: {
-    population: 1,
-    growth: 0,
-    longevity: 0,
-    stability: 0,
-    energy: 0,
-    reserves: 0,
-    armor: 0,
-    mobility: 0,
-    signal: 0,
-    bonds: 0,
-    diversity: 0,
-    exploration: 0,
-    novelty: 0,
-    delta: 0,
-  },
-  fitnessModes: {
-    population: 'max',
-    growth: 'max',
-    longevity: 'max',
-    stability: 'max',
-    energy: 'max',
-    reserves: 'max',
-    armor: 'max',
-    mobility: 'max',
-    signal: 'max',
-    bonds: 'max',
-    diversity: 'max',
-    exploration: 'max',
-    novelty: 'max',
-    delta: 'max',
-  },
-};
+import { MULTIPLEX_DEFAULTS } from './defaults.js';
+import {
+  BASE_FITNESS_METRICS,
+  updateShardWindow,
+  computeShardMetrics,
+  shardFromSnapshot,
+  getFitnessReport,
+  summarizeMultiplex,
+} from './metrics.js';
+import {
+  createShard,
+  spawnShardOffspring,
+  snapshotShard,
+  restoreShard,
+} from './shards.js';
 
 /** Hard cap on concurrent shards (keeps the main thread usable). */
 export const MAX_SHARDS = 16;
 
 /** Floor for the dynamic per-shard population cap (keeps shards alive at 16×). */
 export const MIN_SHARD_POPULATION = 250;
-
-/** The 14 fitness metrics exposed to the FIT tab (weighted composite). */
-export const FITNESS_METRICS = Object.freeze([
-  'population',
-  'growth',
-  'longevity',
-  'stability',
-  'energy',
-  'reserves',
-  'armor',
-  'mobility',
-  'signal',
-  'bonds',
-  'diversity',
-  'exploration',
-  'novelty',
-  'delta',
-]);
-
-/** The 13 base metrics (delta is derived, not measured). */
-const BASE_FITNESS_METRICS = FITNESS_METRICS.filter((m) => m !== 'delta');
-
-/** Rolling alive-count window length feeding GROWTH / STABILITY. */
-export const ALIVE_WINDOW_SIZE = 32;
-
-/** Spatial bins per axis for the EXPLORATION metric (4×4×4 = 64 bins). */
-export const EXPLORATION_BINS = 4;
 
 /**
  * Dynamic per-shard population cap: the more shards run at once, the smaller
@@ -127,15 +55,6 @@ export function computeShardPopulationCap(total, scale = 1) {
   const scaled = Math.floor(base * Math.max(0.1, Math.min(1, parseFloat(scale) || 1)));
   return Math.max(MIN_SHARD_POPULATION, Math.min(MAX_PARTICLES, scaled));
 }
-
-/** Species colour palette for freshly spawned shard populations. */
-const SHARD_SPECIES_COLORS = [
-  [255, 80, 80],
-  [255, 200, 50],
-  [80, 255, 120],
-  [120, 160, 255],
-  [100, 60, 140],
-];
 
 /**
  * Create a fresh multiplex state object.
@@ -234,6 +153,9 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
   const effDt = dt * simSpeed * Math.max(0.05, cfg.simSpeed || 1);
   const substeps = Math.max(1, Math.min(8, Math.round(cfg.substeps) || 1));
   const subDt = effDt / substeps;
+  // Live tunables are passed explicitly — the solver no longer reads the
+  // module-level runtimeConfig singleton.
+  const simContext = simContextFromRuntimeConfig(runtimeConfig);
   const t0 = performance.now();
   for (const shard of mx.shards) {
     if (shard.count <= 0) continue;
@@ -247,6 +169,7 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
         worldSize,
         subDt,
         () => shard.prng.next(),
+        simContext,
       );
     }
     spawnShardOffspring(shard);
@@ -328,310 +251,6 @@ export function selectFollowShard(mx, prevSnapshot, skipIndex = -1) {
     }
   }
   if (bestId >= 0) selectShard(mx, bestId);
-}
-
-/** Aggregate stats for the drawer: shard count, living particles, cap. */
-export function summarizeMultiplex(mx) {
-  let alive = 0;
-  for (const shard of mx.shards) {
-    if (!shard || !shard.view) continue;
-    const n = Math.min(shard.count || 0, (shard.view.length / PARTICLE_STRIDE) | 0);
-    for (let p = 0; p < n; p++) {
-      if (shard.view[p * PARTICLE_STRIDE + S.DEAD] === 0) alive++;
-    }
-  }
-  return {
-    shards: mx.shards.length,
-    alive,
-    populationCap: mx.populationCap || 0,
-    totalBudget: (mx.populationCap || 0) * mx.shards.length,
-  };
-}
-
-/** Count living particles in a shard buffer. */
-function countAlive(shard) {
-  if (!shard || !shard.view) return 0;
-  let alive = 0;
-  const n = Math.min(shard.count || 0, (shard.view.length / PARTICLE_STRIDE) | 0);
-  for (let p = 0; p < n; p++) {
-    if (shard.view[p * PARTICLE_STRIDE + S.DEAD] === 0) alive++;
-  }
-  return alive;
-}
-
-/** Roll the alive-count window (cap ALIVE_WINDOW_SIZE) and update prevAlive. */
-function updateShardWindow(shard) {
-  const alive = countAlive(shard);
-  if (!shard.aliveWindow) shard.aliveWindow = [];
-  shard.aliveWindow.push(alive);
-  if (shard.aliveWindow.length > ALIVE_WINDOW_SIZE) shard.aliveWindow.shift();
-  shard.prevAlive = alive;
-}
-
-/** Build a metrics-compatible shard view from a snapshot (for follow-mode). */
-function shardFromSnapshot(snap) {
-  return {
-    view: snap.view,
-    dna: snap.dna,
-    sourceDna: snap.sourceDna,
-    count: snap.count,
-    speciesCount: snap.speciesCount,
-    maxCount: snap.maxCount,
-    aliveWindow: snap.aliveWindow,
-    prevAlive: snap.prevAlive,
-  };
-}
-
-/**
- * Raw fitness metrics for one shard. All values are bounded: rates are
- * normalized (0-1), means are plain averages over living particles, and
- * novelty is a 0-1 normalized mean genome distance vs the source DNA.
- */
-export function computeShardMetrics(shard, worldSize = WORLD_SIZE) {
-  const out = {
-    population: 0,
-    growth: 0,
-    longevity: 0,
-    stability: 1,
-    energy: 0,
-    reserves: 0,
-    armor: 0,
-    mobility: 0,
-    signal: 0,
-    bonds: 0,
-    diversity: 0,
-    exploration: 0,
-    novelty: 0,
-  };
-  if (!shard || !shard.view) return out;
-  const n = Math.min(shard.count || 0, (shard.view.length / PARTICLE_STRIDE) | 0);
-  const binSize = Math.max(1, worldSize / EXPLORATION_BINS);
-  const binCount = EXPLORATION_BINS ** 3;
-  const bins = new Array(binCount).fill(0);
-  const speciesCounts = new Map();
-  let alive = 0;
-  let ageSum = 0;
-  let energySum = 0;
-  let reservesSum = 0;
-  let armorSum = 0;
-  let mobilitySum = 0;
-  let signalSum = 0;
-  let bondsSum = 0;
-  for (let p = 0; p < n; p++) {
-    const b = p * PARTICLE_STRIDE;
-    if (shard.view[b + S.DEAD] >= 0.5) continue;
-    alive++;
-    ageSum += shard.view[b + S.AGE] || 0;
-    energySum += shard.view[b + S.ENERGY] || 0;
-    reservesSum += shard.view[b + S.STORED_ENERGY] || 0;
-    armorSum += shard.view[b + S.ARMOR] || 0;
-    mobilitySum += Math.hypot(
-      shard.view[b + S.VEL_X] || 0,
-      shard.view[b + S.VEL_Y] || 0,
-      shard.view[b + S.VEL_Z] || 0,
-    );
-    signalSum += shard.view[b + S.SIGNAL] || 0;
-    bondsSum += shard.view[b + S.BOND_COUNT] || 0;
-    const sp = shard.view[b + S.SPECIES_ID] | 0;
-    speciesCounts.set(sp, (speciesCounts.get(sp) || 0) + 1);
-    const bx = Math.max(0, Math.min(EXPLORATION_BINS - 1, Math.floor(shard.view[b + S.POS_X] / binSize)));
-    const by = Math.max(0, Math.min(EXPLORATION_BINS - 1, Math.floor(shard.view[b + S.POS_Y] / binSize)));
-    const bz = Math.max(0, Math.min(EXPLORATION_BINS - 1, Math.floor(shard.view[b + S.POS_Z] / binSize)));
-    bins[bx * EXPLORATION_BINS * EXPLORATION_BINS + by * EXPLORATION_BINS + bz]++;
-  }
-  out.population = alive;
-  out.growth = alive - (Number.isFinite(shard.prevAlive) ? shard.prevAlive : alive);
-  if (alive > 0) {
-    out.longevity = ageSum / alive;
-    out.energy = energySum / alive;
-    out.reserves = reservesSum / alive;
-    out.armor = armorSum / alive;
-    out.mobility = mobilitySum / alive;
-    out.signal = signalSum / alive;
-    out.bonds = bondsSum / alive;
-    // Shannon evenness over the species present (J = H / ln(S)).
-    const counts = [...speciesCounts.values()];
-    if (counts.length > 1) {
-      let h = 0;
-      for (const c of counts) {
-        const p = c / alive;
-        h -= p * Math.log(p);
-      }
-      out.diversity = h / Math.log(counts.length);
-    } else {
-      out.diversity = counts.length === 1 ? 1 : 0;
-    }
-    // Spatial entropy over the 4×4×4 occupancy grid, normalized by ln(bins).
-    let e = 0;
-    for (const c of bins) {
-      if (c > 0) {
-        const p = c / alive;
-        e -= p * Math.log(p);
-      }
-    }
-    out.exploration = e / Math.log(binCount);
-  }
-  // Novelty: mean normalized genome distance vs the shard's source DNA.
-  if (shard.dna && shard.sourceDna) {
-    const spStride = 64;
-    const spCount = Math.min(Math.max(1, shard.speciesCount || 1), 64);
-    let sum = 0;
-    for (let sp = 0; sp < spCount; sp++) {
-      const base = sp * spStride;
-      for (let p = 0; p < spStride; p++) {
-        sum += Math.abs((shard.dna[base + p] || 0) - (shard.sourceDna[base + p] || 0));
-      }
-    }
-    out.novelty = sum / (spCount * spStride * 65535);
-  }
-  // Stability: 1 - coefficient-of-variation² of the alive window (0-1).
-  const win = shard.aliveWindow && shard.aliveWindow.length ? shard.aliveWindow : [alive];
-  const mean = win.reduce((a, b) => a + b, 0) / win.length;
-  if (win.length > 1 && mean > 0) {
-    let variance = 0;
-    for (const c of win) variance += (c - mean) * (c - mean);
-    variance /= win.length;
-    out.stability = Math.max(0, Math.min(1, 1 - variance / (mean * mean)));
-  }
-  return out;
-}
-
-/**
- * Full fitness report: min-max normalizes the 13 base metrics across shards,
- * applies fitness modes (min → 1−norm), derives the per-shard DELTA metric
- * (mean deviation from the other shards), computes the weighted composite,
- * and pushes avgDelta into mx.deltaHistory (cap ALIVE_WINDOW_SIZE).
- */
-export function getFitnessReport(mx) {
-  const shards = mx.shards || [];
-  const worldSize = mx.worldSize || WORLD_SIZE;
-  const raw = shards.map((shard) => ({
-    id: shard.id,
-    metrics: computeShardMetrics(shard, worldSize),
-  }));
-  const weights = (mx.config && mx.config.fitnessWeights) || MULTIPLEX_DEFAULTS.fitnessWeights;
-  const modes = (mx.config && mx.config.fitnessModes) || MULTIPLEX_DEFAULTS.fitnessModes;
-
-  // Min-max normalize + mode flip on the base metrics.
-  for (const key of BASE_FITNESS_METRICS) {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const r of raw) {
-      const v = r.metrics[key];
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-    const span = max - min;
-    const mode = modes[key];
-    for (const r of raw) {
-      const norm = span === 0 ? 0 : (r.metrics[key] - min) / span;
-      r.metrics[key] = mode === 'min' ? 1 - norm : norm;
-    }
-  }
-
-  // Delta: mean |score − mean(other shards)| over the base metrics.
-  for (const r of raw) {
-    let sum = 0;
-    for (const key of BASE_FITNESS_METRICS) {
-      let others = 0;
-      let cnt = 0;
-      for (const o of raw) {
-        if (o === r) continue;
-        others += o.metrics[key];
-        cnt++;
-      }
-      const meanOthers = cnt ? others / cnt : 0;
-      sum += Math.abs(r.metrics[key] - meanOthers);
-    }
-    r.metrics.delta = sum / BASE_FITNESS_METRICS.length;
-  }
-  {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const r of raw) {
-      const v = r.metrics.delta;
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-    const span = max - min;
-    const mode = modes.delta;
-    for (const r of raw) {
-      const norm = span === 0 ? 0 : (r.metrics.delta - min) / span;
-      r.metrics.delta = mode === 'min' ? 1 - norm : norm;
-    }
-  }
-
-  // Weighted composite (falls back to population when all weights are 0).
-  const weightSum = FITNESS_METRICS.reduce(
-    (a, key) => a + Math.max(0, parseFloat(weights[key]) || 0),
-    0,
-  );
-  const perShard = raw.map((r) => {
-    let fitness;
-    if (weightSum > 0) {
-      fitness = FITNESS_METRICS.reduce(
-        (a, key) => a + Math.max(0, parseFloat(weights[key]) || 0) * (r.metrics[key] || 0),
-        0,
-      ) / weightSum;
-    } else {
-      fitness = r.metrics.population || 0;
-    }
-    return { id: r.id, fitness, metrics: r.metrics };
-  });
-
-  const avgDelta = perShard.length
-    ? perShard.reduce((a, e) => a + e.metrics.delta, 0) / perShard.length
-    : 0;
-  mx.deltaHistory = mx.deltaHistory || [];
-  mx.deltaHistory.push(avgDelta);
-  if (mx.deltaHistory.length > ALIVE_WINDOW_SIZE) mx.deltaHistory.shift();
-  return { perShard, avgDelta, rollingDelta: mx.deltaHistory.slice() };
-}
-
-/** Full snapshot of a shard's view, DNA, laws, PRNG and counters. */
-export function snapshotShard(shard) {
-  return {
-    view: shard.view.slice(),
-    dna: shard.dna ? shard.dna.slice() : null,
-    sourceDna: shard.sourceDna ? shard.sourceDna.slice() : null,
-    laws: {
-      lowFlags: shard.laws ? shard.laws.lowFlags[0] : 0,
-      highFlags: shard.laws ? shard.laws.highFlags[0] : 0,
-      extFlags: shard.laws && shard.laws.extFlags ? shard.laws.extFlags[0] : 0,
-      quadFlags: shard.laws && shard.laws.quadFlags ? shard.laws.quadFlags[0] : 0,
-    },
-    prngState: shard.prng ? shard.prng.state | 0 : 0,
-    count: shard.count,
-    speciesCount: shard.speciesCount,
-    maxCount: shard.maxCount,
-    tick: shard.tick,
-    offspring: shard.offspring || 0,
-    aliveWindow: shard.aliveWindow ? shard.aliveWindow.slice() : [],
-    prevAlive: shard.prevAlive,
-  };
-}
-
-/** Restore a snapshot onto a (freshly built) shard — keep-selected anchor. */
-export function restoreShard(shard, snap) {
-  if (!shard || !snap) return;
-  shard.view.fill(0);
-  shard.view.set(snap.view);
-  if (shard.dna && snap.dna) shard.dna.set(snap.dna);
-  if (shard.sourceDna && snap.sourceDna) shard.sourceDna.set(snap.sourceDna);
-  if (shard.laws && snap.laws) {
-    shard.laws.lowFlags[0] = snap.laws.lowFlags;
-    shard.laws.highFlags[0] = snap.laws.highFlags;
-    if (shard.laws.extFlags) shard.laws.extFlags[0] = snap.laws.extFlags;
-    if (shard.laws.quadFlags) shard.laws.quadFlags[0] = snap.laws.quadFlags;
-  }
-  if (shard.prng) shard.prng.state = snap.prngState | 0;
-  shard.count = snap.count;
-  shard.speciesCount = snap.speciesCount;
-  shard.maxCount = snap.maxCount;
-  shard.tick = snap.tick;
-  shard.offspring = snap.offspring;
-  shard.aliveWindow = snap.aliveWindow ? snap.aliveWindow.slice() : [];
-  shard.prevAlive = snap.prevAlive;
 }
 
 /**
@@ -733,203 +352,6 @@ function buildShards(mx, source, fromShard) {
   void fromShard;
 }
 
-function createShard(index, seed, source, config, maxCount) {
-  const buf = createParticleBuffer(MAX_PARTICLES, PARTICLE_STRIDE);
-  const dna = createDNABuffer();
-  dna.set(source.dna.subarray ? source.dna.subarray(0, dna.length) : source.dna);
-
-  const laws = createLawState();
-  laws.lowFlags[0] = source.laws.lowFlags[0];
-  laws.highFlags[0] = source.laws.highFlags[0];
-  laws.extFlags[0] = source.laws.extFlags[0] || 0;
-  laws.quadFlags[0] = source.laws.quadFlags[0] || 0;
-
-  const prng = new SplitMix32(seed);
-  const shard = {
-    id: index,
-    buffer: buf.buffer,
-    view: buf.view,
-    dna,
-    sourceDna: dna.slice(), // pre-variation genome this shard derived from
-    laws,
-    prng,
-    maxCount,
-    count: Math.min(source.count || 0, maxCount),
-    speciesCount: source.speciesCount || 5,
-    tick: 0,
-    offspring: 0,
-    aliveWindow: [],
-    prevAlive: 0,
-    canvas: null,
-    wrapper: null,
-    renderer: null,
-  };
-
-  if (config.deriveMode === 'spawn') {
-    spawnShardPopulation(shard);
-  } else {
-    shard.view.fill(0);
-    if (shard.count > 0) {
-      shard.view.set(source.view.subarray(0, shard.count * PARTICLE_STRIDE));
-    }
-  }
-  applyVariation(shard, config);
-  shard.prevAlive = countAlive(shard);
-  shard.aliveWindow = [shard.prevAlive];
-  return shard;
-}
-
-function applyVariation(shard, config) {
-  const v = config.variation || 0;
-  if (v <= 0) return;
-  const prng = shard.prng;
-  // Per-aspect multipliers (0 blocks that aspect entirely, 1 = master knob).
-  const aspect = (x) => {
-    const n = parseFloat(x);
-    return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
-  };
-  const lawV = aspect(config.lawVariation);
-  const dnaV = aspect(config.dnaVariation);
-  const popV = aspect(config.popVariation);
-
-  if (config.randomizeLaws && lawV > 0) {
-    for (let l = 0; l < LAW_COUNT; l++) {
-      if (prng.next() < v * lawV * 0.5) {
-        if (l < 32) shard.laws.lowFlags[0] ^= (1 << l);
-        else if (l < 64) shard.laws.highFlags[0] ^= (1 << (l - 32));
-        else if (l < 96) shard.laws.extFlags[0] ^= (1 << (l - 64));
-        else shard.laws.quadFlags[0] ^= (1 << (l - 96));
-      }
-    }
-  }
-
-  if (config.randomizeDNA) {
-    const spCount = Math.min(shard.speciesCount, 64);
-    for (let s = 0; s < spCount; s++) {
-      for (let p = 0; p < 42; p++) {
-        if (prng.next() < v * dnaV * 0.35) {
-          const r = DNA_RANGES[p] || { min: 0, max: 1 };
-          const span = r.max - r.min;
-          const cur = getDNAFloat(shard.dna, s, p, r.min, r.max);
-          const next = Math.max(r.min, Math.min(r.max, cur + (prng.next() - 0.5) * 2 * v * dnaV * span));
-          setDNAFloat(shard.dna, s, p, next, r.min, r.max);
-        }
-      }
-    }
-  }
-
-  if (config.randomizePopulation && popV > 0) {
-    for (let i = 0; i < shard.count; i++) {
-      const b = i * PARTICLE_STRIDE;
-      shard.view[b + S.POS_X] += (prng.next() - 0.5) * WORLD_SIZE * 0.03 * v * popV;
-      shard.view[b + S.POS_Y] += (prng.next() - 0.5) * WORLD_SIZE * 0.03 * v * popV;
-      shard.view[b + S.POS_Z] += (prng.next() - 0.5) * WORLD_SIZE * 0.03 * v * popV;
-      shard.view[b + S.VEL_X] += (prng.next() - 0.5) * 0.2 * v * popV;
-      shard.view[b + S.VEL_Y] += (prng.next() - 0.5) * 0.2 * v * popV;
-      shard.view[b + S.VEL_Z] += (prng.next() - 0.5) * 0.2 * v * popV;
-    }
-  }
-}
-
-/** Fresh population for a shard (mirrors the default grid spawn). */
-function spawnShardPopulation(shard) {
-  shard.view.fill(0);
-  const species = Math.min(shard.speciesCount || 5, 64);
-  // Balance species evenly when the dynamic cap is below the default spawn.
-  const perSpecies = Math.max(1, Math.floor(shard.maxCount / species));
-  const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
-  const cellSize = (WORLD_SIZE - 10) / gridDim;
-  let idx = 0;
-  for (let s = 0; s < species; s++) {
-    for (let i = 0; i < perSpecies && idx < shard.maxCount; i++) {
-      const b = idx * PARTICLE_STRIDE;
-      const gx = i % gridDim;
-      const gy = Math.floor(i / gridDim) % gridDim;
-      const gz = Math.floor(i / (gridDim * gridDim));
-      const jx = (shard.prng.next() - 0.5) * cellSize * 0.4;
-      const jy = (shard.prng.next() - 0.5) * cellSize * 0.4;
-      const jz = (shard.prng.next() - 0.5) * cellSize * 0.4;
-      shard.view[b + S.POS_X] = 5 + gx * cellSize + cellSize * 0.5 + jx;
-      shard.view[b + S.POS_Y] = 5 + gy * cellSize + cellSize * 0.5 + jy;
-      shard.view[b + S.POS_Z] = 5 + gz * cellSize + cellSize * 0.5 + jz;
-      shard.view[b + S.MASS] = 1.0 + shard.prng.next();
-      shard.view[b + S.SPECIES_ID] = s;
-      shard.view[b + S.ENERGY] = 50 + shard.prng.next() * 50;
-      shard.view[b + S.DEAD] = 0;
-      shard.view[b + S.AGE] = 0;
-      const col = SHARD_SPECIES_COLORS[s % SHARD_SPECIES_COLORS.length];
-      shard.view[b + S.COLOR_R] = col[0];
-      shard.view[b + S.COLOR_G] = col[1];
-      shard.view[b + S.COLOR_B] = col[2];
-      for (let d = 0; d < 42; d++) {
-        const r = DNA_RANGES[d] || { min: -1, max: 1 };
-        shard.view[b + S.DNA_CACHE_START + d] =
-          getDNAFloat(shard.dna, s, d, r.min, r.max);
-      }
-      shard.view[b + S.ELECTRIC_ENERGY] = 0;
-      shard.view[b + S.STORED_ENERGY] = 0;
-      shard.view[b + S.REPRO_DRIVE] = 0;
-      shard.view[b + S.RADIATION_EXPOSURE] = 0;
-      shard.view[b + S.ENTANGLE_ID] = -1;
-      shard.view[b + S.ENTANGLE_PHASE] = 0;
-      idx++;
-    }
-  }
-  shard.count = idx;
-}
-
-/** Append offspring produced by the last solve() into this shard's buffer. */
-function spawnShardOffspring(shard) {
-  const list = drainOffspring();
-  for (const off of list) {
-    if (shard.count >= shard.maxCount) break;
-    const b = shard.count * PARTICLE_STRIDE;
-    shard.view[b + S.POS_X] = off.x;
-    shard.view[b + S.POS_Y] = off.y;
-    shard.view[b + S.POS_Z] = off.z || 0;
-    shard.view[b + S.VEL_X] = off.vx || 0;
-    shard.view[b + S.VEL_Y] = off.vy || 0;
-    shard.view[b + S.VEL_Z] = off.vz || 0;
-    shard.view[b + S.MASS] = off.mass || 1.0;
-    shard.view[b + S.SPECIES_ID] = off.speciesId;
-    shard.view[b + S.ENERGY] = off.energy || 60;
-    if (off.dna && off.dna.length) {
-      for (let d = 0; d < 42 && d < off.dna.length; d++) {
-        shard.view[b + S.DNA_CACHE_START + d] = off.dna[d];
-      }
-    }
-    shard.view[b + S.DEAD] = 0;
-    shard.view[b + S.AGE] = 0;
-    shard.view[b + S.SIGNAL] = 0;
-    shard.view[b + S.MEMORY] = 0;
-    shard.view[b + S.HUNGER] = 0;
-    shard.view[b + S.ARMOR] = 0.2;
-    shard.view[b + S.MITOSIS_TIMER] = 0;
-    shard.view[b + S.PARTNER_ID] = -1;
-    shard.view[b + S.BOND_COUNT] = 0;
-    shard.view[b + S.BOND_PARTNER_1] = -1;
-    shard.view[b + S.BOND_PARTNER_2] = -1;
-      shard.view[b + S.BOND_PARTNER_3] = -1;
-      shard.view[b + S.BOND_PARTNER_4] = -1;
-      shard.view[b + S.BOND_PARTNER_5] = -1;
-      shard.view[b + S.BOND_PARTNER_6] = -1;
-    shard.view[b + S.TEMPERATURE] = 0.5;
-    shard.view[b + S.CHARGE] = 0;
-    shard.view[b + S.ELECTRIC_ENERGY] = 0;
-    shard.view[b + S.STORED_ENERGY] = 0;
-    shard.view[b + S.REPRO_DRIVE] = 0;
-    shard.view[b + S.RADIATION_EXPOSURE] = 0;
-    shard.view[b + S.ENTANGLE_ID] = -1;
-    shard.view[b + S.ENTANGLE_PHASE] = 0;
-    // Inherit the parents' intermediate colour when reproduction carried one
-    shard.view[b + S.COLOR_R] = off.colorR != null ? Math.max(0, Math.min(255, off.colorR)) : 160;
-    shard.view[b + S.COLOR_G] = off.colorG != null ? Math.max(0, Math.min(255, off.colorG)) : 160;
-    shard.view[b + S.COLOR_B] = off.colorB != null ? Math.max(0, Math.min(255, off.colorB)) : 160;
-    shard.count++;
-    shard.offspring = (shard.offspring || 0) + 1;
-  }
-}
-
 // ── DOM: grid + canvases ────────────────────────────────────────────────────
 
 function mountShards(mx) {
@@ -977,3 +399,15 @@ function mountShards(mx) {
     window.addEventListener('resize', mx.onResize);
   }
 }
+
+// Re-export the shared surface extracted into sibling modules so importers of
+// ./multiplex.js (main.js, multiplexUI.js, tests) keep working unchanged.
+export { FITNESS_METRICS, ALIVE_WINDOW_SIZE, EXPLORATION_BINS } from './metrics.js';
+export {
+  MULTIPLEX_DEFAULTS,
+  summarizeMultiplex,
+  computeShardMetrics,
+  getFitnessReport,
+  snapshotShard,
+  restoreShard,
+};

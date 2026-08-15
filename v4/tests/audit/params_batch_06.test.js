@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, simContext } from './paramsHelpers.js';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import { LAW_INDEXES, DNA_RANGES } from '../../src/constants.js';
 import { solve, drainOffspring, resetOffspringRing } from '../../src/physics/solver.js';
@@ -18,7 +18,7 @@ describe('Batch 06 — MUTATION_RATE / DECAY_RATE / visualScale / globalAlpha', 
       });
       const laws = lawsWith(LAW_INDEXES.REPRO, LAW_INDEXES.WRAP);
       withWorldParam('MUTATION_RATE', rate, () => {
-        solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.001); // always reproduce
+        solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.001, simContext()); // always reproduce
       });
       const off = drainOffspring();
       if (!off.length) return 0;
@@ -41,7 +41,7 @@ describe('Batch 06 — MUTATION_RATE / DECAY_RATE / visualScale / globalAlpha', 
       const laws = lawsWith(LAW_INDEXES.LIFE);
       withWorldParam('DECAY_RATE', rate, () => {
         withWorldParam('LIGHT_LEVEL', 0, () => {
-          for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+          for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
         });
       });
       return view[S.ENERGY];

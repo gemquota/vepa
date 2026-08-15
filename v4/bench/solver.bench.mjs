@@ -27,6 +27,7 @@ import { createWorldParams } from '../src/state/worldParams.js';
 import { runtimeConfig } from '../src/state/runtimeConfig.js';
 import { SplitMix32 } from '../src/core/prng.js';
 import { solve } from '../src/physics/solver.js';
+import { simContextFromRuntimeConfig } from '../src/physics/simContext.js';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -59,6 +60,8 @@ const SPOTLIGHT_LAWS = [
 const dnaBuffer = createDNABuffer();
 loadDefaults(dnaBuffer, DNA_RANGES);
 runtimeConfig.worldParams = createWorldParams();
+// Passed explicitly to solve() — the solver no longer reads the singleton.
+const simContext = simContextFromRuntimeConfig(runtimeConfig);
 const S = STRIDE_INDEXES;
 
 function makeWorld(count, seed = 1234) {
@@ -103,7 +106,7 @@ function lawStateFor(names) {
 function timeTicks(view, count, names, ticks, next) {
   const lawState = lawStateFor(names);
   const t0 = performance.now();
-  for (let t = 0; t < ticks; t++) solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next);
+  for (let t = 0; t < ticks; t++) solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next, simContext);
   return performance.now() - t0;
 }
 
@@ -123,12 +126,12 @@ function timeFrozenTicks(frozen, count, names, ticks, rounds = 5) {
     const next = () => rng.next();
     for (let t = 0; t < 20; t++) {
       view.set(frozen);
-      solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next);
+      solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next, simContext);
     }
     const t0 = performance.now();
     for (let t = 0; t < ticks; t++) {
       view.set(frozen);
-      solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next);
+      solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next, simContext);
     }
     samples.push((performance.now() - t0) / ticks);
   }
@@ -142,7 +145,7 @@ function run(count, names, ticks, warmup, seed) {
   const rng = new SplitMix32((seed ^ 0x9e3779b9) | 0);
   const next = () => rng.next();
 
-  for (let t = 0; t < warmup; t++) solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next);
+  for (let t = 0; t < warmup; t++) solve(view, count, PARTICLE_STRIDE, lawState, dnaBuffer, WORLD_SIZE, 1.0, next, simContext);
 
   const totalMs = timeTicks(view, count, names, ticks, next);
 

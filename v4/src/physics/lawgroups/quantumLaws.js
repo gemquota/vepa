@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { PARTICLE_STRIDE, STRIDE_INDEXES as S, DNA_INDEXES as D } from '../../constants.js';
+import { buffer_global } from '../lawsState.js';
 
 const FORCE_LIMIT = 50;
 const ENERGY_MAX = 200;
@@ -234,4 +235,71 @@ export function applyAntimatter(view, iBase, jBase, k) {
     view[jBase + S.SIGNAL] = Math.min(SIGNAL_MAX, nanGuard(view[jBase + S.SIGNAL]) + 10 * k);
   }
   return null;
+}
+
+// ============================================================================
+// Legacy quantum laws — migrated from laws.js (P0: laws.js → lawgroups)
+// ============================================================================
+
+/** ENTANGLEMENT — contact pairs two unentangled particles into a quantum link. */
+export function applyEntanglePair(p1Ptr, p2Ptr, dist) {
+  const buf = buffer_global;
+  if (buf[p1Ptr + S.ENTANGLE_ID] >= 0 || buf[p2Ptr + S.ENTANGLE_ID] >= 0) return;
+  const rSum = (buf[p1Ptr + S.RADIUS] || 0.6) + (buf[p2Ptr + S.RADIUS] || 0.6);
+  if (dist > rSum + 0.5) return;
+  buf[p1Ptr + S.ENTANGLE_ID] = p2Ptr / PARTICLE_STRIDE;
+  buf[p2Ptr + S.ENTANGLE_ID] = p1Ptr / PARTICLE_STRIDE;
+  buf[p1Ptr + S.ENTANGLE_PHASE] = 1.0;
+  buf[p2Ptr + S.ENTANGLE_PHASE] = 1.0;
+}
+
+/**
+ * ENTANGLEMENT — non-local coupling (per-particle). Momentum converges with
+ * the partner at any distance; signals relay through the link; the phase
+ * decays until the link snaps with a recoil kick.
+ */
+export function applyEntanglement(p1Ptr, k, prng) {
+  const buf = buffer_global;
+  const partnerIdx = buf[p1Ptr + S.ENTANGLE_ID];
+  if (partnerIdx < 0) return null;
+  const phase = buf[p1Ptr + S.ENTANGLE_PHASE] || 0;
+  buf[p1Ptr + S.ENTANGLE_PHASE] = phase * 0.998;
+
+  const jBase = partnerIdx * PARTICLE_STRIDE;
+  if (buf[jBase + S.DEAD] >= 0.5 || buf[jBase + S.MASS] <= 0) {
+    // partner lost → recoil kick, link snaps
+    buf[p1Ptr + S.ENTANGLE_ID] = -1;
+    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    if (prng) {
+      return {
+        ax: nanGuard((prng() - 0.5) * 0.8),
+        ay: nanGuard((prng() - 0.5) * 0.8),
+        az: nanGuard((prng() - 0.5) * 0.8),
+      };
+    }
+    return null;
+  }
+
+  if (buf[p1Ptr + S.ENTANGLE_PHASE] < 0.05) {
+    buf[p1Ptr + S.ENTANGLE_ID] = -1;
+    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    return null;
+  }
+
+  // non-local momentum exchange (returned as a force — survives integration)
+  const dvx = (buf[jBase + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * k * phase;
+  const dvy = (buf[jBase + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * k * phase;
+  const dvz = (buf[jBase + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * k * phase;
+
+  // non-local signal relay (persists in stride)
+  const sJ = buf[jBase + S.SIGNAL] || 0;
+  if (sJ > 0.3) {
+    buf[p1Ptr + S.SIGNAL] = Math.max(buf[p1Ptr + S.SIGNAL] || 0, sJ * phase);
+  }
+
+  return {
+    ax: nanGuard(dvx),
+    ay: nanGuard(dvy),
+    az: nanGuard(dvz),
+  };
 }

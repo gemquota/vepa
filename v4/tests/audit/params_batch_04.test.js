@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, lcg } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, lcg, simContext } from './paramsHelpers.js';
 import { LAW_INDEXES } from '../../src/constants.js';
 import { solve } from '../../src/physics/solver.js';
 
@@ -12,7 +12,7 @@ describe('Batch 04 — VISCOSITY / ENTROPY / HEAT_CAPACITY / LIGHT_LEVEL', () =>
       });
       const laws = lawsWith(LAW_INDEXES.DRAG);
       withWorldParam('VISCOSITY', worldV, () => {
-        for (let t = 0; t < 40; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 40; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.VEL_X];
     };
@@ -31,7 +31,7 @@ describe('Batch 04 — VISCOSITY / ENTROPY / HEAT_CAPACITY / LIGHT_LEVEL', () =>
       const laws = lawsWith(LAW_INDEXES.ENTR);
       const rng = lcg(1234);
       withWorldParam('ENTROPY', entropy, () => {
-        for (let t = 0; t < 60; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
+        for (let t = 0; t < 60; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng, simContext());
       });
       return Math.abs(view[S.VEL_X]) + Math.abs(view[S.VEL_Y]) + Math.abs(view[S.VEL_Z]);
     };
@@ -47,7 +47,7 @@ describe('Batch 04 — VISCOSITY / ENTROPY / HEAT_CAPACITY / LIGHT_LEVEL', () =>
       });
       const laws = lawsWith(LAW_INDEXES.HEAT);
       withWorldParam('HEAT_CAPACITY', capacity, () => {
-        for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       const t0 = view[S.TEMPERATURE];
       const t1 = view[PARTICLE_STRIDE + S.TEMPERATURE];
@@ -65,7 +65,7 @@ describe('Batch 04 — VISCOSITY / ENTROPY / HEAT_CAPACITY / LIGHT_LEVEL', () =>
       });
       const laws = lawsWith(LAW_INDEXES.LIFE);
       withWorldParam('LIGHT_LEVEL', light, () => {
-        for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.ENERGY];
     };

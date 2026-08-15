@@ -6,7 +6,7 @@ import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults } from '../../src/dna/dnaBuffer.js';
 import { solve } from '../../src/physics/solver.js';
-import { withWorldParam } from './paramsHelpers.js';
+import { withWorldParam, simContext } from './paramsHelpers.js';
 
 const WORLD = 2000;
 const DT = 0.25;
@@ -179,7 +179,7 @@ describe('Batch 04 — SENESCENCE / ENERGY / RADIATION / GENOTYPE (indices 12-15
       const laws = createLawState();
       set(laws, LAW_INDEXES.RADIATION);
       withWorldParam('RADIATION_LEVEL', level, () => {
-        for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
+        for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng, simContext());
       });
       return view[S.ENERGY];
     };
@@ -207,7 +207,7 @@ describe('Batch 04 — SENESCENCE / ENERGY / RADIATION / GENOTYPE (indices 12-15
     const laws = createLawState();
     set(laws, LAW_INDEXES.RADIATION);
     withWorldParam('RADIATION_LEVEL', 5, () => {
-      for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng);
+      for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, rng, simContext());
     });
     expect(view[S.DEAD]).toBe(1);
   });

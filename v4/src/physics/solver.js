@@ -12,7 +12,7 @@ import {
   LAW_COUNT,
   WORLD_SIZE,
 } from '../constants.js';
-import { runtimeConfig } from '../state/runtimeConfig.js';
+import { SIM_CONTEXT_DEFAULTS } from './simContext.js';
 import { isAlive } from '../state/particleBuffer.js';
 import { isSet } from '../state/lawState.js';
 import { createGrid, clear, insert, getNeighbors } from './spatialGrid.js';
@@ -130,6 +130,11 @@ const MAX_VELOCITY = 10.0;
 const G = 0.2 * (WORLD_SIZE / 240) ** 2;   // lower gravity so particles don't instantly clump
 const DEFAULT_DT = 1.0;
 
+// ── Simulation context (explicit and portable) ──
+// solve() never reads module-level mutable state; callers pass an explicit
+// context (see ./simContext.js). The baseline defaults are the static
+// SIM_CONTEXT_DEFAULTS, identical to a fresh runtimeConfig.
+
 /** Blend a neighbor's color into a subject particle (dissolution). */
 function blendColor(view, subjBase, nbBase, ratio) {
   const si = STRIDE_INDEXES;
@@ -173,8 +178,20 @@ function readDNAFromCache(view, base, dnaOut) {
  * @param {number} worldSize - World boundary size
  * @param {number} dt - Time step (default 1.0)
  * @param {Function} prng - PRNG function returning [0,1)
+ * @param {object} [simContext] - Explicit simulation context: world params
+ *   plus tunable scalars ({ worldParams, starMass, forceScale, maxForce,
+ *   dragMultiplier, birthRate, deathRate }). Defaults to the static baseline.
  */
-export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, worldSize, dt, prng) {
+export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, worldSize, dt, prng, simContext = SIM_CONTEXT_DEFAULTS) {
+  const {
+    worldParams = SIM_CONTEXT_DEFAULTS.worldParams,
+    starMass = SIM_CONTEXT_DEFAULTS.starMass,
+    forceScale = SIM_CONTEXT_DEFAULTS.forceScale,
+    maxForce = SIM_CONTEXT_DEFAULTS.maxForce,
+    dragMultiplier = SIM_CONTEXT_DEFAULTS.dragMultiplier,
+    birthRate = SIM_CONTEXT_DEFAULTS.birthRate,
+    deathRate = SIM_CONTEXT_DEFAULTS.deathRate,
+  } = simContext;
   const grid = ensureGrid();
   setBuffer(particleBuffer);
   const view = particleBuffer; // Float32Array or SharedArrayBuffer view
@@ -200,8 +217,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   const active = new Uint8Array(LAW_COUNT);
   for (let i = 0; i < LAW_COUNT; i++) active[i] = isSet(lawState, i) ? 1 : 0;
 
-  // World parameters (WORLD panel sliders) — read live from runtimeConfig.
-  const WP = runtimeConfig.worldParams || {};
+  // World parameters (WORLD panel sliders) — from the explicit sim context.
+  const WP = worldParams || {};
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
 
   // Fate clock — advances once per tick so species destiny points wander.
@@ -362,8 +379,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           const mI = view[iBase + S.MASS];
           const mJ = view[jBase + S.MASS];
           const bigM = Math.max(mI, mJ);
-          if (bigM > runtimeConfig.starMass) {
-            const collapseMult = 1.0 + (bigM - runtimeConfig.starMass) * 0.08;
+          if (bigM > starMass) {
+            const collapseMult = 1.0 + (bigM - starMass) * 0.08;
             ax += gravForce.ax * collapseMult;
             ay += gravForce.ay * collapseMult;
             az += gravForce.az * collapseMult;
@@ -449,8 +466,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           // Massive bodies squish instead of rigidly bouncing; fusing pairs
           // coalesce instead of bouncing apart.
           if (collOn && !fusing) {
-            const isStarI = m1 > runtimeConfig.starMass;
-            const isStarJ = m2 > runtimeConfig.starMass;
+            const isStarI = m1 > starMass;
+            const isStarJ = m2 > starMass;
             const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
             px -= nx * push;
             py -= ny * push;
@@ -480,13 +497,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
           // ── ACCR: softbody dissolution + gravitational collapse ──
           if (accrOn && fusing) {
-            const isStarI = m1 > runtimeConfig.starMass;
-            const isStarJ = m2 > runtimeConfig.starMass;
+            const isStarI = m1 > starMass;
+            const isStarJ = m2 > starMass;
             // FUSION DNA (9): mass-merging efficiency multiplier (0..1 → 0.5..1.5).
             const fusionMult = 0.5 + (dnaI[DNA_INDEXES.FUSION] || 0.5);
             if (isStarI) {
               // Collapse: star pulls overlapping matter in and dissolves it
-              const gain = (m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass)) * fusionMult;
+              const gain = (m2 * 0.04 + 0.02 * (m1 / starMass)) * fusionMult;
               view[iBase + S.MASS] += gain;
               view[jBase + S.MASS] = Math.max(0, m2 - gain);
               if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
@@ -1199,11 +1216,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Force clamping (goal-engine tunable ceiling + global force scale) ──
 
-    ax *= runtimeConfig.forceScale;
-    ay *= runtimeConfig.forceScale;
-    az *= runtimeConfig.forceScale;
+    ax *= forceScale;
+    ay *= forceScale;
+    az *= forceScale;
     const forceMag = Math.sqrt(ax * ax + ay * ay + az * az);
-    const forceCap = Math.min(MAX_FORCE, Math.max(0.1, runtimeConfig.maxForce));
+    const forceCap = Math.min(MAX_FORCE, Math.max(0.1, maxForce));
     if (forceMag > forceCap) {
       const scale = forceCap / forceMag;
       ax *= scale;
@@ -1239,9 +1256,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Global drag multiplier (goal-engine tunable) — gated by DRAG ──
 
     if (active[LAW_INDEXES.DRAG]) {
-      vx *= runtimeConfig.dragMultiplier;
-      vy *= runtimeConfig.dragMultiplier;
-      vz *= runtimeConfig.dragMultiplier;
+      vx *= dragMultiplier;
+      vy *= dragMultiplier;
+      vz *= dragMultiplier;
     }
 
     // ── World params: WIND (constant +X drift) + DAMPING (global decay) ──
@@ -1414,7 +1431,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Life cycle ──
 
     applyLifeCycle(lawState, view, iBase, dnaI, localTimeStep, prng,
-      syn[LAW_INDEXES.LIFE] * runtimeConfig.deathRate, dnaBuffer);
+      syn[LAW_INDEXES.LIFE] * deathRate, dnaBuffer);
 
     // ── Glow ──
     applyGlowEffect(lawState, view, iBase, dnaI, localTimeStep,
@@ -1466,7 +1483,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Reproduction ──
 
     const offspring = applyReproduction(lawState, view, iBase, dnaI, prng,
-      syn[LAW_INDEXES.REPRO] * runtimeConfig.birthRate, dnaBuffer, localTimeStep);
+      syn[LAW_INDEXES.REPRO] * birthRate, dnaBuffer, localTimeStep);
     if (offspring) {
       _offspringRing[_ringWrite] = offspring;
       _ringWrite = (_ringWrite + 1) % OFFSPRING_RING_SIZE;

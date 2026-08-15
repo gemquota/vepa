@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, simContext } from './paramsHelpers.js';
 import { createWorldParams, applyWorldParam } from '../../src/state/worldParams.js';
 import { LAW_INDEXES } from '../../src/constants.js';
 import { solve } from '../../src/physics/solver.js';
@@ -13,7 +13,7 @@ describe('Batch 05 — RADIATION_LEVEL / SPAWN_RATE / SPECIES_INTERACTION / ENER
       });
       const laws = lawsWith(LAW_INDEXES.RADIATION, LAW_INDEXES.LIFE); // LIFE keeps AGE advancing & energy path active
       withWorldParam('RADIATION_LEVEL', level, () => {
-        for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 50; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.ENERGY];
     };
@@ -41,7 +41,7 @@ describe('Batch 05 — RADIATION_LEVEL / SPAWN_RATE / SPECIES_INTERACTION / ENER
       });
       const laws = lawsWith(LAW_INDEXES.AFFINITY, LAW_INDEXES.WRAP);
       withWorldParam('SPECIES_INTERACTION', interaction, () => {
-        for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.POS_X];
     };
@@ -58,7 +58,7 @@ describe('Batch 05 — RADIATION_LEVEL / SPAWN_RATE / SPECIES_INTERACTION / ENER
       });
       const laws = lawsWith(LAW_INDEXES.ENERGY, LAW_INDEXES.WRAP);
       withWorldParam('ENERGY_TRANSFER', transfer, () => {
-        for (let t = 0; t < 30; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 30; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[PARTICLE_STRIDE + S.ENERGY];
     };

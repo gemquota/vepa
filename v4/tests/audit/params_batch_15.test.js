@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD } from './paramsHelpers.js';
+import { makeWorld, withWorldParam, lawsWith, PARTICLE_STRIDE, S, WORLD, simContext } from './paramsHelpers.js';
 import { LAW_INDEXES } from '../../src/constants.js';
 import { solve, drainOffspring, resetOffspringRing } from '../../src/physics/solver.js';
 import { setDNAFloat } from '../../src/dna/dnaBuffer.js';
@@ -34,7 +34,7 @@ describe('Batch 15 — DNA.MUTATION / DNA.ENERGY_EFFICIENCY / DNA.SEX_CHANCE / D
       });
       const laws = lawsWith(LAW_INDEXES.LIFE, LAW_INDEXES.WRAP);
       withWorldParam('LIGHT_LEVEL', 0, () => {
-        for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5);
+        for (let t = 0; t < 100; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, 1.0, () => 0.5, simContext());
       });
       return view[S.ENERGY];
     };

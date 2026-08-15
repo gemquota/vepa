@@ -285,7 +285,7 @@ export const DNA_RANGES = [
   { min: 1,     max: 10,   default: 3        },   // 63 REGULATORY_DEPTH
 ];
 
-// --- Law Indexes (64 laws) ---
+// --- Law Indexes (128 laws, indices 0-127) ---
 
 export const LAW_INDEXES = {
   // Physics (Blue) — indices 0-6

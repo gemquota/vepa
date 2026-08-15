@@ -7,6 +7,7 @@ import { createLawState, set, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults } from '../../src/dna/dnaBuffer.js';
 import { solve } from '../../src/physics/solver.js';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
+import { simContext } from './paramsHelpers.js';
 
 const WORLD = 2000;
 const DT = 0.25;
@@ -181,7 +182,7 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
       set(laws, LAW_INDEXES.GLOW);
       const prev = runtimeConfig.worldParams;
       runtimeConfig.worldParams = { ...prev, WALL_REFLECT: wallReflect };
-      for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+      for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng, simContext());
       runtimeConfig.worldParams = prev;
       return { x: view[S.POS_X], vx: view[S.VEL_X] };
     };

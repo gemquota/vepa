@@ -49,7 +49,7 @@ export function logDebug(text, level = 'info') {
 export function debugSnapshot() {
   return {
     app: 'VEPA v4',
-    version: '4.1.6',
+    version: '4.6.26',
     url: typeof location !== 'undefined' ? location.href : '',
     startedAt,
     messageCount: messages.length,
