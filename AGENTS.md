@@ -4,7 +4,7 @@
 > **Active Target:** **VEPA4 v7.0.0** (legacy label `4.7.0`; working tree; HEAD `247d0e6` = `backup: 7.0.0 draft + exports snapshot before master switch`, 2026-08-11; slider-controls WIP uncommitted)
 > **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
 > archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
-> **Working Branch:** `feature/slider-controls`
+> **Working Branch:** `master`
 > **Audit Hash:** `AGENTS_SYNC_v7.0.0_2026-08-16`
 >
 > This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
