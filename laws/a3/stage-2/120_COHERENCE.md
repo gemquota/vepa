@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #120 explicitly binds to:
 1. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **OXIDATION_RATE (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics

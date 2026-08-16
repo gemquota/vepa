@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #61 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

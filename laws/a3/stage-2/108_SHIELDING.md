@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #108 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SHIELDING_ATTENUATION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ARMOR (Stride 63)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

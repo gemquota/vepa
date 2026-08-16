@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FLUX)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), POLARITY (DNA 4), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), POLARITY (DNA 4), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **POLARITY (DNA 4)**
 - **CHARGE (Stride 67)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

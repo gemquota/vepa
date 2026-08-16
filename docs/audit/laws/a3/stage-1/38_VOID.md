@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.VOID)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), WORLD_SIZE (World), RADIUS (Stride 56), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), VOID_PRESSURE (World), WORLD_SIZE (World), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **VOID_PRESSURE (World)**
 - **WORLD_SIZE (World)**
 - **RADIUS (Stride 56)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

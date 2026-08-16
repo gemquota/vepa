@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #64 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PLASMA_IONIZATION_ENERGY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

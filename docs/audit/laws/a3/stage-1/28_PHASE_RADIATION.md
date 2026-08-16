@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PHASE_RADIATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), ALPHA (DNA 5), TEMPERATURE (Stride 66), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), PHASE_RADIATION_FACTOR (World), ALPHA (DNA 5), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **PHASE_RADIATION_FACTOR (World)**
 - **ALPHA (DNA 5)**
 - **TEMPERATURE (Stride 66)**
-- **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

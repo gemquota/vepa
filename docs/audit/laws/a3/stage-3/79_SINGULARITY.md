@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **SINGULARITY_HORIZON (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`

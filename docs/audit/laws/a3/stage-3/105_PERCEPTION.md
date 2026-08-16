@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`

@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #83 explicitly binds to:
 1. **FRICTION (DNA 27)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #87 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ROTATION_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

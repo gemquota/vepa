@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #17 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CATALYSIS_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

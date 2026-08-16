@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **JITTER (DNA 3)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

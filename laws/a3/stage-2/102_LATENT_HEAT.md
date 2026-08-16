@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #102 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **LATENT_HEAT_BUFFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STORED_ENERGY (Stride 78)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

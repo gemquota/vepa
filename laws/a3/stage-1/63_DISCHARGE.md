@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DISCHARGE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), DISCHARGE_ARC_THRESHOLD (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **DISCHARGE_ARC_THRESHOLD (World)**
 - **REACTION_THRESHOLD (DNA 37)**
-- **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior

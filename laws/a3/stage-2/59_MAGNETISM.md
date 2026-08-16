@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #59 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

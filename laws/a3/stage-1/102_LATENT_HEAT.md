@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LATENT_HEAT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STORED_ENERGY (Stride 78)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), LATENT_HEAT_BUFFER (World), CRITICAL_TEMP (World), STORED_ENERGY (Stride 78)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **LATENT_HEAT_BUFFER (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STORED_ENERGY (Stride 78)**
 
 ## 4. Current Limitations & Observed Behavior

@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #65 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERCONDUCT_TC (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

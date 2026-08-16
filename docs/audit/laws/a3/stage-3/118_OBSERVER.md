@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ALPHA (DNA 5)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
-- [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **POLYMER_LIMIT (World)**
 - [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 - [x] Wired parameter: **BOND_COUNT (Stride 58)**
-- [x] Wired parameter: **BOND_PARTNER (Stride 59-60)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`

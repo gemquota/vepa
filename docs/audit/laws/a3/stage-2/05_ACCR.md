@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #5 explicitly binds to:
 1. **FUSION (DNA 9)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACCRETION_RADIUS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

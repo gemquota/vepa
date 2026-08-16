@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #103 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **RUNAWAY_MULT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

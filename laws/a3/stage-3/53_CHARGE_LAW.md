@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **COULOMB_CONSTANT (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`

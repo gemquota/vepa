@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #78 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #29 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #127 explicitly binds to:
 1. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ANTIMATTER_ANNIHILATION_YIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.BOIL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), VISCOSITY (DNA 1)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), VISCOSITY (DNA 1)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **VISCOSITY (DNA 1)**
 
 ## 4. Current Limitations & Observed Behavior

@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #77 explicitly binds to:
 1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

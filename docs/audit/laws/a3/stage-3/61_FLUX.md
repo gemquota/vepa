@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **POLARITY (DNA 4)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`

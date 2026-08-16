@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #89 explicitly binds to:
 1. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PARASITE_DRAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

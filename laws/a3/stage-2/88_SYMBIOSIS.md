@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #88 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SYMBIOSIS_BOOST (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SPECIES_INTERACTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

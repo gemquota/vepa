@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.IONIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), RADIATION_LEVEL (World), CHARGE (Stride 67), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), PLASMA_IONIZATION_ENERGY (World), RADIATION_LEVEL (World), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **PLASMA_IONIZATION_ENERGY (World)**
 - **RADIATION_LEVEL (World)**
 - **CHARGE (Stride 67)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

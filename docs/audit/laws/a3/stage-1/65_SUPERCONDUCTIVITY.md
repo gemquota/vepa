@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), MAGNETIC_MOMENT (DNA 33)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SUPERCONDUCT_TC (World), CRITICAL_TEMP (World), MAGNETIC_MOMENT (DNA 33)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SUPERCONDUCT_TC (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **MAGNETIC_MOMENT (DNA 33)**
 
 ## 4. Current Limitations & Observed Behavior

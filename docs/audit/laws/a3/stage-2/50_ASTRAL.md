@@ -15,9 +15,9 @@
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #50 explicitly binds to:
-1. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **ASTRAL_PHASE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

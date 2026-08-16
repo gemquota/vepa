@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COMPRESSION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), MASS (Stride 6), TEMPERATURE (Stride 66), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ADIABATIC_GAMMA (World), MASS (Stride 6), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **ADIABATIC_GAMMA (World)**
 - **MASS (Stride 6)**
-- **TEMPERATURE (Stride 66)**
 - **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior

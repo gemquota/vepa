@@ -14,21 +14,21 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 
 ### Cross-Law Matrix & Synergy Chains
 - **GRAV** (Law #0): Synergizes with parameters [FORCE (DNA 0); GLOBAL_G (World); MASS (Stride 6); RADIUS (Stride 56)].
-- **DRAG** (Law #1): Synergizes with parameters [VISCOSITY (DNA 1); DAMPING (World); RADIUS (Stride 56); MAX_VELOCITY (DNA 28)].
+- **DRAG** (Law #1): Synergizes with parameters [VISCOSITY (DNA 1); DAMPING (World); FRICTION_COEFF (World); MAX_VELOCITY (DNA 28)].
 - **ENTR** (Law #2): Synergizes with parameters [JITTER (DNA 3); ENTROPY (World); TEMPERATURE (Stride 66); HEAT_CAPACITY (World)].
 - **WRAP** (Law #3): Synergizes with parameters [WORLD_SIZE (World); WALL_REFLECT (World); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
-- **COLL** (Law #4): Synergizes with parameters [STIFFNESS (DNA 8); ELASTICITY (DNA 30); MASS (Stride 6); RADIUS (Stride 56)].
-- **ACCR** (Law #5): Synergizes with parameters [FUSION (DNA 9); FUSION_TIME (DNA 17); MASS (Stride 6); RADIUS (Stride 56)].
+- **COLL** (Law #4): Synergizes with parameters [STIFFNESS (DNA 8); ELASTICITY (DNA 30); ELASTIC_RESTITUTION (World); MASS (Stride 6)].
+- **ACCR** (Law #5): Synergizes with parameters [FUSION (DNA 9); ACCRETION_RADIUS (World); FUSION_TIME (DNA 17); MASS (Stride 6)].
 - **PLANETARY** (Law #6): Synergizes with parameters [FORCE (DNA 0); GLOBAL_G (World); HIDDEN_MASS (DNA 7); INERTIA (DNA 26)].
-- **VOID** (Law #38): Synergizes with parameters [FORCE (DNA 0); WORLD_SIZE (World); RADIUS (Stride 56); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **BOND** (Law #39): Synergizes with parameters [STIFFNESS (DNA 8); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58); BOND_PARTNER (Stride 59-60)].
-- **SINGULARITY** (Law #79): Synergizes with parameters [FORCE (DNA 0); HIDDEN_MASS (DNA 7); MASS (Stride 6); CRITICAL_TEMP (World)].
-- **TIDE** (Law #82): Synergizes with parameters [TIDAL (DNA 15); FORCE (DNA 0); GLOBAL_G (World); RADIUS (Stride 56)].
-- **FRICTION** (Law #83): Synergizes with parameters [FRICTION (DNA 27); VISCOSITY (DNA 1); STIFFNESS (DNA 8); VEL_X/Y/Z (Stride 3-5)].
-- **ELASTICITY** (Law #84): Synergizes with parameters [ELASTICITY (DNA 30); STIFFNESS (DNA 8); MASS (Stride 6); RADIUS (Stride 56)].
-- **TURBULENCE** (Law #85): Synergizes with parameters [JITTER (DNA 3); TORQUE (DNA 2); VISCOSITY (DNA 1); ENTROPY (World)].
-- **CENTRIPETAL** (Law #86): Synergizes with parameters [TORQUE (DNA 2); FORCE (DNA 0); INERTIA (DNA 26); MAX_VELOCITY (DNA 28)].
-- **ROTATION** (Law #87): Synergizes with parameters [TORQUE (DNA 2); INERTIA (DNA 26); VEL_X/Y/Z (Stride 3-5); BOND_ANGLE (DNA 31)].
+- **VOID** (Law #38): Synergizes with parameters [FORCE (DNA 0); VOID_PRESSURE (World); WORLD_SIZE (World); RADIUS (Stride 56)].
+- **BOND** (Law #39): Synergizes with parameters [STIFFNESS (DNA 8); BOND_STRENGTH (World); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58)].
+- **SINGULARITY** (Law #79): Synergizes with parameters [FORCE (DNA 0); SINGULARITY_HORIZON (World); HIDDEN_MASS (DNA 7); MASS (Stride 6)].
+- **TIDE** (Law #82): Synergizes with parameters [TIDAL (DNA 15); TIDAL_SCALE (World); FORCE (DNA 0); GLOBAL_G (World)].
+- **FRICTION** (Law #83): Synergizes with parameters [FRICTION (DNA 27); FRICTION_COEFF (World); VISCOSITY (DNA 1); VEL_X/Y/Z (Stride 3-5)].
+- **ELASTICITY** (Law #84): Synergizes with parameters [ELASTICITY (DNA 30); ELASTIC_RESTITUTION (World); STIFFNESS (DNA 8); MASS (Stride 6)].
+- **TURBULENCE** (Law #85): Synergizes with parameters [JITTER (DNA 3); TURBULENCE_KICK (World); TORQUE (DNA 2); VISCOSITY (DNA 1)].
+- **CENTRIPETAL** (Law #86): Synergizes with parameters [TORQUE (DNA 2); CENTRIPETAL_SCALE (World); FORCE (DNA 0); INERTIA (DNA 26)].
+- **ROTATION** (Law #87): Synergizes with parameters [TORQUE (DNA 2); ROTATION_SPEED (World); INERTIA (DNA 26); VEL_X/Y/Z (Stride 3-5)].
 
 ---
 
@@ -59,7 +59,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DRAG` (1)
 - **Spectrum Hue**: 353.8°
-- **Governing Parameters**: VISCOSITY (DNA 1), DAMPING (World), RADIUS (Stride 56), MAX_VELOCITY (DNA 28)
+- **Governing Parameters**: VISCOSITY (DNA 1), DAMPING (World), FRICTION_COEFF (World), MAX_VELOCITY (DNA 28)
 - **Help DB Hint**: "Velocity-dependent motion damping."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -116,7 +116,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COLL` (4)
 - **Spectrum Hue**: 356.6°
-- **Governing Parameters**: STIFFNESS (DNA 8), ELASTICITY (DNA 30), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: STIFFNESS (DNA 8), ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), MASS (Stride 6)
 - **Help DB Hint**: "Physical collisions with momentum exchange."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -135,7 +135,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ACCR` (5)
 - **Spectrum Hue**: 357.6°
-- **Governing Parameters**: FUSION (DNA 9), FUSION_TIME (DNA 17), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: FUSION (DNA 9), ACCRETION_RADIUS (World), FUSION_TIME (DNA 17), MASS (Stride 6)
 - **Help DB Hint**: "Mass accretion on collision."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -173,7 +173,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.VOID` (38)
 - **Spectrum Hue**: 359.5°
-- **Governing Parameters**: FORCE (DNA 0), WORLD_SIZE (World), RADIUS (Stride 56), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: FORCE (DNA 0), VOID_PRESSURE (World), WORLD_SIZE (World), RADIUS (Stride 56)
 - **Help DB Hint**: "Vacuum pressure: empty space pushes particles apart."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -192,7 +192,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.BOND` (39)
 - **Spectrum Hue**: 0.5°
-- **Governing Parameters**: STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)
+- **Governing Parameters**: STIFFNESS (DNA 8), BOND_STRENGTH (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)
 - **Help DB Hint**: "Molecular bonding between nearby particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -211,7 +211,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SINGULARITY` (79)
 - **Spectrum Hue**: 1.4°
-- **Governing Parameters**: FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), CRITICAL_TEMP (World)
+- **Governing Parameters**: FORCE (DNA 0), SINGULARITY_HORIZON (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)
 - **Help DB Hint**: "Singularity: supermassive particles collapse into black holes."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -230,7 +230,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TIDE` (82)
 - **Spectrum Hue**: 2.4°
-- **Governing Parameters**: TIDAL (DNA 15), FORCE (DNA 0), GLOBAL_G (World), RADIUS (Stride 56)
+- **Governing Parameters**: TIDAL (DNA 15), TIDAL_SCALE (World), FORCE (DNA 0), GLOBAL_G (World)
 - **Help DB Hint**: "Tides: massive neighbours stretch and pull at each other."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -249,7 +249,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FRICTION` (83)
 - **Spectrum Hue**: 3.4°
-- **Governing Parameters**: FRICTION (DNA 27), VISCOSITY (DNA 1), STIFFNESS (DNA 8), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: FRICTION (DNA 27), FRICTION_COEFF (World), VISCOSITY (DNA 1), VEL_X/Y/Z (Stride 3-5)
 - **Help DB Hint**: "Friction: velocity-dependent drag slows everything down."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -268,7 +268,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ELASTICITY` (84)
 - **Spectrum Hue**: 4.3°
-- **Governing Parameters**: ELASTICITY (DNA 30), STIFFNESS (DNA 8), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), STIFFNESS (DNA 8), MASS (Stride 6)
 - **Help DB Hint**: "Elasticity: collisions bounce with restitution."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -287,7 +287,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TURBULENCE` (85)
 - **Spectrum Hue**: 5.3°
-- **Governing Parameters**: JITTER (DNA 3), TORQUE (DNA 2), VISCOSITY (DNA 1), ENTROPY (World)
+- **Governing Parameters**: JITTER (DNA 3), TURBULENCE_KICK (World), TORQUE (DNA 2), VISCOSITY (DNA 1)
 - **Help DB Hint**: "Turbulence: a noise-driven swirl perturbs every particle."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -306,7 +306,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CENTRIPETAL` (86)
 - **Spectrum Hue**: 6.2°
-- **Governing Parameters**: TORQUE (DNA 2), FORCE (DNA 0), INERTIA (DNA 26), MAX_VELOCITY (DNA 28)
+- **Governing Parameters**: TORQUE (DNA 2), CENTRIPETAL_SCALE (World), FORCE (DNA 0), INERTIA (DNA 26)
 - **Help DB Hint**: "Centripetal: everything is pulled gently toward the world centre."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -325,7 +325,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ROTATION` (87)
 - **Spectrum Hue**: 7.2°
-- **Governing Parameters**: TORQUE (DNA 2), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5), BOND_ANGLE (DNA 31)
+- **Governing Parameters**: TORQUE (DNA 2), ROTATION_SPEED (World), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5)
 - **Help DB Hint**: "Rotation: the world spins around its centre."
 
 ### 2. Physical Basis & Proposal (Stage 2)

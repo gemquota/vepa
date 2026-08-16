@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SOLVATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), VISCOSITY (DNA 1), CHARGE (Stride 67), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), SOLVATION_RATE (World), VISCOSITY (DNA 1), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **SOLVATION_RATE (World)**
 - **VISCOSITY (DNA 1)**
 - **CHARGE (Stride 67)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

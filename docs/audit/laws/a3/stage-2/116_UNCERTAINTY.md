@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #116 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **UNCERTAINTY_SIGMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

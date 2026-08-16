@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #11 explicitly binds to:
 1. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TRACKING_SENSITIVITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

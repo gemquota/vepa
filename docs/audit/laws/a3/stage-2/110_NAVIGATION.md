@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #110 explicitly binds to:
 1. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NAVIGATION_GRADIENT_BIAS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

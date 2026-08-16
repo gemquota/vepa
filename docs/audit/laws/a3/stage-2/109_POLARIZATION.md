@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #109 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLARIZATION_DISPLACEMENT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

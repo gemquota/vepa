@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #69 explicitly binds to:
 1. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SIGNAL_BOOST_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

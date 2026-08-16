@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CHARGE (Stride 67)**
+- [x] Wired parameter: **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -39,6 +39,80 @@ export const WORLD_PARAM_DEFS = [
   { key: 'ENERGY_TRANSFER', label: 'ENERGY TRANSFER', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
   { key: 'MUTATION_RATE', label: 'MUTATION RATE', min: 0, max: 5, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
   { key: 'DECAY_RATE', label: 'DECAY RATE', min: 0, max: 2, default: 1, step: 0.05, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
+
+  // ── DEDICATED LAW PARAMETERS (PHYSICS) ──
+  { key: 'TIDAL_SCALE', label: 'TIDAL SCALE', min: 0, max: 5, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'FORCES' },
+  { key: 'FRICTION_COEFF', label: 'FRICTION COEFF', min: 0, max: 2, default: 1, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' },
+  { key: 'ELASTIC_RESTITUTION', label: 'ELASTIC RESTITUTION', min: 0, max: 1, default: 0.5, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' },
+  { key: 'TURBULENCE_KICK', label: 'TURBULENCE KICK', min: 0, max: 5, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'MOTION' },
+  { key: 'CENTRIPETAL_SCALE', label: 'CENTRIPETAL SCALE', min: 0, max: 5, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'FORCES' },
+  { key: 'ROTATION_SPEED', label: 'ROTATION SPEED', min: 0, max: 5, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'MOTION' },
+  { key: 'ACCRETION_RADIUS', label: 'ACCRETION RADIUS', min: 0.1, max: 10, default: 2, step: 0.1, group: 'PHYSICS', subgroup: 'FORCES' },
+  { key: 'SINGULARITY_HORIZON', label: 'SINGULARITY HORIZON', min: 1, max: 50, default: 10, step: 1, group: 'PHYSICS', subgroup: 'FORCES' },
+  { key: 'BOND_STRENGTH', label: 'BOND STRENGTH', min: 0, max: 10, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'FORCES' },
+  { key: 'VOID_PRESSURE', label: 'VOID PRESSURE', min: 0, max: 5, default: 1, step: 0.1, group: 'PHYSICS', subgroup: 'FORCES' },
+
+  // ── DEDICATED LAW PARAMETERS (BIOLOGY) ──
+  { key: 'REPRODUCTION_THRESHOLD', label: 'REPRODUCTION THRESH', min: 10, max: 100, default: 50, step: 5, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
+  { key: 'SENESCENCE_RATE', label: 'SENESCENCE RATE', min: 0, max: 2, default: 1, step: 0.05, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
+  { key: 'PREDATION_EFFICIENCY', label: 'PREDATION EFFICIENCY', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
+  { key: 'SYMBIOSIS_BOOST', label: 'SYMBIOSIS BOOST', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
+  { key: 'PARASITE_DRAIN', label: 'PARASITE DRAIN', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
+  { key: 'IMMUNITY_SHIELD', label: 'IMMUNITY SHIELD', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
+  { key: 'HIBERNATION_SAVINGS', label: 'HIBERNATION SAVINGS', min: 0, max: 1, default: 0.8, step: 0.05, group: 'BIOLOGY', subgroup: 'LIFE CYCLE' },
+  { key: 'TRACKING_SENSITIVITY', label: 'TRACKING SENSITIVITY', min: 0, max: 5, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
+
+  // ── DEDICATED LAW PARAMETERS (CHEMISTRY) ──
+  { key: 'CATALYSIS_SPEED', label: 'CATALYSIS SPEED', min: 0, max: 5, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'REACTIONS' },
+  { key: 'SOLVATION_RATE', label: 'SOLVATION RATE', min: 0, max: 2, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'STATES' },
+  { key: 'ACIDITY_PH', label: 'ACIDITY PH', min: 0, max: 14, default: 7, step: 0.5, group: 'CHEMISTRY', subgroup: 'REACTIONS' },
+  { key: 'OXIDATION_RATE', label: 'OXIDATION RATE', min: 0, max: 2, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'REACTIONS' },
+  { key: 'POLYMER_LIMIT', label: 'POLYMER LIMIT', min: 2, max: 10, default: 6, step: 1, group: 'CHEMISTRY', subgroup: 'BONDS' },
+  { key: 'CRYSTAL_LATTICE', label: 'CRYSTAL LATTICE', min: 0.1, max: 5, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'STATES' },
+  { key: 'ELECTROLYSIS_POWER', label: 'ELECTROLYSIS POWER', min: 0, max: 5, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'REACTIONS' },
+  { key: 'AUTOCATALYSIS_GAIN', label: 'AUTOCATALYSIS GAIN', min: 0, max: 5, default: 1, step: 0.1, group: 'CHEMISTRY', subgroup: 'REACTIONS' },
+
+  // ── DEDICATED LAW PARAMETERS (THERMODYNAMICS) ──
+  { key: 'CONVECTION_RATE', label: 'CONVECTION RATE', min: 0, max: 5, default: 1, step: 0.1, group: 'THERMODYNAMICS', subgroup: 'HEAT' },
+  { key: 'PHASE_RADIATION_FACTOR', label: 'PHASE RADIATION FACTOR', min: 0, max: 2, default: 1, step: 0.1, group: 'THERMODYNAMICS', subgroup: 'RADIATION' },
+  { key: 'LATENT_HEAT_BUFFER', label: 'LATENT HEAT BUFFER', min: 0, max: 5, default: 1, step: 0.1, group: 'THERMODYNAMICS', subgroup: 'PHASE' },
+  { key: 'MELT_TEMP_POINT', label: 'MELT TEMP POINT', min: 0, max: 100, default: 30, step: 1, group: 'THERMODYNAMICS', subgroup: 'PHASE' },
+  { key: 'BOIL_TEMP_POINT', label: 'BOIL TEMP POINT', min: 50, max: 200, default: 100, step: 5, group: 'THERMODYNAMICS', subgroup: 'PHASE' },
+  { key: 'ADIABATIC_GAMMA', label: 'ADIABATIC GAMMA', min: 1, max: 2, default: 1.4, step: 0.05, group: 'THERMODYNAMICS', subgroup: 'HEAT' },
+  { key: 'RUNAWAY_MULT', label: 'RUNAWAY MULTIPLIER', min: 1, max: 10, default: 2, step: 0.5, group: 'THERMODYNAMICS', subgroup: 'HEAT' },
+
+  // ── DEDICATED LAW PARAMETERS (METAPHYSICS) ──
+  { key: 'TIME_WARP_FACTOR', label: 'TIME WARP FACTOR', min: 0.1, max: 10, default: 1, step: 0.1, group: 'METAPHYSICS', subgroup: 'TIME' },
+  { key: 'DIMENSIONAL_FOLD', label: 'DIMENSIONAL FOLD', min: 1, max: 4, default: 3, step: 0.1, group: 'METAPHYSICS', subgroup: 'SPACE' },
+  { key: 'CHAOS_LYAPUNOV', label: 'CHAOS LYAPUNOV', min: 0, max: 5, default: 1, step: 0.1, group: 'METAPHYSICS', subgroup: 'ENTROPY' },
+  { key: 'CONSCIOUSNESS_PHI', label: 'CONSCIOUSNESS PHI', min: 0, max: 10, default: 1, step: 0.1, group: 'METAPHYSICS', subgroup: 'MIND' },
+  { key: 'TELEPATHY_RANGE', label: 'TELEPATHY RANGE', min: 10, max: 500, default: 100, step: 10, group: 'METAPHYSICS', subgroup: 'MIND' },
+  { key: 'ASTRAL_PHASE', label: 'ASTRAL PHASE', min: 0, max: 1, default: 0.5, step: 0.05, group: 'METAPHYSICS', subgroup: 'SPACE' },
+  { key: 'SYNCHRONICITY_RATE', label: 'SYNCHRONICITY RATE', min: 0, max: 5, default: 1, step: 0.1, group: 'METAPHYSICS', subgroup: 'ENTROPY' },
+
+  // ── DEDICATED LAW PARAMETERS (ELECTROMAGNETISM) ──
+  { key: 'COULOMB_CONSTANT', label: 'COULOMB CONSTANT', min: 0, max: 10, default: 1, step: 0.1, group: 'ELECTROMAGNETISM', subgroup: 'CHARGE' },
+  { key: 'MAGNETIC_FLUX_SCALE', label: 'MAGNETIC FLUX SCALE', min: 0, max: 5, default: 1, step: 0.1, group: 'ELECTROMAGNETISM', subgroup: 'FIELD' },
+  { key: 'PLASMA_IONIZATION_ENERGY', label: 'PLASMA IONIZATION EN', min: 0.1, max: 10, default: 2, step: 0.1, group: 'ELECTROMAGNETISM', subgroup: 'FIELD' },
+  { key: 'DISCHARGE_ARC_THRESHOLD', label: 'DISCHARGE ARC THRESH', min: 1, max: 50, default: 10, step: 1, group: 'ELECTROMAGNETISM', subgroup: 'CHARGE' },
+  { key: 'SHIELDING_ATTENUATION', label: 'SHIELDING ATTENUATION', min: 0, max: 1, default: 0.8, step: 0.05, group: 'ELECTROMAGNETISM', subgroup: 'FIELD' },
+  { key: 'POLARIZATION_DISPLACEMENT', label: 'POLARIZATION DISPL', min: 0, max: 2, default: 1, step: 0.1, group: 'ELECTROMAGNETISM', subgroup: 'FIELD' },
+
+  // ── DEDICATED LAW PARAMETERS (INFORMATION) ──
+  { key: 'STIGMERGY_DECAY_RATE', label: 'STIGMERGY DECAY RATE', min: 0.001, max: 0.1, default: 0.01, step: 0.005, group: 'INFORMATION', subgroup: 'SIGNALS' },
+  { key: 'HEBBIAN_LEARNING_RATE', label: 'HEBBIAN LEARNING RATE', min: 0, max: 1, default: 0.1, step: 0.01, group: 'INFORMATION', subgroup: 'LEARNING' },
+  { key: 'SIGNAL_BOOST_GAIN', label: 'SIGNAL BOOST GAIN', min: 1, max: 10, default: 2, step: 0.5, group: 'INFORMATION', subgroup: 'SIGNALS' },
+  { key: 'CULTURAL_TRANSMISSION', label: 'CULTURAL TRANSMISSION', min: 0, max: 1, default: 0.5, step: 0.05, group: 'INFORMATION', subgroup: 'MEMETICS' },
+  { key: 'ENCRYPTION_CIPHER_KEY', label: 'ENCRYPTION CIPHER KEY', min: 1, max: 256, default: 128, step: 1, group: 'INFORMATION', subgroup: 'SIGNALS' },
+  { key: 'NAVIGATION_GRADIENT_BIAS', label: 'NAV GRADIENT BIAS', min: 0, max: 5, default: 1, step: 0.1, group: 'INFORMATION', subgroup: 'SIGNALS' },
+
+  // ── DEDICATED LAW PARAMETERS (QUANTUM) ──
+  { key: 'TUNNELING_PROBABILITY', label: 'TUNNELING PROB', min: 0, max: 0.5, default: 0.05, step: 0.005, group: 'QUANTUM', subgroup: 'PROBABILITY' },
+  { key: 'SUPERPOSITION_PHASE_SCALE', label: 'SUPERPOSITION PHASE', min: 0, max: 2, default: 1, step: 0.1, group: 'QUANTUM', subgroup: 'STATE' },
+  { key: 'DECOHERENCE_RATE_FACTOR', label: 'DECOHERENCE RATE', min: 0, max: 2, default: 1, step: 0.1, group: 'QUANTUM', subgroup: 'STATE' },
+  { key: 'UNCERTAINTY_SIGMA', label: 'UNCERTAINTY SIGMA', min: 0.01, max: 1, default: 0.1, step: 0.01, group: 'QUANTUM', subgroup: 'PROBABILITY' },
+  { key: 'ANTIMATTER_ANNIHILATION_YIELD', label: 'ANNIHILATION YIELD', min: 0, max: 10, default: 5, step: 0.5, group: 'QUANTUM', subgroup: 'ENERGY' },
+  { key: 'SPIN_PRECESSION_FREQ', label: 'SPIN PRECESSION FREQ', min: 0, max: 10, default: 1, step: 0.5, group: 'QUANTUM', subgroup: 'STATE' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

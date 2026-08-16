@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **SPIN_PRECESSION_FREQ (World)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`

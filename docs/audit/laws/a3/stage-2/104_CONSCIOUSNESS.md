@@ -15,10 +15,10 @@
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #104 explicitly binds to:
-1. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

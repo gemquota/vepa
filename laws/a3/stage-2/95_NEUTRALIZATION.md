@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #95 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACIDITY_PH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

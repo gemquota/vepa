@@ -37,7 +37,7 @@ Law #0 (GRAV) is fully audited, parameterized, implemented, and verified.
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 - [x] Wired parameter: **DAMPING (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -115,8 +115,8 @@ Law #3 (WRAP) is fully audited, parameterized, implemented, and verified.
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **ELASTICITY (DNA 30)**
+- [x] Wired parameter: **ELASTIC_RESTITUTION (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -140,9 +140,9 @@ Law #4 (COLL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FUSION (DNA 9)**
+- [x] Wired parameter: **ACCRETION_RADIUS (World)**
 - [x] Wired parameter: **FUSION_TIME (DNA 17)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -192,9 +192,9 @@ Law #6 (PLANETARY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **VOID_PRESSURE (World)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 - [x] Wired parameter: **RADIUS (Stride 56)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -218,9 +218,9 @@ Law #38 (VOID) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **BOND_STRENGTH (World)**
 - [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 - [x] Wired parameter: **BOND_COUNT (Stride 58)**
-- [x] Wired parameter: **BOND_PARTNER (Stride 59-60)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -244,9 +244,9 @@ Law #39 (BOND) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **SINGULARITY_HORIZON (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -270,9 +270,9 @@ Law #79 (SINGULARITY) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TIDAL (DNA 15)**
+- [x] Wired parameter: **TIDAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **GLOBAL_G (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -296,8 +296,8 @@ Law #82 (TIDE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FRICTION (DNA 27)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -322,9 +322,9 @@ Law #83 (FRICTION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ELASTICITY (DNA 30)**
+- [x] Wired parameter: **ELASTIC_RESTITUTION (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -348,9 +348,9 @@ Law #84 (ELASTICITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **TURBULENCE_KICK (World)**
 - [x] Wired parameter: **TORQUE (DNA 2)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **ENTROPY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -374,9 +374,9 @@ Law #85 (TURBULENCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **CENTRIPETAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
-- [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -400,9 +400,9 @@ Law #86 (CENTRIPETAL) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **ROTATION_SPEED (World)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
-- [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -504,9 +504,9 @@ Law #9 (AFFINITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
+- [x] Wired parameter: **REPRODUCTION_THRESHOLD (World)**
 - [x] Wired parameter: **SEX_CHANCE (DNA 35)**
 - [x] Wired parameter: **MUTATION_RATE (World)**
-- [x] Wired parameter: **REPRO_DRIVE (Stride 79)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -530,8 +530,8 @@ Law #10 (REPRO) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **TRACKING_SENSITIVITY (World)**
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -556,9 +556,9 @@ Law #11 (TRACK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **DEATH_RATE (DNA 11)**
+- [x] Wired parameter: **SENESCENCE_RATE (World)**
 - [x] Wired parameter: **TELOMERE_LENGTH (DNA 60)**
 - [x] Wired parameter: **AGE (Stride 51)**
-- [x] Wired parameter: **DECAY_RATE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -686,9 +686,9 @@ Law #16 (PHENOTYPE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
+- [x] Wired parameter: **PREDATION_EFFICIENCY (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
 - [x] Wired parameter: **HUNGER (Stride 62)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -738,8 +738,8 @@ Law #52 (COMMS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
+- [x] Wired parameter: **SYMBIOSIS_BOOST (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
-- [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
 - [x] Wired parameter: **SPECIES_INTERACTION (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -764,9 +764,9 @@ Law #88 (SYMBIOSIS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
+- [x] Wired parameter: **PARASITE_DRAIN (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
 - [x] Wired parameter: **HUNGER (Stride 62)**
-- [x] Wired parameter: **IMMUNITY (DNA 91)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -790,9 +790,9 @@ Law #89 (PARASITE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
+- [x] Wired parameter: **HIBERNATION_SAVINGS (World)**
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -816,9 +816,9 @@ Law #90 (HIBERNATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REPAIR_EFFICIENCY (DNA 51)**
+- [x] Wired parameter: **IMMUNITY_SHIELD (World)**
 - [x] Wired parameter: **IMMUNITY (DNA 91)**
 - [x] Wired parameter: **RADIATION_EXPOSURE (Stride 80)**
-- [x] Wired parameter: **AGE (Stride 51)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -842,9 +842,9 @@ Law #91 (IMMUNITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CATALYSIS (DNA 38)**
+- [x] Wired parameter: **CATALYSIS_SPEED (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -868,9 +868,9 @@ Law #17 (CATALYSIS_LAW) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **SOLVATION_RATE (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -894,9 +894,9 @@ Law #18 (SOLVATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **ACIDITY_PH (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -920,9 +920,9 @@ Law #19 (ACIDITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **OXIDATION_RATE (World)**
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -946,9 +946,9 @@ Law #20 (OXIDATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **POLYMER_LIMIT (World)**
 - [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 - [x] Wired parameter: **BOND_COUNT (Stride 58)**
-- [x] Wired parameter: **BOND_PARTNER (Stride 59-60)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -1024,9 +1024,9 @@ Law #23 (CHIRALITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **CRYSTAL_LATTICE (World)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -1050,8 +1050,8 @@ Law #24 (CRYSTALLIZATION) is fully audited, parameterized, implemented, and veri
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **OXIDATION_RATE (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1102,9 +1102,9 @@ Law #41 (ALLOY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **ELECTROLYSIS_POWER (World)**
 - [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **VISCOSITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -1154,9 +1154,9 @@ Law #93 (PHOTOLYSIS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **SOLVATION_RATE (World)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VISCOSITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -1180,9 +1180,9 @@ Law #94 (PRECIPITATION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **ACIDITY_PH (World)**
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -1232,8 +1232,8 @@ Law #96 (STOICHIOMETRY) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CATALYSIS (DNA 38)**
+- [x] Wired parameter: **AUTOCATALYSIS_GAIN (World)**
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
-- [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1310,8 +1310,8 @@ Law #26 (COLD) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **CONVECTION_RATE (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **GLOBAL_G (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1336,9 +1336,9 @@ Law #27 (CONVECTION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PHASE_RADIATION_FACTOR (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsThermodynamics.test.js`
@@ -1362,8 +1362,8 @@ Law #28 (PHASE_RADIATION) is fully audited, parameterized, implemented, and veri
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1388,8 +1388,8 @@ Law #29 (SUBLIMATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **MELT_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1414,8 +1414,8 @@ Law #42 (MELT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1440,8 +1440,8 @@ Law #43 (BOIL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1466,8 +1466,8 @@ Law #44 (CONDENSE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **MELT_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1518,8 +1518,8 @@ Law #46 (EXOTHERMIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **ENTROPY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1544,8 +1544,8 @@ Law #98 (ADIABATIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1570,8 +1570,8 @@ Law #99 (COMPRESSION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **JITTER (DNA 3)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1622,8 +1622,8 @@ Law #101 (EQUILIBRIUM) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **LATENT_HEAT_BUFFER (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STORED_ENERGY (Stride 78)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1648,8 +1648,8 @@ Law #102 (LATENT_HEAT) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **RUNAWAY_MULT (World)**
 - [x] Wired parameter: **MUTATION_RATE (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1674,9 +1674,9 @@ Law #103 (RUNAWAY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1700,9 +1700,9 @@ Law #30 (TIME_DILATION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SYMMETRY (DNA 6)**
+- [x] Wired parameter: **DIMENSIONAL_FOLD (World)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1726,9 +1726,9 @@ Law #31 (DIMENSIONALITY) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **CHAOS_LYAPUNOV (World)**
 - [x] Wired parameter: **EPIGENETIC_DRIFT (DNA 44)**
 - [x] Wired parameter: **ENTROPY (World)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1855,10 +1855,10 @@ Law #36 (SOUL_LAW) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1881,10 +1881,10 @@ Law #37 (MIND) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TELEPATHY_RANGE (World)**
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
 - [x] Wired parameter: **SIGNAL_STRENGTH (DNA 19)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1907,10 +1907,10 @@ Law #47 (TELEPATHY) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TELEPATHY_RANGE (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -1933,9 +1933,9 @@ Law #48 (CLAIRVOYANCE) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -1959,9 +1959,9 @@ Law #49 (PRECOGNITION) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **ASTRAL_PHASE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
-- [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2011,10 +2011,10 @@ Law #80 (ENTANGLEMENT) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **REGULATORY_DEPTH (DNA 63)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -2038,9 +2038,9 @@ Law #104 (CONSCIOUSNESS) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -2063,10 +2063,10 @@ Law #105 (PERCEPTION) is fully audited, parameterized, implemented, and verified
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **SYNCHRONICITY_RATE (World)**
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
 - [x] Wired parameter: **RESONANCE_Q (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -2090,9 +2090,9 @@ Law #106 (SYNCHRONICITY) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **COULOMB_CONSTANT (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2116,9 +2116,9 @@ Law #53 (CHARGE_LAW) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2142,9 +2142,9 @@ Law #54 (FIELD) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **COULOMB_CONSTANT (World)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2220,9 +2220,9 @@ Law #57 (CAPACITANCE) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2246,8 +2246,8 @@ Law #58 (INDUCTANCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2298,9 +2298,9 @@ Law #60 (RESONANCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **POLARITY (DNA 4)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2324,9 +2324,9 @@ Law #61 (FLUX) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2350,8 +2350,8 @@ Law #62 (IONIZATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **DISCHARGE_ARC_THRESHOLD (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2376,8 +2376,8 @@ Law #63 (DISCHARGE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2402,8 +2402,8 @@ Law #64 (PLASMA) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SUPERCONDUCT_TC (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2454,8 +2454,8 @@ Law #107 (ANTENNA) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SHIELDING_ATTENUATION (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
-- [x] Wired parameter: **CHARGE (Stride 67)**
 - [x] Wired parameter: **ARMOR (Stride 63)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -2480,9 +2480,9 @@ Law #108 (SHIELDING) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **POLARIZATION_DISPLACEMENT (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **PHASE_1 (Stride 68)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -2558,9 +2558,9 @@ Law #67 (PATTERN) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_DECAY (DNA 20)**
+- [x] Wired parameter: **STIGMERGY_DECAY_RATE (World)**
 - [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2584,9 +2584,9 @@ Law #68 (STIGMERGY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_STRENGTH (DNA 19)**
+- [x] Wired parameter: **SIGNAL_BOOST_GAIN (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2610,9 +2610,9 @@ Law #69 (SIGNAL_BOOST) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ADAPTATION_RATE (DNA 55)**
+- [x] Wired parameter: **HEBBIAN_LEARNING_RATE (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **AGE (Stride 51)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2688,9 +2688,9 @@ Law #72 (METRIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ADAPTATION_RATE (DNA 55)**
+- [x] Wired parameter: **HEBBIAN_LEARNING_RATE (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2714,9 +2714,9 @@ Law #73 (PREDICT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CODON_BIAS (DNA 62)**
+- [x] Wired parameter: **ENCRYPTION_CIPHER_KEY (World)**
 - [x] Wired parameter: **REPAIR_EFFICIENCY (DNA 51)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **GENOTYPE (DNA 15)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2740,9 +2740,9 @@ Law #74 (CODE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2792,9 +2792,9 @@ Law #76 (FEEDBACK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2818,9 +2818,9 @@ Law #77 (LANGUAGE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2870,9 +2870,9 @@ Law #81 (HISTORY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
+- [x] Wired parameter: **NAVIGATION_GRADIENT_BIAS (World)**
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2896,9 +2896,9 @@ Law #110 (NAVIGATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CODON_BIAS (DNA 62)**
+- [x] Wired parameter: **ENCRYPTION_CIPHER_KEY (World)**
 - [x] Wired parameter: **REGULATORY_DEPTH (DNA 63)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -2922,9 +2922,9 @@ Law #111 (ENCRYPTION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -2948,9 +2948,9 @@ Law #112 (SUPERPOSITION) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **TUNNELING_PROBABILITY (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -2974,9 +2974,9 @@ Law #113 (TUNNELING) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENTROPY (World)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3000,8 +3000,8 @@ Law #114 (DECOHERENCE) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -3026,9 +3026,9 @@ Law #115 (WAVE_PARTICLE) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **UNCERTAINTY_SIGMA (World)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3052,9 +3052,9 @@ Law #116 (UNCERTAINTY) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **TUNNELING_PROBABILITY (World)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **WORLD_SIZE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3078,8 +3078,8 @@ Law #117 (TELEPORT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ALPHA (DNA 5)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
-- [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -3130,9 +3130,9 @@ Law #119 (PLANCK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **RESONANCE_Q (World)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **PHASE_2 (Stride 69)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3208,9 +3208,9 @@ Law #122 (FERMIONIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **SPIN_PRECESSION_FREQ (World)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3260,9 +3260,9 @@ Law #124 (SPECTRAL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3286,9 +3286,9 @@ Law #125 (WAVEFUNCTION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **WORLD_SIZE (World)**
+- [x] Wired parameter: **DIMENSIONAL_FOLD (World)**
 - [x] Wired parameter: **DIMENSIONALITY (DNA 31)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -3312,8 +3312,8 @@ Law #126 (HYPERPLANE) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CHARGE (Stride 67)**
+- [x] Wired parameter: **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

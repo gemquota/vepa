@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #38 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **VOID_PRESSURE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

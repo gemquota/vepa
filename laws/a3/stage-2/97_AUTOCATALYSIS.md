@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #97 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **AUTOCATALYSIS_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

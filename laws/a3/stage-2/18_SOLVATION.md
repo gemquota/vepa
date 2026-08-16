@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #18 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SOLVATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

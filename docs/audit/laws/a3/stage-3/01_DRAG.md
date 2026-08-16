@@ -9,7 +9,7 @@
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 - [x] Wired parameter: **DAMPING (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #111 explicitly binds to:
 1. **CODON_BIAS (DNA 62)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ENCRYPTION_CIPHER_KEY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

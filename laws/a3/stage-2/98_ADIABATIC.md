@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #98 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

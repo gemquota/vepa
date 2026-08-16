@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CATALYSIS (DNA 38)**
+- [x] Wired parameter: **AUTOCATALYSIS_GAIN (World)**
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
-- [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics

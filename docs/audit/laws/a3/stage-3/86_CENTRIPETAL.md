@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **CENTRIPETAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
-- [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`

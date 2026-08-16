@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.AUTOCATALYSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), BIRTH_RATE (DNA 10), REACTION_THRESHOLD (DNA 37), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), AUTOCATALYSIS_GAIN (World), BIRTH_RATE (DNA 10), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CATALYSIS (DNA 38)**
+- **AUTOCATALYSIS_GAIN (World)**
 - **BIRTH_RATE (DNA 10)**
-- **REACTION_THRESHOLD (DNA 37)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior

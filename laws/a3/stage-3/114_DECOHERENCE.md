@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENTROPY (World)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`

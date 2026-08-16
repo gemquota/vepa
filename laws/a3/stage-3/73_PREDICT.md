@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ADAPTATION_RATE (DNA 55)**
+- [x] Wired parameter: **HEBBIAN_LEARNING_RATE (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`

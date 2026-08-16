@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #55 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **COULOMB_CONSTANT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

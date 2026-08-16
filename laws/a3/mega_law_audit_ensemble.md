@@ -196,21 +196,21 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 
 ### Cross-Law Matrix & Synergy Chains
 - **GRAV** (Law #0): Synergizes with parameters [FORCE (DNA 0); GLOBAL_G (World); MASS (Stride 6); RADIUS (Stride 56)].
-- **DRAG** (Law #1): Synergizes with parameters [VISCOSITY (DNA 1); DAMPING (World); RADIUS (Stride 56); MAX_VELOCITY (DNA 28)].
+- **DRAG** (Law #1): Synergizes with parameters [VISCOSITY (DNA 1); DAMPING (World); FRICTION_COEFF (World); MAX_VELOCITY (DNA 28)].
 - **ENTR** (Law #2): Synergizes with parameters [JITTER (DNA 3); ENTROPY (World); TEMPERATURE (Stride 66); HEAT_CAPACITY (World)].
 - **WRAP** (Law #3): Synergizes with parameters [WORLD_SIZE (World); WALL_REFLECT (World); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
-- **COLL** (Law #4): Synergizes with parameters [STIFFNESS (DNA 8); ELASTICITY (DNA 30); MASS (Stride 6); RADIUS (Stride 56)].
-- **ACCR** (Law #5): Synergizes with parameters [FUSION (DNA 9); FUSION_TIME (DNA 17); MASS (Stride 6); RADIUS (Stride 56)].
+- **COLL** (Law #4): Synergizes with parameters [STIFFNESS (DNA 8); ELASTICITY (DNA 30); ELASTIC_RESTITUTION (World); MASS (Stride 6)].
+- **ACCR** (Law #5): Synergizes with parameters [FUSION (DNA 9); ACCRETION_RADIUS (World); FUSION_TIME (DNA 17); MASS (Stride 6)].
 - **PLANETARY** (Law #6): Synergizes with parameters [FORCE (DNA 0); GLOBAL_G (World); HIDDEN_MASS (DNA 7); INERTIA (DNA 26)].
-- **VOID** (Law #38): Synergizes with parameters [FORCE (DNA 0); WORLD_SIZE (World); RADIUS (Stride 56); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **BOND** (Law #39): Synergizes with parameters [STIFFNESS (DNA 8); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58); BOND_PARTNER (Stride 59-60)].
-- **SINGULARITY** (Law #79): Synergizes with parameters [FORCE (DNA 0); HIDDEN_MASS (DNA 7); MASS (Stride 6); CRITICAL_TEMP (World)].
-- **TIDE** (Law #82): Synergizes with parameters [TIDAL (DNA 15); FORCE (DNA 0); GLOBAL_G (World); RADIUS (Stride 56)].
-- **FRICTION** (Law #83): Synergizes with parameters [FRICTION (DNA 27); VISCOSITY (DNA 1); STIFFNESS (DNA 8); VEL_X/Y/Z (Stride 3-5)].
-- **ELASTICITY** (Law #84): Synergizes with parameters [ELASTICITY (DNA 30); STIFFNESS (DNA 8); MASS (Stride 6); RADIUS (Stride 56)].
-- **TURBULENCE** (Law #85): Synergizes with parameters [JITTER (DNA 3); TORQUE (DNA 2); VISCOSITY (DNA 1); ENTROPY (World)].
-- **CENTRIPETAL** (Law #86): Synergizes with parameters [TORQUE (DNA 2); FORCE (DNA 0); INERTIA (DNA 26); MAX_VELOCITY (DNA 28)].
-- **ROTATION** (Law #87): Synergizes with parameters [TORQUE (DNA 2); INERTIA (DNA 26); VEL_X/Y/Z (Stride 3-5); BOND_ANGLE (DNA 31)].
+- **VOID** (Law #38): Synergizes with parameters [FORCE (DNA 0); VOID_PRESSURE (World); WORLD_SIZE (World); RADIUS (Stride 56)].
+- **BOND** (Law #39): Synergizes with parameters [STIFFNESS (DNA 8); BOND_STRENGTH (World); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58)].
+- **SINGULARITY** (Law #79): Synergizes with parameters [FORCE (DNA 0); SINGULARITY_HORIZON (World); HIDDEN_MASS (DNA 7); MASS (Stride 6)].
+- **TIDE** (Law #82): Synergizes with parameters [TIDAL (DNA 15); TIDAL_SCALE (World); FORCE (DNA 0); GLOBAL_G (World)].
+- **FRICTION** (Law #83): Synergizes with parameters [FRICTION (DNA 27); FRICTION_COEFF (World); VISCOSITY (DNA 1); VEL_X/Y/Z (Stride 3-5)].
+- **ELASTICITY** (Law #84): Synergizes with parameters [ELASTICITY (DNA 30); ELASTIC_RESTITUTION (World); STIFFNESS (DNA 8); MASS (Stride 6)].
+- **TURBULENCE** (Law #85): Synergizes with parameters [JITTER (DNA 3); TURBULENCE_KICK (World); TORQUE (DNA 2); VISCOSITY (DNA 1)].
+- **CENTRIPETAL** (Law #86): Synergizes with parameters [TORQUE (DNA 2); CENTRIPETAL_SCALE (World); FORCE (DNA 0); INERTIA (DNA 26)].
+- **ROTATION** (Law #87): Synergizes with parameters [TORQUE (DNA 2); ROTATION_SPEED (World); INERTIA (DNA 26); VEL_X/Y/Z (Stride 3-5)].
 
 ---
 
@@ -241,7 +241,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DRAG` (1)
 - **Spectrum Hue**: 353.8°
-- **Governing Parameters**: VISCOSITY (DNA 1), DAMPING (World), RADIUS (Stride 56), MAX_VELOCITY (DNA 28)
+- **Governing Parameters**: VISCOSITY (DNA 1), DAMPING (World), FRICTION_COEFF (World), MAX_VELOCITY (DNA 28)
 - **Help DB Hint**: "Velocity-dependent motion damping."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -298,7 +298,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COLL` (4)
 - **Spectrum Hue**: 356.6°
-- **Governing Parameters**: STIFFNESS (DNA 8), ELASTICITY (DNA 30), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: STIFFNESS (DNA 8), ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), MASS (Stride 6)
 - **Help DB Hint**: "Physical collisions with momentum exchange."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -317,7 +317,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ACCR` (5)
 - **Spectrum Hue**: 357.6°
-- **Governing Parameters**: FUSION (DNA 9), FUSION_TIME (DNA 17), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: FUSION (DNA 9), ACCRETION_RADIUS (World), FUSION_TIME (DNA 17), MASS (Stride 6)
 - **Help DB Hint**: "Mass accretion on collision."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -355,7 +355,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.VOID` (38)
 - **Spectrum Hue**: 359.5°
-- **Governing Parameters**: FORCE (DNA 0), WORLD_SIZE (World), RADIUS (Stride 56), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: FORCE (DNA 0), VOID_PRESSURE (World), WORLD_SIZE (World), RADIUS (Stride 56)
 - **Help DB Hint**: "Vacuum pressure: empty space pushes particles apart."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -374,7 +374,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.BOND` (39)
 - **Spectrum Hue**: 0.5°
-- **Governing Parameters**: STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)
+- **Governing Parameters**: STIFFNESS (DNA 8), BOND_STRENGTH (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)
 - **Help DB Hint**: "Molecular bonding between nearby particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -393,7 +393,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SINGULARITY` (79)
 - **Spectrum Hue**: 1.4°
-- **Governing Parameters**: FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), CRITICAL_TEMP (World)
+- **Governing Parameters**: FORCE (DNA 0), SINGULARITY_HORIZON (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)
 - **Help DB Hint**: "Singularity: supermassive particles collapse into black holes."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -412,7 +412,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TIDE` (82)
 - **Spectrum Hue**: 2.4°
-- **Governing Parameters**: TIDAL (DNA 15), FORCE (DNA 0), GLOBAL_G (World), RADIUS (Stride 56)
+- **Governing Parameters**: TIDAL (DNA 15), TIDAL_SCALE (World), FORCE (DNA 0), GLOBAL_G (World)
 - **Help DB Hint**: "Tides: massive neighbours stretch and pull at each other."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -431,7 +431,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FRICTION` (83)
 - **Spectrum Hue**: 3.4°
-- **Governing Parameters**: FRICTION (DNA 27), VISCOSITY (DNA 1), STIFFNESS (DNA 8), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: FRICTION (DNA 27), FRICTION_COEFF (World), VISCOSITY (DNA 1), VEL_X/Y/Z (Stride 3-5)
 - **Help DB Hint**: "Friction: velocity-dependent drag slows everything down."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -450,7 +450,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ELASTICITY` (84)
 - **Spectrum Hue**: 4.3°
-- **Governing Parameters**: ELASTICITY (DNA 30), STIFFNESS (DNA 8), MASS (Stride 6), RADIUS (Stride 56)
+- **Governing Parameters**: ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), STIFFNESS (DNA 8), MASS (Stride 6)
 - **Help DB Hint**: "Elasticity: collisions bounce with restitution."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -469,7 +469,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TURBULENCE` (85)
 - **Spectrum Hue**: 5.3°
-- **Governing Parameters**: JITTER (DNA 3), TORQUE (DNA 2), VISCOSITY (DNA 1), ENTROPY (World)
+- **Governing Parameters**: JITTER (DNA 3), TURBULENCE_KICK (World), TORQUE (DNA 2), VISCOSITY (DNA 1)
 - **Help DB Hint**: "Turbulence: a noise-driven swirl perturbs every particle."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -488,7 +488,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CENTRIPETAL` (86)
 - **Spectrum Hue**: 6.2°
-- **Governing Parameters**: TORQUE (DNA 2), FORCE (DNA 0), INERTIA (DNA 26), MAX_VELOCITY (DNA 28)
+- **Governing Parameters**: TORQUE (DNA 2), CENTRIPETAL_SCALE (World), FORCE (DNA 0), INERTIA (DNA 26)
 - **Help DB Hint**: "Centripetal: everything is pulled gently toward the world centre."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -507,7 +507,7 @@ Physics laws form the spatial & dynamical foundation of the VEPA engine. Gravity
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ROTATION` (87)
 - **Spectrum Hue**: 7.2°
-- **Governing Parameters**: TORQUE (DNA 2), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5), BOND_ANGLE (DNA 31)
+- **Governing Parameters**: TORQUE (DNA 2), ROTATION_SPEED (World), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5)
 - **Help DB Hint**: "Rotation: the world spins around its centre."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -542,19 +542,19 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 - **LIFE** (Law #7): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); DECAY_RATE (World); LIGHT_LEVEL (World); ENERGY (Stride 50)].
 - **GLOW** (Law #8): Synergizes with parameters [ALPHA (DNA 5); ENERGY (Stride 50); LIGHT_LEVEL (World); COLOR_R/G/B (Stride 53-55)].
 - **AFFINITY** (Law #9): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); SPECIES_INTERACTION (World); NEIGHBORHOOD_RADIUS (DNA 18); SPECIES_ID (Stride 7)].
-- **REPRO** (Law #10): Synergizes with parameters [BIRTH_RATE (DNA 10); SEX_CHANCE (DNA 35); MUTATION_RATE (World); REPRO_DRIVE (Stride 79)].
-- **TRACK** (Law #11): Synergizes with parameters [SIGNAL_RESP (DNA 13); PREDATION_BIAS (DNA 36); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
-- **SENESCENCE** (Law #12): Synergizes with parameters [DEATH_RATE (DNA 11); TELOMERE_LENGTH (DNA 60); AGE (Stride 51); DECAY_RATE (World)].
+- **REPRO** (Law #10): Synergizes with parameters [BIRTH_RATE (DNA 10); REPRODUCTION_THRESHOLD (World); SEX_CHANCE (DNA 35); MUTATION_RATE (World)].
+- **TRACK** (Law #11): Synergizes with parameters [SIGNAL_RESP (DNA 13); TRACKING_SENSITIVITY (World); PREDATION_BIAS (DNA 36); SIGNAL (Stride 57)].
+- **SENESCENCE** (Law #12): Synergizes with parameters [DEATH_RATE (DNA 11); SENESCENCE_RATE (World); TELOMERE_LENGTH (DNA 60); AGE (Stride 51)].
 - **ENERGY** (Law #13): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); ENERGY_TRANSFER (World); STORED_ENERGY (Stride 78); ENERGY (Stride 50)].
 - **RADIATION** (Law #14): Synergizes with parameters [RADIATION_EXPOSURE (Stride 80); RADIATION_LEVEL (World); MUTAGEN_SENSITIVITY (DNA 59); REPAIR_EFFICIENCY (DNA 51)].
 - **GENOTYPE** (Law #15): Synergizes with parameters [CROSSOVER_RATE (DNA 43); ALLELE_COUNT (DNA 48); PLOIDY_LEVEL (DNA 61); MUTATION (DNA 12)].
 - **PHENOTYPE** (Law #16): Synergizes with parameters [DOMINANCE (DNA 42); GENE_SILENCING (DNA 57); REGULATORY_DEPTH (DNA 63); BASE_RADIUS (DNA 29)].
-- **PREDATION** (Law #51): Synergizes with parameters [PREDATION_BIAS (DNA 36); ENERGY_TRANSFER (World); HUNGER (Stride 62); SPECIES_ID (Stride 7)].
+- **PREDATION** (Law #51): Synergizes with parameters [PREDATION_BIAS (DNA 36); PREDATION_EFFICIENCY (World); ENERGY_TRANSFER (World); HUNGER (Stride 62)].
 - **COMMS** (Law #52): Synergizes with parameters [SIGNAL_STRENGTH (DNA 19); SIGNAL_DECAY (DNA 20); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
-- **SYMBIOSIS** (Law #88): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); ENERGY_TRANSFER (World); ENERGY_EFFICIENCY (DNA 34); SPECIES_INTERACTION (World)].
-- **PARASITE** (Law #89): Synergizes with parameters [PREDATION_BIAS (DNA 36); ENERGY_TRANSFER (World); HUNGER (Stride 62); IMMUNITY (DNA 91)].
-- **HIBERNATION** (Law #90): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); HEAT_CAPACITY (World); TEMPERATURE (Stride 66); ENERGY (Stride 50)].
-- **IMMUNITY** (Law #91): Synergizes with parameters [REPAIR_EFFICIENCY (DNA 51); IMMUNITY (DNA 91); RADIATION_EXPOSURE (Stride 80); AGE (Stride 51)].
+- **SYMBIOSIS** (Law #88): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); SYMBIOSIS_BOOST (World); ENERGY_TRANSFER (World); SPECIES_INTERACTION (World)].
+- **PARASITE** (Law #89): Synergizes with parameters [PREDATION_BIAS (DNA 36); PARASITE_DRAIN (World); ENERGY_TRANSFER (World); HUNGER (Stride 62)].
+- **HIBERNATION** (Law #90): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); HIBERNATION_SAVINGS (World); HEAT_CAPACITY (World); TEMPERATURE (Stride 66)].
+- **IMMUNITY** (Law #91): Synergizes with parameters [REPAIR_EFFICIENCY (DNA 51); IMMUNITY_SHIELD (World); IMMUNITY (DNA 91); RADIATION_EXPOSURE (Stride 80)].
 
 ---
 
@@ -623,7 +623,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.REPRO` (10)
 - **Spectrum Hue**: 40.7°
-- **Governing Parameters**: BIRTH_RATE (DNA 10), SEX_CHANCE (DNA 35), MUTATION_RATE (World), REPRO_DRIVE (Stride 79)
+- **Governing Parameters**: BIRTH_RATE (DNA 10), REPRODUCTION_THRESHOLD (World), SEX_CHANCE (DNA 35), MUTATION_RATE (World)
 - **Help DB Hint**: "Reproduction driven by a reproductive-drive meter."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -642,7 +642,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TRACK` (11)
 - **Spectrum Hue**: 41.6°
-- **Governing Parameters**: SIGNAL_RESP (DNA 13), PREDATION_BIAS (DNA 36), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
+- **Governing Parameters**: SIGNAL_RESP (DNA 13), TRACKING_SENSITIVITY (World), PREDATION_BIAS (DNA 36), SIGNAL (Stride 57)
 - **Help DB Hint**: "Predation tracking: particles chase lower-mass prey of another species."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -661,7 +661,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SENESCENCE` (12)
 - **Spectrum Hue**: 42.6°
-- **Governing Parameters**: DEATH_RATE (DNA 11), TELOMERE_LENGTH (DNA 60), AGE (Stride 51), DECAY_RATE (World)
+- **Governing Parameters**: DEATH_RATE (DNA 11), SENESCENCE_RATE (World), TELOMERE_LENGTH (DNA 60), AGE (Stride 51)
 - **Help DB Hint**: "Age-based death: old particles die off."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -756,7 +756,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PREDATION` (51)
 - **Spectrum Hue**: 47.4°
-- **Governing Parameters**: PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), SPECIES_ID (Stride 7)
+- **Governing Parameters**: PREDATION_BIAS (DNA 36), PREDATION_EFFICIENCY (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)
 - **Help DB Hint**: "Predation: mass-difference pursuit and gene absorption."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -794,7 +794,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SYMBIOSIS` (88)
 - **Spectrum Hue**: 49.3°
-- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), ENERGY_TRANSFER (World), ENERGY_EFFICIENCY (DNA 34), SPECIES_INTERACTION (World)
+- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), SYMBIOSIS_BOOST (World), ENERGY_TRANSFER (World), SPECIES_INTERACTION (World)
 - **Help DB Hint**: "Symbiosis: different species exchange energy on contact."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -813,7 +813,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PARASITE` (89)
 - **Spectrum Hue**: 50.3°
-- **Governing Parameters**: PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), IMMUNITY (DNA 91)
+- **Governing Parameters**: PREDATION_BIAS (DNA 36), PARASITE_DRAIN (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)
 - **Help DB Hint**: "Parasite: smaller particles drain energy from larger hosts."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -832,7 +832,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.HIBERNATION` (90)
 - **Spectrum Hue**: 51.2°
-- **Governing Parameters**: ENERGY_EFFICIENCY (DNA 34), HEAT_CAPACITY (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)
+- **Governing Parameters**: ENERGY_EFFICIENCY (DNA 34), HIBERNATION_SAVINGS (World), HEAT_CAPACITY (World), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Hibernation: starving particles slow down to preserve energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -851,7 +851,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.IMMUNITY` (91)
 - **Spectrum Hue**: 52.2°
-- **Governing Parameters**: REPAIR_EFFICIENCY (DNA 51), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80), AGE (Stride 51)
+- **Governing Parameters**: REPAIR_EFFICIENCY (DNA 51), IMMUNITY_SHIELD (World), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80)
 - **Help DB Hint**: "Immunity: armour regenerates and drains are resisted."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -883,22 +883,22 @@ Governs chemical transformations, acid-base pH gradients, redox oxidation-reduct
 Chemistry bridges abiotic physics with biological life. Catalysis and Polymerization construct structural macro-assemblies, while Electrolosis and Photolysis channel energy into reactive species. Synergizes with Electromagnetism (Charge, Ionization) and Thermodynamics.
 
 ### Cross-Law Matrix & Synergy Chains
-- **CATALYSIS_LAW** (Law #17): Synergizes with parameters [CATALYSIS (DNA 38); REACTION_THRESHOLD (DNA 37); TEMPERATURE (Stride 66); HEAT_CAPACITY (World)].
-- **SOLVATION** (Law #18): Synergizes with parameters [POLARITY (DNA 4); VISCOSITY (DNA 1); CHARGE (Stride 67); HEAT_CAPACITY (World)].
-- **ACIDITY** (Law #19): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); CONDUCTIVITY (DNA 32); PHASE_1 (Stride 68); PHASE_2 (Stride 69)].
-- **OXIDATION** (Law #20): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); HEAT_OUTPUT (DNA 39); CHARGE (Stride 67); RADIATION_LEVEL (World)].
-- **POLYMER** (Law #21): Synergizes with parameters [STIFFNESS (DNA 8); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58); BOND_PARTNER (Stride 59-60)].
+- **CATALYSIS_LAW** (Law #17): Synergizes with parameters [CATALYSIS (DNA 38); CATALYSIS_SPEED (World); REACTION_THRESHOLD (DNA 37); TEMPERATURE (Stride 66)].
+- **SOLVATION** (Law #18): Synergizes with parameters [POLARITY (DNA 4); SOLVATION_RATE (World); VISCOSITY (DNA 1); CHARGE (Stride 67)].
+- **ACIDITY** (Law #19): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); ACIDITY_PH (World); CONDUCTIVITY (DNA 32); PHASE_1 (Stride 68)].
+- **OXIDATION** (Law #20): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); OXIDATION_RATE (World); HEAT_OUTPUT (DNA 39); CHARGE (Stride 67)].
+- **POLYMER** (Law #21): Synergizes with parameters [STIFFNESS (DNA 8); POLYMER_LIMIT (World); BOND_ANGLE (DNA 31); BOND_COUNT (Stride 58)].
 - **ISOMERIZATION** (Law #22): Synergizes with parameters [JITTER (DNA 3); REACTION_THRESHOLD (DNA 37); TEMPERATURE (Stride 66); PHASE_1 (Stride 68)].
 - **CHIRALITY** (Law #23): Synergizes with parameters [SYMMETRY (DNA 6); BOND_ANGLE (DNA 31); POLARITY (DNA 4); PHASE_2 (Stride 69)].
-- **CRYSTALLIZATION** (Law #24): Synergizes with parameters [STIFFNESS (DNA 8); BASE_RADIUS (DNA 29); TEMPERATURE (Stride 66); CRITICAL_TEMP (World)].
-- **REDUCTION** (Law #40): Synergizes with parameters [CONDUCTIVITY (DNA 32); REACTION_THRESHOLD (DNA 37); ELECTRIC_ENERGY (Stride 77); CHARGE (Stride 67)].
+- **CRYSTALLIZATION** (Law #24): Synergizes with parameters [STIFFNESS (DNA 8); CRYSTAL_LATTICE (World); BASE_RADIUS (DNA 29); TEMPERATURE (Stride 66)].
+- **REDUCTION** (Law #40): Synergizes with parameters [CONDUCTIVITY (DNA 32); OXIDATION_RATE (World); REACTION_THRESHOLD (DNA 37); CHARGE (Stride 67)].
 - **ALLOY** (Law #41): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); STIFFNESS (DNA 8); CONDUCTIVITY (DNA 32); SPECIES_INTERACTION (World)].
-- **ELECTROLYSIS** (Law #92): Synergizes with parameters [CONDUCTIVITY (DNA 32); ELECTRIC_ENERGY (Stride 77); CHARGE (Stride 67); VISCOSITY (World)].
+- **ELECTROLYSIS** (Law #92): Synergizes with parameters [CONDUCTIVITY (DNA 32); ELECTROLYSIS_POWER (World); ELECTRIC_ENERGY (Stride 77); CHARGE (Stride 67)].
 - **PHOTOLYSIS** (Law #93): Synergizes with parameters [LIGHT_LEVEL (World); REACTION_THRESHOLD (DNA 37); ALPHA (DNA 5); ENERGY (Stride 50)].
-- **PRECIPITATION** (Law #94): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); BASE_RADIUS (DNA 29); MASS (Stride 6); VISCOSITY (World)].
-- **NEUTRALIZATION** (Law #95): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); HEAT_OUTPUT (DNA 39); CHARGE (Stride 67); HEAT_CAPACITY (World)].
+- **PRECIPITATION** (Law #94): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); SOLVATION_RATE (World); BASE_RADIUS (DNA 29); MASS (Stride 6)].
+- **NEUTRALIZATION** (Law #95): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); ACIDITY_PH (World); HEAT_OUTPUT (DNA 39); CHARGE (Stride 67)].
 - **STOICHIOMETRY** (Law #96): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); CATALYSIS (DNA 38); MASS (Stride 6); BOND_COUNT (Stride 58)].
-- **AUTOCATALYSIS** (Law #97): Synergizes with parameters [CATALYSIS (DNA 38); BIRTH_RATE (DNA 10); REACTION_THRESHOLD (DNA 37); ENERGY (Stride 50)].
+- **AUTOCATALYSIS** (Law #97): Synergizes with parameters [CATALYSIS (DNA 38); AUTOCATALYSIS_GAIN (World); BIRTH_RATE (DNA 10); ENERGY (Stride 50)].
 
 ---
 
@@ -910,7 +910,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CATALYSIS_LAW` (17)
 - **Spectrum Hue**: 82.8°
-- **Governing Parameters**: CATALYSIS (DNA 38), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66), HEAT_CAPACITY (World)
+- **Governing Parameters**: CATALYSIS (DNA 38), CATALYSIS_SPEED (World), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Catalysis: reactions happen faster — and it is free."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -929,7 +929,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SOLVATION` (18)
 - **Spectrum Hue**: 83.8°
-- **Governing Parameters**: POLARITY (DNA 4), VISCOSITY (DNA 1), CHARGE (Stride 67), HEAT_CAPACITY (World)
+- **Governing Parameters**: POLARITY (DNA 4), SOLVATION_RATE (World), VISCOSITY (DNA 1), CHARGE (Stride 67)
 - **Help DB Hint**: "Solvation: the solvent medium — opposite charges attract, like charges repel."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -948,7 +948,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ACIDITY` (19)
 - **Spectrum Hue**: 84.7°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68), PHASE_2 (Stride 69)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Acid/base exchange: charge equalization between particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -967,7 +967,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.OXIDATION` (20)
 - **Spectrum Hue**: 85.7°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), RADIATION_LEVEL (World)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), OXIDATION_RATE (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)
 - **Help DB Hint**: "Oxidation: charged particles rust, burn and glow."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -986,7 +986,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.POLYMER` (21)
 - **Spectrum Hue**: 86.6°
-- **Governing Parameters**: STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)
+- **Governing Parameters**: STIFFNESS (DNA 8), POLYMER_LIMIT (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)
 - **Help DB Hint**: "Polymerization: particles form chain bonds."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1043,7 +1043,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CRYSTALLIZATION` (24)
 - **Spectrum Hue**: 89.5°
-- **Governing Parameters**: STIFFNESS (DNA 8), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66), CRITICAL_TEMP (World)
+- **Governing Parameters**: STIFFNESS (DNA 8), CRYSTAL_LATTICE (World), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Crystallization: same-species rigid lattice formation."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1062,7 +1062,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.REDUCTION` (40)
 - **Spectrum Hue**: 90.5°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), OXIDATION_RATE (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)
 - **Help DB Hint**: "Reduction: charge is neutralized between particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1100,7 +1100,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ELECTROLYSIS` (92)
 - **Spectrum Hue**: 92.4°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67), VISCOSITY (World)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), ELECTROLYSIS_POWER (World), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)
 - **Help DB Hint**: "Electrolysis: charge splits matter apart."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1138,7 +1138,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PRECIPITATION` (94)
 - **Spectrum Hue**: 94.3°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), BASE_RADIUS (DNA 29), MASS (Stride 6), VISCOSITY (World)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), SOLVATION_RATE (World), BASE_RADIUS (DNA 29), MASS (Stride 6)
 - **Help DB Hint**: "Precipitation: dissolved matter condenses into dense clumps."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1157,7 +1157,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.NEUTRALIZATION` (95)
 - **Spectrum Hue**: 95.3°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), HEAT_CAPACITY (World)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)
 - **Help DB Hint**: "Neutralization: opposite charges cancel and release heat."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1195,7 +1195,7 @@ Chemistry bridges abiotic physics with biological life. Catalysis and Polymeriza
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.AUTOCATALYSIS` (97)
 - **Spectrum Hue**: 97.2°
-- **Governing Parameters**: CATALYSIS (DNA 38), BIRTH_RATE (DNA 10), REACTION_THRESHOLD (DNA 37), ENERGY (Stride 50)
+- **Governing Parameters**: CATALYSIS (DNA 38), AUTOCATALYSIS_GAIN (World), BIRTH_RATE (DNA 10), ENERGY (Stride 50)
 - **Help DB Hint**: "Autocatalysis: a species catalyses its own reactions."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1229,20 +1229,20 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### Cross-Law Matrix & Synergy Chains
 - **HEAT** (Law #25): Synergizes with parameters [HEAT_OUTPUT (DNA 39); HEAT_CAPACITY (World); TEMPERATURE (Stride 66); ENTROPY (World)].
 - **COLD** (Law #26): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); DECAY_RATE (World)].
-- **CONVECTION** (Law #27): Synergizes with parameters [HEAT_OUTPUT (DNA 39); VISCOSITY (DNA 1); TEMPERATURE (Stride 66); GLOBAL_G (World)].
-- **PHASE_RADIATION** (Law #28): Synergizes with parameters [HEAT_OUTPUT (DNA 39); ALPHA (DNA 5); TEMPERATURE (Stride 66); RADIATION_LEVEL (World)].
-- **SUBLIMATION** (Law #29): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); PHASE_1 (Stride 68)].
-- **MELT** (Law #42): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STIFFNESS (DNA 8)].
-- **BOIL** (Law #43): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); VISCOSITY (DNA 1)].
-- **CONDENSE** (Law #44): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); BASE_RADIUS (DNA 29)].
-- **DEPOSIT** (Law #45): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STIFFNESS (DNA 8)].
+- **CONVECTION** (Law #27): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CONVECTION_RATE (World); VISCOSITY (DNA 1); GLOBAL_G (World)].
+- **PHASE_RADIATION** (Law #28): Synergizes with parameters [HEAT_OUTPUT (DNA 39); PHASE_RADIATION_FACTOR (World); ALPHA (DNA 5); TEMPERATURE (Stride 66)].
+- **SUBLIMATION** (Law #29): Synergizes with parameters [HEAT_OUTPUT (DNA 39); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); PHASE_1 (Stride 68)].
+- **MELT** (Law #42): Synergizes with parameters [HEAT_OUTPUT (DNA 39); MELT_TEMP_POINT (World); CRITICAL_TEMP (World); STIFFNESS (DNA 8)].
+- **BOIL** (Law #43): Synergizes with parameters [HEAT_OUTPUT (DNA 39); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); VISCOSITY (DNA 1)].
+- **CONDENSE** (Law #44): Synergizes with parameters [HEAT_CAPACITY (World); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); BASE_RADIUS (DNA 29)].
+- **DEPOSIT** (Law #45): Synergizes with parameters [HEAT_CAPACITY (World); MELT_TEMP_POINT (World); CRITICAL_TEMP (World); STIFFNESS (DNA 8)].
 - **EXOTHERMIC** (Law #46): Synergizes with parameters [HEAT_OUTPUT (DNA 39); REACTION_THRESHOLD (DNA 37); STORED_ENERGY (Stride 78); TEMPERATURE (Stride 66)].
-- **ADIABATIC** (Law #98): Synergizes with parameters [HEAT_CAPACITY (World); VISCOSITY (DNA 1); TEMPERATURE (Stride 66); ENTROPY (World)].
-- **COMPRESSION** (Law #99): Synergizes with parameters [STIFFNESS (DNA 8); MASS (Stride 6); TEMPERATURE (Stride 66); RADIUS (Stride 56)].
-- **EXPANSION** (Law #100): Synergizes with parameters [HEAT_OUTPUT (DNA 39); JITTER (DNA 3); TEMPERATURE (Stride 66); WORLD_SIZE (World)].
+- **ADIABATIC** (Law #98): Synergizes with parameters [HEAT_CAPACITY (World); ADIABATIC_GAMMA (World); VISCOSITY (DNA 1); ENTROPY (World)].
+- **COMPRESSION** (Law #99): Synergizes with parameters [STIFFNESS (DNA 8); ADIABATIC_GAMMA (World); MASS (Stride 6); RADIUS (Stride 56)].
+- **EXPANSION** (Law #100): Synergizes with parameters [HEAT_OUTPUT (DNA 39); ADIABATIC_GAMMA (World); JITTER (DNA 3); WORLD_SIZE (World)].
 - **EQUILIBRIUM** (Law #101): Synergizes with parameters [HEAT_CAPACITY (World); ENTROPY (World); TEMPERATURE (Stride 66); DAMPING (World)].
-- **LATENT_HEAT** (Law #102): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STORED_ENERGY (Stride 78)].
-- **RUNAWAY** (Law #103): Synergizes with parameters [HEAT_OUTPUT (DNA 39); MUTATION_RATE (World); TEMPERATURE (Stride 66); ENERGY (Stride 50)].
+- **LATENT_HEAT** (Law #102): Synergizes with parameters [HEAT_CAPACITY (World); LATENT_HEAT_BUFFER (World); CRITICAL_TEMP (World); STORED_ENERGY (Stride 78)].
+- **RUNAWAY** (Law #103): Synergizes with parameters [HEAT_OUTPUT (DNA 39); RUNAWAY_MULT (World); MUTATION_RATE (World); ENERGY (Stride 50)].
 
 ---
 
@@ -1292,7 +1292,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CONVECTION` (27)
 - **Spectrum Hue**: 129.7°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), GLOBAL_G (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CONVECTION_RATE (World), VISCOSITY (DNA 1), GLOBAL_G (World)
 - **Help DB Hint**: "Convection: buoyant vertical motion from temperature."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1311,7 +1311,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PHASE_RADIATION` (28)
 - **Spectrum Hue**: 130.7°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), ALPHA (DNA 5), TEMPERATURE (Stride 66), RADIATION_LEVEL (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), PHASE_RADIATION_FACTOR (World), ALPHA (DNA 5), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Blackbody radiation: hot particles emit energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1330,7 +1330,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUBLIMATION` (29)
 - **Spectrum Hue**: 131.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), PHASE_1 (Stride 68)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Sublimation: low-mass hot particles turn to gas."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1349,7 +1349,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.MELT` (42)
 - **Spectrum Hue**: 132.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)
 - **Help DB Hint**: "Melting: hot particles lose structural integrity."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1368,7 +1368,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.BOIL` (43)
 - **Spectrum Hue**: 133.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), VISCOSITY (DNA 1)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), VISCOSITY (DNA 1)
 - **Help DB Hint**: "Boiling: very hot particles eject mass."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1387,7 +1387,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CONDENSE` (44)
 - **Spectrum Hue**: 134.5°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), BASE_RADIUS (DNA 29)
+- **Governing Parameters**: HEAT_CAPACITY (World), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), BASE_RADIUS (DNA 29)
 - **Help DB Hint**: "Condensation: cool particles gain mass from vapor."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1406,7 +1406,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DEPOSIT` (45)
 - **Spectrum Hue**: 135.5°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)
+- **Governing Parameters**: HEAT_CAPACITY (World), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)
 - **Help DB Hint**: "Deposition: vapor directly solidifies on cold particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1444,7 +1444,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ADIABATIC` (98)
 - **Spectrum Hue**: 137.4°
-- **Governing Parameters**: HEAT_CAPACITY (World), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), ENTROPY (World)
+- **Governing Parameters**: HEAT_CAPACITY (World), ADIABATIC_GAMMA (World), VISCOSITY (DNA 1), ENTROPY (World)
 - **Help DB Hint**: "Adiabatic: motion converts to heat without loss."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1463,7 +1463,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COMPRESSION` (99)
 - **Spectrum Hue**: 138.4°
-- **Governing Parameters**: STIFFNESS (DNA 8), MASS (Stride 6), TEMPERATURE (Stride 66), RADIUS (Stride 56)
+- **Governing Parameters**: STIFFNESS (DNA 8), ADIABATIC_GAMMA (World), MASS (Stride 6), RADIUS (Stride 56)
 - **Help DB Hint**: "Compression: particles shrink and heat up under pressure."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1482,7 +1482,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.EXPANSION` (100)
 - **Spectrum Hue**: 139.3°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), JITTER (DNA 3), TEMPERATURE (Stride 66), WORLD_SIZE (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), ADIABATIC_GAMMA (World), JITTER (DNA 3), WORLD_SIZE (World)
 - **Help DB Hint**: "Expansion: particles swell and cool when sparse."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1520,7 +1520,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.LATENT_HEAT` (102)
 - **Spectrum Hue**: 141.2°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STORED_ENERGY (Stride 78)
+- **Governing Parameters**: HEAT_CAPACITY (World), LATENT_HEAT_BUFFER (World), CRITICAL_TEMP (World), STORED_ENERGY (Stride 78)
 - **Help DB Hint**: "Latent heat: phase changes absorb or release energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1539,7 +1539,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.RUNAWAY` (103)
 - **Spectrum Hue**: 142.2°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), MUTATION_RATE (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), RUNAWAY_MULT (World), MUTATION_RATE (World), ENERGY (Stride 50)
 - **Help DB Hint**: "Runaway: hot particles produce more heat."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1571,22 +1571,22 @@ Governs temporal warps, non-local telepathic links, integrated consciousness fie
 Metaphysical laws act as the functional ink of the Narrative Consciousness layer. Time Dilation alters localized simulation dt, while Consciousness and Telepathy link particle states across spatial distances, overriding physical distance limits.
 
 ### Cross-Law Matrix & Synergy Chains
-- **TIME_DILATION** (Law #30): Synergizes with parameters [FORCE (DNA 0); HIDDEN_MASS (DNA 7); MASS (Stride 6); VEL_X/Y/Z (Stride 3-5)].
-- **DIMENSIONALITY** (Law #31): Synergizes with parameters [SYMMETRY (DNA 6); WORLD_SIZE (World); POS_X/Y/Z (Stride 0-2); ALPHA (DNA 5)].
-- **CHAOS** (Law #32): Synergizes with parameters [JITTER (DNA 3); EPIGENETIC_DRIFT (DNA 44); ENTROPY (World); VEL_X/Y/Z (Stride 3-5)].
+- **TIME_DILATION** (Law #30): Synergizes with parameters [FORCE (DNA 0); TIME_WARP_FACTOR (World); HIDDEN_MASS (DNA 7); MASS (Stride 6)].
+- **DIMENSIONALITY** (Law #31): Synergizes with parameters [SYMMETRY (DNA 6); DIMENSIONAL_FOLD (World); WORLD_SIZE (World); POS_X/Y/Z (Stride 0-2)].
+- **CHAOS** (Law #32): Synergizes with parameters [JITTER (DNA 3); CHAOS_LYAPUNOV (World); EPIGENETIC_DRIFT (DNA 44); ENTROPY (World)].
 - **ORDER** (Law #33): Synergizes with parameters [SYMMETRY (DNA 6); STIFFNESS (DNA 8); RESONANCE_Q (World); SIGNAL (Stride 57)].
 - **FATE** (Law #34): Synergizes with parameters [FORCE (DNA 0); INERTIA (DNA 26); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
 - **WILL** (Law #35): Synergizes with parameters [FORCE (DNA 0); ENERGY_EFFICIENCY (DNA 34); ENERGY (Stride 50); VEL_X/Y/Z (Stride 3-5)].
 - **SOUL_LAW** (Law #36): Synergizes with parameters [SOUL (Stride 70); SPECIES_AFFINITY (DNA 41); ENERGY (Stride 50); MEMORY (Stride 61)].
-- **MIND** (Law #37): Synergizes with parameters [NEIGHBORHOOD_RADIUS (DNA 18); MEMORY_DECAY (DNA 40); MEMORY (Stride 61); SIGNAL (Stride 57)].
-- **TELEPATHY** (Law #47): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); SIGNAL_STRENGTH (DNA 19); MEMORY (Stride 61); SIGNAL (Stride 57)].
-- **CLAIRVOYANCE** (Law #48): Synergizes with parameters [NEIGHBORHOOD_RADIUS (DNA 18); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57); MEMORY (Stride 61)].
-- **PRECOGNITION** (Law #49): Synergizes with parameters [MEMORY_DECAY (DNA 40); PROPAGATION_SPEED (DNA 21); VEL_X/Y/Z (Stride 3-5); MEMORY (Stride 61)].
-- **ASTRAL** (Law #50): Synergizes with parameters [ALPHA (DNA 5); VEL_X/Y/Z (Stride 3-5); TRAIL_X/Y/Z (Stride 71-73); ENERGY (Stride 50)].
+- **MIND** (Law #37): Synergizes with parameters [CONSCIOUSNESS_PHI (World); NEIGHBORHOOD_RADIUS (DNA 18); MEMORY_DECAY (DNA 40); MEMORY (Stride 61)].
+- **TELEPATHY** (Law #47): Synergizes with parameters [TELEPATHY_RANGE (World); TUNING_CH1-CH4 (DNA 22-25); SIGNAL_STRENGTH (DNA 19); MEMORY (Stride 61)].
+- **CLAIRVOYANCE** (Law #48): Synergizes with parameters [TELEPATHY_RANGE (World); NEIGHBORHOOD_RADIUS (DNA 18); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
+- **PRECOGNITION** (Law #49): Synergizes with parameters [TIME_WARP_FACTOR (World); MEMORY_DECAY (DNA 40); PROPAGATION_SPEED (DNA 21); MEMORY (Stride 61)].
+- **ASTRAL** (Law #50): Synergizes with parameters [ASTRAL_PHASE (World); ALPHA (DNA 5); VEL_X/Y/Z (Stride 3-5); ENERGY (Stride 50)].
 - **ENTANGLEMENT** (Law #80): Synergizes with parameters [ENTANGLE_ID (Stride 75); ENTANGLE_PHASE (Stride 76); TUNING_CH1 (DNA 22); SPECIES_AFFINITY (DNA 41)].
-- **CONSCIOUSNESS** (Law #104): Synergizes with parameters [REGULATORY_DEPTH (DNA 63); MEMORY_DECAY (DNA 40); MEMORY (Stride 61); ENERGY (Stride 50)].
-- **PERCEPTION** (Law #105): Synergizes with parameters [SIGNAL_RESP (DNA 13); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57); ALPHA (DNA 5)].
-- **SYNCHRONICITY** (Law #106): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); RESONANCE_Q (World); PHASE_1 (Stride 68); SIGNAL (Stride 57)].
+- **CONSCIOUSNESS** (Law #104): Synergizes with parameters [CONSCIOUSNESS_PHI (World); REGULATORY_DEPTH (DNA 63); MEMORY_DECAY (DNA 40); MEMORY (Stride 61)].
+- **PERCEPTION** (Law #105): Synergizes with parameters [SIGNAL_RESP (DNA 13); CONSCIOUSNESS_PHI (World); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
+- **SYNCHRONICITY** (Law #106): Synergizes with parameters [SYNCHRONICITY_RATE (World); TUNING_CH1-CH4 (DNA 22-25); RESONANCE_Q (World); PHASE_1 (Stride 68)].
 
 ---
 
@@ -1598,7 +1598,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TIME_DILATION` (30)
 - **Spectrum Hue**: 172.8°
-- **Governing Parameters**: FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: FORCE (DNA 0), TIME_WARP_FACTOR (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)
 - **Help DB Hint**: "Time dilation: gravity slows local time near massive bodies."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1617,7 +1617,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DIMENSIONALITY` (31)
 - **Spectrum Hue**: 173.8°
-- **Governing Parameters**: SYMMETRY (DNA 6), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2), ALPHA (DNA 5)
+- **Governing Parameters**: SYMMETRY (DNA 6), DIMENSIONAL_FOLD (World), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Dimensional drift: random Z-axis motion."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1636,7 +1636,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CHAOS` (32)
 - **Spectrum Hue**: 174.7°
-- **Governing Parameters**: JITTER (DNA 3), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: JITTER (DNA 3), CHAOS_LYAPUNOV (World), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World)
 - **Help DB Hint**: "Chaos: deterministic Lorenz dynamics — sensitive dependence on initial conditions."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1731,7 +1731,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.MIND` (37)
 - **Spectrum Hue**: 179.5°
-- **Governing Parameters**: NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SIGNAL (Stride 57)
+- **Governing Parameters**: CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)
 - **Help DB Hint**: "Hivemind: collective consciousness signal boost."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1750,7 +1750,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TELEPATHY` (47)
 - **Spectrum Hue**: 180.5°
-- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61), SIGNAL (Stride 57)
+- **Governing Parameters**: TELEPATHY_RANGE (World), TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61)
 - **Help DB Hint**: "Telepathy: instant information sharing across species."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1769,7 +1769,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CLAIRVOYANCE` (48)
 - **Spectrum Hue**: 181.4°
-- **Governing Parameters**: NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), MEMORY (Stride 61)
+- **Governing Parameters**: TELEPATHY_RANGE (World), NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)
 - **Help DB Hint**: "Clairvoyance: particles sense future positions."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1788,7 +1788,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PRECOGNITION` (49)
 - **Spectrum Hue**: 182.4°
-- **Governing Parameters**: MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), VEL_X/Y/Z (Stride 3-5), MEMORY (Stride 61)
+- **Governing Parameters**: TIME_WARP_FACTOR (World), MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)
 - **Help DB Hint**: "Precognition: collision anticipation and avoidance."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1807,7 +1807,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ASTRAL` (50)
 - **Spectrum Hue**: 183.4°
-- **Governing Parameters**: ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), TRAIL_X/Y/Z (Stride 71-73), ENERGY (Stride 50)
+- **Governing Parameters**: ASTRAL_PHASE (World), ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), ENERGY (Stride 50)
 - **Help DB Hint**: "Astral projection: souls leave bodies on death."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1845,7 +1845,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CONSCIOUSNESS` (104)
 - **Spectrum Hue**: 185.3°
-- **Governing Parameters**: REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), ENERGY (Stride 50)
+- **Governing Parameters**: CONSCIOUSNESS_PHI (World), REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)
 - **Help DB Hint**: "Consciousness: a predictive self-model that attends to prediction error."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1864,7 +1864,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PERCEPTION` (105)
 - **Spectrum Hue**: 186.2°
-- **Governing Parameters**: SIGNAL_RESP (DNA 13), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), ALPHA (DNA 5)
+- **Governing Parameters**: SIGNAL_RESP (DNA 13), CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
 - **Help DB Hint**: "Perception: awareness extends far beyond touch."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1883,7 +1883,7 @@ Metaphysical laws act as the functional ink of the Narrative Consciousness layer
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SYNCHRONICITY` (106)
 - **Spectrum Hue**: 187.2°
-- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68), SIGNAL (Stride 57)
+- **Governing Parameters**: SYNCHRONICITY_RATE (World), TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Synchronicity: meaningful coincidences align the swarm."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1915,22 +1915,22 @@ Governs Coulomb electrostatic forces, Lorentz magnetic deflection, plasma ionize
 Electromagnetism provides high-frequency long-range force propagation. Charge and Magnetism induce field currents, while Resonance and Superconductivity alter energy transport without impedance. Synergizes with Information transmission (Signal Boost, Antenna).
 
 ### Cross-Law Matrix & Synergy Chains
-- **CHARGE_LAW** (Law #53): Synergizes with parameters [POLARITY (DNA 4); CONDUCTIVITY (DNA 32); CHARGE (Stride 67); ELECTRIC_ENERGY (Stride 77)].
-- **FIELD** (Law #54): Synergizes with parameters [POLARITY (DNA 4); MAGNETIC_MOMENT (DNA 33); CHARGE (Stride 67); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **CURRENT** (Law #55): Synergizes with parameters [CONDUCTIVITY (DNA 32); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67); ELECTRIC_ENERGY (Stride 77)].
+- **CHARGE_LAW** (Law #53): Synergizes with parameters [POLARITY (DNA 4); COULOMB_CONSTANT (World); CONDUCTIVITY (DNA 32); CHARGE (Stride 67)].
+- **FIELD** (Law #54): Synergizes with parameters [POLARITY (DNA 4); MAGNETIC_FLUX_SCALE (World); MAGNETIC_MOMENT (DNA 33); CHARGE (Stride 67)].
+- **CURRENT** (Law #55): Synergizes with parameters [CONDUCTIVITY (DNA 32); COULOMB_CONSTANT (World); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67)].
 - **RESISTANCE** (Law #56): Synergizes with parameters [CONDUCTIVITY (DNA 32); HEAT_OUTPUT (DNA 39); TEMPERATURE (Stride 66); HEAT_CAPACITY (World)].
 - **CAPACITANCE** (Law #57): Synergizes with parameters [POLARITY (DNA 4); BASE_RADIUS (DNA 29); STORED_ENERGY (Stride 78); ELECTRIC_ENERGY (Stride 77)].
-- **INDUCTANCE** (Law #58): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); CONDUCTIVITY (DNA 32); ELECTRIC_ENERGY (Stride 77); VEL_X/Y/Z (Stride 3-5)].
-- **MAGNETISM** (Law #59): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); FORCE (DNA 0); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67)].
+- **INDUCTANCE** (Law #58): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); CONDUCTIVITY (DNA 32); ELECTRIC_ENERGY (Stride 77)].
+- **MAGNETISM** (Law #59): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); FORCE (DNA 0); CHARGE (Stride 67)].
 - **RESONANCE** (Law #60): Synergizes with parameters [PULSE_RATE (DNA 14); RESONANCE_Q (World); SIGNAL (Stride 57); ELECTRIC_ENERGY (Stride 77)].
-- **FLUX** (Law #61): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); POLARITY (DNA 4); CHARGE (Stride 67); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **IONIZATION** (Law #62): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); RADIATION_LEVEL (World); CHARGE (Stride 67); ENERGY (Stride 50)].
-- **DISCHARGE** (Law #63): Synergizes with parameters [CONDUCTIVITY (DNA 32); REACTION_THRESHOLD (DNA 37); ELECTRIC_ENERGY (Stride 77); CHARGE (Stride 67)].
-- **PLASMA** (Law #64): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CONDUCTIVITY (DNA 32); TEMPERATURE (Stride 66); CHARGE (Stride 67)].
-- **SUPERCONDUCTIVITY** (Law #65): Synergizes with parameters [CONDUCTIVITY (DNA 32); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); MAGNETIC_MOMENT (DNA 33)].
+- **FLUX** (Law #61): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); POLARITY (DNA 4); CHARGE (Stride 67)].
+- **IONIZATION** (Law #62): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); PLASMA_IONIZATION_ENERGY (World); RADIATION_LEVEL (World); CHARGE (Stride 67)].
+- **DISCHARGE** (Law #63): Synergizes with parameters [CONDUCTIVITY (DNA 32); DISCHARGE_ARC_THRESHOLD (World); REACTION_THRESHOLD (DNA 37); CHARGE (Stride 67)].
+- **PLASMA** (Law #64): Synergizes with parameters [HEAT_OUTPUT (DNA 39); PLASMA_IONIZATION_ENERGY (World); CONDUCTIVITY (DNA 32); CHARGE (Stride 67)].
+- **SUPERCONDUCTIVITY** (Law #65): Synergizes with parameters [CONDUCTIVITY (DNA 32); SUPERCONDUCT_TC (World); CRITICAL_TEMP (World); MAGNETIC_MOMENT (DNA 33)].
 - **ANTENNA** (Law #107): Synergizes with parameters [PULSE_RATE (DNA 14); SIGNAL_STRENGTH (DNA 19); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
-- **SHIELDING** (Law #108): Synergizes with parameters [CONDUCTIVITY (DNA 32); STIFFNESS (DNA 8); CHARGE (Stride 67); ARMOR (Stride 63)].
-- **POLARIZATION** (Law #109): Synergizes with parameters [POLARITY (DNA 4); ALPHA (DNA 5); CHARGE (Stride 67); PHASE_1 (Stride 68)].
+- **SHIELDING** (Law #108): Synergizes with parameters [CONDUCTIVITY (DNA 32); SHIELDING_ATTENUATION (World); STIFFNESS (DNA 8); ARMOR (Stride 63)].
+- **POLARIZATION** (Law #109): Synergizes with parameters [POLARITY (DNA 4); POLARIZATION_DISPLACEMENT (World); ALPHA (DNA 5); CHARGE (Stride 67)].
 
 ---
 
@@ -1942,7 +1942,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CHARGE_LAW` (53)
 - **Spectrum Hue**: 217.8°
-- **Governing Parameters**: POLARITY (DNA 4), CONDUCTIVITY (DNA 32), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)
+- **Governing Parameters**: POLARITY (DNA 4), COULOMB_CONSTANT (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)
 - **Help DB Hint**: "Coulomb force: charged particles attract or repel."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1961,7 +1961,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FIELD` (54)
 - **Spectrum Hue**: 218.8°
-- **Governing Parameters**: POLARITY (DNA 4), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: POLARITY (DNA 4), MAGNETIC_FLUX_SCALE (World), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67)
 - **Help DB Hint**: "Uniform electric field drift along the particle's polarity."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -1980,7 +1980,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CURRENT` (55)
 - **Spectrum Hue**: 219.7°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), COULOMB_CONSTANT (World), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)
 - **Help DB Hint**: "Charge transport: charge diffuses between conductive particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2037,7 +2037,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.INDUCTANCE` (58)
 - **Spectrum Hue**: 222.6°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77)
 - **Help DB Hint**: "Inductance: neighbors align their motion magnetically."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2056,7 +2056,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.MAGNETISM` (59)
 - **Spectrum Hue**: 223.6°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), FORCE (DNA 0), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), FORCE (DNA 0), CHARGE (Stride 67)
 - **Help DB Hint**: "Magnetic moment alignment: aligned moments attract."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2094,7 +2094,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FLUX` (61)
 - **Spectrum Hue**: 225.5°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), POLARITY (DNA 4), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), POLARITY (DNA 4), CHARGE (Stride 67)
 - **Help DB Hint**: "Charge flux: particles are pushed along the charge gradient."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2113,7 +2113,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.IONIZATION` (62)
 - **Spectrum Hue**: 226.4°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), RADIATION_LEVEL (World), CHARGE (Stride 67), ENERGY (Stride 50)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), PLASMA_IONIZATION_ENERGY (World), RADIATION_LEVEL (World), CHARGE (Stride 67)
 - **Help DB Hint**: "Ionization: hard contacts strip charge onto particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2132,7 +2132,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DISCHARGE` (63)
 - **Spectrum Hue**: 227.4°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), DISCHARGE_ARC_THRESHOLD (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)
 - **Help DB Hint**: "Discharge: stored charge bursts into motion and heat."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2151,7 +2151,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PLASMA` (64)
 - **Spectrum Hue**: 228.4°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CONDUCTIVITY (DNA 32), TEMPERATURE (Stride 66), CHARGE (Stride 67)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), PLASMA_IONIZATION_ENERGY (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)
 - **Help DB Hint**: "Plasma: hot particles ionize — heat becomes charge."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2170,7 +2170,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUPERCONDUCTIVITY` (65)
 - **Spectrum Hue**: 229.3°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), MAGNETIC_MOMENT (DNA 33)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), SUPERCONDUCT_TC (World), CRITICAL_TEMP (World), MAGNETIC_MOMENT (DNA 33)
 - **Help DB Hint**: "Superconductivity: cold pairs couple into lossless streams."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2208,7 +2208,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SHIELDING` (108)
 - **Spectrum Hue**: 231.2°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), STIFFNESS (DNA 8), CHARGE (Stride 67), ARMOR (Stride 63)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), SHIELDING_ATTENUATION (World), STIFFNESS (DNA 8), ARMOR (Stride 63)
 - **Help DB Hint**: "Shielding: a Faraday cage blocks external EM forces."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2227,7 +2227,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.POLARIZATION` (109)
 - **Spectrum Hue**: 232.2°
-- **Governing Parameters**: POLARITY (DNA 4), ALPHA (DNA 5), CHARGE (Stride 67), PHASE_1 (Stride 68)
+- **Governing Parameters**: POLARITY (DNA 4), POLARIZATION_DISPLACEMENT (World), ALPHA (DNA 5), CHARGE (Stride 67)
 - **Help DB Hint**: "Polarization: signals are filtered by channel alignment."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2261,20 +2261,20 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### Cross-Law Matrix & Synergy Chains
 - **MEMORY** (Law #66): Synergizes with parameters [MEMORY_DECAY (DNA 40); MEMORY (Stride 61); AGE (Stride 51); ENERGY (Stride 50)].
 - **PATTERN** (Law #67): Synergizes with parameters [NEIGHBORHOOD_RADIUS (DNA 18); SYMMETRY (DNA 6); MEMORY (Stride 61); SPECIES_AFFINITY (DNA 41)].
-- **STIGMERGY** (Law #68): Synergizes with parameters [SIGNAL_DECAY (DNA 20); TRAIL_X/Y/Z (Stride 71-73); SIGNAL (Stride 57); SPECIES_ID (Stride 7)].
-- **SIGNAL_BOOST** (Law #69): Synergizes with parameters [SIGNAL_STRENGTH (DNA 19); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57); ENERGY (Stride 50)].
-- **LEARN** (Law #70): Synergizes with parameters [ADAPTATION_RATE (DNA 55); MEMORY_DECAY (DNA 40); MEMORY (Stride 61); AGE (Stride 51)].
+- **STIGMERGY** (Law #68): Synergizes with parameters [SIGNAL_DECAY (DNA 20); STIGMERGY_DECAY_RATE (World); TRAIL_X/Y/Z (Stride 71-73); SIGNAL (Stride 57)].
+- **SIGNAL_BOOST** (Law #69): Synergizes with parameters [SIGNAL_STRENGTH (DNA 19); SIGNAL_BOOST_GAIN (World); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
+- **LEARN** (Law #70): Synergizes with parameters [ADAPTATION_RATE (DNA 55); HEBBIAN_LEARNING_RATE (World); MEMORY_DECAY (DNA 40); MEMORY (Stride 61)].
 - **SYMBOL** (Law #71): Synergizes with parameters [CODON_BIAS (DNA 62); REGULATORY_DEPTH (DNA 63); MEMORY (Stride 61); SIGNAL (Stride 57)].
 - **METRIC** (Law #72): Synergizes with parameters [ENTROPY (World); MEMORY_DECAY (DNA 40); NEIGHBORHOOD_RADIUS (DNA 18); SPECIES_ID (Stride 7)].
-- **PREDICT** (Law #73): Synergizes with parameters [ADAPTATION_RATE (DNA 55); PROPAGATION_SPEED (DNA 21); MEMORY (Stride 61); VEL_X/Y/Z (Stride 3-5)].
-- **CODE** (Law #74): Synergizes with parameters [CODON_BIAS (DNA 62); REPAIR_EFFICIENCY (DNA 51); MEMORY (Stride 61); GENOTYPE (DNA 15)].
-- **PROTOCOL** (Law #75): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); SPECIES_AFFINITY (DNA 41); SIGNAL (Stride 57); SPECIES_ID (Stride 7)].
+- **PREDICT** (Law #73): Synergizes with parameters [ADAPTATION_RATE (DNA 55); HEBBIAN_LEARNING_RATE (World); PROPAGATION_SPEED (DNA 21); MEMORY (Stride 61)].
+- **CODE** (Law #74): Synergizes with parameters [CODON_BIAS (DNA 62); ENCRYPTION_CIPHER_KEY (World); REPAIR_EFFICIENCY (DNA 51); MEMORY (Stride 61)].
+- **PROTOCOL** (Law #75): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); CULTURAL_TRANSMISSION (World); SPECIES_AFFINITY (DNA 41); SIGNAL (Stride 57)].
 - **FEEDBACK** (Law #76): Synergizes with parameters [SIGNAL_RESP (DNA 13); DAMPING (World); SIGNAL (Stride 57); VEL_X/Y/Z (Stride 3-5)].
-- **LANGUAGE** (Law #77): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57); SPECIES_ID (Stride 7)].
-- **CULTURE** (Law #78): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); MEMORY_DECAY (DNA 40); MEMORY (Stride 61); SPECIES_ID (Stride 7)].
+- **LANGUAGE** (Law #77): Synergizes with parameters [TUNING_CH1-CH4 (DNA 22-25); CULTURAL_TRANSMISSION (World); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
+- **CULTURE** (Law #78): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); CULTURAL_TRANSMISSION (World); MEMORY_DECAY (DNA 40); MEMORY (Stride 61)].
 - **HISTORY** (Law #81): Synergizes with parameters [AGE (Stride 51); MEMORY_DECAY (DNA 40); MEMORY (Stride 61); SOUL (Stride 70)].
-- **NAVIGATION** (Law #110): Synergizes with parameters [PROPAGATION_SPEED (DNA 21); SIGNAL_RESP (DNA 13); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
-- **ENCRYPTION** (Law #111): Synergizes with parameters [CODON_BIAS (DNA 62); REGULATORY_DEPTH (DNA 63); MEMORY (Stride 61); SIGNAL (Stride 57)].
+- **NAVIGATION** (Law #110): Synergizes with parameters [PROPAGATION_SPEED (DNA 21); NAVIGATION_GRADIENT_BIAS (World); SIGNAL_RESP (DNA 13); POS_X/Y/Z (Stride 0-2)].
+- **ENCRYPTION** (Law #111): Synergizes with parameters [CODON_BIAS (DNA 62); ENCRYPTION_CIPHER_KEY (World); REGULATORY_DEPTH (DNA 63); MEMORY (Stride 61)].
 
 ---
 
@@ -2324,7 +2324,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.STIGMERGY` (68)
 - **Spectrum Hue**: 264.7°
-- **Governing Parameters**: SIGNAL_DECAY (DNA 20), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57), SPECIES_ID (Stride 7)
+- **Governing Parameters**: SIGNAL_DECAY (DNA 20), STIGMERGY_DECAY_RATE (World), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57)
 - **Help DB Hint**: "Stigmergy: particles leave trails and follow the trails of others."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2343,7 +2343,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SIGNAL_BOOST` (69)
 - **Spectrum Hue**: 265.7°
-- **Governing Parameters**: SIGNAL_STRENGTH (DNA 19), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), ENERGY (Stride 50)
+- **Governing Parameters**: SIGNAL_STRENGTH (DNA 19), SIGNAL_BOOST_GAIN (World), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)
 - **Help DB Hint**: "Signal boost: contact amplifies and relays signals."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2362,7 +2362,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.LEARN` (70)
 - **Spectrum Hue**: 266.6°
-- **Governing Parameters**: ADAPTATION_RATE (DNA 55), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), AGE (Stride 51)
+- **Governing Parameters**: ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)
 - **Help DB Hint**: "Learning: particles match the velocity of their neighbors."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2419,7 +2419,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PREDICT` (73)
 - **Spectrum Hue**: 269.5°
-- **Governing Parameters**: ADAPTATION_RATE (DNA 55), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)
 - **Help DB Hint**: "Predict: particles aim where the neighbor will be."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2438,7 +2438,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CODE` (74)
 - **Spectrum Hue**: 270.5°
-- **Governing Parameters**: CODON_BIAS (DNA 62), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61), GENOTYPE (DNA 15)
+- **Governing Parameters**: CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61)
 - **Help DB Hint**: "Code: close contact blends DNA between particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2457,7 +2457,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PROTOCOL` (75)
 - **Spectrum Hue**: 271.4°
-- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57), SPECIES_ID (Stride 7)
+- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57)
 - **Help DB Hint**: "Protocol: neighbors entrain their signal phase."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2495,7 +2495,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.LANGUAGE` (77)
 - **Spectrum Hue**: 273.4°
-- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), SPECIES_ID (Stride 7)
+- **Governing Parameters**: TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
 - **Help DB Hint**: "Language: signaling pairs exchange memory traces."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2514,7 +2514,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CULTURE` (78)
 - **Spectrum Hue**: 274.3°
-- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SPECIES_ID (Stride 7)
+- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), CULTURAL_TRANSMISSION (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)
 - **Help DB Hint**: "Culture: same-species contacts converge their traits."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2552,7 +2552,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.NAVIGATION` (110)
 - **Spectrum Hue**: 276.2°
-- **Governing Parameters**: PROPAGATION_SPEED (DNA 21), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: PROPAGATION_SPEED (DNA 21), NAVIGATION_GRADIENT_BIAS (World), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Navigation: particles steer toward remembered hotspots."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2571,7 +2571,7 @@ Information laws process substrate signals into cognitive structures. Memory and
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ENCRYPTION` (111)
 - **Spectrum Hue**: 277.2°
-- **Governing Parameters**: CODON_BIAS (DNA 62), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61), SIGNAL (Stride 57)
+- **Governing Parameters**: CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61)
 - **Help DB Hint**: "Encryption: keyed cipher — only matching keys decode the COMMS channel."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2603,22 +2603,22 @@ Governs wave-particle duality probability clouds, barrier tunneling, Heisenberg 
 Quantum laws introduce probabilistic micro-foundations. Superposition and Tunneling permit state transit across classical energy barriers, while Observer collapse and Decoherence translate quantum states into classical particle observables.
 
 ### Cross-Law Matrix & Synergy Chains
-- **SUPERPOSITION** (Law #112): Synergizes with parameters [JITTER (DNA 3); ALPHA (DNA 5); PHASE_1 (Stride 68); POS_X/Y/Z (Stride 0-2)].
-- **TUNNELING** (Law #113): Synergizes with parameters [JITTER (DNA 3); STIFFNESS (DNA 8); POS_X/Y/Z (Stride 0-2); ENERGY (Stride 50)].
-- **DECOHERENCE** (Law #114): Synergizes with parameters [ENTROPY (World); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68); PHASE_2 (Stride 69)].
-- **WAVE_PARTICLE** (Law #115): Synergizes with parameters [BASE_RADIUS (DNA 29); MASS (Stride 6); VEL_X/Y/Z (Stride 3-5); ALPHA (DNA 5)].
-- **UNCERTAINTY** (Law #116): Synergizes with parameters [JITTER (DNA 3); INERTIA (DNA 26); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
-- **TELEPORT** (Law #117): Synergizes with parameters [FORCE (DNA 0); ENERGY (Stride 50); POS_X/Y/Z (Stride 0-2); WORLD_SIZE (World)].
-- **OBSERVER** (Law #118): Synergizes with parameters [ALPHA (DNA 5); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68); SIGNAL (Stride 57)].
+- **SUPERPOSITION** (Law #112): Synergizes with parameters [JITTER (DNA 3); SUPERPOSITION_PHASE_SCALE (World); ALPHA (DNA 5); PHASE_1 (Stride 68)].
+- **TUNNELING** (Law #113): Synergizes with parameters [JITTER (DNA 3); TUNNELING_PROBABILITY (World); STIFFNESS (DNA 8); POS_X/Y/Z (Stride 0-2)].
+- **DECOHERENCE** (Law #114): Synergizes with parameters [ENTROPY (World); DECOHERENCE_RATE_FACTOR (World); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68)].
+- **WAVE_PARTICLE** (Law #115): Synergizes with parameters [BASE_RADIUS (DNA 29); SUPERPOSITION_PHASE_SCALE (World); MASS (Stride 6); ALPHA (DNA 5)].
+- **UNCERTAINTY** (Law #116): Synergizes with parameters [JITTER (DNA 3); UNCERTAINTY_SIGMA (World); INERTIA (DNA 26); POS_X/Y/Z (Stride 0-2)].
+- **TELEPORT** (Law #117): Synergizes with parameters [FORCE (DNA 0); TUNNELING_PROBABILITY (World); ENERGY (Stride 50); POS_X/Y/Z (Stride 0-2)].
+- **OBSERVER** (Law #118): Synergizes with parameters [ALPHA (DNA 5); DECOHERENCE_RATE_FACTOR (World); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
 - **PLANCK** (Law #119): Synergizes with parameters [FORCE (DNA 0); BASE_RADIUS (DNA 29); VEL_X/Y/Z (Stride 3-5); ENERGY (Stride 50)].
-- **COHERENCE** (Law #120): Synergizes with parameters [RESONANCE_Q (World); PHASE_1 (Stride 68); PHASE_2 (Stride 69); SIGNAL (Stride 57)].
+- **COHERENCE** (Law #120): Synergizes with parameters [RESONANCE_Q (World); SUPERPOSITION_PHASE_SCALE (World); PHASE_1 (Stride 68); PHASE_2 (Stride 69)].
 - **BOSONIC** (Law #121): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); POS_X/Y/Z (Stride 0-2)].
 - **FERMIONIC** (Law #122): Synergizes with parameters [STIFFNESS (DNA 8); BASE_RADIUS (DNA 29); POS_X/Y/Z (Stride 0-2); RADIUS (Stride 56)].
-- **SPIN** (Law #123): Synergizes with parameters [TORQUE (DNA 2); MAGNETIC_MOMENT (DNA 33); PHASE_1 (Stride 68); VEL_X/Y/Z (Stride 3-5)].
+- **SPIN** (Law #123): Synergizes with parameters [TORQUE (DNA 2); SPIN_PRECESSION_FREQ (World); MAGNETIC_MOMENT (DNA 33); PHASE_1 (Stride 68)].
 - **SPECTRAL** (Law #124): Synergizes with parameters [LIGHT_LEVEL (World); HEAT_OUTPUT (DNA 39); ENERGY (Stride 50); COLOR_R/G/B (Stride 53-55)].
-- **WAVEFUNCTION** (Law #125): Synergizes with parameters [JITTER (DNA 3); ALPHA (DNA 5); PHASE_1 (Stride 68); POS_X/Y/Z (Stride 0-2)].
-- **HYPERPLANE** (Law #126): Synergizes with parameters [WORLD_SIZE (World); DIMENSIONALITY (DNA 31); POS_X/Y/Z (Stride 0-2); PHASE_2 (Stride 69)].
-- **ANTIMATTER** (Law #127): Synergizes with parameters [CHARGE (Stride 67); MASS (Stride 6); ENERGY (Stride 50); RADIATION_LEVEL (World)].
+- **WAVEFUNCTION** (Law #125): Synergizes with parameters [JITTER (DNA 3); SUPERPOSITION_PHASE_SCALE (World); ALPHA (DNA 5); PHASE_1 (Stride 68)].
+- **HYPERPLANE** (Law #126): Synergizes with parameters [WORLD_SIZE (World); DIMENSIONAL_FOLD (World); DIMENSIONALITY (DNA 31); POS_X/Y/Z (Stride 0-2)].
+- **ANTIMATTER** (Law #127): Synergizes with parameters [CHARGE (Stride 67); ANTIMATTER_ANNIHILATION_YIELD (World); MASS (Stride 6); RADIATION_LEVEL (World)].
 
 ---
 
@@ -2630,7 +2630,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUPERPOSITION` (112)
 - **Spectrum Hue**: 307.8°
-- **Governing Parameters**: JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)
+- **Governing Parameters**: JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Superposition: a spread of velocity states with Born-rule collapse."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2649,7 +2649,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TUNNELING` (113)
 - **Spectrum Hue**: 308.8°
-- **Governing Parameters**: JITTER (DNA 3), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2), ENERGY (Stride 50)
+- **Governing Parameters**: JITTER (DNA 3), TUNNELING_PROBABILITY (World), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Tunneling: particles occasionally pass straight through barriers."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2668,7 +2668,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DECOHERENCE` (114)
 - **Spectrum Hue**: 309.7°
-- **Governing Parameters**: ENTROPY (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), PHASE_2 (Stride 69)
+- **Governing Parameters**: ENTROPY (World), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Decoherence: quantum spread collapses into classical order."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2687,7 +2687,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.WAVE_PARTICLE` (115)
 - **Spectrum Hue**: 310.7°
-- **Governing Parameters**: BASE_RADIUS (DNA 29), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5), ALPHA (DNA 5)
+- **Governing Parameters**: BASE_RADIUS (DNA 29), SUPERPOSITION_PHASE_SCALE (World), MASS (Stride 6), ALPHA (DNA 5)
 - **Help DB Hint**: "Wave-particle: observation decides — unmeasured systems spread as waves."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2706,7 +2706,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.UNCERTAINTY` (116)
 - **Spectrum Hue**: 311.6°
-- **Governing Parameters**: JITTER (DNA 3), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: JITTER (DNA 3), UNCERTAINTY_SIGMA (World), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Uncertainty: position and velocity cannot both be known."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2725,7 +2725,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TELEPORT` (117)
 - **Spectrum Hue**: 312.6°
-- **Governing Parameters**: FORCE (DNA 0), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2), WORLD_SIZE (World)
+- **Governing Parameters**: FORCE (DNA 0), TUNNELING_PROBABILITY (World), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Teleport: quantum state transfer through an entangled link."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2744,7 +2744,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.OBSERVER` (118)
 - **Spectrum Hue**: 313.6°
-- **Governing Parameters**: ALPHA (DNA 5), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), SIGNAL (Stride 57)
+- **Governing Parameters**: ALPHA (DNA 5), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
 - **Help DB Hint**: "Observer: measurement collapses nearby states."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2782,7 +2782,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COHERENCE` (120)
 - **Spectrum Hue**: 315.5°
-- **Governing Parameters**: RESONANCE_Q (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69), SIGNAL (Stride 57)
+- **Governing Parameters**: RESONANCE_Q (World), SUPERPOSITION_PHASE_SCALE (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69)
 - **Help DB Hint**: "Coherence: neighbouring particles phase-lock."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2839,7 +2839,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SPIN` (123)
 - **Spectrum Hue**: 318.4°
-- **Governing Parameters**: TORQUE (DNA 2), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: TORQUE (DNA 2), SPIN_PRECESSION_FREQ (World), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Spin: particles carry intrinsic angular momentum."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2877,7 +2877,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.WAVEFUNCTION` (125)
 - **Spectrum Hue**: 320.3°
-- **Governing Parameters**: JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)
+- **Governing Parameters**: JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Wavefunction: position is a probability cloud."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2896,7 +2896,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.HYPERPLANE` (126)
 - **Spectrum Hue**: 321.2°
-- **Governing Parameters**: WORLD_SIZE (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2), PHASE_2 (Stride 69)
+- **Governing Parameters**: WORLD_SIZE (World), DIMENSIONAL_FOLD (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Hyperplane: a fourth spatial axis drifts through the dish."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2915,7 +2915,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ANTIMATTER` (127)
 - **Spectrum Hue**: 322.2°
-- **Governing Parameters**: CHARGE (Stride 67), MASS (Stride 6), ENERGY (Stride 50), RADIATION_LEVEL (World)
+- **Governing Parameters**: CHARGE (Stride 67), ANTIMATTER_ANNIHILATION_YIELD (World), MASS (Stride 6), RADIATION_LEVEL (World)
 - **Help DB Hint**: "Antimatter: opposites annihilate on contact."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -2980,14 +2980,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DRAG)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), RADIUS (Stride 56), MAX_VELOCITY (DNA 28)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), FRICTION_COEFF (World), MAX_VELOCITY (DNA 28)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **VISCOSITY (DNA 1)**
 - **DAMPING (World)**
-- **RADIUS (Stride 56)**
+- **FRICTION_COEFF (World)**
 - **MAX_VELOCITY (DNA 28)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3070,15 +3070,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COLL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ELASTICITY (DNA 30), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
 - **ELASTICITY (DNA 30)**
+- **ELASTIC_RESTITUTION (World)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3100,15 +3100,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ACCR)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FUSION (DNA 9), FUSION_TIME (DNA 17), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FUSION (DNA 9), ACCRETION_RADIUS (World), FUSION_TIME (DNA 17), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FUSION (DNA 9)**
+- **ACCRETION_RADIUS (World)**
 - **FUSION_TIME (DNA 17)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3160,15 +3160,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.VOID)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), WORLD_SIZE (World), RADIUS (Stride 56), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), VOID_PRESSURE (World), WORLD_SIZE (World), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **VOID_PRESSURE (World)**
 - **WORLD_SIZE (World)**
 - **RADIUS (Stride 56)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3190,15 +3190,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.BOND)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_STRENGTH (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **BOND_STRENGTH (World)**
 - **BOND_ANGLE (DNA 31)**
 - **BOND_COUNT (Stride 58)**
-- **BOND_PARTNER (Stride 59-60)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3220,15 +3220,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SINGULARITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), CRITICAL_TEMP (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), SINGULARITY_HORIZON (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **SINGULARITY_HORIZON (World)**
 - **HIDDEN_MASS (DNA 7)**
 - **MASS (Stride 6)**
-- **CRITICAL_TEMP (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3250,15 +3250,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TIDE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIDAL (DNA 15), FORCE (DNA 0), GLOBAL_G (World), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIDAL (DNA 15), TIDAL_SCALE (World), FORCE (DNA 0), GLOBAL_G (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TIDAL (DNA 15)**
+- **TIDAL_SCALE (World)**
 - **FORCE (DNA 0)**
 - **GLOBAL_G (World)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3280,14 +3280,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FRICTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FRICTION (DNA 27), VISCOSITY (DNA 1), STIFFNESS (DNA 8), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FRICTION (DNA 27), FRICTION_COEFF (World), VISCOSITY (DNA 1), VEL_X/Y/Z (Stride 3-5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FRICTION (DNA 27)**
+- **FRICTION_COEFF (World)**
 - **VISCOSITY (DNA 1)**
-- **STIFFNESS (DNA 8)**
 - **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3310,15 +3310,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ELASTICITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ELASTICITY (DNA 30), STIFFNESS (DNA 8), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), STIFFNESS (DNA 8), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ELASTICITY (DNA 30)**
+- **ELASTIC_RESTITUTION (World)**
 - **STIFFNESS (DNA 8)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3340,15 +3340,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TURBULENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TORQUE (DNA 2), VISCOSITY (DNA 1), ENTROPY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TURBULENCE_KICK (World), TORQUE (DNA 2), VISCOSITY (DNA 1)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **TURBULENCE_KICK (World)**
 - **TORQUE (DNA 2)**
 - **VISCOSITY (DNA 1)**
-- **ENTROPY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3370,15 +3370,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CENTRIPETAL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), FORCE (DNA 0), INERTIA (DNA 26), MAX_VELOCITY (DNA 28)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), CENTRIPETAL_SCALE (World), FORCE (DNA 0), INERTIA (DNA 26)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **CENTRIPETAL_SCALE (World)**
 - **FORCE (DNA 0)**
 - **INERTIA (DNA 26)**
-- **MAX_VELOCITY (DNA 28)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3400,15 +3400,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ROTATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5), BOND_ANGLE (DNA 31)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), ROTATION_SPEED (World), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **ROTATION_SPEED (World)**
 - **INERTIA (DNA 26)**
 - **VEL_X/Y/Z (Stride 3-5)**
-- **BOND_ANGLE (DNA 31)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3520,15 +3520,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.REPRO)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BIRTH_RATE (DNA 10), SEX_CHANCE (DNA 35), MUTATION_RATE (World), REPRO_DRIVE (Stride 79)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BIRTH_RATE (DNA 10), REPRODUCTION_THRESHOLD (World), SEX_CHANCE (DNA 35), MUTATION_RATE (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **BIRTH_RATE (DNA 10)**
+- **REPRODUCTION_THRESHOLD (World)**
 - **SEX_CHANCE (DNA 35)**
 - **MUTATION_RATE (World)**
-- **REPRO_DRIVE (Stride 79)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3550,14 +3550,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TRACK)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), PREDATION_BIAS (DNA 36), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), TRACKING_SENSITIVITY (World), PREDATION_BIAS (DNA 36), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_RESP (DNA 13)**
+- **TRACKING_SENSITIVITY (World)**
 - **PREDATION_BIAS (DNA 36)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3580,15 +3580,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SENESCENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (DEATH_RATE (DNA 11), TELOMERE_LENGTH (DNA 60), AGE (Stride 51), DECAY_RATE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (DEATH_RATE (DNA 11), SENESCENCE_RATE (World), TELOMERE_LENGTH (DNA 60), AGE (Stride 51)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **DEATH_RATE (DNA 11)**
+- **SENESCENCE_RATE (World)**
 - **TELOMERE_LENGTH (DNA 60)**
 - **AGE (Stride 51)**
-- **DECAY_RATE (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3730,15 +3730,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PREDATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), PREDATION_EFFICIENCY (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PREDATION_BIAS (DNA 36)**
+- **PREDATION_EFFICIENCY (World)**
 - **ENERGY_TRANSFER (World)**
 - **HUNGER (Stride 62)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3790,14 +3790,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SYMBIOSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), ENERGY_TRANSFER (World), ENERGY_EFFICIENCY (DNA 34), SPECIES_INTERACTION (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), SYMBIOSIS_BOOST (World), ENERGY_TRANSFER (World), SPECIES_INTERACTION (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SPECIES_AFFINITY (DNA 41)**
+- **SYMBIOSIS_BOOST (World)**
 - **ENERGY_TRANSFER (World)**
-- **ENERGY_EFFICIENCY (DNA 34)**
 - **SPECIES_INTERACTION (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3820,15 +3820,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PARASITE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), IMMUNITY (DNA 91)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), PARASITE_DRAIN (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PREDATION_BIAS (DNA 36)**
+- **PARASITE_DRAIN (World)**
 - **ENERGY_TRANSFER (World)**
 - **HUNGER (Stride 62)**
-- **IMMUNITY (DNA 91)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3850,15 +3850,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.HIBERNATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENERGY_EFFICIENCY (DNA 34), HEAT_CAPACITY (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENERGY_EFFICIENCY (DNA 34), HIBERNATION_SAVINGS (World), HEAT_CAPACITY (World), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ENERGY_EFFICIENCY (DNA 34)**
+- **HIBERNATION_SAVINGS (World)**
 - **HEAT_CAPACITY (World)**
 - **TEMPERATURE (Stride 66)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3880,15 +3880,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.IMMUNITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REPAIR_EFFICIENCY (DNA 51), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80), AGE (Stride 51)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REPAIR_EFFICIENCY (DNA 51), IMMUNITY_SHIELD (World), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REPAIR_EFFICIENCY (DNA 51)**
+- **IMMUNITY_SHIELD (World)**
 - **IMMUNITY (DNA 91)**
 - **RADIATION_EXPOSURE (Stride 80)**
-- **AGE (Stride 51)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3910,15 +3910,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CATALYSIS_LAW)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), CATALYSIS_SPEED (World), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CATALYSIS (DNA 38)**
+- **CATALYSIS_SPEED (World)**
 - **REACTION_THRESHOLD (DNA 37)**
 - **TEMPERATURE (Stride 66)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3940,15 +3940,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SOLVATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), VISCOSITY (DNA 1), CHARGE (Stride 67), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), SOLVATION_RATE (World), VISCOSITY (DNA 1), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **SOLVATION_RATE (World)**
 - **VISCOSITY (DNA 1)**
 - **CHARGE (Stride 67)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3970,15 +3970,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ACIDITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **ACIDITY_PH (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **PHASE_1 (Stride 68)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4000,15 +4000,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.OXIDATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), OXIDATION_RATE (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **OXIDATION_RATE (World)**
 - **HEAT_OUTPUT (DNA 39)**
 - **CHARGE (Stride 67)**
-- **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4030,15 +4030,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.POLYMER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), POLYMER_LIMIT (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **POLYMER_LIMIT (World)**
 - **BOND_ANGLE (DNA 31)**
 - **BOND_COUNT (Stride 58)**
-- **BOND_PARTNER (Stride 59-60)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4120,15 +4120,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66), CRITICAL_TEMP (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), CRYSTAL_LATTICE (World), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **CRYSTAL_LATTICE (World)**
 - **BASE_RADIUS (DNA 29)**
 - **TEMPERATURE (Stride 66)**
-- **CRITICAL_TEMP (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4150,14 +4150,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.REDUCTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), OXIDATION_RATE (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **OXIDATION_RATE (World)**
 - **REACTION_THRESHOLD (DNA 37)**
-- **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4210,15 +4210,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ELECTROLYSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67), VISCOSITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), ELECTROLYSIS_POWER (World), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **ELECTROLYSIS_POWER (World)**
 - **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
-- **VISCOSITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4270,15 +4270,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PRECIPITATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), BASE_RADIUS (DNA 29), MASS (Stride 6), VISCOSITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), SOLVATION_RATE (World), BASE_RADIUS (DNA 29), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **SOLVATION_RATE (World)**
 - **BASE_RADIUS (DNA 29)**
 - **MASS (Stride 6)**
-- **VISCOSITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4300,15 +4300,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.NEUTRALIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **ACIDITY_PH (World)**
 - **HEAT_OUTPUT (DNA 39)**
 - **CHARGE (Stride 67)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4360,14 +4360,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.AUTOCATALYSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), BIRTH_RATE (DNA 10), REACTION_THRESHOLD (DNA 37), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), AUTOCATALYSIS_GAIN (World), BIRTH_RATE (DNA 10), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CATALYSIS (DNA 38)**
+- **AUTOCATALYSIS_GAIN (World)**
 - **BIRTH_RATE (DNA 10)**
-- **REACTION_THRESHOLD (DNA 37)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4450,14 +4450,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONVECTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), GLOBAL_G (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CONVECTION_RATE (World), VISCOSITY (DNA 1), GLOBAL_G (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **CONVECTION_RATE (World)**
 - **VISCOSITY (DNA 1)**
-- **TEMPERATURE (Stride 66)**
 - **GLOBAL_G (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4480,15 +4480,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PHASE_RADIATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), ALPHA (DNA 5), TEMPERATURE (Stride 66), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), PHASE_RADIATION_FACTOR (World), ALPHA (DNA 5), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **PHASE_RADIATION_FACTOR (World)**
 - **ALPHA (DNA 5)**
 - **TEMPERATURE (Stride 66)**
-- **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4510,14 +4510,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUBLIMATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), PHASE_1 (Stride 68)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **PHASE_1 (Stride 68)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4540,14 +4540,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MELT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **MELT_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STIFFNESS (DNA 8)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4570,14 +4570,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.BOIL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), VISCOSITY (DNA 1)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), VISCOSITY (DNA 1)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **VISCOSITY (DNA 1)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4600,14 +4600,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONDENSE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), BASE_RADIUS (DNA 29)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), BASE_RADIUS (DNA 29)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **BASE_RADIUS (DNA 29)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4630,14 +4630,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DEPOSIT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **MELT_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STIFFNESS (DNA 8)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4690,14 +4690,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ADIABATIC)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), ENTROPY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), ADIABATIC_GAMMA (World), VISCOSITY (DNA 1), ENTROPY (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **ADIABATIC_GAMMA (World)**
 - **VISCOSITY (DNA 1)**
-- **TEMPERATURE (Stride 66)**
 - **ENTROPY (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4720,14 +4720,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COMPRESSION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), MASS (Stride 6), TEMPERATURE (Stride 66), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ADIABATIC_GAMMA (World), MASS (Stride 6), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **ADIABATIC_GAMMA (World)**
 - **MASS (Stride 6)**
-- **TEMPERATURE (Stride 66)**
 - **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4750,14 +4750,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.EXPANSION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), JITTER (DNA 3), TEMPERATURE (Stride 66), WORLD_SIZE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), ADIABATIC_GAMMA (World), JITTER (DNA 3), WORLD_SIZE (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **ADIABATIC_GAMMA (World)**
 - **JITTER (DNA 3)**
-- **TEMPERATURE (Stride 66)**
 - **WORLD_SIZE (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4810,14 +4810,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LATENT_HEAT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STORED_ENERGY (Stride 78)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), LATENT_HEAT_BUFFER (World), CRITICAL_TEMP (World), STORED_ENERGY (Stride 78)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **LATENT_HEAT_BUFFER (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STORED_ENERGY (Stride 78)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4840,14 +4840,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.RUNAWAY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), MUTATION_RATE (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), RUNAWAY_MULT (World), MUTATION_RATE (World), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **RUNAWAY_MULT (World)**
 - **MUTATION_RATE (World)**
-- **TEMPERATURE (Stride 66)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -4870,15 +4870,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TIME_DILATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), TIME_WARP_FACTOR (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **TIME_WARP_FACTOR (World)**
 - **HIDDEN_MASS (DNA 7)**
 - **MASS (Stride 6)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4900,15 +4900,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DIMENSIONALITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYMMETRY (DNA 6), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYMMETRY (DNA 6), DIMENSIONAL_FOLD (World), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SYMMETRY (DNA 6)**
+- **DIMENSIONAL_FOLD (World)**
 - **WORLD_SIZE (World)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -4930,15 +4930,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CHAOS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), CHAOS_LYAPUNOV (World), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **CHAOS_LYAPUNOV (World)**
 - **EPIGENETIC_DRIFT (DNA 44)**
 - **ENTROPY (World)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5080,15 +5080,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MIND)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **CONSCIOUSNESS_PHI (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5110,15 +5110,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TELEPATHY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TELEPATHY_RANGE (World), TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TELEPATHY_RANGE (World)**
 - **TUNING_CH1-CH4 (DNA 22-25)**
 - **SIGNAL_STRENGTH (DNA 19)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5140,15 +5140,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), MEMORY (Stride 61)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TELEPATHY_RANGE (World), NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TELEPATHY_RANGE (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **SIGNAL (Stride 57)**
-- **MEMORY (Stride 61)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5170,14 +5170,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PRECOGNITION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), VEL_X/Y/Z (Stride 3-5), MEMORY (Stride 61)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIME_WARP_FACTOR (World), MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TIME_WARP_FACTOR (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **PROPAGATION_SPEED (DNA 21)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **MEMORY (Stride 61)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5200,14 +5200,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ASTRAL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), TRAIL_X/Y/Z (Stride 71-73), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ASTRAL_PHASE (World), ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **ASTRAL_PHASE (World)**
 - **ALPHA (DNA 5)**
 - **VEL_X/Y/Z (Stride 3-5)**
-- **TRAIL_X/Y/Z (Stride 71-73)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5260,15 +5260,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONSCIOUSNESS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONSCIOUSNESS_PHI (World), REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **CONSCIOUSNESS_PHI (World)**
 - **REGULATORY_DEPTH (DNA 63)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5290,15 +5290,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PERCEPTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_RESP (DNA 13)**
+- **CONSCIOUSNESS_PHI (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
-- **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5320,15 +5320,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SYNCHRONICITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYNCHRONICITY_RATE (World), TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **SYNCHRONICITY_RATE (World)**
 - **TUNING_CH1-CH4 (DNA 22-25)**
 - **RESONANCE_Q (World)**
 - **PHASE_1 (Stride 68)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5350,15 +5350,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CHARGE_LAW)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), CONDUCTIVITY (DNA 32), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), COULOMB_CONSTANT (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **COULOMB_CONSTANT (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **CHARGE (Stride 67)**
-- **ELECTRIC_ENERGY (Stride 77)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5380,15 +5380,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FIELD)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), MAGNETIC_FLUX_SCALE (World), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **MAGNETIC_MOMENT (DNA 33)**
 - **CHARGE (Stride 67)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5410,15 +5410,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CURRENT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), COULOMB_CONSTANT (World), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **COULOMB_CONSTANT (World)**
 - **VEL_X/Y/Z (Stride 3-5)**
 - **CHARGE (Stride 67)**
-- **ELECTRIC_ENERGY (Stride 77)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5500,15 +5500,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.INDUCTANCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **ELECTRIC_ENERGY (Stride 77)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5530,14 +5530,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MAGNETISM)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), FORCE (DNA 0), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), FORCE (DNA 0), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **FORCE (DNA 0)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5590,15 +5590,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FLUX)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), POLARITY (DNA 4), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), POLARITY (DNA 4), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **POLARITY (DNA 4)**
 - **CHARGE (Stride 67)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5620,15 +5620,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.IONIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), RADIATION_LEVEL (World), CHARGE (Stride 67), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), PLASMA_IONIZATION_ENERGY (World), RADIATION_LEVEL (World), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **PLASMA_IONIZATION_ENERGY (World)**
 - **RADIATION_LEVEL (World)**
 - **CHARGE (Stride 67)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5650,14 +5650,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DISCHARGE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), DISCHARGE_ARC_THRESHOLD (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **DISCHARGE_ARC_THRESHOLD (World)**
 - **REACTION_THRESHOLD (DNA 37)**
-- **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5680,14 +5680,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PLASMA)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CONDUCTIVITY (DNA 32), TEMPERATURE (Stride 66), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), PLASMA_IONIZATION_ENERGY (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **PLASMA_IONIZATION_ENERGY (World)**
 - **CONDUCTIVITY (DNA 32)**
-- **TEMPERATURE (Stride 66)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5710,14 +5710,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), MAGNETIC_MOMENT (DNA 33)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SUPERCONDUCT_TC (World), CRITICAL_TEMP (World), MAGNETIC_MOMENT (DNA 33)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SUPERCONDUCT_TC (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **MAGNETIC_MOMENT (DNA 33)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5770,14 +5770,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SHIELDING)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), STIFFNESS (DNA 8), CHARGE (Stride 67), ARMOR (Stride 63)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SHIELDING_ATTENUATION (World), STIFFNESS (DNA 8), ARMOR (Stride 63)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SHIELDING_ATTENUATION (World)**
 - **STIFFNESS (DNA 8)**
-- **CHARGE (Stride 67)**
 - **ARMOR (Stride 63)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -5800,15 +5800,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.POLARIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), ALPHA (DNA 5), CHARGE (Stride 67), PHASE_1 (Stride 68)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), POLARIZATION_DISPLACEMENT (World), ALPHA (DNA 5), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **POLARIZATION_DISPLACEMENT (World)**
 - **ALPHA (DNA 5)**
 - **CHARGE (Stride 67)**
-- **PHASE_1 (Stride 68)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5890,15 +5890,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.STIGMERGY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_DECAY (DNA 20), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_DECAY (DNA 20), STIGMERGY_DECAY_RATE (World), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_DECAY (DNA 20)**
+- **STIGMERGY_DECAY_RATE (World)**
 - **TRAIL_X/Y/Z (Stride 71-73)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5920,15 +5920,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SIGNAL_BOOST)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_STRENGTH (DNA 19), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_STRENGTH (DNA 19), SIGNAL_BOOST_GAIN (World), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_STRENGTH (DNA 19)**
+- **SIGNAL_BOOST_GAIN (World)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **SIGNAL (Stride 57)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -5950,15 +5950,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LEARN)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), AGE (Stride 51)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ADAPTATION_RATE (DNA 55)**
+- **HEBBIAN_LEARNING_RATE (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **AGE (Stride 51)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6040,15 +6040,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PREDICT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ADAPTATION_RATE (DNA 55)**
+- **HEBBIAN_LEARNING_RATE (World)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **MEMORY (Stride 61)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6070,15 +6070,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CODE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61), GENOTYPE (DNA 15)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CODON_BIAS (DNA 62)**
+- **ENCRYPTION_CIPHER_KEY (World)**
 - **REPAIR_EFFICIENCY (DNA 51)**
 - **MEMORY (Stride 61)**
-- **GENOTYPE (DNA 15)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6100,15 +6100,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PROTOCOL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TUNING_CH1-CH4 (DNA 22-25)**
+- **CULTURAL_TRANSMISSION (World)**
 - **SPECIES_AFFINITY (DNA 41)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6160,15 +6160,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LANGUAGE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TUNING_CH1-CH4 (DNA 22-25)**
+- **CULTURAL_TRANSMISSION (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6190,15 +6190,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CULTURE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), CULTURAL_TRANSMISSION (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SPECIES_AFFINITY (DNA 41)**
+- **CULTURAL_TRANSMISSION (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6250,15 +6250,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.NAVIGATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PROPAGATION_SPEED (DNA 21), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PROPAGATION_SPEED (DNA 21), NAVIGATION_GRADIENT_BIAS (World), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PROPAGATION_SPEED (DNA 21)**
+- **NAVIGATION_GRADIENT_BIAS (World)**
 - **SIGNAL_RESP (DNA 13)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6280,15 +6280,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ENCRYPTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CODON_BIAS (DNA 62)**
+- **ENCRYPTION_CIPHER_KEY (World)**
 - **REGULATORY_DEPTH (DNA 63)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6310,15 +6310,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUPERPOSITION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **ALPHA (DNA 5)**
 - **PHASE_1 (Stride 68)**
-- **POS_X/Y/Z (Stride 0-2)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6340,15 +6340,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TUNNELING)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TUNNELING_PROBABILITY (World), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **TUNNELING_PROBABILITY (World)**
 - **STIFFNESS (DNA 8)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6370,15 +6370,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DECOHERENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENTROPY (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENTROPY (World), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ENTROPY (World)**
+- **DECOHERENCE_RATE_FACTOR (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **PHASE_1 (Stride 68)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6400,14 +6400,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.WAVE_PARTICLE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), SUPERPOSITION_PHASE_SCALE (World), MASS (Stride 6), ALPHA (DNA 5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **BASE_RADIUS (DNA 29)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **MASS (Stride 6)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -6430,15 +6430,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.UNCERTAINTY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), UNCERTAINTY_SIGMA (World), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **UNCERTAINTY_SIGMA (World)**
 - **INERTIA (DNA 26)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6460,15 +6460,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TELEPORT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2), WORLD_SIZE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), TUNNELING_PROBABILITY (World), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **TUNNELING_PROBABILITY (World)**
 - **ENERGY (Stride 50)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **WORLD_SIZE (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6490,14 +6490,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.OBSERVER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ALPHA (DNA 5)**
+- **DECOHERENCE_RATE_FACTOR (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
-- **PHASE_1 (Stride 68)**
 - **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -6550,15 +6550,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COHERENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (RESONANCE_Q (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (RESONANCE_Q (World), SUPERPOSITION_PHASE_SCALE (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **RESONANCE_Q (World)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **PHASE_1 (Stride 68)**
 - **PHASE_2 (Stride 69)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6640,15 +6640,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SPIN)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), SPIN_PRECESSION_FREQ (World), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **SPIN_PRECESSION_FREQ (World)**
 - **MAGNETIC_MOMENT (DNA 33)**
 - **PHASE_1 (Stride 68)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6700,15 +6700,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.WAVEFUNCTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **ALPHA (DNA 5)**
 - **PHASE_1 (Stride 68)**
-- **POS_X/Y/Z (Stride 0-2)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6730,15 +6730,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.HYPERPLANE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (WORLD_SIZE (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (WORLD_SIZE (World), DIMENSIONAL_FOLD (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **WORLD_SIZE (World)**
+- **DIMENSIONAL_FOLD (World)**
 - **DIMENSIONALITY (DNA 31)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -6760,14 +6760,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ANTIMATTER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), MASS (Stride 6), ENERGY (Stride 50), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), ANTIMATTER_ANNIHILATION_YIELD (World), MASS (Stride 6), RADIATION_LEVEL (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CHARGE (Stride 67)**
+- **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - **MASS (Stride 6)**
-- **ENERGY (Stride 50)**
 - **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -6832,7 +6832,7 @@ To satisfy the multi-parameter control mandate, Law #0 explicitly binds to:
 To satisfy the multi-parameter control mandate, Law #1 explicitly binds to:
 1. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **DAMPING (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAX_VELOCITY (DNA 28)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -6919,8 +6919,8 @@ To satisfy the multi-parameter control mandate, Law #3 explicitly binds to:
 To satisfy the multi-parameter control mandate, Law #4 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **ELASTICITY (DNA 30)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ELASTIC_RESTITUTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -6947,9 +6947,9 @@ To satisfy the multi-parameter control mandate, Law #4 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #5 explicitly binds to:
 1. **FUSION (DNA 9)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACCRETION_RADIUS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7005,9 +7005,9 @@ To satisfy the multi-parameter control mandate, Law #6 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #38 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **VOID_PRESSURE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7034,9 +7034,9 @@ To satisfy the multi-parameter control mandate, Law #38 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #39 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_PARTNER (Stride 59-60)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOND_STRENGTH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7063,9 +7063,9 @@ To satisfy the multi-parameter control mandate, Law #39 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #79 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SINGULARITY_HORIZON (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7092,9 +7092,9 @@ To satisfy the multi-parameter control mandate, Law #79 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #82 explicitly binds to:
 1. **TIDAL (DNA 15)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TIDAL_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7121,8 +7121,8 @@ To satisfy the multi-parameter control mandate, Law #82 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #83 explicitly binds to:
 1. **FRICTION (DNA 27)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -7150,9 +7150,9 @@ To satisfy the multi-parameter control mandate, Law #83 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #84 explicitly binds to:
 1. **ELASTICITY (DNA 30)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ELASTIC_RESTITUTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7179,9 +7179,9 @@ To satisfy the multi-parameter control mandate, Law #84 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #85 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TURBULENCE_KICK (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7208,9 +7208,9 @@ To satisfy the multi-parameter control mandate, Law #85 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #86 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **MAX_VELOCITY (DNA 28)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CENTRIPETAL_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7237,9 +7237,9 @@ To satisfy the multi-parameter control mandate, Law #86 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #87 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ROTATION_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7353,9 +7353,9 @@ To satisfy the multi-parameter control mandate, Law #9 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #10 explicitly binds to:
 1. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **REPRO_DRIVE (Stride 79)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REPRODUCTION_THRESHOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7382,8 +7382,8 @@ To satisfy the multi-parameter control mandate, Law #10 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #11 explicitly binds to:
 1. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TRACKING_SENSITIVITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -7411,9 +7411,9 @@ To satisfy the multi-parameter control mandate, Law #11 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #12 explicitly binds to:
 1. **DEATH_RATE (DNA 11)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **DECAY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SENESCENCE_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7556,9 +7556,9 @@ To satisfy the multi-parameter control mandate, Law #16 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #51 explicitly binds to:
 1. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PREDATION_EFFICIENCY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7614,8 +7614,8 @@ To satisfy the multi-parameter control mandate, Law #52 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #88 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SYMBIOSIS_BOOST (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SPECIES_INTERACTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -7643,9 +7643,9 @@ To satisfy the multi-parameter control mandate, Law #88 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #89 explicitly binds to:
 1. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PARASITE_DRAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7672,9 +7672,9 @@ To satisfy the multi-parameter control mandate, Law #89 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #90 explicitly binds to:
 1. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HIBERNATION_SAVINGS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7701,9 +7701,9 @@ To satisfy the multi-parameter control mandate, Law #90 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #91 explicitly binds to:
 1. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **IMMUNITY_SHIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7730,9 +7730,9 @@ To satisfy the multi-parameter control mandate, Law #91 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #17 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CATALYSIS_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7759,9 +7759,9 @@ To satisfy the multi-parameter control mandate, Law #17 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #18 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SOLVATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7788,9 +7788,9 @@ To satisfy the multi-parameter control mandate, Law #18 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #19 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACIDITY_PH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7817,9 +7817,9 @@ To satisfy the multi-parameter control mandate, Law #19 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #20 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **OXIDATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7846,9 +7846,9 @@ To satisfy the multi-parameter control mandate, Law #20 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #21 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_PARTNER (Stride 59-60)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLYMER_LIMIT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7933,9 +7933,9 @@ To satisfy the multi-parameter control mandate, Law #23 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #24 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CRYSTAL_LATTICE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -7962,8 +7962,8 @@ To satisfy the multi-parameter control mandate, Law #24 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #40 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **OXIDATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8020,9 +8020,9 @@ To satisfy the multi-parameter control mandate, Law #41 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #92 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VISCOSITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ELECTROLYSIS_POWER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8078,9 +8078,9 @@ To satisfy the multi-parameter control mandate, Law #93 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #94 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VISCOSITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SOLVATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8107,9 +8107,9 @@ To satisfy the multi-parameter control mandate, Law #94 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #95 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACIDITY_PH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8165,8 +8165,8 @@ To satisfy the multi-parameter control mandate, Law #96 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #97 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **AUTOCATALYSIS_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8252,8 +8252,8 @@ To satisfy the multi-parameter control mandate, Law #26 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #27 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CONVECTION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8281,9 +8281,9 @@ To satisfy the multi-parameter control mandate, Law #27 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #28 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PHASE_RADIATION_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8310,8 +8310,8 @@ To satisfy the multi-parameter control mandate, Law #28 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #29 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8339,8 +8339,8 @@ To satisfy the multi-parameter control mandate, Law #29 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #42 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MELT_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8368,8 +8368,8 @@ To satisfy the multi-parameter control mandate, Law #42 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #43 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8397,8 +8397,8 @@ To satisfy the multi-parameter control mandate, Law #43 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #44 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8426,8 +8426,8 @@ To satisfy the multi-parameter control mandate, Law #44 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #45 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MELT_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8484,8 +8484,8 @@ To satisfy the multi-parameter control mandate, Law #46 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #98 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8513,8 +8513,8 @@ To satisfy the multi-parameter control mandate, Law #98 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #99 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8542,8 +8542,8 @@ To satisfy the multi-parameter control mandate, Law #99 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #100 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8600,8 +8600,8 @@ To satisfy the multi-parameter control mandate, Law #101 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #102 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **LATENT_HEAT_BUFFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STORED_ENERGY (Stride 78)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8629,8 +8629,8 @@ To satisfy the multi-parameter control mandate, Law #102 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #103 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **RUNAWAY_MULT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8658,9 +8658,9 @@ To satisfy the multi-parameter control mandate, Law #103 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #30 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TIME_WARP_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8687,9 +8687,9 @@ To satisfy the multi-parameter control mandate, Law #30 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #31 explicitly binds to:
 1. **SYMMETRY (DNA 6)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DIMENSIONAL_FOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8716,9 +8716,9 @@ To satisfy the multi-parameter control mandate, Law #31 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #32 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CHAOS_LYAPUNOV (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8860,10 +8860,10 @@ To satisfy the multi-parameter control mandate, Law #36 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #37 explicitly binds to:
-1. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8889,10 +8889,10 @@ To satisfy the multi-parameter control mandate, Law #37 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #47 explicitly binds to:
-1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8918,10 +8918,10 @@ To satisfy the multi-parameter control mandate, Law #47 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #48 explicitly binds to:
-1. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -8947,9 +8947,9 @@ To satisfy the multi-parameter control mandate, Law #48 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #49 explicitly binds to:
-1. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TIME_WARP_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -8976,9 +8976,9 @@ To satisfy the multi-parameter control mandate, Law #49 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #50 explicitly binds to:
-1. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **ASTRAL_PHASE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9034,10 +9034,10 @@ To satisfy the multi-parameter control mandate, Law #80 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #104 explicitly binds to:
-1. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9064,9 +9064,9 @@ To satisfy the multi-parameter control mandate, Law #104 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #105 explicitly binds to:
 1. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9092,10 +9092,10 @@ To satisfy the multi-parameter control mandate, Law #105 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #106 explicitly binds to:
-1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **SYNCHRONICITY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9122,9 +9122,9 @@ To satisfy the multi-parameter control mandate, Law #106 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #53 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **COULOMB_CONSTANT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9151,9 +9151,9 @@ To satisfy the multi-parameter control mandate, Law #53 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #54 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9180,9 +9180,9 @@ To satisfy the multi-parameter control mandate, Law #54 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #55 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **COULOMB_CONSTANT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9267,9 +9267,9 @@ To satisfy the multi-parameter control mandate, Law #57 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #58 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9296,8 +9296,8 @@ To satisfy the multi-parameter control mandate, Law #58 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #59 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9354,9 +9354,9 @@ To satisfy the multi-parameter control mandate, Law #60 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #61 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9383,9 +9383,9 @@ To satisfy the multi-parameter control mandate, Law #61 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #62 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PLASMA_IONIZATION_ENERGY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9412,8 +9412,8 @@ To satisfy the multi-parameter control mandate, Law #62 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #63 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DISCHARGE_ARC_THRESHOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9441,8 +9441,8 @@ To satisfy the multi-parameter control mandate, Law #63 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #64 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PLASMA_IONIZATION_ENERGY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9470,8 +9470,8 @@ To satisfy the multi-parameter control mandate, Law #64 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #65 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERCONDUCT_TC (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9528,8 +9528,8 @@ To satisfy the multi-parameter control mandate, Law #107 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #108 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SHIELDING_ATTENUATION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ARMOR (Stride 63)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -9557,9 +9557,9 @@ To satisfy the multi-parameter control mandate, Law #108 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #109 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLARIZATION_DISPLACEMENT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9644,9 +9644,9 @@ To satisfy the multi-parameter control mandate, Law #67 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #68 explicitly binds to:
 1. **SIGNAL_DECAY (DNA 20)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **STIGMERGY_DECAY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9673,9 +9673,9 @@ To satisfy the multi-parameter control mandate, Law #68 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #69 explicitly binds to:
 1. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SIGNAL_BOOST_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9702,9 +9702,9 @@ To satisfy the multi-parameter control mandate, Law #69 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #70 explicitly binds to:
 1. **ADAPTATION_RATE (DNA 55)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HEBBIAN_LEARNING_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9789,9 +9789,9 @@ To satisfy the multi-parameter control mandate, Law #72 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #73 explicitly binds to:
 1. **ADAPTATION_RATE (DNA 55)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HEBBIAN_LEARNING_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9818,9 +9818,9 @@ To satisfy the multi-parameter control mandate, Law #73 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #74 explicitly binds to:
 1. **CODON_BIAS (DNA 62)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **GENOTYPE (DNA 15)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ENCRYPTION_CIPHER_KEY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9847,9 +9847,9 @@ To satisfy the multi-parameter control mandate, Law #74 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #75 explicitly binds to:
 1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9905,9 +9905,9 @@ To satisfy the multi-parameter control mandate, Law #76 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #77 explicitly binds to:
 1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9934,9 +9934,9 @@ To satisfy the multi-parameter control mandate, Law #77 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #78 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -9992,9 +9992,9 @@ To satisfy the multi-parameter control mandate, Law #81 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #110 explicitly binds to:
 1. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NAVIGATION_GRADIENT_BIAS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10021,9 +10021,9 @@ To satisfy the multi-parameter control mandate, Law #110 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #111 explicitly binds to:
 1. **CODON_BIAS (DNA 62)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ENCRYPTION_CIPHER_KEY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10050,9 +10050,9 @@ To satisfy the multi-parameter control mandate, Law #111 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #112 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10079,9 +10079,9 @@ To satisfy the multi-parameter control mandate, Law #112 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #113 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNNELING_PROBABILITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10108,9 +10108,9 @@ To satisfy the multi-parameter control mandate, Law #113 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #114 explicitly binds to:
 1. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DECOHERENCE_RATE_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10137,8 +10137,8 @@ To satisfy the multi-parameter control mandate, Law #114 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #115 explicitly binds to:
 1. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -10166,9 +10166,9 @@ To satisfy the multi-parameter control mandate, Law #115 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #116 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **UNCERTAINTY_SIGMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10195,9 +10195,9 @@ To satisfy the multi-parameter control mandate, Law #116 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #117 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNNELING_PROBABILITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10224,8 +10224,8 @@ To satisfy the multi-parameter control mandate, Law #117 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #118 explicitly binds to:
 1. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DECOHERENCE_RATE_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -10282,9 +10282,9 @@ To satisfy the multi-parameter control mandate, Law #119 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #120 explicitly binds to:
 1. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10369,9 +10369,9 @@ To satisfy the multi-parameter control mandate, Law #122 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #123 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SPIN_PRECESSION_FREQ (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10427,9 +10427,9 @@ To satisfy the multi-parameter control mandate, Law #124 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #125 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10456,9 +10456,9 @@ To satisfy the multi-parameter control mandate, Law #125 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #126 explicitly binds to:
 1. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DIMENSIONAL_FOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -10485,8 +10485,8 @@ To satisfy the multi-parameter control mandate, Law #126 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #127 explicitly binds to:
 1. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ANTIMATTER_ANNIHILATION_YIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -10539,7 +10539,7 @@ Law #0 (GRAV) is fully audited, parameterized, implemented, and verified.
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 - [x] Wired parameter: **DAMPING (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -10617,8 +10617,8 @@ Law #3 (WRAP) is fully audited, parameterized, implemented, and verified.
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **ELASTICITY (DNA 30)**
+- [x] Wired parameter: **ELASTIC_RESTITUTION (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10642,9 +10642,9 @@ Law #4 (COLL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FUSION (DNA 9)**
+- [x] Wired parameter: **ACCRETION_RADIUS (World)**
 - [x] Wired parameter: **FUSION_TIME (DNA 17)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10694,9 +10694,9 @@ Law #6 (PLANETARY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **VOID_PRESSURE (World)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 - [x] Wired parameter: **RADIUS (Stride 56)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10720,9 +10720,9 @@ Law #38 (VOID) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **BOND_STRENGTH (World)**
 - [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 - [x] Wired parameter: **BOND_COUNT (Stride 58)**
-- [x] Wired parameter: **BOND_PARTNER (Stride 59-60)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10746,9 +10746,9 @@ Law #39 (BOND) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **SINGULARITY_HORIZON (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10772,9 +10772,9 @@ Law #79 (SINGULARITY) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TIDAL (DNA 15)**
+- [x] Wired parameter: **TIDAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **GLOBAL_G (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10798,8 +10798,8 @@ Law #82 (TIDE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FRICTION (DNA 27)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -10824,9 +10824,9 @@ Law #83 (FRICTION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ELASTICITY (DNA 30)**
+- [x] Wired parameter: **ELASTIC_RESTITUTION (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10850,9 +10850,9 @@ Law #84 (ELASTICITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **TURBULENCE_KICK (World)**
 - [x] Wired parameter: **TORQUE (DNA 2)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **ENTROPY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10876,9 +10876,9 @@ Law #85 (TURBULENCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **CENTRIPETAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
-- [x] Wired parameter: **MAX_VELOCITY (DNA 28)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -10902,9 +10902,9 @@ Law #86 (CENTRIPETAL) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **ROTATION_SPEED (World)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
-- [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`
@@ -11006,9 +11006,9 @@ Law #9 (AFFINITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
+- [x] Wired parameter: **REPRODUCTION_THRESHOLD (World)**
 - [x] Wired parameter: **SEX_CHANCE (DNA 35)**
 - [x] Wired parameter: **MUTATION_RATE (World)**
-- [x] Wired parameter: **REPRO_DRIVE (Stride 79)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11032,8 +11032,8 @@ Law #10 (REPRO) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **TRACKING_SENSITIVITY (World)**
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11058,9 +11058,9 @@ Law #11 (TRACK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **DEATH_RATE (DNA 11)**
+- [x] Wired parameter: **SENESCENCE_RATE (World)**
 - [x] Wired parameter: **TELOMERE_LENGTH (DNA 60)**
 - [x] Wired parameter: **AGE (Stride 51)**
-- [x] Wired parameter: **DECAY_RATE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11188,9 +11188,9 @@ Law #16 (PHENOTYPE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
+- [x] Wired parameter: **PREDATION_EFFICIENCY (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
 - [x] Wired parameter: **HUNGER (Stride 62)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11240,8 +11240,8 @@ Law #52 (COMMS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
+- [x] Wired parameter: **SYMBIOSIS_BOOST (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
-- [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
 - [x] Wired parameter: **SPECIES_INTERACTION (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11266,9 +11266,9 @@ Law #88 (SYMBIOSIS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
+- [x] Wired parameter: **PARASITE_DRAIN (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
 - [x] Wired parameter: **HUNGER (Stride 62)**
-- [x] Wired parameter: **IMMUNITY (DNA 91)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11292,9 +11292,9 @@ Law #89 (PARASITE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
+- [x] Wired parameter: **HIBERNATION_SAVINGS (World)**
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11318,9 +11318,9 @@ Law #90 (HIBERNATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REPAIR_EFFICIENCY (DNA 51)**
+- [x] Wired parameter: **IMMUNITY_SHIELD (World)**
 - [x] Wired parameter: **IMMUNITY (DNA 91)**
 - [x] Wired parameter: **RADIATION_EXPOSURE (Stride 80)**
-- [x] Wired parameter: **AGE (Stride 51)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`
@@ -11344,9 +11344,9 @@ Law #91 (IMMUNITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CATALYSIS (DNA 38)**
+- [x] Wired parameter: **CATALYSIS_SPEED (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11370,9 +11370,9 @@ Law #17 (CATALYSIS_LAW) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **SOLVATION_RATE (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11396,9 +11396,9 @@ Law #18 (SOLVATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **ACIDITY_PH (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11422,9 +11422,9 @@ Law #19 (ACIDITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **OXIDATION_RATE (World)**
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11448,9 +11448,9 @@ Law #20 (OXIDATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **POLYMER_LIMIT (World)**
 - [x] Wired parameter: **BOND_ANGLE (DNA 31)**
 - [x] Wired parameter: **BOND_COUNT (Stride 58)**
-- [x] Wired parameter: **BOND_PARTNER (Stride 59-60)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11526,9 +11526,9 @@ Law #23 (CHIRALITY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **CRYSTAL_LATTICE (World)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11552,8 +11552,8 @@ Law #24 (CRYSTALLIZATION) is fully audited, parameterized, implemented, and veri
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **OXIDATION_RATE (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11604,9 +11604,9 @@ Law #41 (ALLOY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **ELECTROLYSIS_POWER (World)**
 - [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **VISCOSITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11656,9 +11656,9 @@ Law #93 (PHOTOLYSIS) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **SOLVATION_RATE (World)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VISCOSITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11682,9 +11682,9 @@ Law #94 (PRECIPITATION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **ACIDITY_PH (World)**
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`
@@ -11734,8 +11734,8 @@ Law #96 (STOICHIOMETRY) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CATALYSIS (DNA 38)**
+- [x] Wired parameter: **AUTOCATALYSIS_GAIN (World)**
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
-- [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11812,8 +11812,8 @@ Law #26 (COLD) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **CONVECTION_RATE (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **GLOBAL_G (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11838,9 +11838,9 @@ Law #27 (CONVECTION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PHASE_RADIATION_FACTOR (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsThermodynamics.test.js`
@@ -11864,8 +11864,8 @@ Law #28 (PHASE_RADIATION) is fully audited, parameterized, implemented, and veri
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11890,8 +11890,8 @@ Law #29 (SUBLIMATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **MELT_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11916,8 +11916,8 @@ Law #42 (MELT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11942,8 +11942,8 @@ Law #43 (BOIL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -11968,8 +11968,8 @@ Law #44 (CONDENSE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **MELT_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12020,8 +12020,8 @@ Law #46 (EXOTHERMIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **ENTROPY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12046,8 +12046,8 @@ Law #98 (ADIABATIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12072,8 +12072,8 @@ Law #99 (COMPRESSION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **JITTER (DNA 3)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12124,8 +12124,8 @@ Law #101 (EQUILIBRIUM) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **LATENT_HEAT_BUFFER (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STORED_ENERGY (Stride 78)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12150,8 +12150,8 @@ Law #102 (LATENT_HEAT) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **RUNAWAY_MULT (World)**
 - [x] Wired parameter: **MUTATION_RATE (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12176,9 +12176,9 @@ Law #103 (RUNAWAY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12202,9 +12202,9 @@ Law #30 (TIME_DILATION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SYMMETRY (DNA 6)**
+- [x] Wired parameter: **DIMENSIONAL_FOLD (World)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12228,9 +12228,9 @@ Law #31 (DIMENSIONALITY) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **CHAOS_LYAPUNOV (World)**
 - [x] Wired parameter: **EPIGENETIC_DRIFT (DNA 44)**
 - [x] Wired parameter: **ENTROPY (World)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12357,10 +12357,10 @@ Law #36 (SOUL_LAW) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12383,10 +12383,10 @@ Law #37 (MIND) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TELEPATHY_RANGE (World)**
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
 - [x] Wired parameter: **SIGNAL_STRENGTH (DNA 19)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12409,10 +12409,10 @@ Law #47 (TELEPATHY) is fully audited, parameterized, implemented, and verified.
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TELEPATHY_RANGE (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12435,9 +12435,9 @@ Law #48 (CLAIRVOYANCE) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12461,9 +12461,9 @@ Law #49 (PRECOGNITION) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **ASTRAL_PHASE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
-- [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12513,10 +12513,10 @@ Law #80 (ENTANGLEMENT) is fully audited, parameterized, implemented, and verifie
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **REGULATORY_DEPTH (DNA 63)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12540,9 +12540,9 @@ Law #104 (CONSCIOUSNESS) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **CONSCIOUSNESS_PHI (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12565,10 +12565,10 @@ Law #105 (PERCEPTION) is fully audited, parameterized, implemented, and verified
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **SYNCHRONICITY_RATE (World)**
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
 - [x] Wired parameter: **RESONANCE_Q (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`
@@ -12592,9 +12592,9 @@ Law #106 (SYNCHRONICITY) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **COULOMB_CONSTANT (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12618,9 +12618,9 @@ Law #53 (CHARGE_LAW) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12644,9 +12644,9 @@ Law #54 (FIELD) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **COULOMB_CONSTANT (World)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12722,9 +12722,9 @@ Law #57 (CAPACITANCE) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
 - [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12748,8 +12748,8 @@ Law #58 (INDUCTANCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12800,9 +12800,9 @@ Law #60 (RESONANCE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
+- [x] Wired parameter: **MAGNETIC_FLUX_SCALE (World)**
 - [x] Wired parameter: **POLARITY (DNA 4)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12826,9 +12826,9 @@ Law #61 (FLUX) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -12852,8 +12852,8 @@ Law #62 (IONIZATION) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **DISCHARGE_ARC_THRESHOLD (World)**
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
-- [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12878,8 +12878,8 @@ Law #63 (DISCHARGE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12904,8 +12904,8 @@ Law #64 (PLASMA) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SUPERCONDUCT_TC (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12956,8 +12956,8 @@ Law #107 (ANTENNA) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SHIELDING_ATTENUATION (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
-- [x] Wired parameter: **CHARGE (Stride 67)**
 - [x] Wired parameter: **ARMOR (Stride 63)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -12982,9 +12982,9 @@ Law #108 (SHIELDING) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **POLARITY (DNA 4)**
+- [x] Wired parameter: **POLARIZATION_DISPLACEMENT (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **PHASE_1 (Stride 68)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`
@@ -13060,9 +13060,9 @@ Law #67 (PATTERN) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_DECAY (DNA 20)**
+- [x] Wired parameter: **STIGMERGY_DECAY_RATE (World)**
 - [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13086,9 +13086,9 @@ Law #68 (STIGMERGY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_STRENGTH (DNA 19)**
+- [x] Wired parameter: **SIGNAL_BOOST_GAIN (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13112,9 +13112,9 @@ Law #69 (SIGNAL_BOOST) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ADAPTATION_RATE (DNA 55)**
+- [x] Wired parameter: **HEBBIAN_LEARNING_RATE (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **AGE (Stride 51)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13190,9 +13190,9 @@ Law #72 (METRIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ADAPTATION_RATE (DNA 55)**
+- [x] Wired parameter: **HEBBIAN_LEARNING_RATE (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13216,9 +13216,9 @@ Law #73 (PREDICT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CODON_BIAS (DNA 62)**
+- [x] Wired parameter: **ENCRYPTION_CIPHER_KEY (World)**
 - [x] Wired parameter: **REPAIR_EFFICIENCY (DNA 51)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **GENOTYPE (DNA 15)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13242,9 +13242,9 @@ Law #74 (CODE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13294,9 +13294,9 @@ Law #76 (FEEDBACK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13320,9 +13320,9 @@ Law #77 (LANGUAGE) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
+- [x] Wired parameter: **CULTURAL_TRANSMISSION (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13372,9 +13372,9 @@ Law #81 (HISTORY) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
+- [x] Wired parameter: **NAVIGATION_GRADIENT_BIAS (World)**
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13398,9 +13398,9 @@ Law #110 (NAVIGATION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CODON_BIAS (DNA 62)**
+- [x] Wired parameter: **ENCRYPTION_CIPHER_KEY (World)**
 - [x] Wired parameter: **REGULATORY_DEPTH (DNA 63)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`
@@ -13424,9 +13424,9 @@ Law #111 (ENCRYPTION) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13450,9 +13450,9 @@ Law #112 (SUPERPOSITION) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **TUNNELING_PROBABILITY (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13476,9 +13476,9 @@ Law #113 (TUNNELING) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENTROPY (World)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13502,8 +13502,8 @@ Law #114 (DECOHERENCE) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -13528,9 +13528,9 @@ Law #115 (WAVE_PARTICLE) is fully audited, parameterized, implemented, and verif
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **UNCERTAINTY_SIGMA (World)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13554,9 +13554,9 @@ Law #116 (UNCERTAINTY) is fully audited, parameterized, implemented, and verifie
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **TUNNELING_PROBABILITY (World)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **WORLD_SIZE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13580,8 +13580,8 @@ Law #117 (TELEPORT) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ALPHA (DNA 5)**
+- [x] Wired parameter: **DECOHERENCE_RATE_FACTOR (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
-- [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
@@ -13632,9 +13632,9 @@ Law #119 (PLANCK) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **RESONANCE_Q (World)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **PHASE_2 (Stride 69)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13710,9 +13710,9 @@ Law #122 (FERMIONIC) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TORQUE (DNA 2)**
+- [x] Wired parameter: **SPIN_PRECESSION_FREQ (World)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13762,9 +13762,9 @@ Law #124 (SPECTRAL) is fully audited, parameterized, implemented, and verified.
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13788,9 +13788,9 @@ Law #125 (WAVEFUNCTION) is fully audited, parameterized, implemented, and verifi
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **WORLD_SIZE (World)**
+- [x] Wired parameter: **DIMENSIONAL_FOLD (World)**
 - [x] Wired parameter: **DIMENSIONALITY (DNA 31)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **PHASE_2 (Stride 69)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`
@@ -13814,8 +13814,8 @@ Law #126 (HYPERPLANE) is fully audited, parameterized, implemented, and verified
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CHARGE (Stride 67)**
+- [x] Wired parameter: **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

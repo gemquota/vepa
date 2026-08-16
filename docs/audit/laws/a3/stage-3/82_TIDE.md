@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **TIDAL (DNA 15)**
+- [x] Wired parameter: **TIDAL_SCALE (World)**
 - [x] Wired parameter: **FORCE (DNA 0)**
 - [x] Wired parameter: **GLOBAL_G (World)**
-- [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsPhysics.test.js`

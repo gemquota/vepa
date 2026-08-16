@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #12 explicitly binds to:
 1. **DEATH_RATE (DNA 11)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **DECAY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SENESCENCE_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #90 explicitly binds to:
 1. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HIBERNATION_SAVINGS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

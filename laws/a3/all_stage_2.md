@@ -48,7 +48,7 @@ To satisfy the multi-parameter control mandate, Law #0 explicitly binds to:
 To satisfy the multi-parameter control mandate, Law #1 explicitly binds to:
 1. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **DAMPING (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAX_VELOCITY (DNA 28)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -135,8 +135,8 @@ To satisfy the multi-parameter control mandate, Law #3 explicitly binds to:
 To satisfy the multi-parameter control mandate, Law #4 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **ELASTICITY (DNA 30)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ELASTIC_RESTITUTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -163,9 +163,9 @@ To satisfy the multi-parameter control mandate, Law #4 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #5 explicitly binds to:
 1. **FUSION (DNA 9)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACCRETION_RADIUS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FUSION_TIME (DNA 17)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -221,9 +221,9 @@ To satisfy the multi-parameter control mandate, Law #6 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #38 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **VOID_PRESSURE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -250,9 +250,9 @@ To satisfy the multi-parameter control mandate, Law #38 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #39 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_PARTNER (Stride 59-60)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOND_STRENGTH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -279,9 +279,9 @@ To satisfy the multi-parameter control mandate, Law #39 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #79 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SINGULARITY_HORIZON (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -308,9 +308,9 @@ To satisfy the multi-parameter control mandate, Law #79 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #82 explicitly binds to:
 1. **TIDAL (DNA 15)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TIDAL_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -337,8 +337,8 @@ To satisfy the multi-parameter control mandate, Law #82 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #83 explicitly binds to:
 1. **FRICTION (DNA 27)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -366,9 +366,9 @@ To satisfy the multi-parameter control mandate, Law #83 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #84 explicitly binds to:
 1. **ELASTICITY (DNA 30)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ELASTIC_RESTITUTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -395,9 +395,9 @@ To satisfy the multi-parameter control mandate, Law #84 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #85 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TURBULENCE_KICK (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -424,9 +424,9 @@ To satisfy the multi-parameter control mandate, Law #85 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #86 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **MAX_VELOCITY (DNA 28)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CENTRIPETAL_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -453,9 +453,9 @@ To satisfy the multi-parameter control mandate, Law #86 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #87 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ROTATION_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -569,9 +569,9 @@ To satisfy the multi-parameter control mandate, Law #9 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #10 explicitly binds to:
 1. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **REPRO_DRIVE (Stride 79)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REPRODUCTION_THRESHOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -598,8 +598,8 @@ To satisfy the multi-parameter control mandate, Law #10 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #11 explicitly binds to:
 1. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TRACKING_SENSITIVITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -627,9 +627,9 @@ To satisfy the multi-parameter control mandate, Law #11 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #12 explicitly binds to:
 1. **DEATH_RATE (DNA 11)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **DECAY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SENESCENCE_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TELOMERE_LENGTH (DNA 60)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -772,9 +772,9 @@ To satisfy the multi-parameter control mandate, Law #16 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #51 explicitly binds to:
 1. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PREDATION_EFFICIENCY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -830,8 +830,8 @@ To satisfy the multi-parameter control mandate, Law #52 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #88 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SYMBIOSIS_BOOST (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SPECIES_INTERACTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -859,9 +859,9 @@ To satisfy the multi-parameter control mandate, Law #88 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #89 explicitly binds to:
 1. **PREDATION_BIAS (DNA 36)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PARASITE_DRAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY_TRANSFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **HUNGER (Stride 62)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -888,9 +888,9 @@ To satisfy the multi-parameter control mandate, Law #89 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #90 explicitly binds to:
 1. **ENERGY_EFFICIENCY (DNA 34)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HIBERNATION_SAVINGS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -917,9 +917,9 @@ To satisfy the multi-parameter control mandate, Law #90 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #91 explicitly binds to:
 1. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **IMMUNITY_SHIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -946,9 +946,9 @@ To satisfy the multi-parameter control mandate, Law #91 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #17 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CATALYSIS_SPEED (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -975,9 +975,9 @@ To satisfy the multi-parameter control mandate, Law #17 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #18 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SOLVATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1004,9 +1004,9 @@ To satisfy the multi-parameter control mandate, Law #18 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #19 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACIDITY_PH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1033,9 +1033,9 @@ To satisfy the multi-parameter control mandate, Law #19 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #20 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **OXIDATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1062,9 +1062,9 @@ To satisfy the multi-parameter control mandate, Law #20 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #21 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_PARTNER (Stride 59-60)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLYMER_LIMIT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1149,9 +1149,9 @@ To satisfy the multi-parameter control mandate, Law #23 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #24 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CRYSTAL_LATTICE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1178,8 +1178,8 @@ To satisfy the multi-parameter control mandate, Law #24 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #40 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **OXIDATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1236,9 +1236,9 @@ To satisfy the multi-parameter control mandate, Law #41 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #92 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VISCOSITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ELECTROLYSIS_POWER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1294,9 +1294,9 @@ To satisfy the multi-parameter control mandate, Law #93 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #94 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VISCOSITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SOLVATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1323,9 +1323,9 @@ To satisfy the multi-parameter control mandate, Law #94 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #95 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ACIDITY_PH (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1381,8 +1381,8 @@ To satisfy the multi-parameter control mandate, Law #96 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #97 explicitly binds to:
 1. **CATALYSIS (DNA 38)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **AUTOCATALYSIS_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1468,8 +1468,8 @@ To satisfy the multi-parameter control mandate, Law #26 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #27 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CONVECTION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1497,9 +1497,9 @@ To satisfy the multi-parameter control mandate, Law #27 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #28 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PHASE_RADIATION_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1526,8 +1526,8 @@ To satisfy the multi-parameter control mandate, Law #28 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #29 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1555,8 +1555,8 @@ To satisfy the multi-parameter control mandate, Law #29 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #42 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MELT_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1584,8 +1584,8 @@ To satisfy the multi-parameter control mandate, Law #42 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #43 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1613,8 +1613,8 @@ To satisfy the multi-parameter control mandate, Law #43 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #44 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **BOIL_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1642,8 +1642,8 @@ To satisfy the multi-parameter control mandate, Law #44 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #45 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MELT_TEMP_POINT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1700,8 +1700,8 @@ To satisfy the multi-parameter control mandate, Law #46 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #98 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1729,8 +1729,8 @@ To satisfy the multi-parameter control mandate, Law #98 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #99 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1758,8 +1758,8 @@ To satisfy the multi-parameter control mandate, Law #99 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #100 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1816,8 +1816,8 @@ To satisfy the multi-parameter control mandate, Law #101 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #102 explicitly binds to:
 1. **HEAT_CAPACITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **LATENT_HEAT_BUFFER (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **STORED_ENERGY (Stride 78)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1845,8 +1845,8 @@ To satisfy the multi-parameter control mandate, Law #102 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #103 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **RUNAWAY_MULT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -1874,9 +1874,9 @@ To satisfy the multi-parameter control mandate, Law #103 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #30 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TIME_WARP_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1903,9 +1903,9 @@ To satisfy the multi-parameter control mandate, Law #30 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #31 explicitly binds to:
 1. **SYMMETRY (DNA 6)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DIMENSIONAL_FOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -1932,9 +1932,9 @@ To satisfy the multi-parameter control mandate, Law #31 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #32 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CHAOS_LYAPUNOV (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2076,10 +2076,10 @@ To satisfy the multi-parameter control mandate, Law #36 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #37 explicitly binds to:
-1. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2105,10 +2105,10 @@ To satisfy the multi-parameter control mandate, Law #37 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #47 explicitly binds to:
-1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2134,10 +2134,10 @@ To satisfy the multi-parameter control mandate, Law #47 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #48 explicitly binds to:
-1. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2163,9 +2163,9 @@ To satisfy the multi-parameter control mandate, Law #48 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #49 explicitly binds to:
-1. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TIME_WARP_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2192,9 +2192,9 @@ To satisfy the multi-parameter control mandate, Law #49 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #50 explicitly binds to:
-1. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **ASTRAL_PHASE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2250,10 +2250,10 @@ To satisfy the multi-parameter control mandate, Law #80 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #104 explicitly binds to:
-1. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2280,9 +2280,9 @@ To satisfy the multi-parameter control mandate, Law #104 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #105 explicitly binds to:
 1. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CONSCIOUSNESS_PHI (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2308,10 +2308,10 @@ To satisfy the multi-parameter control mandate, Law #105 explicitly binds to:
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #106 explicitly binds to:
-1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **SYNCHRONICITY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2338,9 +2338,9 @@ To satisfy the multi-parameter control mandate, Law #106 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #53 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **COULOMB_CONSTANT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2367,9 +2367,9 @@ To satisfy the multi-parameter control mandate, Law #53 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #54 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2396,9 +2396,9 @@ To satisfy the multi-parameter control mandate, Law #54 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #55 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **COULOMB_CONSTANT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2483,9 +2483,9 @@ To satisfy the multi-parameter control mandate, Law #57 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #58 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2512,8 +2512,8 @@ To satisfy the multi-parameter control mandate, Law #58 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #59 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2570,9 +2570,9 @@ To satisfy the multi-parameter control mandate, Law #60 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #61 explicitly binds to:
 1. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **MAGNETIC_FLUX_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2599,9 +2599,9 @@ To satisfy the multi-parameter control mandate, Law #61 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #62 explicitly binds to:
 1. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PLASMA_IONIZATION_ENERGY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2628,8 +2628,8 @@ To satisfy the multi-parameter control mandate, Law #62 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #63 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ELECTRIC_ENERGY (Stride 77)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DISCHARGE_ARC_THRESHOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REACTION_THRESHOLD (DNA 37)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2657,8 +2657,8 @@ To satisfy the multi-parameter control mandate, Law #63 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #64 explicitly binds to:
 1. **HEAT_OUTPUT (DNA 39)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **PLASMA_IONIZATION_ENERGY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2686,8 +2686,8 @@ To satisfy the multi-parameter control mandate, Law #64 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #65 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERCONDUCT_TC (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2744,8 +2744,8 @@ To satisfy the multi-parameter control mandate, Law #107 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #108 explicitly binds to:
 1. **CONDUCTIVITY (DNA 32)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SHIELDING_ATTENUATION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ARMOR (Stride 63)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -2773,9 +2773,9 @@ To satisfy the multi-parameter control mandate, Law #108 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #109 explicitly binds to:
 1. **POLARITY (DNA 4)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLARIZATION_DISPLACEMENT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2860,9 +2860,9 @@ To satisfy the multi-parameter control mandate, Law #67 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #68 explicitly binds to:
 1. **SIGNAL_DECAY (DNA 20)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **STIGMERGY_DECAY_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TRAIL_X/Y/Z (Stride 71-73)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2889,9 +2889,9 @@ To satisfy the multi-parameter control mandate, Law #68 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #69 explicitly binds to:
 1. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SIGNAL_BOOST_GAIN (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -2918,9 +2918,9 @@ To satisfy the multi-parameter control mandate, Law #69 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #70 explicitly binds to:
 1. **ADAPTATION_RATE (DNA 55)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HEBBIAN_LEARNING_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3005,9 +3005,9 @@ To satisfy the multi-parameter control mandate, Law #72 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #73 explicitly binds to:
 1. **ADAPTATION_RATE (DNA 55)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HEBBIAN_LEARNING_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3034,9 +3034,9 @@ To satisfy the multi-parameter control mandate, Law #73 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #74 explicitly binds to:
 1. **CODON_BIAS (DNA 62)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **GENOTYPE (DNA 15)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ENCRYPTION_CIPHER_KEY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3063,9 +3063,9 @@ To satisfy the multi-parameter control mandate, Law #74 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #75 explicitly binds to:
 1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3121,9 +3121,9 @@ To satisfy the multi-parameter control mandate, Law #76 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #77 explicitly binds to:
 1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3150,9 +3150,9 @@ To satisfy the multi-parameter control mandate, Law #77 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #78 explicitly binds to:
 1. **SPECIES_AFFINITY (DNA 41)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SPECIES_ID (Stride 7)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CULTURAL_TRANSMISSION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3208,9 +3208,9 @@ To satisfy the multi-parameter control mandate, Law #81 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #110 explicitly binds to:
 1. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NAVIGATION_GRADIENT_BIAS (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_RESP (DNA 13)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3237,9 +3237,9 @@ To satisfy the multi-parameter control mandate, Law #110 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #111 explicitly binds to:
 1. **CODON_BIAS (DNA 62)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ENCRYPTION_CIPHER_KEY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **REGULATORY_DEPTH (DNA 63)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3266,9 +3266,9 @@ To satisfy the multi-parameter control mandate, Law #111 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #112 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3295,9 +3295,9 @@ To satisfy the multi-parameter control mandate, Law #112 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #113 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNNELING_PROBABILITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3324,9 +3324,9 @@ To satisfy the multi-parameter control mandate, Law #113 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #114 explicitly binds to:
 1. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DECOHERENCE_RATE_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3353,8 +3353,8 @@ To satisfy the multi-parameter control mandate, Law #114 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #115 explicitly binds to:
 1. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -3382,9 +3382,9 @@ To satisfy the multi-parameter control mandate, Law #115 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #116 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **UNCERTAINTY_SIGMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **INERTIA (DNA 26)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3411,9 +3411,9 @@ To satisfy the multi-parameter control mandate, Law #116 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #117 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNNELING_PROBABILITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3440,8 +3440,8 @@ To satisfy the multi-parameter control mandate, Law #117 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #118 explicitly binds to:
 1. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DECOHERENCE_RATE_FACTOR (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
@@ -3498,9 +3498,9 @@ To satisfy the multi-parameter control mandate, Law #119 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #120 explicitly binds to:
 1. **RESONANCE_Q (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3585,9 +3585,9 @@ To satisfy the multi-parameter control mandate, Law #122 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #123 explicitly binds to:
 1. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SPIN_PRECESSION_FREQ (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MAGNETIC_MOMENT (DNA 33)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3643,9 +3643,9 @@ To satisfy the multi-parameter control mandate, Law #124 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #125 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3672,9 +3672,9 @@ To satisfy the multi-parameter control mandate, Law #125 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #126 explicitly binds to:
 1. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DIMENSIONAL_FOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
@@ -3701,8 +3701,8 @@ To satisfy the multi-parameter control mandate, Law #126 explicitly binds to:
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #127 explicitly binds to:
 1. **CHARGE (Stride 67)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ANTIMATTER_ANNIHILATION_YIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIATION_LEVEL (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

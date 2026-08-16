@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_DECAY (DNA 20)**
+- [x] Wired parameter: **STIGMERGY_DECAY_RATE (World)**
 - [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`

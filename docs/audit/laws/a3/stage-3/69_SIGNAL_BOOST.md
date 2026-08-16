@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_STRENGTH (DNA 19)**
+- [x] Wired parameter: **SIGNAL_BOOST_GAIN (World)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`

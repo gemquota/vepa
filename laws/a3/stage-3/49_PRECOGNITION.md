@@ -7,9 +7,9 @@
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **MEMORY_DECAY (DNA 40)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics

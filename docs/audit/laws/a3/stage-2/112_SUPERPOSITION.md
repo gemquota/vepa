@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #112 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **PHASE_1 (Stride 68)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

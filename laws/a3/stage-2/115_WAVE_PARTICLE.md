@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #115 explicitly binds to:
 1. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SUPERPOSITION_PHASE_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **ALPHA (DNA 5)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

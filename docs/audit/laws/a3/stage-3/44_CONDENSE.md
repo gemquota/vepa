@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **BOIL_TEMP_POINT (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 
 ## 3. Empirical Test Results & Performance Metrics

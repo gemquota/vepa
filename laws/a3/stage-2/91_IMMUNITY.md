@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #91 explicitly binds to:
 1. **REPAIR_EFFICIENCY (DNA 51)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **IMMUNITY_SHIELD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **IMMUNITY (DNA 91)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **RADIATION_EXPOSURE (Stride 80)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ANTIMATTER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), MASS (Stride 6), ENERGY (Stride 50), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), ANTIMATTER_ANNIHILATION_YIELD (World), MASS (Stride 6), RADIATION_LEVEL (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CHARGE (Stride 67)**
+- **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - **MASS (Stride 6)**
-- **ENERGY (Stride 50)**
 - **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior

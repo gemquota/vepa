@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SYMMETRY (DNA 6)**
+- [x] Wired parameter: **DIMENSIONAL_FOLD (World)**
 - [x] Wired parameter: **WORLD_SIZE (World)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`

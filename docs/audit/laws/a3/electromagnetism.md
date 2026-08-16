@@ -13,22 +13,22 @@ Governs Coulomb electrostatic forces, Lorentz magnetic deflection, plasma ionize
 Electromagnetism provides high-frequency long-range force propagation. Charge and Magnetism induce field currents, while Resonance and Superconductivity alter energy transport without impedance. Synergizes with Information transmission (Signal Boost, Antenna).
 
 ### Cross-Law Matrix & Synergy Chains
-- **CHARGE_LAW** (Law #53): Synergizes with parameters [POLARITY (DNA 4); CONDUCTIVITY (DNA 32); CHARGE (Stride 67); ELECTRIC_ENERGY (Stride 77)].
-- **FIELD** (Law #54): Synergizes with parameters [POLARITY (DNA 4); MAGNETIC_MOMENT (DNA 33); CHARGE (Stride 67); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **CURRENT** (Law #55): Synergizes with parameters [CONDUCTIVITY (DNA 32); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67); ELECTRIC_ENERGY (Stride 77)].
+- **CHARGE_LAW** (Law #53): Synergizes with parameters [POLARITY (DNA 4); COULOMB_CONSTANT (World); CONDUCTIVITY (DNA 32); CHARGE (Stride 67)].
+- **FIELD** (Law #54): Synergizes with parameters [POLARITY (DNA 4); MAGNETIC_FLUX_SCALE (World); MAGNETIC_MOMENT (DNA 33); CHARGE (Stride 67)].
+- **CURRENT** (Law #55): Synergizes with parameters [CONDUCTIVITY (DNA 32); COULOMB_CONSTANT (World); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67)].
 - **RESISTANCE** (Law #56): Synergizes with parameters [CONDUCTIVITY (DNA 32); HEAT_OUTPUT (DNA 39); TEMPERATURE (Stride 66); HEAT_CAPACITY (World)].
 - **CAPACITANCE** (Law #57): Synergizes with parameters [POLARITY (DNA 4); BASE_RADIUS (DNA 29); STORED_ENERGY (Stride 78); ELECTRIC_ENERGY (Stride 77)].
-- **INDUCTANCE** (Law #58): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); CONDUCTIVITY (DNA 32); ELECTRIC_ENERGY (Stride 77); VEL_X/Y/Z (Stride 3-5)].
-- **MAGNETISM** (Law #59): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); FORCE (DNA 0); VEL_X/Y/Z (Stride 3-5); CHARGE (Stride 67)].
+- **INDUCTANCE** (Law #58): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); CONDUCTIVITY (DNA 32); ELECTRIC_ENERGY (Stride 77)].
+- **MAGNETISM** (Law #59): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); FORCE (DNA 0); CHARGE (Stride 67)].
 - **RESONANCE** (Law #60): Synergizes with parameters [PULSE_RATE (DNA 14); RESONANCE_Q (World); SIGNAL (Stride 57); ELECTRIC_ENERGY (Stride 77)].
-- **FLUX** (Law #61): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); POLARITY (DNA 4); CHARGE (Stride 67); NEIGHBORHOOD_RADIUS (DNA 18)].
-- **IONIZATION** (Law #62): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); RADIATION_LEVEL (World); CHARGE (Stride 67); ENERGY (Stride 50)].
-- **DISCHARGE** (Law #63): Synergizes with parameters [CONDUCTIVITY (DNA 32); REACTION_THRESHOLD (DNA 37); ELECTRIC_ENERGY (Stride 77); CHARGE (Stride 67)].
-- **PLASMA** (Law #64): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CONDUCTIVITY (DNA 32); TEMPERATURE (Stride 66); CHARGE (Stride 67)].
-- **SUPERCONDUCTIVITY** (Law #65): Synergizes with parameters [CONDUCTIVITY (DNA 32); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); MAGNETIC_MOMENT (DNA 33)].
+- **FLUX** (Law #61): Synergizes with parameters [MAGNETIC_MOMENT (DNA 33); MAGNETIC_FLUX_SCALE (World); POLARITY (DNA 4); CHARGE (Stride 67)].
+- **IONIZATION** (Law #62): Synergizes with parameters [REACTION_THRESHOLD (DNA 37); PLASMA_IONIZATION_ENERGY (World); RADIATION_LEVEL (World); CHARGE (Stride 67)].
+- **DISCHARGE** (Law #63): Synergizes with parameters [CONDUCTIVITY (DNA 32); DISCHARGE_ARC_THRESHOLD (World); REACTION_THRESHOLD (DNA 37); CHARGE (Stride 67)].
+- **PLASMA** (Law #64): Synergizes with parameters [HEAT_OUTPUT (DNA 39); PLASMA_IONIZATION_ENERGY (World); CONDUCTIVITY (DNA 32); CHARGE (Stride 67)].
+- **SUPERCONDUCTIVITY** (Law #65): Synergizes with parameters [CONDUCTIVITY (DNA 32); SUPERCONDUCT_TC (World); CRITICAL_TEMP (World); MAGNETIC_MOMENT (DNA 33)].
 - **ANTENNA** (Law #107): Synergizes with parameters [PULSE_RATE (DNA 14); SIGNAL_STRENGTH (DNA 19); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
-- **SHIELDING** (Law #108): Synergizes with parameters [CONDUCTIVITY (DNA 32); STIFFNESS (DNA 8); CHARGE (Stride 67); ARMOR (Stride 63)].
-- **POLARIZATION** (Law #109): Synergizes with parameters [POLARITY (DNA 4); ALPHA (DNA 5); CHARGE (Stride 67); PHASE_1 (Stride 68)].
+- **SHIELDING** (Law #108): Synergizes with parameters [CONDUCTIVITY (DNA 32); SHIELDING_ATTENUATION (World); STIFFNESS (DNA 8); ARMOR (Stride 63)].
+- **POLARIZATION** (Law #109): Synergizes with parameters [POLARITY (DNA 4); POLARIZATION_DISPLACEMENT (World); ALPHA (DNA 5); CHARGE (Stride 67)].
 
 ---
 
@@ -40,7 +40,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CHARGE_LAW` (53)
 - **Spectrum Hue**: 217.8°
-- **Governing Parameters**: POLARITY (DNA 4), CONDUCTIVITY (DNA 32), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)
+- **Governing Parameters**: POLARITY (DNA 4), COULOMB_CONSTANT (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)
 - **Help DB Hint**: "Coulomb force: charged particles attract or repel."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -59,7 +59,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FIELD` (54)
 - **Spectrum Hue**: 218.8°
-- **Governing Parameters**: POLARITY (DNA 4), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: POLARITY (DNA 4), MAGNETIC_FLUX_SCALE (World), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67)
 - **Help DB Hint**: "Uniform electric field drift along the particle's polarity."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -78,7 +78,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CURRENT` (55)
 - **Spectrum Hue**: 219.7°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), COULOMB_CONSTANT (World), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)
 - **Help DB Hint**: "Charge transport: charge diffuses between conductive particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -135,7 +135,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.INDUCTANCE` (58)
 - **Spectrum Hue**: 222.6°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77)
 - **Help DB Hint**: "Inductance: neighbors align their motion magnetically."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -154,7 +154,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.MAGNETISM` (59)
 - **Spectrum Hue**: 223.6°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), FORCE (DNA 0), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), FORCE (DNA 0), CHARGE (Stride 67)
 - **Help DB Hint**: "Magnetic moment alignment: aligned moments attract."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -192,7 +192,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.FLUX` (61)
 - **Spectrum Hue**: 225.5°
-- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), POLARITY (DNA 4), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)
+- **Governing Parameters**: MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), POLARITY (DNA 4), CHARGE (Stride 67)
 - **Help DB Hint**: "Charge flux: particles are pushed along the charge gradient."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -211,7 +211,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.IONIZATION` (62)
 - **Spectrum Hue**: 226.4°
-- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), RADIATION_LEVEL (World), CHARGE (Stride 67), ENERGY (Stride 50)
+- **Governing Parameters**: REACTION_THRESHOLD (DNA 37), PLASMA_IONIZATION_ENERGY (World), RADIATION_LEVEL (World), CHARGE (Stride 67)
 - **Help DB Hint**: "Ionization: hard contacts strip charge onto particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -230,7 +230,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DISCHARGE` (63)
 - **Spectrum Hue**: 227.4°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), DISCHARGE_ARC_THRESHOLD (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)
 - **Help DB Hint**: "Discharge: stored charge bursts into motion and heat."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -249,7 +249,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PLASMA` (64)
 - **Spectrum Hue**: 228.4°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CONDUCTIVITY (DNA 32), TEMPERATURE (Stride 66), CHARGE (Stride 67)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), PLASMA_IONIZATION_ENERGY (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)
 - **Help DB Hint**: "Plasma: hot particles ionize — heat becomes charge."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -268,7 +268,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUPERCONDUCTIVITY` (65)
 - **Spectrum Hue**: 229.3°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), MAGNETIC_MOMENT (DNA 33)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), SUPERCONDUCT_TC (World), CRITICAL_TEMP (World), MAGNETIC_MOMENT (DNA 33)
 - **Help DB Hint**: "Superconductivity: cold pairs couple into lossless streams."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -306,7 +306,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SHIELDING` (108)
 - **Spectrum Hue**: 231.2°
-- **Governing Parameters**: CONDUCTIVITY (DNA 32), STIFFNESS (DNA 8), CHARGE (Stride 67), ARMOR (Stride 63)
+- **Governing Parameters**: CONDUCTIVITY (DNA 32), SHIELDING_ATTENUATION (World), STIFFNESS (DNA 8), ARMOR (Stride 63)
 - **Help DB Hint**: "Shielding: a Faraday cage blocks external EM forces."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -325,7 +325,7 @@ Electromagnetism provides high-frequency long-range force propagation. Charge an
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.POLARIZATION` (109)
 - **Spectrum Hue**: 232.2°
-- **Governing Parameters**: POLARITY (DNA 4), ALPHA (DNA 5), CHARGE (Stride 67), PHASE_1 (Stride 68)
+- **Governing Parameters**: POLARITY (DNA 4), POLARIZATION_DISPLACEMENT (World), ALPHA (DNA 5), CHARGE (Stride 67)
 - **Help DB Hint**: "Polarization: signals are filtered by channel alignment."
 
 ### 2. Physical Basis & Proposal (Stage 2)

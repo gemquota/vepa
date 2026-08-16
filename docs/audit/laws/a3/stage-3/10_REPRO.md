@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BIRTH_RATE (DNA 10)**
+- [x] Wired parameter: **REPRODUCTION_THRESHOLD (World)**
 - [x] Wired parameter: **SEX_CHANCE (DNA 35)**
 - [x] Wired parameter: **MUTATION_RATE (World)**
-- [x] Wired parameter: **REPRO_DRIVE (Stride 79)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`

@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **RESONANCE_Q (World)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
 - [x] Wired parameter: **PHASE_2 (Stride 69)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`

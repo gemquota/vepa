@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #126 explicitly binds to:
 1. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **PHASE_2 (Stride 69)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **DIMENSIONAL_FOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **DIMENSIONALITY (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

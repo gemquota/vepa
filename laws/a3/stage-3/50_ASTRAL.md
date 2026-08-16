@@ -7,9 +7,9 @@
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **ASTRAL_PHASE (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
-- [x] Wired parameter: **TRAIL_X/Y/Z (Stride 71-73)**
 - [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics

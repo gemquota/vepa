@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PHASE_RADIATION_FACTOR (World)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **RADIATION_LEVEL (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsThermodynamics.test.js`

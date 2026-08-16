@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #117 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **WORLD_SIZE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNNELING_PROBABILITY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ENERGY (Stride 50)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **POS_X/Y/Z (Stride 0-2)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

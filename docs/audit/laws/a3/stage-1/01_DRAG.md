@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DRAG)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), RADIUS (Stride 56), MAX_VELOCITY (DNA 28)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), FRICTION_COEFF (World), MAX_VELOCITY (DNA 28)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **VISCOSITY (DNA 1)**
 - **DAMPING (World)**
-- **RADIUS (Stride 56)**
+- **FRICTION_COEFF (World)**
 - **MAX_VELOCITY (DNA 28)**
 
 ## 4. Current Limitations & Observed Behavior

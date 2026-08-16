@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FORCE (DNA 0)**
+- [x] Wired parameter: **TIME_WARP_FACTOR (World)**
 - [x] Wired parameter: **HIDDEN_MASS (DNA 7)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`

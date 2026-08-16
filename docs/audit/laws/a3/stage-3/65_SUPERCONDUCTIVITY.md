@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SUPERCONDUCT_TC (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **MAGNETIC_MOMENT (DNA 33)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
+- [x] Wired parameter: **SUPERPOSITION_PHASE_SCALE (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 - [x] Wired parameter: **ALPHA (DNA 5)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #82 explicitly binds to:
 1. **TIDAL (DNA 15)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TIDAL_SCALE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **GLOBAL_G (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

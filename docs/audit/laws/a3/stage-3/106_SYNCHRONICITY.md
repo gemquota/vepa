@@ -7,10 +7,10 @@
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **SYNCHRONICITY_RATE (World)**
 - [x] Wired parameter: **TUNING_CH1-CH4 (DNA 22-25)**
 - [x] Wired parameter: **RESONANCE_Q (World)**
 - [x] Wired parameter: **PHASE_1 (Stride 68)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`

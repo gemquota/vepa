@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
+- [x] Wired parameter: **HIBERNATION_SAVINGS (World)**
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`

@@ -21,6 +21,13 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.2] - 2026-08-16 → 7.1.1
+
+### Release
+- `feat(params):` added 50+ dedicated law parameter definitions (`WORLD_PARAM_DEFS` in `src/state/worldParams.js`) covering all 8 law categories (Physics, Biology, Chemistry, Thermodynamics, Metaphysics, Electromagnetism, Information, Quantum).
+- `feat(laws):` updated `LAW_PARAMETERS` SSOT dictionary in `src/constants.js` to bind dedicated law parameters to every law.
+- `docs(audit):` regenerated all 397 audit files under `docs/audit/laws/a3/` and `laws/a3/` reflecting new dedicated law parameters.
+
 ## [4.7.1] - 2026-08-16 → 7.1.0
 
 ### Release

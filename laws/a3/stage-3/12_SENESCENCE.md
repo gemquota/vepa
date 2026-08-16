@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **DEATH_RATE (DNA 11)**
+- [x] Wired parameter: **SENESCENCE_RATE (World)**
 - [x] Wired parameter: **TELOMERE_LENGTH (DNA 60)**
 - [x] Wired parameter: **AGE (Stride 51)**
-- [x] Wired parameter: **DECAY_RATE (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`

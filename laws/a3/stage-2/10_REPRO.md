@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #10 explicitly binds to:
 1. **BIRTH_RATE (DNA 10)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **REPRO_DRIVE (Stride 79)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **REPRODUCTION_THRESHOLD (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SEX_CHANCE (DNA 35)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MUTATION_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

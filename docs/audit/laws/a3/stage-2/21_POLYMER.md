@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #21 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **BOND_PARTNER (Stride 59-60)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **POLYMER_LIMIT (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BOND_ANGLE (DNA 31)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **BOND_COUNT (Stride 58)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

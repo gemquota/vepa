@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_CAPACITY (World)**
+- [x] Wired parameter: **LATENT_HEAT_BUFFER (World)**
 - [x] Wired parameter: **CRITICAL_TEMP (World)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **STORED_ENERGY (Stride 78)**
 
 ## 3. Empirical Test Results & Performance Metrics

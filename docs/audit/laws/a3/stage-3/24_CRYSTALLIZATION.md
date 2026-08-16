@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **CRYSTAL_LATTICE (World)**
 - [x] Wired parameter: **BASE_RADIUS (DNA 29)**
 - [x] Wired parameter: **TEMPERATURE (Stride 66)**
-- [x] Wired parameter: **CRITICAL_TEMP (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`

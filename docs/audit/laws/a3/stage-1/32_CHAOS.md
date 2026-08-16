@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CHAOS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), CHAOS_LYAPUNOV (World), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **CHAOS_LYAPUNOV (World)**
 - **EPIGENETIC_DRIFT (DNA 44)**
 - **ENTROPY (World)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

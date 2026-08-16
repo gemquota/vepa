@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #79 explicitly binds to:
 1. **FORCE (DNA 0)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **SINGULARITY_HORIZON (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **HIDDEN_MASS (DNA 7)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

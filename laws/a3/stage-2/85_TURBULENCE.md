@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #85 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TURBULENCE_KICK (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **TORQUE (DNA 2)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

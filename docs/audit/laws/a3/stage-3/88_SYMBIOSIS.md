@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SPECIES_AFFINITY (DNA 41)**
+- [x] Wired parameter: **SYMBIOSIS_BOOST (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
-- [x] Wired parameter: **ENERGY_EFFICIENCY (DNA 34)**
 - [x] Wired parameter: **SPECIES_INTERACTION (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

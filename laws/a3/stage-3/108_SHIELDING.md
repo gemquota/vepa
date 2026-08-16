@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **SHIELDING_ATTENUATION (World)**
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
-- [x] Wired parameter: **CHARGE (Stride 67)**
 - [x] Wired parameter: **ARMOR (Stride 63)**
 
 ## 3. Empirical Test Results & Performance Metrics

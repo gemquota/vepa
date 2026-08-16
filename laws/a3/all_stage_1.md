@@ -42,14 +42,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DRAG)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), RADIUS (Stride 56), MAX_VELOCITY (DNA 28)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (VISCOSITY (DNA 1), DAMPING (World), FRICTION_COEFF (World), MAX_VELOCITY (DNA 28)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **VISCOSITY (DNA 1)**
 - **DAMPING (World)**
-- **RADIUS (Stride 56)**
+- **FRICTION_COEFF (World)**
 - **MAX_VELOCITY (DNA 28)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -132,15 +132,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COLL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ELASTICITY (DNA 30), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
 - **ELASTICITY (DNA 30)**
+- **ELASTIC_RESTITUTION (World)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -162,15 +162,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ACCR)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FUSION (DNA 9), FUSION_TIME (DNA 17), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FUSION (DNA 9), ACCRETION_RADIUS (World), FUSION_TIME (DNA 17), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FUSION (DNA 9)**
+- **ACCRETION_RADIUS (World)**
 - **FUSION_TIME (DNA 17)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -222,15 +222,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.VOID)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), WORLD_SIZE (World), RADIUS (Stride 56), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), VOID_PRESSURE (World), WORLD_SIZE (World), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **VOID_PRESSURE (World)**
 - **WORLD_SIZE (World)**
 - **RADIUS (Stride 56)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -252,15 +252,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.BOND)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_STRENGTH (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **BOND_STRENGTH (World)**
 - **BOND_ANGLE (DNA 31)**
 - **BOND_COUNT (Stride 58)**
-- **BOND_PARTNER (Stride 59-60)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -282,15 +282,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SINGULARITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), CRITICAL_TEMP (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), SINGULARITY_HORIZON (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **SINGULARITY_HORIZON (World)**
 - **HIDDEN_MASS (DNA 7)**
 - **MASS (Stride 6)**
-- **CRITICAL_TEMP (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -312,15 +312,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TIDE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIDAL (DNA 15), FORCE (DNA 0), GLOBAL_G (World), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIDAL (DNA 15), TIDAL_SCALE (World), FORCE (DNA 0), GLOBAL_G (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TIDAL (DNA 15)**
+- **TIDAL_SCALE (World)**
 - **FORCE (DNA 0)**
 - **GLOBAL_G (World)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -342,14 +342,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FRICTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FRICTION (DNA 27), VISCOSITY (DNA 1), STIFFNESS (DNA 8), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FRICTION (DNA 27), FRICTION_COEFF (World), VISCOSITY (DNA 1), VEL_X/Y/Z (Stride 3-5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FRICTION (DNA 27)**
+- **FRICTION_COEFF (World)**
 - **VISCOSITY (DNA 1)**
-- **STIFFNESS (DNA 8)**
 - **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -372,15 +372,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ELASTICITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ELASTICITY (DNA 30), STIFFNESS (DNA 8), MASS (Stride 6), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ELASTICITY (DNA 30), ELASTIC_RESTITUTION (World), STIFFNESS (DNA 8), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ELASTICITY (DNA 30)**
+- **ELASTIC_RESTITUTION (World)**
 - **STIFFNESS (DNA 8)**
 - **MASS (Stride 6)**
-- **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -402,15 +402,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TURBULENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TORQUE (DNA 2), VISCOSITY (DNA 1), ENTROPY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TURBULENCE_KICK (World), TORQUE (DNA 2), VISCOSITY (DNA 1)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **TURBULENCE_KICK (World)**
 - **TORQUE (DNA 2)**
 - **VISCOSITY (DNA 1)**
-- **ENTROPY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -432,15 +432,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CENTRIPETAL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), FORCE (DNA 0), INERTIA (DNA 26), MAX_VELOCITY (DNA 28)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), CENTRIPETAL_SCALE (World), FORCE (DNA 0), INERTIA (DNA 26)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **CENTRIPETAL_SCALE (World)**
 - **FORCE (DNA 0)**
 - **INERTIA (DNA 26)**
-- **MAX_VELOCITY (DNA 28)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -462,15 +462,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ROTATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/physicsLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5), BOND_ANGLE (DNA 31)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), ROTATION_SPEED (World), INERTIA (DNA 26), VEL_X/Y/Z (Stride 3-5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **ROTATION_SPEED (World)**
 - **INERTIA (DNA 26)**
 - **VEL_X/Y/Z (Stride 3-5)**
-- **BOND_ANGLE (DNA 31)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -582,15 +582,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.REPRO)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BIRTH_RATE (DNA 10), SEX_CHANCE (DNA 35), MUTATION_RATE (World), REPRO_DRIVE (Stride 79)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BIRTH_RATE (DNA 10), REPRODUCTION_THRESHOLD (World), SEX_CHANCE (DNA 35), MUTATION_RATE (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **BIRTH_RATE (DNA 10)**
+- **REPRODUCTION_THRESHOLD (World)**
 - **SEX_CHANCE (DNA 35)**
 - **MUTATION_RATE (World)**
-- **REPRO_DRIVE (Stride 79)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -612,14 +612,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TRACK)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), PREDATION_BIAS (DNA 36), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), TRACKING_SENSITIVITY (World), PREDATION_BIAS (DNA 36), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_RESP (DNA 13)**
+- **TRACKING_SENSITIVITY (World)**
 - **PREDATION_BIAS (DNA 36)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -642,15 +642,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SENESCENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (DEATH_RATE (DNA 11), TELOMERE_LENGTH (DNA 60), AGE (Stride 51), DECAY_RATE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (DEATH_RATE (DNA 11), SENESCENCE_RATE (World), TELOMERE_LENGTH (DNA 60), AGE (Stride 51)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **DEATH_RATE (DNA 11)**
+- **SENESCENCE_RATE (World)**
 - **TELOMERE_LENGTH (DNA 60)**
 - **AGE (Stride 51)**
-- **DECAY_RATE (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -792,15 +792,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PREDATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), PREDATION_EFFICIENCY (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PREDATION_BIAS (DNA 36)**
+- **PREDATION_EFFICIENCY (World)**
 - **ENERGY_TRANSFER (World)**
 - **HUNGER (Stride 62)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -852,14 +852,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SYMBIOSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), ENERGY_TRANSFER (World), ENERGY_EFFICIENCY (DNA 34), SPECIES_INTERACTION (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), SYMBIOSIS_BOOST (World), ENERGY_TRANSFER (World), SPECIES_INTERACTION (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SPECIES_AFFINITY (DNA 41)**
+- **SYMBIOSIS_BOOST (World)**
 - **ENERGY_TRANSFER (World)**
-- **ENERGY_EFFICIENCY (DNA 34)**
 - **SPECIES_INTERACTION (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -882,15 +882,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PARASITE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), IMMUNITY (DNA 91)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PREDATION_BIAS (DNA 36), PARASITE_DRAIN (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PREDATION_BIAS (DNA 36)**
+- **PARASITE_DRAIN (World)**
 - **ENERGY_TRANSFER (World)**
 - **HUNGER (Stride 62)**
-- **IMMUNITY (DNA 91)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -912,15 +912,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.HIBERNATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENERGY_EFFICIENCY (DNA 34), HEAT_CAPACITY (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENERGY_EFFICIENCY (DNA 34), HIBERNATION_SAVINGS (World), HEAT_CAPACITY (World), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ENERGY_EFFICIENCY (DNA 34)**
+- **HIBERNATION_SAVINGS (World)**
 - **HEAT_CAPACITY (World)**
 - **TEMPERATURE (Stride 66)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -942,15 +942,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.IMMUNITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REPAIR_EFFICIENCY (DNA 51), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80), AGE (Stride 51)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REPAIR_EFFICIENCY (DNA 51), IMMUNITY_SHIELD (World), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REPAIR_EFFICIENCY (DNA 51)**
+- **IMMUNITY_SHIELD (World)**
 - **IMMUNITY (DNA 91)**
 - **RADIATION_EXPOSURE (Stride 80)**
-- **AGE (Stride 51)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -972,15 +972,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CATALYSIS_LAW)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), CATALYSIS_SPEED (World), REACTION_THRESHOLD (DNA 37), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CATALYSIS (DNA 38)**
+- **CATALYSIS_SPEED (World)**
 - **REACTION_THRESHOLD (DNA 37)**
 - **TEMPERATURE (Stride 66)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1002,15 +1002,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SOLVATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), VISCOSITY (DNA 1), CHARGE (Stride 67), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), SOLVATION_RATE (World), VISCOSITY (DNA 1), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **SOLVATION_RATE (World)**
 - **VISCOSITY (DNA 1)**
 - **CHARGE (Stride 67)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1032,15 +1032,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ACIDITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), CONDUCTIVITY (DNA 32), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **ACIDITY_PH (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **PHASE_1 (Stride 68)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1062,15 +1062,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.OXIDATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), OXIDATION_RATE (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **OXIDATION_RATE (World)**
 - **HEAT_OUTPUT (DNA 39)**
 - **CHARGE (Stride 67)**
-- **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1092,15 +1092,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.POLYMER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58), BOND_PARTNER (Stride 59-60)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), POLYMER_LIMIT (World), BOND_ANGLE (DNA 31), BOND_COUNT (Stride 58)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **POLYMER_LIMIT (World)**
 - **BOND_ANGLE (DNA 31)**
 - **BOND_COUNT (Stride 58)**
-- **BOND_PARTNER (Stride 59-60)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1182,15 +1182,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66), CRITICAL_TEMP (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), CRYSTAL_LATTICE (World), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **CRYSTAL_LATTICE (World)**
 - **BASE_RADIUS (DNA 29)**
 - **TEMPERATURE (Stride 66)**
-- **CRITICAL_TEMP (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1212,14 +1212,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.REDUCTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), OXIDATION_RATE (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **OXIDATION_RATE (World)**
 - **REACTION_THRESHOLD (DNA 37)**
-- **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1272,15 +1272,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ELECTROLYSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67), VISCOSITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), ELECTROLYSIS_POWER (World), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **ELECTROLYSIS_POWER (World)**
 - **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
-- **VISCOSITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1332,15 +1332,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PRECIPITATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), BASE_RADIUS (DNA 29), MASS (Stride 6), VISCOSITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), SOLVATION_RATE (World), BASE_RADIUS (DNA 29), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **SOLVATION_RATE (World)**
 - **BASE_RADIUS (DNA 29)**
 - **MASS (Stride 6)**
-- **VISCOSITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1362,15 +1362,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.NEUTRALIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67), HEAT_CAPACITY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), ACIDITY_PH (World), HEAT_OUTPUT (DNA 39), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **ACIDITY_PH (World)**
 - **HEAT_OUTPUT (DNA 39)**
 - **CHARGE (Stride 67)**
-- **HEAT_CAPACITY (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1422,14 +1422,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.AUTOCATALYSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), BIRTH_RATE (DNA 10), REACTION_THRESHOLD (DNA 37), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CATALYSIS (DNA 38), AUTOCATALYSIS_GAIN (World), BIRTH_RATE (DNA 10), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CATALYSIS (DNA 38)**
+- **AUTOCATALYSIS_GAIN (World)**
 - **BIRTH_RATE (DNA 10)**
-- **REACTION_THRESHOLD (DNA 37)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1512,14 +1512,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONVECTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), GLOBAL_G (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CONVECTION_RATE (World), VISCOSITY (DNA 1), GLOBAL_G (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **CONVECTION_RATE (World)**
 - **VISCOSITY (DNA 1)**
-- **TEMPERATURE (Stride 66)**
 - **GLOBAL_G (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1542,15 +1542,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PHASE_RADIATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), ALPHA (DNA 5), TEMPERATURE (Stride 66), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), PHASE_RADIATION_FACTOR (World), ALPHA (DNA 5), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **PHASE_RADIATION_FACTOR (World)**
 - **ALPHA (DNA 5)**
 - **TEMPERATURE (Stride 66)**
-- **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1572,14 +1572,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUBLIMATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), PHASE_1 (Stride 68)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **PHASE_1 (Stride 68)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1602,14 +1602,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MELT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **MELT_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STIFFNESS (DNA 8)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1632,14 +1632,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.BOIL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), VISCOSITY (DNA 1)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), VISCOSITY (DNA 1)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **VISCOSITY (DNA 1)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1662,14 +1662,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONDENSE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), BASE_RADIUS (DNA 29)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), BASE_RADIUS (DNA 29)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **BOIL_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **BASE_RADIUS (DNA 29)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1692,14 +1692,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DEPOSIT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **MELT_TEMP_POINT (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STIFFNESS (DNA 8)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1752,14 +1752,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ADIABATIC)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), ENTROPY (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), ADIABATIC_GAMMA (World), VISCOSITY (DNA 1), ENTROPY (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **ADIABATIC_GAMMA (World)**
 - **VISCOSITY (DNA 1)**
-- **TEMPERATURE (Stride 66)**
 - **ENTROPY (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1782,14 +1782,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COMPRESSION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), MASS (Stride 6), TEMPERATURE (Stride 66), RADIUS (Stride 56)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), ADIABATIC_GAMMA (World), MASS (Stride 6), RADIUS (Stride 56)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **ADIABATIC_GAMMA (World)**
 - **MASS (Stride 6)**
-- **TEMPERATURE (Stride 66)**
 - **RADIUS (Stride 56)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1812,14 +1812,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.EXPANSION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), JITTER (DNA 3), TEMPERATURE (Stride 66), WORLD_SIZE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), ADIABATIC_GAMMA (World), JITTER (DNA 3), WORLD_SIZE (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **ADIABATIC_GAMMA (World)**
 - **JITTER (DNA 3)**
-- **TEMPERATURE (Stride 66)**
 - **WORLD_SIZE (World)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1872,14 +1872,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LATENT_HEAT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STORED_ENERGY (Stride 78)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_CAPACITY (World), LATENT_HEAT_BUFFER (World), CRITICAL_TEMP (World), STORED_ENERGY (Stride 78)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_CAPACITY (World)**
+- **LATENT_HEAT_BUFFER (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **STORED_ENERGY (Stride 78)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1902,14 +1902,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.RUNAWAY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), MUTATION_RATE (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), RUNAWAY_MULT (World), MUTATION_RATE (World), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **RUNAWAY_MULT (World)**
 - **MUTATION_RATE (World)**
-- **TEMPERATURE (Stride 66)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -1932,15 +1932,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TIME_DILATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), HIDDEN_MASS (DNA 7), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), TIME_WARP_FACTOR (World), HIDDEN_MASS (DNA 7), MASS (Stride 6)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **TIME_WARP_FACTOR (World)**
 - **HIDDEN_MASS (DNA 7)**
 - **MASS (Stride 6)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1962,15 +1962,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DIMENSIONALITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYMMETRY (DNA 6), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYMMETRY (DNA 6), DIMENSIONAL_FOLD (World), WORLD_SIZE (World), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SYMMETRY (DNA 6)**
+- **DIMENSIONAL_FOLD (World)**
 - **WORLD_SIZE (World)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -1992,15 +1992,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CHAOS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), CHAOS_LYAPUNOV (World), EPIGENETIC_DRIFT (DNA 44), ENTROPY (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **CHAOS_LYAPUNOV (World)**
 - **EPIGENETIC_DRIFT (DNA 44)**
 - **ENTROPY (World)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2142,15 +2142,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MIND)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **CONSCIOUSNESS_PHI (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2172,15 +2172,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TELEPATHY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TELEPATHY_RANGE (World), TUNING_CH1-CH4 (DNA 22-25), SIGNAL_STRENGTH (DNA 19), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TELEPATHY_RANGE (World)**
 - **TUNING_CH1-CH4 (DNA 22-25)**
 - **SIGNAL_STRENGTH (DNA 19)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2202,15 +2202,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CLAIRVOYANCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), MEMORY (Stride 61)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TELEPATHY_RANGE (World), NEIGHBORHOOD_RADIUS (DNA 18), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TELEPATHY_RANGE (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **SIGNAL (Stride 57)**
-- **MEMORY (Stride 61)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2232,14 +2232,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PRECOGNITION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), VEL_X/Y/Z (Stride 3-5), MEMORY (Stride 61)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TIME_WARP_FACTOR (World), MEMORY_DECAY (DNA 40), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **TIME_WARP_FACTOR (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **PROPAGATION_SPEED (DNA 21)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **MEMORY (Stride 61)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2262,14 +2262,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ASTRAL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), TRAIL_X/Y/Z (Stride 71-73), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ASTRAL_PHASE (World), ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **ASTRAL_PHASE (World)**
 - **ALPHA (DNA 5)**
 - **VEL_X/Y/Z (Stride 3-5)**
-- **TRAIL_X/Y/Z (Stride 71-73)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2322,15 +2322,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONSCIOUSNESS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONSCIOUSNESS_PHI (World), REGULATORY_DEPTH (DNA 63), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **CONSCIOUSNESS_PHI (World)**
 - **REGULATORY_DEPTH (DNA 63)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2352,15 +2352,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PERCEPTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_RESP (DNA 13)**
+- **CONSCIOUSNESS_PHI (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
-- **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2382,15 +2382,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SYNCHRONICITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SYNCHRONICITY_RATE (World), TUNING_CH1-CH4 (DNA 22-25), RESONANCE_Q (World), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **SYNCHRONICITY_RATE (World)**
 - **TUNING_CH1-CH4 (DNA 22-25)**
 - **RESONANCE_Q (World)**
 - **PHASE_1 (Stride 68)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2412,15 +2412,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CHARGE_LAW)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), CONDUCTIVITY (DNA 32), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), COULOMB_CONSTANT (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **COULOMB_CONSTANT (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **CHARGE (Stride 67)**
-- **ELECTRIC_ENERGY (Stride 77)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2442,15 +2442,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FIELD)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), MAGNETIC_FLUX_SCALE (World), MAGNETIC_MOMENT (DNA 33), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **MAGNETIC_MOMENT (DNA 33)**
 - **CHARGE (Stride 67)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2472,15 +2472,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CURRENT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67), ELECTRIC_ENERGY (Stride 77)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), COULOMB_CONSTANT (World), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **COULOMB_CONSTANT (World)**
 - **VEL_X/Y/Z (Stride 3-5)**
 - **CHARGE (Stride 67)**
-- **ELECTRIC_ENERGY (Stride 77)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2562,15 +2562,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.INDUCTANCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), CONDUCTIVITY (DNA 32), ELECTRIC_ENERGY (Stride 77)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **CONDUCTIVITY (DNA 32)**
 - **ELECTRIC_ENERGY (Stride 77)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2592,14 +2592,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.MAGNETISM)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), FORCE (DNA 0), VEL_X/Y/Z (Stride 3-5), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), FORCE (DNA 0), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **FORCE (DNA 0)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2652,15 +2652,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.FLUX)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), POLARITY (DNA 4), CHARGE (Stride 67), NEIGHBORHOOD_RADIUS (DNA 18)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (MAGNETIC_MOMENT (DNA 33), MAGNETIC_FLUX_SCALE (World), POLARITY (DNA 4), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **MAGNETIC_MOMENT (DNA 33)**
+- **MAGNETIC_FLUX_SCALE (World)**
 - **POLARITY (DNA 4)**
 - **CHARGE (Stride 67)**
-- **NEIGHBORHOOD_RADIUS (DNA 18)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2682,15 +2682,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.IONIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), RADIATION_LEVEL (World), CHARGE (Stride 67), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (REACTION_THRESHOLD (DNA 37), PLASMA_IONIZATION_ENERGY (World), RADIATION_LEVEL (World), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **REACTION_THRESHOLD (DNA 37)**
+- **PLASMA_IONIZATION_ENERGY (World)**
 - **RADIATION_LEVEL (World)**
 - **CHARGE (Stride 67)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2712,14 +2712,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DISCHARGE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), REACTION_THRESHOLD (DNA 37), ELECTRIC_ENERGY (Stride 77), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), DISCHARGE_ARC_THRESHOLD (World), REACTION_THRESHOLD (DNA 37), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **DISCHARGE_ARC_THRESHOLD (World)**
 - **REACTION_THRESHOLD (DNA 37)**
-- **ELECTRIC_ENERGY (Stride 77)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2742,14 +2742,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PLASMA)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CONDUCTIVITY (DNA 32), TEMPERATURE (Stride 66), CHARGE (Stride 67)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), PLASMA_IONIZATION_ENERGY (World), CONDUCTIVITY (DNA 32), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **PLASMA_IONIZATION_ENERGY (World)**
 - **CONDUCTIVITY (DNA 32)**
-- **TEMPERATURE (Stride 66)**
 - **CHARGE (Stride 67)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2772,14 +2772,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUPERCONDUCTIVITY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), MAGNETIC_MOMENT (DNA 33)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SUPERCONDUCT_TC (World), CRITICAL_TEMP (World), MAGNETIC_MOMENT (DNA 33)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SUPERCONDUCT_TC (World)**
 - **CRITICAL_TEMP (World)**
-- **TEMPERATURE (Stride 66)**
 - **MAGNETIC_MOMENT (DNA 33)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2832,14 +2832,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SHIELDING)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), STIFFNESS (DNA 8), CHARGE (Stride 67), ARMOR (Stride 63)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SHIELDING_ATTENUATION (World), STIFFNESS (DNA 8), ARMOR (Stride 63)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SHIELDING_ATTENUATION (World)**
 - **STIFFNESS (DNA 8)**
-- **CHARGE (Stride 67)**
 - **ARMOR (Stride 63)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -2862,15 +2862,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.POLARIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), ALPHA (DNA 5), CHARGE (Stride 67), PHASE_1 (Stride 68)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (POLARITY (DNA 4), POLARIZATION_DISPLACEMENT (World), ALPHA (DNA 5), CHARGE (Stride 67)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **POLARITY (DNA 4)**
+- **POLARIZATION_DISPLACEMENT (World)**
 - **ALPHA (DNA 5)**
 - **CHARGE (Stride 67)**
-- **PHASE_1 (Stride 68)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2952,15 +2952,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.STIGMERGY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_DECAY (DNA 20), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_DECAY (DNA 20), STIGMERGY_DECAY_RATE (World), TRAIL_X/Y/Z (Stride 71-73), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_DECAY (DNA 20)**
+- **STIGMERGY_DECAY_RATE (World)**
 - **TRAIL_X/Y/Z (Stride 71-73)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -2982,15 +2982,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SIGNAL_BOOST)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_STRENGTH (DNA 19), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_STRENGTH (DNA 19), SIGNAL_BOOST_GAIN (World), PROPAGATION_SPEED (DNA 21), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_STRENGTH (DNA 19)**
+- **SIGNAL_BOOST_GAIN (World)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **SIGNAL (Stride 57)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3012,15 +3012,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LEARN)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), AGE (Stride 51)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ADAPTATION_RATE (DNA 55)**
+- **HEBBIAN_LEARNING_RATE (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **AGE (Stride 51)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3102,15 +3102,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PREDICT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ADAPTATION_RATE (DNA 55), HEBBIAN_LEARNING_RATE (World), PROPAGATION_SPEED (DNA 21), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ADAPTATION_RATE (DNA 55)**
+- **HEBBIAN_LEARNING_RATE (World)**
 - **PROPAGATION_SPEED (DNA 21)**
 - **MEMORY (Stride 61)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3132,15 +3132,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CODE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61), GENOTYPE (DNA 15)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REPAIR_EFFICIENCY (DNA 51), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CODON_BIAS (DNA 62)**
+- **ENCRYPTION_CIPHER_KEY (World)**
 - **REPAIR_EFFICIENCY (DNA 51)**
 - **MEMORY (Stride 61)**
-- **GENOTYPE (DNA 15)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3162,15 +3162,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PROTOCOL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), SPECIES_AFFINITY (DNA 41), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TUNING_CH1-CH4 (DNA 22-25)**
+- **CULTURAL_TRANSMISSION (World)**
 - **SPECIES_AFFINITY (DNA 41)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3222,15 +3222,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.LANGUAGE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TUNING_CH1-CH4 (DNA 22-25), CULTURAL_TRANSMISSION (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TUNING_CH1-CH4 (DNA 22-25)**
+- **CULTURAL_TRANSMISSION (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3252,15 +3252,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CULTURE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), MEMORY_DECAY (DNA 40), MEMORY (Stride 61), SPECIES_ID (Stride 7)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), CULTURAL_TRANSMISSION (World), MEMORY_DECAY (DNA 40), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SPECIES_AFFINITY (DNA 41)**
+- **CULTURAL_TRANSMISSION (World)**
 - **MEMORY_DECAY (DNA 40)**
 - **MEMORY (Stride 61)**
-- **SPECIES_ID (Stride 7)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3312,15 +3312,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.NAVIGATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PROPAGATION_SPEED (DNA 21), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (PROPAGATION_SPEED (DNA 21), NAVIGATION_GRADIENT_BIAS (World), SIGNAL_RESP (DNA 13), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **PROPAGATION_SPEED (DNA 21)**
+- **NAVIGATION_GRADIENT_BIAS (World)**
 - **SIGNAL_RESP (DNA 13)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3342,15 +3342,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ENCRYPTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/infoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CODON_BIAS (DNA 62), ENCRYPTION_CIPHER_KEY (World), REGULATORY_DEPTH (DNA 63), MEMORY (Stride 61)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CODON_BIAS (DNA 62)**
+- **ENCRYPTION_CIPHER_KEY (World)**
 - **REGULATORY_DEPTH (DNA 63)**
 - **MEMORY (Stride 61)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3372,15 +3372,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SUPERPOSITION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **ALPHA (DNA 5)**
 - **PHASE_1 (Stride 68)**
-- **POS_X/Y/Z (Stride 0-2)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3402,15 +3402,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TUNNELING)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), TUNNELING_PROBABILITY (World), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **TUNNELING_PROBABILITY (World)**
 - **STIFFNESS (DNA 8)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3432,15 +3432,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.DECOHERENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENTROPY (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ENTROPY (World), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ENTROPY (World)**
+- **DECOHERENCE_RATE_FACTOR (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **PHASE_1 (Stride 68)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3462,14 +3462,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.WAVE_PARTICLE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), SUPERPOSITION_PHASE_SCALE (World), MASS (Stride 6), ALPHA (DNA 5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **BASE_RADIUS (DNA 29)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **MASS (Stride 6)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3492,15 +3492,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.UNCERTAINTY)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), UNCERTAINTY_SIGMA (World), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **UNCERTAINTY_SIGMA (World)**
 - **INERTIA (DNA 26)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3522,15 +3522,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.TELEPORT)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2), WORLD_SIZE (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (FORCE (DNA 0), TUNNELING_PROBABILITY (World), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **FORCE (DNA 0)**
+- **TUNNELING_PROBABILITY (World)**
 - **ENERGY (Stride 50)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **WORLD_SIZE (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3552,14 +3552,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.OBSERVER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **ALPHA (DNA 5)**
+- **DECOHERENCE_RATE_FACTOR (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
-- **PHASE_1 (Stride 68)**
 - **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
@@ -3612,15 +3612,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.COHERENCE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (RESONANCE_Q (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69), SIGNAL (Stride 57)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (RESONANCE_Q (World), SUPERPOSITION_PHASE_SCALE (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **RESONANCE_Q (World)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **PHASE_1 (Stride 68)**
 - **PHASE_2 (Stride 69)**
-- **SIGNAL (Stride 57)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3702,15 +3702,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SPIN)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68), VEL_X/Y/Z (Stride 3-5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (TORQUE (DNA 2), SPIN_PRECESSION_FREQ (World), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **TORQUE (DNA 2)**
+- **SPIN_PRECESSION_FREQ (World)**
 - **MAGNETIC_MOMENT (DNA 33)**
 - **PHASE_1 (Stride 68)**
-- **VEL_X/Y/Z (Stride 3-5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3762,15 +3762,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.WAVEFUNCTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **JITTER (DNA 3)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **ALPHA (DNA 5)**
 - **PHASE_1 (Stride 68)**
-- **POS_X/Y/Z (Stride 0-2)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3792,15 +3792,15 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.HYPERPLANE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (WORLD_SIZE (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2), PHASE_2 (Stride 69)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (WORLD_SIZE (World), DIMENSIONAL_FOLD (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **WORLD_SIZE (World)**
+- **DIMENSIONAL_FOLD (World)**
 - **DIMENSIONALITY (DNA 31)**
 - **POS_X/Y/Z (Stride 0-2)**
-- **PHASE_2 (Stride 69)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).
@@ -3822,14 +3822,14 @@ The law operates under direct governance of the following parameters:
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ANTIMATTER)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), MASS (Stride 6), ENERGY (Stride 50), RADIATION_LEVEL (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CHARGE (Stride 67), ANTIMATTER_ANNIHILATION_YIELD (World), MASS (Stride 6), RADIATION_LEVEL (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CHARGE (Stride 67)**
+- **ANTIMATTER_ANNIHILATION_YIELD (World)**
 - **MASS (Stride 6)**
-- **ENERGY (Stride 50)**
 - **RADIATION_LEVEL (World)**
 
 ## 4. Current Limitations & Observed Behavior

@@ -17,8 +17,8 @@
 To satisfy the multi-parameter control mandate, Law #4 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **ELASTICITY (DNA 30)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **ELASTIC_RESTITUTION (World)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SYMBIOSIS)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/biologyLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), ENERGY_TRANSFER (World), ENERGY_EFFICIENCY (DNA 34), SPECIES_INTERACTION (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SPECIES_AFFINITY (DNA 41), SYMBIOSIS_BOOST (World), ENERGY_TRANSFER (World), SPECIES_INTERACTION (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SPECIES_AFFINITY (DNA 41)**
+- **SYMBIOSIS_BOOST (World)**
 - **ENERGY_TRANSFER (World)**
-- **ENERGY_EFFICIENCY (DNA 34)**
 - **SPECIES_INTERACTION (World)**
 
 ## 4. Current Limitations & Observed Behavior

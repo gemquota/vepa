@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #24 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **CRITICAL_TEMP (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CRYSTAL_LATTICE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **BASE_RADIUS (DNA 29)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

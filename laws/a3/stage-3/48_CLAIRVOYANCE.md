@@ -7,10 +7,10 @@
 
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
+- [x] Wired parameter: **TELEPATHY_RANGE (World)**
 - [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **PROPAGATION_SPEED (DNA 21)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
-- [x] Wired parameter: **MEMORY (Stride 61)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsMetaphysics.test.js`

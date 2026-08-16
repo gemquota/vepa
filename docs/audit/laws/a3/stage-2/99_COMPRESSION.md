@@ -16,8 +16,8 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #99 explicitly binds to:
 1. **STIFFNESS (DNA 8)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **TEMPERATURE (Stride 66)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **ADIABATIC_GAMMA (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MASS (Stride 6)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

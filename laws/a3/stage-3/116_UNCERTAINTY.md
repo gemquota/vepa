@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **JITTER (DNA 3)**
+- [x] Wired parameter: **UNCERTAINTY_SIGMA (World)**
 - [x] Wired parameter: **INERTIA (DNA 26)**
 - [x] Wired parameter: **POS_X/Y/Z (Stride 0-2)**
-- [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsQuantum.test.js`

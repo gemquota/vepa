@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CODON_BIAS (DNA 62)**
+- [x] Wired parameter: **ENCRYPTION_CIPHER_KEY (World)**
 - [x] Wired parameter: **REGULATORY_DEPTH (DNA 63)**
 - [x] Wired parameter: **MEMORY (Stride 61)**
-- [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsInformation.test.js`

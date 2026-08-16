@@ -17,7 +17,7 @@
 To satisfy the multi-parameter control mandate, Law #1 explicitly binds to:
 1. **VISCOSITY (DNA 1)**: Controls magnitude, spatial threshold, or temporal rate.
 2. **DAMPING (World)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **RADIUS (Stride 56)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **FRICTION_COEFF (World)**: Controls magnitude, spatial threshold, or temporal rate.
 4. **MAX_VELOCITY (DNA 28)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees

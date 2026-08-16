@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **RADIATION_LEVEL (World)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **ENERGY (Stride 50)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsElectromagnetism.test.js`

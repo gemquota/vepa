@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **STIFFNESS (DNA 8)**
+- [x] Wired parameter: **ADIABATIC_GAMMA (World)**
 - [x] Wired parameter: **MASS (Stride 6)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **RADIUS (Stride 56)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -15,20 +15,20 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### Cross-Law Matrix & Synergy Chains
 - **HEAT** (Law #25): Synergizes with parameters [HEAT_OUTPUT (DNA 39); HEAT_CAPACITY (World); TEMPERATURE (Stride 66); ENTROPY (World)].
 - **COLD** (Law #26): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); DECAY_RATE (World)].
-- **CONVECTION** (Law #27): Synergizes with parameters [HEAT_OUTPUT (DNA 39); VISCOSITY (DNA 1); TEMPERATURE (Stride 66); GLOBAL_G (World)].
-- **PHASE_RADIATION** (Law #28): Synergizes with parameters [HEAT_OUTPUT (DNA 39); ALPHA (DNA 5); TEMPERATURE (Stride 66); RADIATION_LEVEL (World)].
-- **SUBLIMATION** (Law #29): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); PHASE_1 (Stride 68)].
-- **MELT** (Law #42): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STIFFNESS (DNA 8)].
-- **BOIL** (Law #43): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); VISCOSITY (DNA 1)].
-- **CONDENSE** (Law #44): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); BASE_RADIUS (DNA 29)].
-- **DEPOSIT** (Law #45): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STIFFNESS (DNA 8)].
+- **CONVECTION** (Law #27): Synergizes with parameters [HEAT_OUTPUT (DNA 39); CONVECTION_RATE (World); VISCOSITY (DNA 1); GLOBAL_G (World)].
+- **PHASE_RADIATION** (Law #28): Synergizes with parameters [HEAT_OUTPUT (DNA 39); PHASE_RADIATION_FACTOR (World); ALPHA (DNA 5); TEMPERATURE (Stride 66)].
+- **SUBLIMATION** (Law #29): Synergizes with parameters [HEAT_OUTPUT (DNA 39); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); PHASE_1 (Stride 68)].
+- **MELT** (Law #42): Synergizes with parameters [HEAT_OUTPUT (DNA 39); MELT_TEMP_POINT (World); CRITICAL_TEMP (World); STIFFNESS (DNA 8)].
+- **BOIL** (Law #43): Synergizes with parameters [HEAT_OUTPUT (DNA 39); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); VISCOSITY (DNA 1)].
+- **CONDENSE** (Law #44): Synergizes with parameters [HEAT_CAPACITY (World); BOIL_TEMP_POINT (World); CRITICAL_TEMP (World); BASE_RADIUS (DNA 29)].
+- **DEPOSIT** (Law #45): Synergizes with parameters [HEAT_CAPACITY (World); MELT_TEMP_POINT (World); CRITICAL_TEMP (World); STIFFNESS (DNA 8)].
 - **EXOTHERMIC** (Law #46): Synergizes with parameters [HEAT_OUTPUT (DNA 39); REACTION_THRESHOLD (DNA 37); STORED_ENERGY (Stride 78); TEMPERATURE (Stride 66)].
-- **ADIABATIC** (Law #98): Synergizes with parameters [HEAT_CAPACITY (World); VISCOSITY (DNA 1); TEMPERATURE (Stride 66); ENTROPY (World)].
-- **COMPRESSION** (Law #99): Synergizes with parameters [STIFFNESS (DNA 8); MASS (Stride 6); TEMPERATURE (Stride 66); RADIUS (Stride 56)].
-- **EXPANSION** (Law #100): Synergizes with parameters [HEAT_OUTPUT (DNA 39); JITTER (DNA 3); TEMPERATURE (Stride 66); WORLD_SIZE (World)].
+- **ADIABATIC** (Law #98): Synergizes with parameters [HEAT_CAPACITY (World); ADIABATIC_GAMMA (World); VISCOSITY (DNA 1); ENTROPY (World)].
+- **COMPRESSION** (Law #99): Synergizes with parameters [STIFFNESS (DNA 8); ADIABATIC_GAMMA (World); MASS (Stride 6); RADIUS (Stride 56)].
+- **EXPANSION** (Law #100): Synergizes with parameters [HEAT_OUTPUT (DNA 39); ADIABATIC_GAMMA (World); JITTER (DNA 3); WORLD_SIZE (World)].
 - **EQUILIBRIUM** (Law #101): Synergizes with parameters [HEAT_CAPACITY (World); ENTROPY (World); TEMPERATURE (Stride 66); DAMPING (World)].
-- **LATENT_HEAT** (Law #102): Synergizes with parameters [HEAT_CAPACITY (World); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); STORED_ENERGY (Stride 78)].
-- **RUNAWAY** (Law #103): Synergizes with parameters [HEAT_OUTPUT (DNA 39); MUTATION_RATE (World); TEMPERATURE (Stride 66); ENERGY (Stride 50)].
+- **LATENT_HEAT** (Law #102): Synergizes with parameters [HEAT_CAPACITY (World); LATENT_HEAT_BUFFER (World); CRITICAL_TEMP (World); STORED_ENERGY (Stride 78)].
+- **RUNAWAY** (Law #103): Synergizes with parameters [HEAT_OUTPUT (DNA 39); RUNAWAY_MULT (World); MUTATION_RATE (World); ENERGY (Stride 50)].
 
 ---
 
@@ -78,7 +78,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CONVECTION` (27)
 - **Spectrum Hue**: 129.7°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), GLOBAL_G (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CONVECTION_RATE (World), VISCOSITY (DNA 1), GLOBAL_G (World)
 - **Help DB Hint**: "Convection: buoyant vertical motion from temperature."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -97,7 +97,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PHASE_RADIATION` (28)
 - **Spectrum Hue**: 130.7°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), ALPHA (DNA 5), TEMPERATURE (Stride 66), RADIATION_LEVEL (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), PHASE_RADIATION_FACTOR (World), ALPHA (DNA 5), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Blackbody radiation: hot particles emit energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -116,7 +116,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUBLIMATION` (29)
 - **Spectrum Hue**: 131.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), PHASE_1 (Stride 68)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Sublimation: low-mass hot particles turn to gas."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -135,7 +135,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.MELT` (42)
 - **Spectrum Hue**: 132.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)
 - **Help DB Hint**: "Melting: hot particles lose structural integrity."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -154,7 +154,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.BOIL` (43)
 - **Spectrum Hue**: 133.6°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), VISCOSITY (DNA 1)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), VISCOSITY (DNA 1)
 - **Help DB Hint**: "Boiling: very hot particles eject mass."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -173,7 +173,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.CONDENSE` (44)
 - **Spectrum Hue**: 134.5°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), BASE_RADIUS (DNA 29)
+- **Governing Parameters**: HEAT_CAPACITY (World), BOIL_TEMP_POINT (World), CRITICAL_TEMP (World), BASE_RADIUS (DNA 29)
 - **Help DB Hint**: "Condensation: cool particles gain mass from vapor."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -192,7 +192,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DEPOSIT` (45)
 - **Spectrum Hue**: 135.5°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STIFFNESS (DNA 8)
+- **Governing Parameters**: HEAT_CAPACITY (World), MELT_TEMP_POINT (World), CRITICAL_TEMP (World), STIFFNESS (DNA 8)
 - **Help DB Hint**: "Deposition: vapor directly solidifies on cold particles."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -230,7 +230,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ADIABATIC` (98)
 - **Spectrum Hue**: 137.4°
-- **Governing Parameters**: HEAT_CAPACITY (World), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), ENTROPY (World)
+- **Governing Parameters**: HEAT_CAPACITY (World), ADIABATIC_GAMMA (World), VISCOSITY (DNA 1), ENTROPY (World)
 - **Help DB Hint**: "Adiabatic: motion converts to heat without loss."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -249,7 +249,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COMPRESSION` (99)
 - **Spectrum Hue**: 138.4°
-- **Governing Parameters**: STIFFNESS (DNA 8), MASS (Stride 6), TEMPERATURE (Stride 66), RADIUS (Stride 56)
+- **Governing Parameters**: STIFFNESS (DNA 8), ADIABATIC_GAMMA (World), MASS (Stride 6), RADIUS (Stride 56)
 - **Help DB Hint**: "Compression: particles shrink and heat up under pressure."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -268,7 +268,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.EXPANSION` (100)
 - **Spectrum Hue**: 139.3°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), JITTER (DNA 3), TEMPERATURE (Stride 66), WORLD_SIZE (World)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), ADIABATIC_GAMMA (World), JITTER (DNA 3), WORLD_SIZE (World)
 - **Help DB Hint**: "Expansion: particles swell and cool when sparse."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -306,7 +306,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.LATENT_HEAT` (102)
 - **Spectrum Hue**: 141.2°
-- **Governing Parameters**: HEAT_CAPACITY (World), CRITICAL_TEMP (World), TEMPERATURE (Stride 66), STORED_ENERGY (Stride 78)
+- **Governing Parameters**: HEAT_CAPACITY (World), LATENT_HEAT_BUFFER (World), CRITICAL_TEMP (World), STORED_ENERGY (Stride 78)
 - **Help DB Hint**: "Latent heat: phase changes absorb or release energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -325,7 +325,7 @@ Thermodynamic laws maintain energy balance across the synthetic petri dish. Heat
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.RUNAWAY` (103)
 - **Spectrum Hue**: 142.2°
-- **Governing Parameters**: HEAT_OUTPUT (DNA 39), MUTATION_RATE (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)
+- **Governing Parameters**: HEAT_OUTPUT (DNA 39), RUNAWAY_MULT (World), MUTATION_RATE (World), ENERGY (Stride 50)
 - **Help DB Hint**: "Runaway: hot particles produce more heat."
 
 ### 2. Physical Basis & Proposal (Stage 2)

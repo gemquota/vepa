@@ -15,10 +15,10 @@
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #47 explicitly binds to:
-1. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **TUNING_CH1-CH4 (DNA 22-25)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **SIGNAL_STRENGTH (DNA 19)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

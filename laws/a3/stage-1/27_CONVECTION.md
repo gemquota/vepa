@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CONVECTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/thermoLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), VISCOSITY (DNA 1), TEMPERATURE (Stride 66), GLOBAL_G (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (HEAT_OUTPUT (DNA 39), CONVECTION_RATE (World), VISCOSITY (DNA 1), GLOBAL_G (World)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **HEAT_OUTPUT (DNA 39)**
+- **CONVECTION_RATE (World)**
 - **VISCOSITY (DNA 1)**
-- **TEMPERATURE (Stride 66)**
 - **GLOBAL_G (World)**
 
 ## 4. Current Limitations & Observed Behavior

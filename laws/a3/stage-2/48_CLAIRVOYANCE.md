@@ -15,10 +15,10 @@
 
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #48 explicitly binds to:
-1. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
+1. **TELEPATHY_RANGE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **NEIGHBORHOOD_RADIUS (DNA 18)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **PROPAGATION_SPEED (DNA 21)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **SIGNAL (Stride 57)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

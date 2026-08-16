@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **SIGNAL_RESP (DNA 13)**
+- [x] Wired parameter: **TRACKING_SENSITIVITY (World)**
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
-- [x] Wired parameter: **NEIGHBORHOOD_RADIUS (DNA 18)**
 - [x] Wired parameter: **SIGNAL (Stride 57)**
 
 ## 3. Empirical Test Results & Performance Metrics

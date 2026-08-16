@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
+- [x] Wired parameter: **ELECTROLYSIS_POWER (World)**
 - [x] Wired parameter: **ELECTRIC_ENERGY (Stride 77)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **VISCOSITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`

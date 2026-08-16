@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.ASTRAL)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), TRAIL_X/Y/Z (Stride 71-73), ENERGY (Stride 50)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (ASTRAL_PHASE (World), ALPHA (DNA 5), VEL_X/Y/Z (Stride 3-5), ENERGY (Stride 50)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
+- **ASTRAL_PHASE (World)**
 - **ALPHA (DNA 5)**
 - **VEL_X/Y/Z (Stride 3-5)**
-- **TRAIL_X/Y/Z (Stride 71-73)**
 - **ENERGY (Stride 50)**
 
 ## 4. Current Limitations & Observed Behavior

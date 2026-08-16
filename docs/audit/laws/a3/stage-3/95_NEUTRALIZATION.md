@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REACTION_THRESHOLD (DNA 37)**
+- [x] Wired parameter: **ACIDITY_PH (World)**
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
-- [x] Wired parameter: **HEAT_CAPACITY (World)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsChemistry.test.js`

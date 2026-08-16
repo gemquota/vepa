@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **CONVECTION_RATE (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **GLOBAL_G (World)**
 
 ## 3. Empirical Test Results & Performance Metrics

@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.CRYSTALLIZATION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/chemistryLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66), CRITICAL_TEMP (World)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (STIFFNESS (DNA 8), CRYSTAL_LATTICE (World), BASE_RADIUS (DNA 29), TEMPERATURE (Stride 66)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **STIFFNESS (DNA 8)**
+- **CRYSTAL_LATTICE (World)**
 - **BASE_RADIUS (DNA 29)**
 - **TEMPERATURE (Stride 66)**
-- **CRITICAL_TEMP (World)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

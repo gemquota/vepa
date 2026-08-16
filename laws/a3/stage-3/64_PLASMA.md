@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **HEAT_OUTPUT (DNA 39)**
+- [x] Wired parameter: **PLASMA_IONIZATION_ENERGY (World)**
 - [x] Wired parameter: **CONDUCTIVITY (DNA 32)**
-- [x] Wired parameter: **TEMPERATURE (Stride 66)**
 - [x] Wired parameter: **CHARGE (Stride 67)**
 
 ## 3. Empirical Test Results & Performance Metrics

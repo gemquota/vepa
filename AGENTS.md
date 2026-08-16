@@ -1,11 +1,11 @@
 # AGENTS.md — VEPA Workspace Initialization & Codebase Audit
 
 > **Project:** VEPA — Vector Emergent Physics Automata
-> **Active Target:** **VEPA4 v7.1.0** (legacy label `4.7.1`; HEAD `89c094b`, 2026-08-16; a3 law audit ensemble & slider controls merged)
+> **Active Target:** **VEPA4 v7.1.1** (legacy label `4.7.2`; HEAD `7f85296`, 2026-08-16; dedicated law parameters added & merged)
 > **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
 > archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
 > **Working Branch:** `master`
-> **Audit Hash:** `AGENTS_SYNC_v7.1.0_2026-08-16`
+> **Audit Hash:** `AGENTS_SYNC_v7.1.1_2026-08-16`
 >
 > This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
 >
@@ -22,7 +22,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | Attribute | Value |
 |-----------|-------|
 | **Repository** | `github.com/gemquota/vepa.git` |
-| **Active version** | **VEPA4 v7.1.0** (legacy label `4.7.1`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
+| **Active version** | **VEPA4 v7.1.1** (legacy label `4.7.2`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
 | **Active tree** | repo root (VEPA v4 — "Integrated Intelligence"; `v4/` promoted to root 2026-08-10) |
 | **Legacy trees** | archived 2026-08-10 → `gemquota/vepa-archive` (root `src/` v2.5.0-era · `v3/`, `v3-backup/`, `v3-persistence-design/` · `vaa/`) |
 | **Branches** | `master` (stable) · `new` · `feature/slider-controls` (**current**) · `feature/multiplayer-investigation` · `feature/nuclear-rewrite` (remote) |

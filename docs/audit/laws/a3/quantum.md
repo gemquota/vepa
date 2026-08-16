@@ -13,22 +13,22 @@ Governs wave-particle duality probability clouds, barrier tunneling, Heisenberg 
 Quantum laws introduce probabilistic micro-foundations. Superposition and Tunneling permit state transit across classical energy barriers, while Observer collapse and Decoherence translate quantum states into classical particle observables.
 
 ### Cross-Law Matrix & Synergy Chains
-- **SUPERPOSITION** (Law #112): Synergizes with parameters [JITTER (DNA 3); ALPHA (DNA 5); PHASE_1 (Stride 68); POS_X/Y/Z (Stride 0-2)].
-- **TUNNELING** (Law #113): Synergizes with parameters [JITTER (DNA 3); STIFFNESS (DNA 8); POS_X/Y/Z (Stride 0-2); ENERGY (Stride 50)].
-- **DECOHERENCE** (Law #114): Synergizes with parameters [ENTROPY (World); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68); PHASE_2 (Stride 69)].
-- **WAVE_PARTICLE** (Law #115): Synergizes with parameters [BASE_RADIUS (DNA 29); MASS (Stride 6); VEL_X/Y/Z (Stride 3-5); ALPHA (DNA 5)].
-- **UNCERTAINTY** (Law #116): Synergizes with parameters [JITTER (DNA 3); INERTIA (DNA 26); POS_X/Y/Z (Stride 0-2); VEL_X/Y/Z (Stride 3-5)].
-- **TELEPORT** (Law #117): Synergizes with parameters [FORCE (DNA 0); ENERGY (Stride 50); POS_X/Y/Z (Stride 0-2); WORLD_SIZE (World)].
-- **OBSERVER** (Law #118): Synergizes with parameters [ALPHA (DNA 5); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68); SIGNAL (Stride 57)].
+- **SUPERPOSITION** (Law #112): Synergizes with parameters [JITTER (DNA 3); SUPERPOSITION_PHASE_SCALE (World); ALPHA (DNA 5); PHASE_1 (Stride 68)].
+- **TUNNELING** (Law #113): Synergizes with parameters [JITTER (DNA 3); TUNNELING_PROBABILITY (World); STIFFNESS (DNA 8); POS_X/Y/Z (Stride 0-2)].
+- **DECOHERENCE** (Law #114): Synergizes with parameters [ENTROPY (World); DECOHERENCE_RATE_FACTOR (World); NEIGHBORHOOD_RADIUS (DNA 18); PHASE_1 (Stride 68)].
+- **WAVE_PARTICLE** (Law #115): Synergizes with parameters [BASE_RADIUS (DNA 29); SUPERPOSITION_PHASE_SCALE (World); MASS (Stride 6); ALPHA (DNA 5)].
+- **UNCERTAINTY** (Law #116): Synergizes with parameters [JITTER (DNA 3); UNCERTAINTY_SIGMA (World); INERTIA (DNA 26); POS_X/Y/Z (Stride 0-2)].
+- **TELEPORT** (Law #117): Synergizes with parameters [FORCE (DNA 0); TUNNELING_PROBABILITY (World); ENERGY (Stride 50); POS_X/Y/Z (Stride 0-2)].
+- **OBSERVER** (Law #118): Synergizes with parameters [ALPHA (DNA 5); DECOHERENCE_RATE_FACTOR (World); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
 - **PLANCK** (Law #119): Synergizes with parameters [FORCE (DNA 0); BASE_RADIUS (DNA 29); VEL_X/Y/Z (Stride 3-5); ENERGY (Stride 50)].
-- **COHERENCE** (Law #120): Synergizes with parameters [RESONANCE_Q (World); PHASE_1 (Stride 68); PHASE_2 (Stride 69); SIGNAL (Stride 57)].
+- **COHERENCE** (Law #120): Synergizes with parameters [RESONANCE_Q (World); SUPERPOSITION_PHASE_SCALE (World); PHASE_1 (Stride 68); PHASE_2 (Stride 69)].
 - **BOSONIC** (Law #121): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); CRITICAL_TEMP (World); TEMPERATURE (Stride 66); POS_X/Y/Z (Stride 0-2)].
 - **FERMIONIC** (Law #122): Synergizes with parameters [STIFFNESS (DNA 8); BASE_RADIUS (DNA 29); POS_X/Y/Z (Stride 0-2); RADIUS (Stride 56)].
-- **SPIN** (Law #123): Synergizes with parameters [TORQUE (DNA 2); MAGNETIC_MOMENT (DNA 33); PHASE_1 (Stride 68); VEL_X/Y/Z (Stride 3-5)].
+- **SPIN** (Law #123): Synergizes with parameters [TORQUE (DNA 2); SPIN_PRECESSION_FREQ (World); MAGNETIC_MOMENT (DNA 33); PHASE_1 (Stride 68)].
 - **SPECTRAL** (Law #124): Synergizes with parameters [LIGHT_LEVEL (World); HEAT_OUTPUT (DNA 39); ENERGY (Stride 50); COLOR_R/G/B (Stride 53-55)].
-- **WAVEFUNCTION** (Law #125): Synergizes with parameters [JITTER (DNA 3); ALPHA (DNA 5); PHASE_1 (Stride 68); POS_X/Y/Z (Stride 0-2)].
-- **HYPERPLANE** (Law #126): Synergizes with parameters [WORLD_SIZE (World); DIMENSIONALITY (DNA 31); POS_X/Y/Z (Stride 0-2); PHASE_2 (Stride 69)].
-- **ANTIMATTER** (Law #127): Synergizes with parameters [CHARGE (Stride 67); MASS (Stride 6); ENERGY (Stride 50); RADIATION_LEVEL (World)].
+- **WAVEFUNCTION** (Law #125): Synergizes with parameters [JITTER (DNA 3); SUPERPOSITION_PHASE_SCALE (World); ALPHA (DNA 5); PHASE_1 (Stride 68)].
+- **HYPERPLANE** (Law #126): Synergizes with parameters [WORLD_SIZE (World); DIMENSIONAL_FOLD (World); DIMENSIONALITY (DNA 31); POS_X/Y/Z (Stride 0-2)].
+- **ANTIMATTER** (Law #127): Synergizes with parameters [CHARGE (Stride 67); ANTIMATTER_ANNIHILATION_YIELD (World); MASS (Stride 6); RADIATION_LEVEL (World)].
 
 ---
 
@@ -40,7 +40,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SUPERPOSITION` (112)
 - **Spectrum Hue**: 307.8°
-- **Governing Parameters**: JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)
+- **Governing Parameters**: JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Superposition: a spread of velocity states with Born-rule collapse."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -59,7 +59,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TUNNELING` (113)
 - **Spectrum Hue**: 308.8°
-- **Governing Parameters**: JITTER (DNA 3), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2), ENERGY (Stride 50)
+- **Governing Parameters**: JITTER (DNA 3), TUNNELING_PROBABILITY (World), STIFFNESS (DNA 8), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Tunneling: particles occasionally pass straight through barriers."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -78,7 +78,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.DECOHERENCE` (114)
 - **Spectrum Hue**: 309.7°
-- **Governing Parameters**: ENTROPY (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), PHASE_2 (Stride 69)
+- **Governing Parameters**: ENTROPY (World), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Decoherence: quantum spread collapses into classical order."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -97,7 +97,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.WAVE_PARTICLE` (115)
 - **Spectrum Hue**: 310.7°
-- **Governing Parameters**: BASE_RADIUS (DNA 29), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5), ALPHA (DNA 5)
+- **Governing Parameters**: BASE_RADIUS (DNA 29), SUPERPOSITION_PHASE_SCALE (World), MASS (Stride 6), ALPHA (DNA 5)
 - **Help DB Hint**: "Wave-particle: observation decides — unmeasured systems spread as waves."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -116,7 +116,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.UNCERTAINTY` (116)
 - **Spectrum Hue**: 311.6°
-- **Governing Parameters**: JITTER (DNA 3), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: JITTER (DNA 3), UNCERTAINTY_SIGMA (World), INERTIA (DNA 26), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Uncertainty: position and velocity cannot both be known."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -135,7 +135,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TELEPORT` (117)
 - **Spectrum Hue**: 312.6°
-- **Governing Parameters**: FORCE (DNA 0), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2), WORLD_SIZE (World)
+- **Governing Parameters**: FORCE (DNA 0), TUNNELING_PROBABILITY (World), ENERGY (Stride 50), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Teleport: quantum state transfer through an entangled link."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -154,7 +154,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.OBSERVER` (118)
 - **Spectrum Hue**: 313.6°
-- **Governing Parameters**: ALPHA (DNA 5), NEIGHBORHOOD_RADIUS (DNA 18), PHASE_1 (Stride 68), SIGNAL (Stride 57)
+- **Governing Parameters**: ALPHA (DNA 5), DECOHERENCE_RATE_FACTOR (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
 - **Help DB Hint**: "Observer: measurement collapses nearby states."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -192,7 +192,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.COHERENCE` (120)
 - **Spectrum Hue**: 315.5°
-- **Governing Parameters**: RESONANCE_Q (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69), SIGNAL (Stride 57)
+- **Governing Parameters**: RESONANCE_Q (World), SUPERPOSITION_PHASE_SCALE (World), PHASE_1 (Stride 68), PHASE_2 (Stride 69)
 - **Help DB Hint**: "Coherence: neighbouring particles phase-lock."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -249,7 +249,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SPIN` (123)
 - **Spectrum Hue**: 318.4°
-- **Governing Parameters**: TORQUE (DNA 2), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68), VEL_X/Y/Z (Stride 3-5)
+- **Governing Parameters**: TORQUE (DNA 2), SPIN_PRECESSION_FREQ (World), MAGNETIC_MOMENT (DNA 33), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Spin: particles carry intrinsic angular momentum."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -287,7 +287,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.WAVEFUNCTION` (125)
 - **Spectrum Hue**: 320.3°
-- **Governing Parameters**: JITTER (DNA 3), ALPHA (DNA 5), PHASE_1 (Stride 68), POS_X/Y/Z (Stride 0-2)
+- **Governing Parameters**: JITTER (DNA 3), SUPERPOSITION_PHASE_SCALE (World), ALPHA (DNA 5), PHASE_1 (Stride 68)
 - **Help DB Hint**: "Wavefunction: position is a probability cloud."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -306,7 +306,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.HYPERPLANE` (126)
 - **Spectrum Hue**: 321.2°
-- **Governing Parameters**: WORLD_SIZE (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2), PHASE_2 (Stride 69)
+- **Governing Parameters**: WORLD_SIZE (World), DIMENSIONAL_FOLD (World), DIMENSIONALITY (DNA 31), POS_X/Y/Z (Stride 0-2)
 - **Help DB Hint**: "Hyperplane: a fourth spatial axis drifts through the dish."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -325,7 +325,7 @@ Quantum laws introduce probabilistic micro-foundations. Superposition and Tunnel
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.ANTIMATTER` (127)
 - **Spectrum Hue**: 322.2°
-- **Governing Parameters**: CHARGE (Stride 67), MASS (Stride 6), ENERGY (Stride 50), RADIATION_LEVEL (World)
+- **Governing Parameters**: CHARGE (Stride 67), ANTIMATTER_ANNIHILATION_YIELD (World), MASS (Stride 6), RADIATION_LEVEL (World)
 - **Help DB Hint**: "Antimatter: opposites annihilate on contact."
 
 ### 2. Physical Basis & Proposal (Stage 2)

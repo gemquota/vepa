@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #70 explicitly binds to:
 1. **ADAPTATION_RATE (DNA 55)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **AGE (Stride 51)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **HEBBIAN_LEARNING_RATE (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **MEMORY_DECAY (DNA 40)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **MEMORY (Stride 61)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.

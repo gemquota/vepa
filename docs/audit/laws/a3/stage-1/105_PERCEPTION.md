@@ -10,15 +10,15 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.PERCEPTION)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/metaLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (SIGNAL_RESP (DNA 13), CONSCIOUSNESS_PHI (World), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **SIGNAL_RESP (DNA 13)**
+- **CONSCIOUSNESS_PHI (World)**
 - **NEIGHBORHOOD_RADIUS (DNA 18)**
 - **SIGNAL (Stride 57)**
-- **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior
 - **Performance Overhead**: `O(N)` or `O(N^2)` interaction scaling bounded by Spatial Grid (`GRID_DIM = 12`).

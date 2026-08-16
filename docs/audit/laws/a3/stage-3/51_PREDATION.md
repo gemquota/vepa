@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **PREDATION_BIAS (DNA 36)**
+- [x] Wired parameter: **PREDATION_EFFICIENCY (World)**
 - [x] Wired parameter: **ENERGY_TRANSFER (World)**
 - [x] Wired parameter: **HUNGER (Stride 62)**
-- [x] Wired parameter: **SPECIES_ID (Stride 7)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`

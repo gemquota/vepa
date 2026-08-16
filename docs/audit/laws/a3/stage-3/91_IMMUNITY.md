@@ -8,9 +8,9 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **REPAIR_EFFICIENCY (DNA 51)**
+- [x] Wired parameter: **IMMUNITY_SHIELD (World)**
 - [x] Wired parameter: **IMMUNITY (DNA 91)**
 - [x] Wired parameter: **RADIATION_EXPOSURE (Stride 80)**
-- [x] Wired parameter: **AGE (Stride 51)**
 
 ## 3. Empirical Test Results & Performance Metrics
 - **Unit Test File**: `tests/unit/lawgroupsBiology.test.js`

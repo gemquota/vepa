@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.SHIELDING)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/emLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), STIFFNESS (DNA 8), CHARGE (Stride 67), ARMOR (Stride 63)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (CONDUCTIVITY (DNA 32), SHIELDING_ATTENUATION (World), STIFFNESS (DNA 8), ARMOR (Stride 63)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **CONDUCTIVITY (DNA 32)**
+- **SHIELDING_ATTENUATION (World)**
 - **STIFFNESS (DNA 8)**
-- **CHARGE (Stride 67)**
 - **ARMOR (Stride 63)**
 
 ## 4. Current Limitations & Observed Behavior

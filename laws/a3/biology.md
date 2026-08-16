@@ -16,19 +16,19 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 - **LIFE** (Law #7): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); DECAY_RATE (World); LIGHT_LEVEL (World); ENERGY (Stride 50)].
 - **GLOW** (Law #8): Synergizes with parameters [ALPHA (DNA 5); ENERGY (Stride 50); LIGHT_LEVEL (World); COLOR_R/G/B (Stride 53-55)].
 - **AFFINITY** (Law #9): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); SPECIES_INTERACTION (World); NEIGHBORHOOD_RADIUS (DNA 18); SPECIES_ID (Stride 7)].
-- **REPRO** (Law #10): Synergizes with parameters [BIRTH_RATE (DNA 10); SEX_CHANCE (DNA 35); MUTATION_RATE (World); REPRO_DRIVE (Stride 79)].
-- **TRACK** (Law #11): Synergizes with parameters [SIGNAL_RESP (DNA 13); PREDATION_BIAS (DNA 36); NEIGHBORHOOD_RADIUS (DNA 18); SIGNAL (Stride 57)].
-- **SENESCENCE** (Law #12): Synergizes with parameters [DEATH_RATE (DNA 11); TELOMERE_LENGTH (DNA 60); AGE (Stride 51); DECAY_RATE (World)].
+- **REPRO** (Law #10): Synergizes with parameters [BIRTH_RATE (DNA 10); REPRODUCTION_THRESHOLD (World); SEX_CHANCE (DNA 35); MUTATION_RATE (World)].
+- **TRACK** (Law #11): Synergizes with parameters [SIGNAL_RESP (DNA 13); TRACKING_SENSITIVITY (World); PREDATION_BIAS (DNA 36); SIGNAL (Stride 57)].
+- **SENESCENCE** (Law #12): Synergizes with parameters [DEATH_RATE (DNA 11); SENESCENCE_RATE (World); TELOMERE_LENGTH (DNA 60); AGE (Stride 51)].
 - **ENERGY** (Law #13): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); ENERGY_TRANSFER (World); STORED_ENERGY (Stride 78); ENERGY (Stride 50)].
 - **RADIATION** (Law #14): Synergizes with parameters [RADIATION_EXPOSURE (Stride 80); RADIATION_LEVEL (World); MUTAGEN_SENSITIVITY (DNA 59); REPAIR_EFFICIENCY (DNA 51)].
 - **GENOTYPE** (Law #15): Synergizes with parameters [CROSSOVER_RATE (DNA 43); ALLELE_COUNT (DNA 48); PLOIDY_LEVEL (DNA 61); MUTATION (DNA 12)].
 - **PHENOTYPE** (Law #16): Synergizes with parameters [DOMINANCE (DNA 42); GENE_SILENCING (DNA 57); REGULATORY_DEPTH (DNA 63); BASE_RADIUS (DNA 29)].
-- **PREDATION** (Law #51): Synergizes with parameters [PREDATION_BIAS (DNA 36); ENERGY_TRANSFER (World); HUNGER (Stride 62); SPECIES_ID (Stride 7)].
+- **PREDATION** (Law #51): Synergizes with parameters [PREDATION_BIAS (DNA 36); PREDATION_EFFICIENCY (World); ENERGY_TRANSFER (World); HUNGER (Stride 62)].
 - **COMMS** (Law #52): Synergizes with parameters [SIGNAL_STRENGTH (DNA 19); SIGNAL_DECAY (DNA 20); PROPAGATION_SPEED (DNA 21); SIGNAL (Stride 57)].
-- **SYMBIOSIS** (Law #88): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); ENERGY_TRANSFER (World); ENERGY_EFFICIENCY (DNA 34); SPECIES_INTERACTION (World)].
-- **PARASITE** (Law #89): Synergizes with parameters [PREDATION_BIAS (DNA 36); ENERGY_TRANSFER (World); HUNGER (Stride 62); IMMUNITY (DNA 91)].
-- **HIBERNATION** (Law #90): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); HEAT_CAPACITY (World); TEMPERATURE (Stride 66); ENERGY (Stride 50)].
-- **IMMUNITY** (Law #91): Synergizes with parameters [REPAIR_EFFICIENCY (DNA 51); IMMUNITY (DNA 91); RADIATION_EXPOSURE (Stride 80); AGE (Stride 51)].
+- **SYMBIOSIS** (Law #88): Synergizes with parameters [SPECIES_AFFINITY (DNA 41); SYMBIOSIS_BOOST (World); ENERGY_TRANSFER (World); SPECIES_INTERACTION (World)].
+- **PARASITE** (Law #89): Synergizes with parameters [PREDATION_BIAS (DNA 36); PARASITE_DRAIN (World); ENERGY_TRANSFER (World); HUNGER (Stride 62)].
+- **HIBERNATION** (Law #90): Synergizes with parameters [ENERGY_EFFICIENCY (DNA 34); HIBERNATION_SAVINGS (World); HEAT_CAPACITY (World); TEMPERATURE (Stride 66)].
+- **IMMUNITY** (Law #91): Synergizes with parameters [REPAIR_EFFICIENCY (DNA 51); IMMUNITY_SHIELD (World); IMMUNITY (DNA 91); RADIATION_EXPOSURE (Stride 80)].
 
 ---
 
@@ -97,7 +97,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.REPRO` (10)
 - **Spectrum Hue**: 40.7°
-- **Governing Parameters**: BIRTH_RATE (DNA 10), SEX_CHANCE (DNA 35), MUTATION_RATE (World), REPRO_DRIVE (Stride 79)
+- **Governing Parameters**: BIRTH_RATE (DNA 10), REPRODUCTION_THRESHOLD (World), SEX_CHANCE (DNA 35), MUTATION_RATE (World)
 - **Help DB Hint**: "Reproduction driven by a reproductive-drive meter."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -116,7 +116,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.TRACK` (11)
 - **Spectrum Hue**: 41.6°
-- **Governing Parameters**: SIGNAL_RESP (DNA 13), PREDATION_BIAS (DNA 36), NEIGHBORHOOD_RADIUS (DNA 18), SIGNAL (Stride 57)
+- **Governing Parameters**: SIGNAL_RESP (DNA 13), TRACKING_SENSITIVITY (World), PREDATION_BIAS (DNA 36), SIGNAL (Stride 57)
 - **Help DB Hint**: "Predation tracking: particles chase lower-mass prey of another species."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -135,7 +135,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SENESCENCE` (12)
 - **Spectrum Hue**: 42.6°
-- **Governing Parameters**: DEATH_RATE (DNA 11), TELOMERE_LENGTH (DNA 60), AGE (Stride 51), DECAY_RATE (World)
+- **Governing Parameters**: DEATH_RATE (DNA 11), SENESCENCE_RATE (World), TELOMERE_LENGTH (DNA 60), AGE (Stride 51)
 - **Help DB Hint**: "Age-based death: old particles die off."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -230,7 +230,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PREDATION` (51)
 - **Spectrum Hue**: 47.4°
-- **Governing Parameters**: PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), SPECIES_ID (Stride 7)
+- **Governing Parameters**: PREDATION_BIAS (DNA 36), PREDATION_EFFICIENCY (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)
 - **Help DB Hint**: "Predation: mass-difference pursuit and gene absorption."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -268,7 +268,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.SYMBIOSIS` (88)
 - **Spectrum Hue**: 49.3°
-- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), ENERGY_TRANSFER (World), ENERGY_EFFICIENCY (DNA 34), SPECIES_INTERACTION (World)
+- **Governing Parameters**: SPECIES_AFFINITY (DNA 41), SYMBIOSIS_BOOST (World), ENERGY_TRANSFER (World), SPECIES_INTERACTION (World)
 - **Help DB Hint**: "Symbiosis: different species exchange energy on contact."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -287,7 +287,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.PARASITE` (89)
 - **Spectrum Hue**: 50.3°
-- **Governing Parameters**: PREDATION_BIAS (DNA 36), ENERGY_TRANSFER (World), HUNGER (Stride 62), IMMUNITY (DNA 91)
+- **Governing Parameters**: PREDATION_BIAS (DNA 36), PARASITE_DRAIN (World), ENERGY_TRANSFER (World), HUNGER (Stride 62)
 - **Help DB Hint**: "Parasite: smaller particles drain energy from larger hosts."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -306,7 +306,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.HIBERNATION` (90)
 - **Spectrum Hue**: 51.2°
-- **Governing Parameters**: ENERGY_EFFICIENCY (DNA 34), HEAT_CAPACITY (World), TEMPERATURE (Stride 66), ENERGY (Stride 50)
+- **Governing Parameters**: ENERGY_EFFICIENCY (DNA 34), HIBERNATION_SAVINGS (World), HEAT_CAPACITY (World), TEMPERATURE (Stride 66)
 - **Help DB Hint**: "Hibernation: starving particles slow down to preserve energy."
 
 ### 2. Physical Basis & Proposal (Stage 2)
@@ -325,7 +325,7 @@ Biology laws transform simple particle kinetics into self-sustaining living spec
 ### 1. Investigation Summary (Stage 1)
 - **Law Index**: `LAW_INDEXES.IMMUNITY` (91)
 - **Spectrum Hue**: 52.2°
-- **Governing Parameters**: REPAIR_EFFICIENCY (DNA 51), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80), AGE (Stride 51)
+- **Governing Parameters**: REPAIR_EFFICIENCY (DNA 51), IMMUNITY_SHIELD (World), IMMUNITY (DNA 91), RADIATION_EXPOSURE (Stride 80)
 - **Help DB Hint**: "Immunity: armour regenerates and drains are resisted."
 
 ### 2. Physical Basis & Proposal (Stage 2)

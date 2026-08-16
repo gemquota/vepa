@@ -8,8 +8,8 @@
 ## 2. Parameter Wiring Details
 The following parameters actively govern law output during runtime solver loops:
 - [x] Wired parameter: **FRICTION (DNA 27)**
+- [x] Wired parameter: **FRICTION_COEFF (World)**
 - [x] Wired parameter: **VISCOSITY (DNA 1)**
-- [x] Wired parameter: **STIFFNESS (DNA 8)**
 - [x] Wired parameter: **VEL_X/Y/Z (Stride 3-5)**
 
 ## 3. Empirical Test Results & Performance Metrics

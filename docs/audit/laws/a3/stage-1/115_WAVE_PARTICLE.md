@@ -10,14 +10,14 @@
 ## 2. Current Implementation Codebase Investigation
 - **Bitmask Gating**: Verified via `isSet(lawState, LAW_INDEXES.WAVE_PARTICLE)` in `src/physics/solver.js`.
 - **Stateless Execution Unit**: Implemented in `src/physics/lawgroups/quantumLaws.js`.
-- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), MASS (Stride 6), VEL_X/Y/Z (Stride 3-5), ALPHA (DNA 5)).
+- **Memory & Stride Layout Access**: Reads particle buffers at `i * PARTICLE_STRIDE` (BASE_RADIUS (DNA 29), SUPERPOSITION_PHASE_SCALE (World), MASS (Stride 6), ALPHA (DNA 5)).
 - **Synergy Multiplier Wiring**: Recovers multiplier via `computeSynergy()` in `src/physics/synergy.js`.
 
 ## 3. Parameter Matrix & Data Dependencies
 The law operates under direct governance of the following parameters:
 - **BASE_RADIUS (DNA 29)**
+- **SUPERPOSITION_PHASE_SCALE (World)**
 - **MASS (Stride 6)**
-- **VEL_X/Y/Z (Stride 3-5)**
 - **ALPHA (DNA 5)**
 
 ## 4. Current Limitations & Observed Behavior

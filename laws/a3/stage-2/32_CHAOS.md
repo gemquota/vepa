@@ -16,9 +16,9 @@
 ## 3. Proposed Parameter Schema & Enhancements
 To satisfy the multi-parameter control mandate, Law #32 explicitly binds to:
 1. **JITTER (DNA 3)**: Controls magnitude, spatial threshold, or temporal rate.
-2. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
-3. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
-4. **VEL_X/Y/Z (Stride 3-5)**: Controls magnitude, spatial threshold, or temporal rate.
+2. **CHAOS_LYAPUNOV (World)**: Controls magnitude, spatial threshold, or temporal rate.
+3. **EPIGENETIC_DRIFT (DNA 44)**: Controls magnitude, spatial threshold, or temporal rate.
+4. **ENTROPY (World)**: Controls magnitude, spatial threshold, or temporal rate.
 
 ## 4. Architectural Integration & Safety Guarantees
 - **NaN / Infinity Guards**: Active clamping against zero-division and runaway energy injection.
