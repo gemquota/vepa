@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { LAW_CATEGORIES, LAW_INDEXES, LAW_HELP_DB, LAW_SPECTRUM, LAW_HUE_BY_INDEX } from '../src/constants.js';
+import { LAW_CATEGORIES, LAW_INDEXES, LAW_PARAMETERS, LAW_HELP_DB, LAW_SPECTRUM, LAW_HUE_BY_INDEX } from '../src/constants.js';
 
 const ROOT_DIR = process.cwd();
 const AUDIT_DIR = path.join(ROOT_DIR, 'docs', 'audit', 'laws', 'a3');
@@ -256,7 +256,7 @@ for (const [catKey, catObj] of Object.entries(LAW_CATEGORIES)) {
       hue,
       color: catObj.color,
       helpInfo,
-      params: getLawParameters(lawKey, catKey),
+      params: LAW_PARAMETERS[lawIdx] || getLawParameters(lawKey, catKey),
       solverFile: catMeta.lawgroup
     });
   });
