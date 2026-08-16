@@ -21,6 +21,13 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.1] - 2026-08-16 → 7.1.0
+
+### Release
+- `feat(audit):` complete 128-law a3 multiphase law audit ensemble across all 8 law categories (Physics, Biology, Chemistry, Thermodynamics, Metaphysics, Electromagnetism, Information, Quantum) with 2-5 controlling parameter bindings per law.
+- `feat(ui):` integrated slider control module and law parameter UI components (`src/ui/sliderControl.js`).
+- `docs(audit):` generated 397 structured audit documents (`docs/audit/laws/a3/`), category theorycrafting reports, Stage 1/2/3 reports, 8-table checklist (`audit_progress.md`), and concatenated master ensemble (`mega_law_audit_ensemble.md`).
+
 ## [4.7.0] - 2026-08-10 → 7.0.0
 
 ### Release (first release under the new schema)
