@@ -61,6 +61,24 @@
 - **`RHO_REF` + `ADIABATIC_GAMMA_MINUS_ONE` constants** (`src/constants.js`) — reference density and γ−1 (2/3) for the ADIABATIC compression-heating rework.
 - Specified in `audit-suite/law-revamp/FINAL-REPORT.md` → *Shared Constants & World-Param Definitions* (Q · T_C · RHO_REF). Inert until the RRP reimplements the four consumer laws.
 
+### feat(sliders) — enhanced slider controls (WORLD / DNA / Species)
+- **Shortform min/max labels** — every slider row now shows its bounds as compact chips (e.g. `50` / `20K`, `1M`) using `formatShort`; long-pressing (500 ms) a bound chip turns it into an inline text input so the min/max can be typed manually (Enter/blur commits, Esc cancels). Row buttons stay aligned — bound chips and controls render in fixed positions so nothing shifts when values change.
+- **LIN/LOG toggle** — a per-slider mode button switches the mapping between linear and logarithmic; it is disabled when `min ≤ 0` (e.g. negative-range DNA traits) and auto-defaults to LOG for wide positive ranges (`min > 0` and `max/min ≥ 50`, e.g. WORLD SIZE, PARTICLE COUNT, MAX POP).
+- **Snap-to-increment** — dragged values snap to the current step grid with float-noise stabilization (`snapToStep`), and the value re-snaps whenever the zoom level changes.
+- **Hold-still precision zoom** — holding the thumb still for ~0.65 s expands the slider to ¼ of its range centred on the current value (4× zoom chip `4×`); holding still again (~1.6 s) expands to ¼ of that (1/16 range, `16×`) for fine control. Dragging while zoomed steps across the zoomed grid; the zoom chip (`1×`/`4×`/`16×`) resets zoom, and a `sc-zoombar` under the track shows the zoomed window (blue normally, orange while zoomed).
+- Wired in `src/ui/sliderControl.js` (`createSliderRow` DOM factory + pure mapping/snapping/zoom helpers) and adopted by `src/ui/worldPanel.js` (25 world sliders), `src/ui/speciesPanel.js` (64 trait sliders), `src/ui/dnaPanel.js` (64 DNA sliders, factory kept for parity) and `src/ui/settingsPanel.js` (4 camera + 4 meta sliders), with `.sc-*` styles in `style.css`.
+- Tests: `tests/unit/sliderControl.test.js` — 21 tests covering short formatting, lin/log mapping, snapping, zoom windows and log-mode defaults. `vepa4 syntax` + `vepa4 build` clean; full suite 173/182 pass (the 9 failures are the pre-existing stale law-RRP assertions in `lawCategories`, `lawgroupsBiologyChemistry`, `lawgroupsEmInfoMeta`, `lawgroupsQuantum`).
+
+### feat(ui) — bold-friendly scale-up (2× toolbar, 2-row law tiles, enlarged sliders)
+- **2× header menu icons** — `#top-toolbar` grows to 64 px with 56×48 px square buttons (22 px glyphs) and explicit 34 px `.chaos-icon` sizing (previously unstyled and tiny).
+- **Law tiles split into 2 rows** — icon-mode `.sq-toggle`s stack vertically (icon on top, `.tog-name` underneath, 60×58 px) so each law reads as its own bold tile; word-mode law buttons grow to 13 px labels / 18 px icons across a 2-column grid.
+- **Enlarged slider controls** — `.sc-*` chips, mode/zoom buttons and value readouts grow ~2× (24 px tall, 16 px thumbs, 5 px tracks, bigger labels) on WORLD / DNA / Species panels.
+- **Mobile overrides scaled to match** — toolbar 44×38 px buttons, 50×48 px law tiles and proportionally larger slider controls on narrow screens.
+- Styles appended to `style.css` (neon-noir palette unchanged); verified in-browser on the LAWS (icon + word) and WORLD/Species slider surfaces.
+
+### feat(ui) — single play/pause transport
+- **Dead scrubbers removed** — the 5-button transport cluster (⏪ ◀ ⏸ ▶ ⏩) in the top-left toolbar collapses to the single working `#play-pause-btn`; the rewind/reverse/forward/fast-forward handlers in `src/ui/ui.js` and the unused `sim:playbackMode` bus handler in `src/main.js` are deleted.
+
 ## [4.6.28] - 2026-08-08 → 6.28.0
 
 ### Multiplex help & long-press tooltips

@@ -94,10 +94,19 @@ describe('chemistry lawgroups', () => {
     seed(buf, 2);
     buf[S.CHARGE] = 1;
     buf[PARTICLE_STRIDE + S.CHARGE] = 0;
+    // Electrolysis needs an electrolyte: CONDUCTIVITY DNA scales the reaction.
+    buf[S.DNA_CACHE_START + D.CONDUCTIVITY] = 1;
     expect(applyElectrolysis(buf, 0, PARTICLE_STRIDE, 1)).toBeNull();
     expect(buf[S.MASS]).toBeLessThan(1.5);
     expect(buf[S.ENERGY]).toBeGreaterThan(100);
     expect(buf[S.SIGNAL]).toBeGreaterThan(0);
+    // No electrolyte → no decomposition.
+    const inert = view(2);
+    seed(inert, 2);
+    inert[S.CHARGE] = 1;
+    inert[PARTICLE_STRIDE + S.CHARGE] = 0;
+    applyElectrolysis(inert, 0, PARTICLE_STRIDE, 1);
+    expect(inert[S.MASS]).toBe(1.5);
   });
 
   it('applyPhotolysis splits mass into energy when signal is high', () => {

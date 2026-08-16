@@ -46,20 +46,32 @@ function makeWorld(count) {
 }
 
 describe('Batch 29 — SUPERPOSITION / TUNNELING / DECOHERENCE / WAVE_PARTICLE (indices 112-115)', () => {
-  it('SUPERPOSITION adds random velocity-spread force', () => {
-    // Direct: prng 0.9 → kick (0.9-0.5)*2*1 = 0.8
+  it('SUPERPOSITION drifts without collapse and collapses by the L2 Born rule', () => {
+    // Direct (no collapse, prng 0.9 ≥ 0.02·k): gentle interference drift from
+    // the rotating phase — the amplitude state is untouched.
     const buf = new Float32Array(1 * PARTICLE_STRIDE);
     const f = applySuperposition(buf, 0, 1, rngHigh);
-    expect(f.ax).toBeCloseTo(0.8, 5);
-    expect(f.ay).toBeCloseTo(0.8, 5);
+    expect(f.ax).toBeCloseTo(Math.sin(0.05) * 0.05, 6);
+    expect(f.ay).toBeCloseTo(Math.cos(0.05) * 0.05, 6);
 
-    // Integration: solver k=0.05 → kick (0.9-0.5)*0.1 = 0.04 → velocity moves
+    // Direct collapse with unnormalised amplitudes: the L2 Born draw
+    // (p = |a|²/Σ|a|²) samples basis 0 for r = 0.25·norm².
+    const c = new Float32Array(1 * PARTICLE_STRIDE);
+    c[S.SUPER_AMP_1] = 0.5;
+    c[S.SUPER_AMP_2] = 0.5;
+    let draw = 0;
+    const seq = () => (draw++ === 0 ? 0.01 : 0.5);
+    const cf = applySuperposition(c, 0, 1, seq);
+    expect(cf.ax).toBe(0); // basis 0 = stay
+    expect(c[S.SUPER_AMP_1]).toBeCloseTo(0.85, 6); // 1 − 3·0.05 re-spread
+
+    // Integration: drift force (k=0.05) moves the velocity; gate off → frozen.
     const w = makeWorld(1);
     const st = createLawState();
     set(st, LAW_INDEXES.SUPERPOSITION);
     expect(isSet(st, LAW_INDEXES.SUPERPOSITION)).toBe(true);
     solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rngHigh);
-    expect(Math.abs(w.view[S.VEL_X])).toBeGreaterThan(0.001);
+    expect(Math.abs(w.view[S.VEL_X])).toBeGreaterThan(1e-9);
 
     // Gate: no law → frozen
     const w2 = makeWorld(1);
@@ -119,30 +131,36 @@ describe('Batch 29 — SUPERPOSITION / TUNNELING / DECOHERENCE / WAVE_PARTICLE (
     expect(w2.view[S.SIGNAL]).toBe(0);
   });
 
-  it('WAVE_PARTICLE damps slow (wave) and amplifies fast (particle) motion', () => {
-    // Direct: wave regime damps, particle regime amplifies, middle returns null
+  it('WAVE_PARTICLE spreads unmeasured particles as waves and accelerates measured ones', () => {
+    // Direct: unmeasured slow particle → perpendicular de Broglie drift (no damping).
     const wave = new Float32Array(1 * PARTICLE_STRIDE);
     wave[S.VEL_X] = 0.2;
-    expect(applyWaveParticle(wave, 0, 1).ax).toBeLessThan(0);
+    const waveForce = applyWaveParticle(wave, 0, 1);
+    expect(waveForce.ax).toBeCloseTo(0, 6); // perpendicular to v
+    expect(waveForce.ay).toBeCloseTo(0.02, 6); // inv(0.2)·0.02·(0.5 + 0.5·sin 0)
+
+    // Measured particle → localised, accelerates along velocity; flag decays.
     const part = new Float32Array(1 * PARTICLE_STRIDE);
     part[S.VEL_X] = 5;
+    part[S.WAVE_MEASURED] = 1;
     expect(applyWaveParticle(part, 0, 1).ax).toBeCloseTo(0.05, 5);
-    const mid = new Float32Array(1 * PARTICLE_STRIDE);
-    mid[S.VEL_X] = 1;
-    expect(applyWaveParticle(mid, 0, 1)).toBeNull();
+    expect(part[S.WAVE_MEASURED]).toBeCloseTo(0.95, 6);
 
-    // Integration: fast particle accelerates (VEL grows), slow particle damps
+    // Integration: a measured particle accelerates (VEL grows).
     const wf = makeWorld(1);
     wf.view[S.VEL_X] = 5;
+    wf.view[S.WAVE_MEASURED] = 1;
     const st = createLawState();
     set(st, LAW_INDEXES.WAVE_PARTICLE);
     expect(isSet(st, LAW_INDEXES.WAVE_PARTICLE)).toBe(true);
     for (let t = 0; t < 10; t++) solve(wf.view, 1, PARTICLE_STRIDE, st, wf.dna, WORLD, DT, rngHigh);
     expect(wf.view[S.VEL_X]).toBeGreaterThan(5);
 
+    // Integration: an unmeasured particle spreads perpendicular — forward
+    // speed is preserved (no damping).
     const ws = makeWorld(1);
     ws.view[S.VEL_X] = 0.2;
     for (let t = 0; t < 30; t++) solve(ws.view, 1, PARTICLE_STRIDE, st, ws.dna, WORLD, DT, rngHigh);
-    expect(ws.view[S.VEL_X]).toBeLessThan(0.2);
+    expect(ws.view[S.VEL_X]).toBeCloseTo(0.2, 2);
   });
 });

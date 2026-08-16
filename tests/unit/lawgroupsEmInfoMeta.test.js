@@ -126,10 +126,22 @@ describe('META law group', () => {
     const memoryBefore = buf[S.MEMORY];
     const result = applyConsciousness(buf, 0, 1);
     expect(result).toBeNull();
+    // Low prediction error (stationary, model matches) → self-maintenance:
+    // ENERGY regens, MEMORY is untouched.
     expect(buf[S.ENERGY]).toBeGreaterThan(energyBefore);
-    expect(buf[S.MEMORY]).toBeGreaterThan(memoryBefore);
+    expect(buf[S.MEMORY]).toBe(memoryBefore);
     expect(buf[S.ENERGY]).toBeLessThanOrEqual(200);
     expect(buf[S.MEMORY]).toBeLessThanOrEqual(1);
+  });
+
+  it('applyConsciousness attends when prediction error is high (MEMORY/SIGNAL up, ENERGY down)', () => {
+    const buf = view(1);
+    seed(buf);
+    buf[S.VEL_X] = 10; // speed 10 vs self-model 0 → error ≈ 9.5
+    applyConsciousness(buf, 0, 1);
+    expect(buf[S.MEMORY]).toBeCloseTo(0.19, 5); // 9.5 · 0.02
+    expect(buf[S.SIGNAL]).toBeCloseTo(0.095, 5); // 9.5 · 0.01
+    expect(buf[S.ENERGY]).toBeCloseTo(99.525, 5); // 100 − 9.5 · 0.05
   });
 
   it('applyPerception aligns velocity toward a neighbor within extended range', () => {

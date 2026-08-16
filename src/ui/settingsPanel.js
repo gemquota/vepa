@@ -7,6 +7,7 @@ import { setCameraConfig, resetCamera } from './camera.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
 import { createLawPanel } from './lawPanel.js';
 import { isDebugVisible, setDebugVisible, debugSnapshot, logDebug } from '../debug.js';
+import { createSliderRow } from './sliderControl.js';
 
 const CAMERA_FIELDS = [
   { key: 'focalLength',       label: 'FOCAL DISTANCE',     min: 400,  max: 4000, step: 50,   value: 1200 },
@@ -37,12 +38,7 @@ export function createSettingsPanel(bus, lawStateObj) {
   html += '<div class="panel-section">';
   html += '<h3 class="law-category-header" style="color:#0ff">CAMERA</h3>';
   for (const f of CAMERA_FIELDS) {
-    html += `<div class="setting-row">`;
-    html += `<label class="setting-label" for="cam-${f.key}">${f.label}</label>`;
-    html += `<input id="cam-${f.key}" class="setting-slider" type="range" `;
-    html += `min="${f.min}" max="${f.max}" step="${f.step}" value="${f.value}" data-cam-key="${f.key}">`;
-    html += `<span class="setting-value" id="cam-val-${f.key}">${f.value}</span>`;
-    html += '</div>';
+    html += `<div data-slider-slot="cam-${f.key}"></div>`;
   }
   html += '<div class="setting-row">';
   html += '<button id="cam-reset" class="btn tiny-btn" type="button">RESET CAMERA</button>';
@@ -53,12 +49,7 @@ export function createSettingsPanel(bus, lawStateObj) {
   html += '<div class="panel-section">';
   html += '<h3 class="law-category-header" style="color:#f8c">META</h3>';
   for (const f of META_FIELDS) {
-    html += `<div class="setting-row">`;
-    html += `<label class="setting-label" for="meta-${f.key}">${f.label}</label>`;
-    html += `<input id="meta-${f.key}" class="setting-slider" type="range" `;
-    html += `min="${f.min}" max="${f.max}" step="${f.step}" value="${f.value}" data-meta-key="${f.key}">`;
-    html += `<span class="setting-value" id="meta-val-${f.key}">${f.value}</span>`;
-    html += '</div>';
+    html += `<div data-slider-slot="meta-${f.key}"></div>`;
   }
   html += '</div>';
 
@@ -89,38 +80,52 @@ export function createSettingsPanel(bus, lawStateObj) {
     });
   }
 
-  // Wire camera sliders
-  for (const input of panel.querySelectorAll('.setting-slider[data-cam-key]')) {
-    const key = input.dataset.camKey;
-    const valEl = document.getElementById(`cam-val-${key}`);
-    input.addEventListener('input', () => {
-      const value = parseFloat(input.value);
-      if (valEl) valEl.textContent = value;
-      setCameraConfig({ [key]: value });
+  // ── Enhanced slider rows (unified with WORLD / DNA / Species) ──
+  const camRows = {};
+  panel.querySelectorAll('[data-slider-slot^="cam-"]').forEach((slot) => {
+    const key = slot.dataset.sliderSlot.slice(4);
+    const f = CAMERA_FIELDS.find((x) => x.key === key);
+    if (!f) return;
+    const row = createSliderRow({
+      label: f.label,
+      min: f.min,
+      max: f.max,
+      step: f.step,
+      value: f.value,
+      key: `cam-${key}`,
+      title: `${f.label} (camera)`,
+      onChange: (value) => setCameraConfig({ [key]: value }),
     });
-  }
+    camRows[key] = row;
+    slot.replaceWith(row.el);
+  });
 
-  // Wire meta sliders
-  for (const input of panel.querySelectorAll('.setting-slider[data-meta-key]')) {
-    const key = input.dataset.metaKey;
-    const valEl = document.getElementById(`meta-val-${key}`);
-    const field = META_FIELDS.find((f) => f.key === key);
-    input.addEventListener('input', () => {
-      const value = parseFloat(input.value);
-      if (valEl) valEl.textContent = value;
-      if (field) field.set(value);
+  const metaRows = {};
+  panel.querySelectorAll('[data-slider-slot^="meta-"]').forEach((slot) => {
+    const key = slot.dataset.sliderSlot.slice(5);
+    const f = META_FIELDS.find((x) => x.key === key);
+    if (!f) return;
+    const row = createSliderRow({
+      label: f.label,
+      min: f.min,
+      max: f.max,
+      step: f.step,
+      value: f.value,
+      key: `meta-${key}`,
+      title: `${f.label} (meta)`,
+      onChange: (value) => f.set(value),
     });
-  }
+    metaRows[key] = row;
+    slot.replaceWith(row.el);
+  });
 
   const resetBtn = document.getElementById('cam-reset');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       resetCamera();
       for (const f of CAMERA_FIELDS) {
-        const input = document.getElementById(`cam-${f.key}`);
-        const valEl = document.getElementById(`cam-val-${f.key}`);
-        if (input) input.value = f.value;
-        if (valEl) valEl.textContent = f.value;
+        const row = camRows[f.key];
+        if (row) row.setValue(f.value, { emit: false, snap: true });
       }
     });
   }

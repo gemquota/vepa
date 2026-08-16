@@ -80,9 +80,6 @@ let historyField = null;
 let historyLast = null;
 let historyTick = 0;
 let historyBufferRef = null;
-let historyComX = HISTORY_DIM * 0.5;
-let historyComY = HISTORY_DIM * 0.5;
-let historyComZ = HISTORY_DIM * 0.5;
 
 // SINGULARITY law — collapse threshold (mass units)
 const SINGULARITY_MASS = 20;
@@ -97,9 +94,6 @@ export function setBuffer(buffer) {
     historyField = new Float32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
     historyLast = new Uint32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
     historyTick = 0;
-    historyComX = HISTORY_DIM * 0.5;
-    historyComY = HISTORY_DIM * 0.5;
-    historyComZ = HISTORY_DIM * 0.5;
   }
 }
 
@@ -168,22 +162,6 @@ export function applyDrag(vx, vy, vz, friction) {
     ax: nanGuard(vx * damp - vx),
     ay: nanGuard(vy * damp - vy),
     az: nanGuard(vz * damp - vz),
-  };
-}
-
-// ============================================================================
-// 3. ENTROPY
-// ============================================================================
-export function applyEntropy(ax, ay, az, jitter, dt) {
-  const scale = jitter * dt;
-  const t0 = performance.now() * 2654435761;
-  const r1 = ((t0 >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  const r2 = (((t0 * 1103515245) >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  const r3 = (((t0 * 214013) >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  return {
-    ax: nanGuard(ax + r1 * scale),
-    ay: nanGuard(ay + r2 * scale),
-    az: nanGuard(az + r3 * scale * 0.3),
   };
 }
 
@@ -1076,21 +1054,24 @@ export function applyConvection(lawState, view, base, dt, synergy) {
 // ============================================================================
 // 23. TIME DILATION
 // ============================================================================
-export function applyTimeDilation(lawState, view, base, synergy, neighborList, neighborCount) {
+export function applyTimeDilation(lawState, view, base, synergy, neighborList, neighborCount, worldSize) {
   if (!isSet(lawState, LAW_INDEXES.TIME_DILATION)) return 1.0; // TIME_DILATION=30
   // Weak-field gravitational time dilation (v4.6.29): localDt = sqrt(1 - 2*Phi*k),
   // Phi = softened potential summed over the local neighbourhood (grid snapshot).
-  // Clocks run slower beside massive bodies and at full speed in empty space.
+  // Self is excluded and distances are wrapped across the torus, so clocks run
+  // slower beside massive bodies and at full speed in empty space.
   let potential = 0;
-  if (neighborList && neighborCount > 0) {
+  if (neighborList && neighborCount > 0 && worldSize > 0) {
     const px = view[base + S.POS_X];
     const py = view[base + S.POS_Y];
     const pz = view[base + S.POS_Z];
+    const half = worldSize * 0.5;
     for (let n = 0; n < neighborCount; n++) {
       const jBase = neighborList[n] * PARTICLE_STRIDE;
-      const dx = (view[jBase + S.POS_X] || 0) - px;
-      const dy = (view[jBase + S.POS_Y] || 0) - py;
-      const dz = (view[jBase + S.POS_Z] || 0) - pz;
+      if (jBase === base) continue; // no self-potential
+      const dx = wrapDelta((view[jBase + S.POS_X] || 0) - px, worldSize, half);
+      const dy = wrapDelta((view[jBase + S.POS_Y] || 0) - py, worldSize, half);
+      const dz = wrapDelta((view[jBase + S.POS_Z] || 0) - pz, worldSize, half);
       const r = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.5;
       potential += (view[jBase + S.MASS] || 0) / r;
     }
@@ -1098,6 +1079,14 @@ export function applyTimeDilation(lawState, view, base, synergy, neighborList, n
   const phi = potential * 0.001 * synergy;
   const localDt = Math.sqrt(Math.max(0, 1 - 2 * phi));
   return Math.max(0.3, Number.isFinite(localDt) ? localDt : 1.0);
+}
+
+/** Signed shortest distance across a toroidal world (worldSize > 0). */
+function wrapDelta(d, worldSize, half) {
+  let w = d % worldSize;
+  if (w > half) w -= worldSize;
+  else if (w < -half) w += worldSize;
+  return w;
 }
 
 // ============================================================================
@@ -2683,11 +2672,13 @@ export function applyEntanglePair(p1Ptr, p2Ptr, dist) {
 }
 
 /**
- * ENTANGLEMENT — non-local coupling (per-particle). Momentum converges with
- * the partner at any distance; signals relay through the link; the phase
- * decays until the link snaps with a recoil kick.
+ * ENTANGLEMENT — correlated link lifecycle (per-particle). The pair shares a
+ * phase that decoheres (×0.998/tick); no signals and no momentum travel
+ * through the link (no-signaling theorem). When one partner dies or the phase
+ * expires, the shared correlation collapses on both sides. TELEPORT is the
+ * only legitimate use of the link (quantum state transfer).
  */
-export function applyEntanglement(p1Ptr, k, prng) {
+export function applyEntanglement(p1Ptr) {
   const buf = buffer_global;
   const partnerIdx = buf[p1Ptr + S.ENTANGLE_ID];
   if (partnerIdx < 0) return null;
@@ -2696,41 +2687,25 @@ export function applyEntanglement(p1Ptr, k, prng) {
 
   const jBase = partnerIdx * PARTICLE_STRIDE;
   if (buf[jBase + S.DEAD] >= 0.5 || buf[jBase + S.MASS] <= 0) {
-    // partner lost → recoil kick, link snaps
-    buf[p1Ptr + S.ENTANGLE_ID] = -1;
-    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
-    if (prng) {
-      return {
-        ax: nanGuard((prng() - 0.5) * 0.8),
-        ay: nanGuard((prng() - 0.5) * 0.8),
-        az: nanGuard((prng() - 0.5) * 0.8),
-      };
-    }
+    // partner lost → the correlation collapses on both sides
+    clearEntangleLink(p1Ptr);
+    clearEntangleLink(jBase);
     return null;
   }
 
   if (buf[p1Ptr + S.ENTANGLE_PHASE] < 0.05) {
-    buf[p1Ptr + S.ENTANGLE_ID] = -1;
-    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    clearEntangleLink(p1Ptr);
+    clearEntangleLink(jBase);
     return null;
   }
+  return null;
+}
 
-  // non-local momentum exchange (returned as a force — survives integration)
-  const dvx = (buf[jBase + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * k * phase;
-  const dvy = (buf[jBase + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * k * phase;
-  const dvz = (buf[jBase + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * k * phase;
-
-  // non-local signal relay (persists in stride)
-  const sJ = buf[jBase + S.SIGNAL] || 0;
-  if (sJ > 0.3) {
-    buf[p1Ptr + S.SIGNAL] = Math.max(buf[p1Ptr + S.SIGNAL] || 0, sJ * phase);
-  }
-
-  return {
-    ax: nanGuard(dvx),
-    ay: nanGuard(dvy),
-    az: nanGuard(dvz),
-  };
+/** Clear one side of an entangled pair. */
+function clearEntangleLink(ptr) {
+  const buf = buffer_global;
+  buf[ptr + S.ENTANGLE_ID] = -1;
+  buf[ptr + S.ENTANGLE_PHASE] = 0;
 }
 
 /** HISTORY — accumulate presence into the spatial memory field. */
@@ -2747,52 +2722,47 @@ export function applyHistoryWrite(p1Ptr, px, py, pz, worldSize) {
   historyLast[c] = historyTick;
 }
 
-/** Advance the memory-field clock once per solve and refresh the centre of mass. */
+/** Advance the memory-field clock once per solve. */
 export function applyHistoryCalc() {
   if (!historyField) return;
   historyTick++;
-  computeHistoryCom();
 }
 
-/** Recompute the field centre of mass from the current memory field. */
-function computeHistoryCom() {
-  let sum = 0, sx = 0, sy = 0, sz = 0;
-  for (let z = 0; z < HISTORY_DIM; z++) {
-    for (let y = 0; y < HISTORY_DIM; y++) {
-      for (let x = 0; x < HISTORY_DIM; x++) {
-        const v = historyField[x + y * HISTORY_DIM + z * HISTORY_DIM * HISTORY_DIM] || 0;
-        sum += v;
-        sx += v * x;
-        sy += v * y;
-        sz += v * z;
-      }
-    }
-  }
-  if (sum < 1e-6) {
-    historyComX = HISTORY_DIM * 0.5;
-    historyComY = HISTORY_DIM * 0.5;
-    historyComZ = HISTORY_DIM * 0.5;
-    return;
-  }
-  historyComX = sx / sum;
-  historyComY = sy / sum;
-  historyComZ = sz / sum;
-}
-
-/** HISTORY — drift toward the field's centre of mass (global memory attractor). */
+/** HISTORY — drift along the local memory-field gradient (archaeology as a force). */
 export function applyHistoryForce(p1Ptr, px, py, pz, worldSize, k) {
   if (!historyField) return null;
   const cellX = (px / worldSize) * HISTORY_DIM;
   const cellY = (py / worldSize) * HISTORY_DIM;
   const cellZ = (pz / worldSize) * HISTORY_DIM;
-  const gx = historyComX - cellX;
-  const gy = historyComY - cellY;
-  const gz = historyComZ - cellZ;
+  const { gx, gy, gz } = historyGradient(cellX, cellY, cellZ);
   const gm = Math.sqrt(gx * gx + gy * gy + gz * gz);
-  if (gm < 0.01) return null;
+  if (gm < 1e-6) return null;
   return {
     ax: nanGuard((gx / gm) * k),
     ay: nanGuard((gy / gm) * k),
     az: nanGuard((gz / gm) * k),
+  };
+}
+
+/** Value of one coarse memory cell, toroidally wrapped. */
+function historyCell(cx, cy, cz) {
+  const x = ((cx % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  const y = ((cy % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  const z = ((cz % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  return historyField[x + y * HISTORY_DIM + z * HISTORY_DIM * HISTORY_DIM] || 0;
+}
+
+/**
+ * Central-difference gradient of the coarse memory field at a fractional cell
+ * position (wrap-around neighbours). Six reads — no global field scan.
+ */
+function historyGradient(cx, cy, cz) {
+  const x = Math.floor(cx);
+  const y = Math.floor(cy);
+  const z = Math.floor(cz);
+  return {
+    gx: historyCell(x + 1, y, z) - historyCell(x - 1, y, z),
+    gy: historyCell(x, y + 1, z) - historyCell(x, y - 1, z),
+    gz: historyCell(x, y, z + 1) - historyCell(x, y, z - 1),
   };
 }

@@ -193,22 +193,32 @@ describe('Batch 18 audit — STIGMERGY / SIGNAL_BOOST / LEARN / SYMBOL', () => {
       expect(isSet(lawsOn('SYMBOL'), LAW_INDEXES.SYMBOL)).toBe(true);
     });
 
-    it('attracts same-species particles by SPECIES_AFFINITY (dx 3, dist 5 → ax 0.03)', () => {
+    it('attracts same-token pairs by shared meaning (dx 3, dist 5 → ax ≈ 0.0045)', () => {
       const b = buf(2);
-      b[S.SPECIES_ID] = 0;
-      b[PARTICLE_STRIDE + S.SPECIES_ID] = 0;
-      b[S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      b[S.SYMBOL_TOKEN] = 0.5;   // bin 4
+      b[PARTICLE_STRIDE + S.SYMBOL_TOKEN] = 0.5; // bin 4
       const f = applySymbolForce(0, PARTICLE_STRIDE, 3, 0, 0, 5, 0.3);
-      expect(f.ax).toBeCloseTo(0.03, 4);
+      // force = 0.15·k/(dist+1) = 0.0075; ax = dx/dist · force ≈ 0.0045
+      expect(f.ax).toBeCloseTo(0.0045, 4);
     });
 
-    it('repels different-species pairs (affinity flipped ×0.5)', () => {
+    it('repels different-token pairs weakly (dx 3, dist 5 → ax ≈ −0.0015)', () => {
       const b = buf(2);
-      b[S.SPECIES_ID] = 0;
-      b[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
-      b[S.DNA_CACHE_START + D.SPECIES_AFFINITY] = 1;
+      b[S.SYMBOL_TOKEN] = 0;     // bin 0
+      b[PARTICLE_STRIDE + S.SYMBOL_TOKEN] = 1; // bin 7
       const f = applySymbolForce(0, PARTICLE_STRIDE, 3, 0, 0, 5, 0.3);
-      expect(f.ax).toBeCloseTo(-0.015, 5); // k · (−affinity·0.5) / (dist+1) · dx/(dist)
+      // force = −0.05·k/(dist+1) = −0.0025; ax = dx/dist · force ≈ −0.0015
+      expect(f.ax).toBeCloseTo(-0.0015, 4);
+    });
+
+    it('imprints the higher-MEMORY partner’s token on contact', () => {
+      const b = buf(2);
+      b[S.MEMORY] = 1;
+      b[PARTICLE_STRIDE + S.MEMORY] = 0;
+      b[S.SYMBOL_TOKEN] = 0.5;   // bin 4 — the teacher
+      b[PARTICLE_STRIDE + S.SYMBOL_TOKEN] = 0;
+      applySymbolForce(0, PARTICLE_STRIDE, 1, 0, 0, 1, 1); // dist 1 < rSum + 0.5
+      expect(b[PARTICLE_STRIDE + S.SYMBOL_TOKEN]).toBeCloseTo(4 / 7 * 0.2, 5); // learn = |1−0|·0.2
     });
 
     it('integration: solve() pulls same-species flockmates together', () => {

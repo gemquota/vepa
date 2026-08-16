@@ -43,14 +43,35 @@ function seed(buf) {
 }
 
 describe('Quantum law group', () => {
-  it('applySuperposition returns a random velocity-spread force', () => {
+  it('applySuperposition returns interference drift, collapsing by the L2 Born rule', () => {
+    // No collapse (prng 0.9 >= 0.02·k): gentle interference drift from the
+    // rotating phase — amplitude state is untouched.
     const buf = view(1);
     seed(buf);
     const f = applySuperposition(buf, 0, 1, fixedPrng(0.9));
     expect(f).not.toBeNull();
-    expect(f.ax).toBeCloseTo(0.8, 5);
-    expect(f.ay).toBeCloseTo(0.8, 5);
-    expect(f.az).toBeCloseTo(0.8, 5);
+    expect(f.ax).toBeCloseTo(Math.sin(0.05) * 0.05, 6);
+    expect(f.ay).toBeCloseTo(Math.cos(0.05) * 0.05, 6);
+    expect(f.az).toBe(0);
+    expect(buf[S.SUPER_PHASE]).toBeCloseTo(0.05, 6);
+    expect(buf[S.SUPER_AMP_1]).toBeCloseTo(0.7, 6);
+
+    // Collapse with unnormalised amplitudes (0.5, 0.5, 0, 0): the L2 Born
+    // draw (p_b = |a_b|²/Σ|a|²) samples basis 0 for r = 0.25·0.5 — the old
+    // L1 sum would have picked basis 1.
+    const c = view(1);
+    seed(c);
+    c[S.SUPER_AMP_1] = 0.5;
+    c[S.SUPER_AMP_2] = 0.5;
+    c[S.SUPER_AMP_3] = 0;
+    c[S.SUPER_AMP_4] = 0;
+    let draw = 0;
+    const seqPrng = () => (draw++ === 0 ? 0.01 : 0.5); // trigger, then r = 0.25
+    const cf = applySuperposition(c, 0, 1, seqPrng);
+    expect(cf.ax).toBe(0); // basis 0 = stay
+    expect(cf.ay).toBe(0);
+    expect(c[S.SUPER_AMP_1]).toBeCloseTo(0.85, 6); // 1 − 3·0.05 re-spread
+    expect(c[S.SUPER_AMP_2]).toBeCloseTo(0.05, 6);
   });
 
   it('applyTunneling phase-shifts position when triggered', () => {
@@ -82,55 +103,89 @@ describe('Quantum law group', () => {
     expect(buf[S.SIGNAL]).toBeLessThanOrEqual(10);
   });
 
-  it('applyWaveParticle damps in wave regime, amplifies in particle regime, null between', () => {
+  it('applyWaveParticle spreads unmeasured particles as waves and accelerates measured ones', () => {
+    // Unmeasured (WAVE_MEASURED = 0): de Broglie perpendicular drift, λ ∝ 1/p.
     const wave = view(1);
     seed(wave);
     wave[S.VEL_X] = 0.2;
+    wave[S.VEL_Y] = 0;
     const waveForce = applyWaveParticle(wave, 0, 1);
-    expect(waveForce.ax).toBeLessThan(0);
+    expect(waveForce.ax).toBeCloseTo(0, 6); // perpendicular to (vx, vy)
+    expect(waveForce.ay).toBeCloseTo(0.02, 6); // inv=2 · 0.02 · (0.5 + 0.5·sin 0)
 
+    // Measured (WAVE_MEASURED > 0.1): localised particle accelerates along v.
     const particle = view(1);
     seed(particle);
     particle[S.VEL_X] = 5;
+    particle[S.WAVE_MEASURED] = 1;
     const particleForce = applyWaveParticle(particle, 0, 1);
-    expect(particleForce.ax).toBeGreaterThan(0);
     expect(particleForce.ax).toBeCloseTo(0.05, 5);
-
-    const middle = view(1);
-    seed(middle);
-    middle[S.VEL_X] = 1;
-    expect(applyWaveParticle(middle, 0, 1)).toBeNull();
+    // The measurement flag decays ×0.95 per tick.
+    expect(particle[S.WAVE_MEASURED]).toBeCloseTo(0.95, 6);
   });
 
-  it('applyUncertainty jitters position and adds a velocity kick', () => {
-    const buf = view(1);
-    seed(buf);
-    const f = applyUncertainty(buf, 0, 1, fixedPrng(0.9));
-    expect(buf[S.POS_X]).not.toBe(100);
-    expect(buf[S.POS_X]).toBeGreaterThan(100);
-    expect(f.ax).toBeCloseTo(0.02, 5);
+  it('applyUncertainty trades position certainty for momentum certainty (speed-gated)', () => {
+    // Fast (speed >= 0.5): position jitter only — no force, Heisenberg keeps p sharp.
+    const fast = view(1);
+    seed(fast);
+    fast[S.VEL_X] = 5;
+    expect(applyUncertainty(fast, 0, 1, fixedPrng(0.9))).toBeNull();
+    expect(fast[S.POS_X]).toBeCloseTo(100.008, 5); // +0.4·0.02
+    expect(fast[S.POS_Y]).toBeCloseTo(100.008, 5);
+
+    // Slow (speed < 0.5): velocity kick only — position stays sharp.
+    const slow = view(1);
+    seed(slow);
+    const f = applyUncertainty(slow, 0, 1, fixedPrng(0.9));
+    expect(f.ax).toBeCloseTo(0.02, 5); // +0.4·0.05
     expect(f.ay).toBeCloseTo(0.02, 5);
     expect(f.az).toBeCloseTo(0.02, 5);
+    expect(slow[S.POS_X]).toBe(100);
   });
 
-  it('applyTeleport jumps position and spends ENERGY when triggered', () => {
-    const buf = view(1);
+  it('applyTeleport transfers state to an entangled partner when triggered', () => {
+    const buf = view(2);
     seed(buf);
-    const result = applyTeleport(buf, 0, 2000, 1000, fixedPrng(0.9));
+    buf[S.ENTANGLE_ID] = 1;
+    buf[PARTICLE_STRIDE + S.ENTANGLE_ID] = 0;
+    buf[S.ENTANGLE_PHASE] = 1;
+    buf[PARTICLE_STRIDE + S.ENTANGLE_PHASE] = 1;
+    buf[S.VEL_X] = 2;
+    let draw = 0;
+    const seqPrng = () => (draw++ === 0 ? 0.001 : 0.9); // trigger, then ground-state jitter
+    const result = applyTeleport(buf, 0, 1, seqPrng);
     expect(result).toBeNull();
-    expect(buf[S.POS_X]).toBeCloseTo(1800, 3);
-    expect(buf[S.POS_Y]).toBeCloseTo(1800, 3);
-    expect(buf[S.POS_Z]).toBeCloseTo(1800, 3);
-    expect(buf[S.ENERGY]).toBe(0);
-    expect(buf[S.ENERGY]).toBeLessThan(100);
+    // State moved to the partner; the sender collapsed — no clone remains.
+    expect(buf[PARTICLE_STRIDE + S.VEL_X]).toBeCloseTo(2, 6);
+    expect(buf[PARTICLE_STRIDE + S.ENERGY]).toBeCloseTo(130, 6); // 100 + 100·0.3
+    expect(buf[S.ENERGY]).toBeCloseTo(95, 6); // 100 − 5 classical channel cost
+    expect(buf[S.VEL_X]).toBeCloseTo(0.16, 6); // (0.9 − 0.5)·0.4
+    // Positions never move; the link is consumed on both sides.
+    expect(buf[S.POS_X]).toBe(100);
+    expect(buf[S.ENTANGLE_ID]).toBe(-1);
+    expect(buf[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(-1);
   });
 
-  it('applyTeleport does nothing when ENERGY is low', () => {
+  it('applyTeleport does nothing without a partner or with low ENERGY', () => {
+    // No entangled partner.
+    const lone = view(1);
+    seed(lone);
+    lone[S.ENTANGLE_ID] = -1;
+    lone[S.ENERGY] = 100;
+    expect(applyTeleport(lone, 0, 1, fixedPrng(0.001))).toBeNull();
+    expect(lone[S.POS_X]).toBe(100);
+    expect(lone[S.ENERGY]).toBe(100);
+
+    // Partner exists but the sender lacks the 10 ENERGY gate.
     const buf = view(1);
     seed(buf);
+    buf[S.ENTANGLE_ID] = 1;
+    buf[PARTICLE_STRIDE + S.ENTANGLE_ID] = 0;
+    buf[PARTICLE_STRIDE + S.ENTANGLE_PHASE] = 1;
     buf[S.ENERGY] = 5;
-    applyTeleport(buf, 0, 2000, 1000, fixedPrng(0.9));
+    applyTeleport(buf, 0, 1, fixedPrng(0.001));
     expect(buf[S.POS_X]).toBe(100);
+    expect(buf[S.ENERGY]).toBe(5);
   });
 
   it('applyObserver collapses j velocity toward i and imprints MEMORY', () => {

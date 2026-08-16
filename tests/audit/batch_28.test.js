@@ -182,14 +182,27 @@ describe('Batch 28 — SHIELDING / POLARIZATION / NAVIGATION / ENCRYPTION', () =
     expect(off.view[S.VEL_X]).toBe(0);
   });
 
-  it('ENCRYPTION (111): active signals decay slowly with a persistence floor', () => {
+  it('ENCRYPTION (111): encodes the carrier amplitude with the cipher key', () => {
     const buf = view(1);
     seed(buf, 1);
     buf[S.SIGNAL] = 2;
     const result = applyEncryption(buf, 0, 1);
     expect(result).toBeNull();
-    expect(buf[S.SIGNAL]).toBeCloseTo(1.95, 5); // 2*0.98 - 0.01
-    expect(buf[S.SIGNAL]).toBeGreaterThanOrEqual(0.05);
+    // Default TUNING_CH1-4 → key 0 → amplitude × (0.6 + 0.4·sin 0) = ×0.6.
+    expect(buf[S.SIGNAL]).toBeCloseTo(1.2, 5);
+    expect(buf[S.PHASE_2]).toBe(0); // key 0 rotates the carrier by nothing
+
+    // A nonzero key rotates PHASE_2 and rescales the carrier differently.
+    const keyed = view(1);
+    seed(keyed, 1);
+    keyed[S.SIGNAL] = 2;
+    keyed[S.DNA_CACHE_START + D.TUNING_CH1] = 0.3;
+    keyed[S.DNA_CACHE_START + D.TUNING_CH2] = 0.3;
+    keyed[S.DNA_CACHE_START + D.TUNING_CH3] = 0.3;
+    keyed[S.DNA_CACHE_START + D.TUNING_CH4] = 0.3; // sum 1.2 → key 2
+    applyEncryption(keyed, 0, 1);
+    expect(keyed[S.PHASE_2]).toBeCloseTo(0.25, 5); // (2/8)·k
+    expect(keyed[S.SIGNAL]).toBeCloseTo(2.0, 5);   // 2·(0.6 + 0.4·sin(π/2))
     // silent particles stay silent
     const silent = view(1);
     seed(silent, 1);

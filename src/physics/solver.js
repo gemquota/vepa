@@ -250,7 +250,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
     localDt[i] = applyTimeDilation(
       lawState, view, base,
-      syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount
+      syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount, worldSize
     );
   }
 
@@ -1174,19 +1174,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── New law types (per-particle) ──
 
-    // Entanglement — non-local momentum/signal coupling with the partner
-    // at any distance; snaps with a recoil when the partner dies.
+    // Entanglement — correlated link lifecycle only (no-signaling): no forces,
+    // no signal relay; the pair's shared phase decoheres and collapses on both
+    // sides when a partner dies or the correlation expires.
     if (active[LAW_INDEXES.ENTANGLEMENT]) {
-      const entForce = applyEntanglement(iBase, 0.1 * syn[LAW_INDEXES.ENTANGLEMENT], prng);
-      if (entForce) {
-        ax += entForce.ax;
-        ay += entForce.ay;
-        az += entForce.az;
-      }
+      applyEntanglement(iBase);
     }
 
     // History — write presence into the spatial memory field, then drift
-    // toward the field's centre of mass (archaeology as a force).
+    // along the local memory-field gradient (archaeology as a force).
     if (active[LAW_INDEXES.HISTORY]) {
       applyHistoryWrite(iBase, px, py, pz, worldSize);
       const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * syn[LAW_INDEXES.HISTORY]);

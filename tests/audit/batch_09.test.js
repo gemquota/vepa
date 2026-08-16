@@ -59,27 +59,36 @@ function makeWorld(count, mutate) {
 }
 
 describe('Batch 09 — CHAOS / ORDER / FATE / WILL', () => {
-  it('CHAOS (32): stochastic velocity forcing, gated by isSet', () => {
+  it('CHAOS (32): deterministic Lorenz forcing, gated by isSet', () => {
     const buf = view(1);
     seed(buf, 1);
     const state = createLawState();
     set(state, LAW_INDEXES.CHAOS);
     expect(isSet(state, LAW_INDEXES.CHAOS)).toBe(true);
-    applyChaos(state, buf, 0, () => 1.0, 1, 1);
-    expect(buf[S.VEL_X]).toBeCloseTo(0.25, 5); // (1-0.5)*0.5*1*1
-    expect(buf[S.VEL_Y]).toBeCloseTo(0.25, 5);
-    expect(buf[S.VEL_Z]).toBeCloseTo(0.125, 5);
-    expect(buf[S.TEMPERATURE]).toBeCloseTo(0.01, 5); // thermal stir (1-0.5)*0.02*1*1
-    // opposite prng flips sign
+    applyChaos(state, buf, 0, 1, 1); // (lawState, view, base, dt, synergy)
+    // Particle 0's deterministic seed: x=0.1, y=0.1, z=20. One Euler step
+    // (dt=1, h=0.02): x→0.1, y→0.114, z→18.9335. Kick = ((x−14)/28)·0.5.
+    expect(buf[S.CHAOS_STATE_X]).toBeCloseTo(0.1, 5);
+    expect(buf[S.CHAOS_STATE_Y]).toBeCloseTo(0.114, 5);
+    expect(buf[S.CHAOS_STATE_Z]).toBeCloseTo(18.9335, 4);
+    expect(buf[S.VEL_X]).toBeCloseTo(-0.2482, 3); // (0.1−14)/28·0.5
+    expect(buf[S.VEL_Y]).toBeCloseTo(-0.2482, 3);
+    expect(buf[S.VEL_Z]).toBeCloseTo(-0.1241, 3); // half on Z
+    expect(buf[S.TEMPERATURE]).toBeCloseTo(0, 5); // stir (18.93−20)/40·0.02 → clamped 0
+
+    // Deterministic: the same seed reproduces the same map and kick — no PRNG.
     const buf2 = view(1);
     seed(buf2, 1);
-    applyChaos(state, buf2, 0, () => 0.0, 1, 1);
-    expect(buf2[S.VEL_X]).toBeCloseTo(-0.25, 5);
-    expect(buf2[S.TEMPERATURE]).toBe(0); // clamped at 0 (stir -0.01)
+    applyChaos(state, buf2, 0, 1, 1);
+    expect(buf2[S.VEL_X]).toBe(buf[S.VEL_X]);
+    expect(buf2[S.CHAOS_STATE_Z]).toBe(buf[S.CHAOS_STATE_Z]);
+
     // gate off → no effect
     const off = createLawState();
-    applyChaos(off, buf, 0, () => 1.0, 1, 1);
-    expect(buf[S.VEL_X]).toBeCloseTo(0.25, 5);
+    const buf3 = view(1);
+    seed(buf3, 1);
+    applyChaos(off, buf3, 0, 1, 1);
+    expect(buf3[S.VEL_X]).toBe(0);
   });
 
   it('CHAOS integration: solve() moves particles only when enabled', () => {

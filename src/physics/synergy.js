@@ -260,7 +260,7 @@ export function computeSynergy(lawState, lawIndex) {
     mult *= 1.6;
   }
 
-  // ENTANGLEMENT + COMMS → entangled signals need no channel ×1.5
+  // ENTANGLEMENT + COMMS → correlated pairs coordinate through the comms channel ×1.5
   if (
     (lawIndex === LAW_INDEXES.ENTANGLEMENT || lawIndex === LAW_INDEXES.COMMS) &&
     isSet(lawState, LAW_INDEXES.ENTANGLEMENT) && isSet(lawState, LAW_INDEXES.COMMS)

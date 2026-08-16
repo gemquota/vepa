@@ -1,5 +1,5 @@
 // ============================================================================
-// VEPA4 — Minimal Functional Concatenated Core (generated 2026-08-10)
+// VEPA4 — Minimal Functional Concatenated Core (generated 2026-08-14)
 //
 // Single-file snapshot of the headless physics core. Every module keeps its
 // own closure scope via the tiny __define/__import registry, so per-file
@@ -992,14 +992,14 @@ const LAW_HELP_DB = {
     system: "Uses MASS, DEAD, RADIUS and TEMPERATURE. With ACCR, mass concentrates until collapse; matter then rains in and the hole grows.",
   },
   ENTANGLEMENT: {
-    hint: "Entanglement: touching particles forge non-local quantum links.",
-    explanation: "Confirmed batch-21: particles that make contact become entangled (ENTANGLE_ID + phase 1) — momentum converges and signals relay between the pair at any distance; the phase decays (×0.998) until the link snaps, and a partner's death fires a recoil kick.",
-    system: "Stores the partner index in ENTANGLE_ID; ENTANGLE_PHASE decays the link over time. +TELEPATHY ×1.6, +COMMS ×1.5. Spooky action without any signal channel.",
+    hint: "Entanglement: touching particles forge correlated quantum links.",
+    explanation: "Particles that make contact become entangled (ENTANGLE_ID + phase 1). The link is a pure correlation — it carries no signals and transfers no momentum (no-signaling theorem); the shared phase decoheres (×0.998/tick) until the correlation snaps on both sides, and one partner's death collapses the pair. TELEPORT is the only legitimate use of the link: quantum state transfer.",
+    system: "Stores the partner index in ENTANGLE_ID; ENTANGLE_PHASE decays the shared correlation over time. No forces, no signal relay, no recoil — correlated collapse only. +TELEPATHY ×1.6, +COMMS ×1.5.",
   },
   HISTORY: {
     hint: "History: the world remembers where particles have been.",
-    explanation: "Confirmed batch-21: a coarse 12×12×12 spatial memory field accumulates particle presence (energy/mass-weighted, exponentially decaying); particles drift toward the field's centre of mass — archaeology as a force, long after the action moved on.",
-    system: "12×12×12 memory field, decaying exponentially. +MEMORY ×1.6, +PATTERN ×1.5. Past activity leaves a global attractor that steers new arrivals.",
+    explanation: "A coarse 12×12×12 spatial memory field accumulates particle presence (energy/mass-weighted, exponentially decaying); particles drift along the local memory-field gradient — archaeology as a local force, long after the action moved on.",
+    system: "12×12×12 memory field, decaying exponentially; per-particle local ∇History gradient (wrap-around central differences, six reads — no global field scan). +MEMORY ×1.6, +PATTERN ×1.5. Past activity leaves a local attractor that steers new arrivals.",
   },
 
   GRAV: {
@@ -1202,7 +1202,7 @@ const LAW_HELP_DB = {
   TIME_DILATION: {
     hint: "Time dilation: gravity slows local time near massive bodies.",
     explanation: "Weak-field gravitational time dilation (v4.6.29): local time slows inside a softened gravitational potential summed over neighbouring masses — clocks run slower beside ACCR stars and SINGULARITY cores and at full speed in empty space. Replaces the old SOUL-gated bullet time with the actual GR mechanism.",
-    system: "Φ = Σ mⱼ/(rⱼ+0.5) over the local neighbourhood (capped 24 nearest); localDt = √(1 − clamp(2·Φ·0.001·synergy)), floored at 0.3. localDt scales AGE, oscillator phase and lifecycle time.",
+    system: "Φ = Σ mⱼ/(rⱼ+0.5) over the local neighbourhood (capped 24 nearest, self excluded, torus-wrapped distances); localDt = √(1 − clamp(2·Φ·0.001·synergy)), floored at 0.3. localDt scales AGE, oscillator phase and lifecycle time.",
     advanced: "A star-mass neighbour at r≈10 slows time ~11%; SINGULARITY cores approach the floor. Synergises with GRAV/ACCR clustering — dense cores literally age slower.",
   },
   DIMENSIONALITY: {
@@ -2408,9 +2408,6 @@ let historyField = null;
 let historyLast = null;
 let historyTick = 0;
 let historyBufferRef = null;
-let historyComX = HISTORY_DIM * 0.5;
-let historyComY = HISTORY_DIM * 0.5;
-let historyComZ = HISTORY_DIM * 0.5;
 
 // SINGULARITY law — collapse threshold (mass units)
 const SINGULARITY_MASS = 20;
@@ -2425,9 +2422,6 @@ function setBuffer(buffer) {
     historyField = new Float32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
     historyLast = new Uint32Array(HISTORY_DIM * HISTORY_DIM * HISTORY_DIM);
     historyTick = 0;
-    historyComX = HISTORY_DIM * 0.5;
-    historyComY = HISTORY_DIM * 0.5;
-    historyComZ = HISTORY_DIM * 0.5;
   }
 }
 
@@ -2496,22 +2490,6 @@ function applyDrag(vx, vy, vz, friction) {
     ax: nanGuard(vx * damp - vx),
     ay: nanGuard(vy * damp - vy),
     az: nanGuard(vz * damp - vz),
-  };
-}
-
-// ============================================================================
-// 3. ENTROPY
-// ============================================================================
-function applyEntropy(ax, ay, az, jitter, dt) {
-  const scale = jitter * dt;
-  const t0 = performance.now() * 2654435761;
-  const r1 = ((t0 >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  const r2 = (((t0 * 1103515245) >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  const r3 = (((t0 * 214013) >>> 0) & 0xFFFF) / 32768.0 - 1.0;
-  return {
-    ax: nanGuard(ax + r1 * scale),
-    ay: nanGuard(ay + r2 * scale),
-    az: nanGuard(az + r3 * scale * 0.3),
   };
 }
 
@@ -3404,21 +3382,24 @@ function applyConvection(lawState, view, base, dt, synergy) {
 // ============================================================================
 // 23. TIME DILATION
 // ============================================================================
-function applyTimeDilation(lawState, view, base, synergy, neighborList, neighborCount) {
+function applyTimeDilation(lawState, view, base, synergy, neighborList, neighborCount, worldSize) {
   if (!isSet(lawState, LAW_INDEXES.TIME_DILATION)) return 1.0; // TIME_DILATION=30
   // Weak-field gravitational time dilation (v4.6.29): localDt = sqrt(1 - 2*Phi*k),
   // Phi = softened potential summed over the local neighbourhood (grid snapshot).
-  // Clocks run slower beside massive bodies and at full speed in empty space.
+  // Self is excluded and distances are wrapped across the torus, so clocks run
+  // slower beside massive bodies and at full speed in empty space.
   let potential = 0;
-  if (neighborList && neighborCount > 0) {
+  if (neighborList && neighborCount > 0 && worldSize > 0) {
     const px = view[base + S.POS_X];
     const py = view[base + S.POS_Y];
     const pz = view[base + S.POS_Z];
+    const half = worldSize * 0.5;
     for (let n = 0; n < neighborCount; n++) {
       const jBase = neighborList[n] * PARTICLE_STRIDE;
-      const dx = (view[jBase + S.POS_X] || 0) - px;
-      const dy = (view[jBase + S.POS_Y] || 0) - py;
-      const dz = (view[jBase + S.POS_Z] || 0) - pz;
+      if (jBase === base) continue; // no self-potential
+      const dx = wrapDelta((view[jBase + S.POS_X] || 0) - px, worldSize, half);
+      const dy = wrapDelta((view[jBase + S.POS_Y] || 0) - py, worldSize, half);
+      const dz = wrapDelta((view[jBase + S.POS_Z] || 0) - pz, worldSize, half);
       const r = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.5;
       potential += (view[jBase + S.MASS] || 0) / r;
     }
@@ -3426,6 +3407,14 @@ function applyTimeDilation(lawState, view, base, synergy, neighborList, neighbor
   const phi = potential * 0.001 * synergy;
   const localDt = Math.sqrt(Math.max(0, 1 - 2 * phi));
   return Math.max(0.3, Number.isFinite(localDt) ? localDt : 1.0);
+}
+
+/** Signed shortest distance across a toroidal world (worldSize > 0). */
+function wrapDelta(d, worldSize, half) {
+  let w = d % worldSize;
+  if (w > half) w -= worldSize;
+  else if (w < -half) w += worldSize;
+  return w;
 }
 
 // ============================================================================
@@ -5011,11 +5000,13 @@ function applyEntanglePair(p1Ptr, p2Ptr, dist) {
 }
 
 /**
- * ENTANGLEMENT — non-local coupling (per-particle). Momentum converges with
- * the partner at any distance; signals relay through the link; the phase
- * decays until the link snaps with a recoil kick.
+ * ENTANGLEMENT — correlated link lifecycle (per-particle). The pair shares a
+ * phase that decoheres (×0.998/tick); no signals and no momentum travel
+ * through the link (no-signaling theorem). When one partner dies or the phase
+ * expires, the shared correlation collapses on both sides. TELEPORT is the
+ * only legitimate use of the link (quantum state transfer).
  */
-function applyEntanglement(p1Ptr, k, prng) {
+function applyEntanglement(p1Ptr) {
   const buf = buffer_global;
   const partnerIdx = buf[p1Ptr + S.ENTANGLE_ID];
   if (partnerIdx < 0) return null;
@@ -5024,41 +5015,25 @@ function applyEntanglement(p1Ptr, k, prng) {
 
   const jBase = partnerIdx * PARTICLE_STRIDE;
   if (buf[jBase + S.DEAD] >= 0.5 || buf[jBase + S.MASS] <= 0) {
-    // partner lost → recoil kick, link snaps
-    buf[p1Ptr + S.ENTANGLE_ID] = -1;
-    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
-    if (prng) {
-      return {
-        ax: nanGuard((prng() - 0.5) * 0.8),
-        ay: nanGuard((prng() - 0.5) * 0.8),
-        az: nanGuard((prng() - 0.5) * 0.8),
-      };
-    }
+    // partner lost → the correlation collapses on both sides
+    clearEntangleLink(p1Ptr);
+    clearEntangleLink(jBase);
     return null;
   }
 
   if (buf[p1Ptr + S.ENTANGLE_PHASE] < 0.05) {
-    buf[p1Ptr + S.ENTANGLE_ID] = -1;
-    buf[p1Ptr + S.ENTANGLE_PHASE] = 0;
+    clearEntangleLink(p1Ptr);
+    clearEntangleLink(jBase);
     return null;
   }
+  return null;
+}
 
-  // non-local momentum exchange (returned as a force — survives integration)
-  const dvx = (buf[jBase + S.VEL_X] - buf[p1Ptr + S.VEL_X]) * k * phase;
-  const dvy = (buf[jBase + S.VEL_Y] - buf[p1Ptr + S.VEL_Y]) * k * phase;
-  const dvz = (buf[jBase + S.VEL_Z] - buf[p1Ptr + S.VEL_Z]) * k * phase;
-
-  // non-local signal relay (persists in stride)
-  const sJ = buf[jBase + S.SIGNAL] || 0;
-  if (sJ > 0.3) {
-    buf[p1Ptr + S.SIGNAL] = Math.max(buf[p1Ptr + S.SIGNAL] || 0, sJ * phase);
-  }
-
-  return {
-    ax: nanGuard(dvx),
-    ay: nanGuard(dvy),
-    az: nanGuard(dvz),
-  };
+/** Clear one side of an entangled pair. */
+function clearEntangleLink(ptr) {
+  const buf = buffer_global;
+  buf[ptr + S.ENTANGLE_ID] = -1;
+  buf[ptr + S.ENTANGLE_PHASE] = 0;
 }
 
 /** HISTORY — accumulate presence into the spatial memory field. */
@@ -5075,49 +5050,21 @@ function applyHistoryWrite(p1Ptr, px, py, pz, worldSize) {
   historyLast[c] = historyTick;
 }
 
-/** Advance the memory-field clock once per solve and refresh the centre of mass. */
+/** Advance the memory-field clock once per solve. */
 function applyHistoryCalc() {
   if (!historyField) return;
   historyTick++;
-  computeHistoryCom();
 }
 
-/** Recompute the field centre of mass from the current memory field. */
-function computeHistoryCom() {
-  let sum = 0, sx = 0, sy = 0, sz = 0;
-  for (let z = 0; z < HISTORY_DIM; z++) {
-    for (let y = 0; y < HISTORY_DIM; y++) {
-      for (let x = 0; x < HISTORY_DIM; x++) {
-        const v = historyField[x + y * HISTORY_DIM + z * HISTORY_DIM * HISTORY_DIM] || 0;
-        sum += v;
-        sx += v * x;
-        sy += v * y;
-        sz += v * z;
-      }
-    }
-  }
-  if (sum < 1e-6) {
-    historyComX = HISTORY_DIM * 0.5;
-    historyComY = HISTORY_DIM * 0.5;
-    historyComZ = HISTORY_DIM * 0.5;
-    return;
-  }
-  historyComX = sx / sum;
-  historyComY = sy / sum;
-  historyComZ = sz / sum;
-}
-
-/** HISTORY — drift toward the field's centre of mass (global memory attractor). */
+/** HISTORY — drift along the local memory-field gradient (archaeology as a force). */
 function applyHistoryForce(p1Ptr, px, py, pz, worldSize, k) {
   if (!historyField) return null;
   const cellX = (px / worldSize) * HISTORY_DIM;
   const cellY = (py / worldSize) * HISTORY_DIM;
   const cellZ = (pz / worldSize) * HISTORY_DIM;
-  const gx = historyComX - cellX;
-  const gy = historyComY - cellY;
-  const gz = historyComZ - cellZ;
+  const { gx, gy, gz } = historyGradient(cellX, cellY, cellZ);
   const gm = Math.sqrt(gx * gx + gy * gy + gz * gz);
-  if (gm < 0.01) return null;
+  if (gm < 1e-6) return null;
   return {
     ax: nanGuard((gx / gm) * k),
     ay: nanGuard((gy / gm) * k),
@@ -5125,7 +5072,30 @@ function applyHistoryForce(p1Ptr, px, py, pz, worldSize, k) {
   };
 }
 
-  return { setBuffer, applyGravity, applyDrag, applyEntropy, applyCollision, applyAccretion, applyTracking, applyPredation, applySolvation, applyPolymerization, applyAcidity, applyOxidation, applyHeat, applyCold, applyGenotype, applyPlanetary, applyLifeCycle, applySignalDecay, cipherKey, applySignalExchange, applyAffinity, applyReproduction, applyChemistry, applyPolymer, applyHeatTransfer, applyThermalJitter, applyColdDamping, applyConvection, applyTimeDilation, applyDimensionality, applyChaos, applyOrder, advanceFateClock, getFateTime, applyFate, applyWill, applySoul, applySoulDecay, applyMind, applyVoid, applyBond, applyReduction, applyAlloy, applyMelt, applyBoil, applyCondense, applyDeposit, applyExothermic, applyTelepathy, applyClairvoyance, applyPrecognition, applyAstral, applyAstralInfluence, applyGlowEffect, applyEnergyTransfer, applyRadiationDamage, applyTrackingBehavior, applyGenotypeMutation, applyPhenotype, applySolvationEffect, applyAcidityEffect, applyOxidationEffect, applyIsomerization, applyChirality, applyCrystallization, applyPhaseRadiation, applySublimation, applyChargeForce, applyFieldDrift, applyCurrentTransfer, applyResistance, applyCapacitanceStore, applyStoredChargeForce, applyInductance, applyMagneticForce, applyResonanceForce, applyFluxForce, applyIonization, applyDischarge, applyPlasma, applySuperconductivity, applyMemoryRefresh, applyMemoryDecay, applyPatternForce, applyTrailWrite, applyStigmergyForce, applySignalBoost, applyLearnAlign, applySymbolForce, applyMetricForce, applyPredictForce, applyCodeBlend, applyProtocolSync, applyFeedback, applyLanguage, applyCulture, applySingularityForce, applySingularityAbsorb, applyEntanglePair, applyEntanglement, applyHistoryWrite, applyHistoryCalc, applyHistoryForce };
+/** Value of one coarse memory cell, toroidally wrapped. */
+function historyCell(cx, cy, cz) {
+  const x = ((cx % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  const y = ((cy % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  const z = ((cz % HISTORY_DIM) + HISTORY_DIM) % HISTORY_DIM;
+  return historyField[x + y * HISTORY_DIM + z * HISTORY_DIM * HISTORY_DIM] || 0;
+}
+
+/**
+ * Central-difference gradient of the coarse memory field at a fractional cell
+ * position (wrap-around neighbours). Six reads — no global field scan.
+ */
+function historyGradient(cx, cy, cz) {
+  const x = Math.floor(cx);
+  const y = Math.floor(cy);
+  const z = Math.floor(cz);
+  return {
+    gx: historyCell(x + 1, y, z) - historyCell(x - 1, y, z),
+    gy: historyCell(x, y + 1, z) - historyCell(x, y - 1, z),
+    gz: historyCell(x, y, z + 1) - historyCell(x, y, z - 1),
+  };
+}
+
+  return { setBuffer, applyGravity, applyDrag, applyCollision, applyAccretion, applyTracking, applyPredation, applySolvation, applyPolymerization, applyAcidity, applyOxidation, applyHeat, applyCold, applyGenotype, applyPlanetary, applyLifeCycle, applySignalDecay, cipherKey, applySignalExchange, applyAffinity, applyReproduction, applyChemistry, applyPolymer, applyHeatTransfer, applyThermalJitter, applyColdDamping, applyConvection, applyTimeDilation, applyDimensionality, applyChaos, applyOrder, advanceFateClock, getFateTime, applyFate, applyWill, applySoul, applySoulDecay, applyMind, applyVoid, applyBond, applyReduction, applyAlloy, applyMelt, applyBoil, applyCondense, applyDeposit, applyExothermic, applyTelepathy, applyClairvoyance, applyPrecognition, applyAstral, applyAstralInfluence, applyGlowEffect, applyEnergyTransfer, applyRadiationDamage, applyTrackingBehavior, applyGenotypeMutation, applyPhenotype, applySolvationEffect, applyAcidityEffect, applyOxidationEffect, applyIsomerization, applyChirality, applyCrystallization, applyPhaseRadiation, applySublimation, applyChargeForce, applyFieldDrift, applyCurrentTransfer, applyResistance, applyCapacitanceStore, applyStoredChargeForce, applyInductance, applyMagneticForce, applyResonanceForce, applyFluxForce, applyIonization, applyDischarge, applyPlasma, applySuperconductivity, applyMemoryRefresh, applyMemoryDecay, applyPatternForce, applyTrailWrite, applyStigmergyForce, applySignalBoost, applyLearnAlign, applySymbolForce, applyMetricForce, applyPredictForce, applyCodeBlend, applyProtocolSync, applyFeedback, applyLanguage, applyCulture, applySingularityForce, applySingularityAbsorb, applyEntanglePair, applyEntanglement, applyHistoryWrite, applyHistoryCalc, applyHistoryForce };
 });
 
 // ══════════════════════════════════════════════════════════════════════
@@ -5393,7 +5363,7 @@ function computeSynergy(lawState, lawIndex) {
     mult *= 1.6;
   }
 
-  // ENTANGLEMENT + COMMS → entangled signals need no channel ×1.5
+  // ENTANGLEMENT + COMMS → correlated pairs coordinate through the comms channel ×1.5
   if (
     (lawIndex === LAW_INDEXES.ENTANGLEMENT || lawIndex === LAW_INDEXES.COMMS) &&
     isSet(lawState, LAW_INDEXES.ENTANGLEMENT) && isSet(lawState, LAW_INDEXES.COMMS)
@@ -6163,13 +6133,14 @@ function applySuperposition(view, iBase, k, prng) {
   // Superposition (v4.6.29): a spread of 4 basis amplitudes over candidate
   // velocities (stay, +perp, −perp, boost). Phases rotate each tick; a
   // collapse event picks one basis with probability |a|² (Born rule), then
-  // renormalises — the real quantum measurement mechanism in a discrete toy.
+  // renormalises (L2) — the real quantum measurement mechanism in a discrete
+  // toy. Amplitudes are stored unnormalised; the collapse draw always uses
+  // p_b = |a_b|² / Σ|a|², never the raw amplitude.
   let a1 = view[iBase + S.SUPER_AMP_1] || 0;
   let a2 = view[iBase + S.SUPER_AMP_2] || 0;
   let a3 = view[iBase + S.SUPER_AMP_3] || 0;
   let a4 = view[iBase + S.SUPER_AMP_4] || 0;
-  const total = a1 + a2 + a3 + a4;
-  if (total <= 1e-6) {
+  if (a1 * a1 + a2 * a2 + a3 * a3 + a4 * a4 <= 1e-6) {
     a1 = 0.7; a2 = 0.1; a3 = 0.1; a4 = 0.1;
     view[iBase + S.SUPER_AMP_1] = a1;
     view[iBase + S.SUPER_AMP_2] = a2;
@@ -6193,26 +6164,31 @@ function applySuperposition(view, iBase, k, prng) {
   ];
 
   if (prng() < 0.02 * k) {
-    // Born-rule collapse: sample a basis by |amplitude|², renormalise.
+    // Born-rule collapse: sample basis b with p_b = |a_b|² / Σ|a|² (L2
+    // normalisation), then collapse to the measured eigenstate plus a tiny
+    // symmetric re-spread so interference can rebuild.
     const amps = [a1, a2, a3, a4];
-    const norm = a1 + a2 + a3 + a4;
-    const r = prng() * norm;
-    let acc = 0, basis = 0;
-    for (let b = 0; b < 4; b++) {
-      acc += amps[b];
-      if (r <= acc) { basis = b; break; }
+    let norm2 = 0;
+    for (let b = 0; b < 4; b++) norm2 += amps[b] * amps[b];
+    if (norm2 > 1e-12) {
+      const r = prng() * norm2;
+      let acc = 0, basis = 0;
+      for (let b = 0; b < 4; b++) {
+        acc += amps[b] * amps[b];
+        if (r <= acc) { basis = b; break; }
+      }
+      const o = offsets[basis];
+      const eps = 0.05;
+      view[iBase + S.SUPER_AMP_1] = basis === 0 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_2] = basis === 1 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_3] = basis === 2 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_4] = basis === 3 ? 1 - 3 * eps : eps;
+      return {
+        ax: clamp(nanGuard(o.x * k), -FORCE_LIMIT, FORCE_LIMIT),
+        ay: clamp(nanGuard(o.y * k), -FORCE_LIMIT, FORCE_LIMIT),
+        az: clamp(nanGuard(o.z * k), -FORCE_LIMIT, FORCE_LIMIT),
+      };
     }
-    const o = offsets[basis];
-    const spread = 0.05;
-    view[iBase + S.SUPER_AMP_1] = basis === 0 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_2] = basis === 1 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_3] = basis === 2 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_4] = basis === 3 ? 1 - spread : spread / 3;
-    return {
-      ax: clamp(nanGuard(o.x * k), -FORCE_LIMIT, FORCE_LIMIT),
-      ay: clamp(nanGuard(o.y * k), -FORCE_LIMIT, FORCE_LIMIT),
-      az: clamp(nanGuard(o.z * k), -FORCE_LIMIT, FORCE_LIMIT),
-    };
   }
   // No collapse: gentle interference drift from the rotating phase.
   return {
@@ -6632,7 +6608,7 @@ function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, world
     }
     localDt[i] = applyTimeDilation(
       lawState, view, base,
-      syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount
+      syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount, worldSize
     );
   }
 
@@ -7556,19 +7532,15 @@ function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, world
 
     // ── New law types (per-particle) ──
 
-    // Entanglement — non-local momentum/signal coupling with the partner
-    // at any distance; snaps with a recoil when the partner dies.
+    // Entanglement — correlated link lifecycle only (no-signaling): no forces,
+    // no signal relay; the pair's shared phase decoheres and collapses on both
+    // sides when a partner dies or the correlation expires.
     if (active[LAW_INDEXES.ENTANGLEMENT]) {
-      const entForce = applyEntanglement(iBase, 0.1 * syn[LAW_INDEXES.ENTANGLEMENT], prng);
-      if (entForce) {
-        ax += entForce.ax;
-        ay += entForce.ay;
-        az += entForce.az;
-      }
+      applyEntanglement(iBase);
     }
 
     // History — write presence into the spatial memory field, then drift
-    // toward the field's centre of mass (archaeology as a force).
+    // along the local memory-field gradient (archaeology as a force).
     if (active[LAW_INDEXES.HISTORY]) {
       applyHistoryWrite(iBase, px, py, pz, worldSize);
       const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * syn[LAW_INDEXES.HISTORY]);

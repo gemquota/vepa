@@ -5,6 +5,7 @@
  */
 import { DNA_META, DNA_RANGES, DNA_INDEXES, DNA_COUNT, MAX_SPECIES } from '../constants.js';
 import { setDNAFloat, getDNAFloat } from '../dna/dnaBuffer.js';
+import { createSliderRow } from './sliderControl.js';
 
 /**
  * DNA parameter groups with display labels and member indices.
@@ -74,19 +75,8 @@ let sliders = [];
 function refreshSliders(dnaBuffer, rangeInfo) {
   for (const s of sliders) {
     const val = getDNAFloat(dnaBuffer, selectedSpecies, s.index, rangeInfo[s.index].min, rangeInfo[s.index].max);
-    s.input.value = val;
-    s.display.textContent = val.toFixed(s.precision);
+    s.row.setValue(val, { emit: false, snap: false });
   }
-}
-
-/**
- * Compute display precision based on param range span.
- */
-function getPrecision(range) {
-  const span = range.max - range.min;
-  if (span > 100) return 0;
-  if (span > 10) return 1;
-  return 2;
 }
 
 /**
@@ -114,39 +104,47 @@ export function createDNAPanel(bus, dnaBuffer) {
   html += '</div></div>';
 
   // ── DNA Sliders by Group ──
-  for (const group of DNA_GROUPS) {
+  DNA_GROUPS.forEach((group, gi) => {
     html += `<div class="panel-section">`;
     html += `<h3 class="dna-section-title">${group.name}</h3>`;
+    html += `<div class="dna-rows" data-group-idx="${gi}"></div>`;
+    html += `</div>`;
+  });
 
+  panel.innerHTML = html;
+
+  // ── Build enhanced slider rows ──
+  sliders = [];
+  DNA_GROUPS.forEach((group, gi) => {
+    const rowsEl = panel.querySelector(`.dna-rows[data-group-idx="${gi}"]`);
+    if (!rowsEl) return;
     for (const idx of group.indices) {
       if (idx >= DNA_COUNT) continue;
       const range = DNA_RANGES[idx];
       const name = DNA_META[idx] || `DNA_${idx}`;
-      const precision = getPrecision(range);
-
-      html += `<div class="dna-slider-row">`;
-      html += `<label class="dna-label" data-param="${idx}">${name}</label>`;
-      html += `<input type="range" class="dna-input" data-param="${idx}" `
-            + `min="${range.min}" max="${range.max}" step="${(range.max - range.min) / 1000}" `
-            + `value="${range.default}">`;
-      html += `<span class="dna-value" data-param="${idx}">${range.default.toFixed(precision)}</span>`;
-      html += `</div>`;
+      const row = createSliderRow({
+        label: name,
+        min: range.min,
+        max: range.max,
+        step: (range.max - range.min) / 1000,
+        value: range.default,
+        key: String(idx),
+        title: `${name} (DNA ${idx})`,
+        onChange: (val) => {
+          setDNAFloat(dnaBuffer, selectedSpecies, idx, val, range.min, range.max);
+          bus.emit('dna:changed', {
+            species: selectedSpecies,
+            param: idx,
+            value: val,
+            paramName: name,
+          });
+        },
+      });
+      row.el.classList.add('sc-dna');
+      rowsEl.appendChild(row.el);
+      sliders.push({ index: idx, row });
     }
-
-    html += `</div>`;
-  }
-
-  panel.innerHTML = html;
-
-  // ── Collect slider references ──
-  sliders = [];
-  for (const input of panel.querySelectorAll('.dna-input')) {
-    const idx = parseInt(input.dataset.param, 10);
-    const range = DNA_RANGES[idx];
-    const precision = getPrecision(range);
-    const display = panel.querySelector(`.dna-value[data-param="${idx}"]`);
-    sliders.push({ index: idx, input, display, precision });
-  }
+  });
 
   // ── Initialize slider values from current DNA buffer ──
   refreshSliders(dnaBuffer, DNA_RANGES);
@@ -162,23 +160,6 @@ export function createDNAPanel(bus, dnaBuffer) {
       // Refresh sliders to show selected species' DNA
       refreshSliders(dnaBuffer, DNA_RANGES);
       bus.emit('dna:speciesChanged', { species: selectedSpecies });
-    });
-  }
-
-  // ── Wire up slider inputs ──
-  for (const s of sliders) {
-    s.input.addEventListener('input', () => {
-      const val = parseFloat(s.input.value);
-      const range = DNA_RANGES[s.index];
-      setDNAFloat(dnaBuffer, selectedSpecies, s.index, val, range.min, range.max);
-      s.display.textContent = val.toFixed(s.precision);
-
-      bus.emit('dna:changed', {
-        species: selectedSpecies,
-        param: s.index,
-        value: val,
-        paramName: DNA_META[s.index],
-      });
     });
   }
 

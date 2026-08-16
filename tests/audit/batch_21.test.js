@@ -59,7 +59,7 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     expect(view[PARTICLE_STRIDE + S.ENTANGLE_PHASE]).toBeGreaterThan(0.9);
   });
 
-  it('ENTANGLEMENT: non-local coupling converges the partners’ velocities', () => {
+  it('ENTANGLEMENT: correlation-only — velocities never converge (no-signaling)', () => {
     const { view, dna } = makeWorld(2, (v, dna, b, i) => {
       v[b + S.POS_X] = i === 0 ? 1000 : 1000.5;
       v[b + S.VEL_X] = i === 0 ? 0 : 5;
@@ -68,13 +68,16 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     set(laws, LAW_INDEXES.ENTANGLEMENT);
     for (let t = 0; t < 150; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     const rel = view[S.VEL_X] - view[PARTICLE_STRIDE + S.VEL_X];
-    expect(Math.abs(rel)).toBeLessThan(5.0); // was 5.0
-    expect(view[S.VEL_X]).toBeGreaterThan(0);
-    expect(view[PARTICLE_STRIDE + S.VEL_X]).toBeLessThan(5);
-    expect(view[S.ENTANGLE_ID]).toBe(1); // link still live (phase ≈ 0.74)
+    // No momentum travels through the link: the 5-unit gap is preserved.
+    expect(Math.abs(rel)).toBeGreaterThan(4.5);
+    expect(view[S.VEL_X]).toBe(0);
+    expect(view[PARTICLE_STRIDE + S.VEL_X]).toBe(5);
+    // The shared correlation decoheres slowly (0.998^150 ≈ 0.74) and stays live.
+    expect(view[S.ENTANGLE_ID]).toBe(1);
+    expect(view[S.ENTANGLE_PHASE]).toBeCloseTo(0.74, 2);
   });
 
-  it('ENTANGLEMENT: phase decay snaps the link once below the threshold', () => {
+  it('ENTANGLEMENT: phase decay collapses the shared correlation on both sides', () => {
     const { view, dna } = makeWorld(2, (v, dna, b, i) => {
       v[b + S.POS_X] = i === 0 ? 1000 : 1000.5;
     });
@@ -82,11 +85,15 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     set(laws, LAW_INDEXES.ENTANGLEMENT);
     solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng); // link forms
     expect(view[S.ENTANGLE_ID]).toBe(1);
+    // Separate the pair so the contact mechanism cannot re-form the link.
+    view[PARTICLE_STRIDE + S.POS_X] = 1800;
     view[S.ENTANGLE_PHASE] = 0.02; // force the decay threshold
     view[PARTICLE_STRIDE + S.ENTANGLE_PHASE] = 0.02;
     solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(view[S.ENTANGLE_ID]).toBe(-1);
+    expect(view[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(-1);
     expect(view[S.ENTANGLE_PHASE]).toBe(0);
+    expect(view[PARTICLE_STRIDE + S.ENTANGLE_PHASE]).toBe(0);
   });
 
   it('ENTANGLEMENT gate: without the law, no link forms', () => {
@@ -100,27 +107,21 @@ describe('Batch 21 — ENTANGLEMENT / HISTORY / TIDE / FRICTION (indices 80-83)'
     expect(view[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(-1);
   });
 
-  it('HISTORY: particles drift toward the shared memory field centre of mass', () => {
+  it('HISTORY: particles drift along the local memory-field gradient', () => {
     const { view, dna } = makeWorld(2, (v, dna, b, i) => {
+      // Adjacent coarse cells (cell size 166.7): cell 0 and cell 1.
       if (i === 0) { v[b + S.POS_X] = 100; v[b + S.POS_Y] = 100; v[b + S.POS_Z] = 100; }
-      else { v[b + S.POS_X] = 1900; v[b + S.POS_Y] = 1900; v[b + S.POS_Z] = 1900; }
+      else { v[b + S.POS_X] = 267; v[b + S.POS_Y] = 100; v[b + S.POS_Z] = 100; }
     });
     const laws = createLawState();
     set(laws, LAW_INDEXES.HISTORY);
     expect(isSet(laws, LAW_INDEXES.HISTORY)).toBe(true);
-    const sep = () => Math.hypot(
-      view[PARTICLE_STRIDE + S.POS_X] - view[S.POS_X],
-      view[PARTICLE_STRIDE + S.POS_Y] - view[S.POS_Y],
-      view[PARTICLE_STRIDE + S.POS_Z] - view[S.POS_Z]);
-    const sep0 = sep();
-    // First ticks pull each particle toward the initial COM (world centre).
-    solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
-    solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
-    expect(view[S.VEL_X]).toBeGreaterThan(0);
-    expect(view[S.VEL_Y]).toBeGreaterThan(0);
-    expect(view[S.VEL_Z]).toBeGreaterThan(0);
-    for (let t = 2; t < 120; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
-    expect(sep()).toBeLessThan(sep0);
+    // Each particle's own presence lands in its cell; the ∇History gradient
+    // (wrap-around central differences) then pulls the pair toward the
+    // remembered activity: p0 +x, p1 −x.
+    for (let t = 0; t < 5; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    expect(view[S.VEL_X]).toBeGreaterThan(0.001);
+    expect(view[PARTICLE_STRIDE + S.VEL_X]).toBeLessThan(-0.001);
   });
 
   it('HISTORY gate: without the law, no memory drift', () => {

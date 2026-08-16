@@ -6,6 +6,8 @@
 import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT, LAW_SPECTRUM, LAW_HUE_BY_INDEX } from '../constants.js';
 import { isSet, set as setLaw, clear as clearLaw, toggle as toggleLaw } from '../state/lawState.js';
 import { WORLD_PARAM_DEFS } from '../state/worldParams.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
+import { createSliderRow } from './sliderControl.js';
 
 // Law icon symbols (matching v2 aesthetic)
 const LAW_ICONS = {
@@ -222,7 +224,8 @@ function renderLawGrid(grid, lawStateObj, bus) {
               + `<span class="tog-icon">${icon}</span><span class="tog-name">${name}</span></button>`;
       } else {
         html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
-              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">${icon}</button>`;
+              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">`
+              + `<span class="tog-icon">${icon}</span><span class="tog-name">${name}</span></button>`;
       }
     }
     html += '</div>';
@@ -465,11 +468,7 @@ function renderWorldSliders(container, bus) {
       html += `<div class="sub-accordion-header" data-subacc="${gi}-${si}"><span class="arrow">▶</span>${sub.label}</div>`;
       html += '<div class="sub-accordion-body">';
       for (const p of sub.params) {
-        html += `<div class="accordion-slider-row">`
-              + `<label>${p.label}</label>`
-              + `<input type="range" min="${p.min}" max="${p.max}" value="${p.default}" step="${p.step}" data-key="${p.key}">`
-              + `<span class="slider-value" data-key="${p.key}">${p.default}</span>`
-              + `</div>`;
+        html += `<div data-slider-slot="${p.key}"></div>`;
       }
       html += '</div></div>';
     });
@@ -493,14 +492,21 @@ function renderWorldSliders(container, bus) {
     });
   });
 
-  // Slider wiring
-  container.querySelectorAll('input[type="range"]').forEach((slider) => {
-    slider.addEventListener('input', () => {
-      const val = parseFloat(slider.value);
-      const display = container.querySelector(`.slider-value[data-key="${slider.dataset.key}"]`);
-      if (display) display.textContent = val;
-      bus.emit('world:paramChanged', { key: slider.dataset.key, value: val });
+  // Enhanced slider rows (min/max labels, lin/log, snap, hold-to-zoom)
+  container.querySelectorAll('[data-slider-slot]').forEach((slot) => {
+    const p = WORLD_PARAM_DEFS.find((d) => d.key === slot.dataset.sliderSlot);
+    if (!p) return;
+    const row = createSliderRow({
+      label: p.label,
+      min: p.min,
+      max: p.max,
+      step: p.step,
+      value: runtimeConfig.worldParams?.[p.key] ?? p.default,
+      key: p.key,
+      title: `${p.label} (${p.key})`,
+      onChange: (value) => bus.emit('world:paramChanged', { key: p.key, value }),
     });
+    slot.replaceWith(row.el);
   });
 }
 

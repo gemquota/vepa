@@ -228,11 +228,8 @@ function setupToolbarControls(bus) {
   const restartBtn = document.getElementById('restart-btn');
   const hardResetBtn = document.getElementById('hard-reset-btn');
   const chaosBtn = document.getElementById('chaos-btn');
+  const chaosMultiplexBtn = document.getElementById('chaos-multiplex-btn');
   const helpToggle = document.getElementById('help-toggle');
-  const rewindBtn = document.getElementById('btn-rewind');
-  const reverseBtn = document.getElementById('btn-reverse');
-  const playBtn = document.getElementById('btn-play');
-  const ffBtn = document.getElementById('btn-fastforward');
 
   if (playPauseBtn) {
     playPauseBtn.addEventListener('click', () => bus.emit('sim:togglePause'));
@@ -268,22 +265,14 @@ function setupToolbarControls(bus) {
       }
     });
   }
+  if (chaosMultiplexBtn) {
+    chaosMultiplexBtn.addEventListener('click', () => {
+      if (typeof window.openChaosMultiplex === 'function') window.openChaosMultiplex();
+    });
+  }
   if (helpToggle) {
     helpToggle.addEventListener('click', () => bus.emit('help:toggle'));
   }
-  if (rewindBtn) {
-    rewindBtn.addEventListener('click', () => bus.emit('sim:playbackMode', { mode: 'rewind' }));
-  }
-  if (reverseBtn) {
-    reverseBtn.addEventListener('click', () => bus.emit('sim:playbackMode', { mode: 'reverse' }));
-  }
-  if (playBtn) {
-    playBtn.addEventListener('click', () => bus.emit('sim:playbackMode', { mode: 'forward' }));
-  }
-  if (ffBtn) {
-    ffBtn.addEventListener('click', () => bus.emit('sim:playbackMode', { mode: 'fastforward' }));
-  }
-
   bus.on('sim:paused', ({ paused }) => {
     if (playPauseBtn) {
       playPauseBtn.textContent = paused ? '▶' : '⏸';

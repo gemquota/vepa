@@ -71,8 +71,9 @@ describe('Batch 27 — CONSCIOUSNESS / PERCEPTION / SYNCHRONICITY / ANTENNA', ()
     seed(buf, 1);
     const result = applyConsciousness(buf, 0, 0.5);
     expect(result).toBeNull();
-    expect(buf[S.ENERGY]).toBeCloseTo(100.01, 5); // +0.02*0.5
-    expect(buf[S.MEMORY]).toBeCloseTo(0.0025, 5); // +0.005*0.5
+    // Stationary particle: prediction error ≈ 0 → self-maintenance regen.
+    expect(buf[S.ENERGY]).toBeCloseTo(100.005, 5); // +0.01·0.5
+    expect(buf[S.MEMORY]).toBe(0);
     // caps respected
     buf[S.ENERGY] = 199.99;
     buf[S.MEMORY] = 0.999;
@@ -81,19 +82,35 @@ describe('Batch 27 — CONSCIOUSNESS / PERCEPTION / SYNCHRONICITY / ANTENNA', ()
     expect(buf[S.MEMORY]).toBeLessThanOrEqual(1);
   });
 
-  it('CONSCIOUSNESS integration: energy and memory grow in solve()', () => {
+  it('CONSCIOUSNESS: high prediction error drives attention (MEMORY up, ENERGY down)', () => {
+    const buf = view(1);
+    seed(buf, 1);
+    buf[S.VEL_X] = 10; // speed 10 vs self-model 0 → err ≈ 9.5
+    applyConsciousness(buf, 0, 1);
+    expect(buf[S.MEMORY]).toBeCloseTo(0.19, 5); // 9.5·0.02
+    expect(buf[S.SIGNAL]).toBeCloseTo(0.095, 5); // 9.5·0.01
+    expect(buf[S.ENERGY]).toBeCloseTo(99.525, 5); // 100 − 9.5·0.05
+  });
+
+  it('CONSCIOUSNESS integration: self-maintenance in solve(), attention with motion', () => {
     const on = makeWorld(1);
     const st = createLawState();
     set(st, LAW_INDEXES.CONSCIOUSNESS);
     expect(isSet(st, LAW_INDEXES.CONSCIOUSNESS)).toBe(true);
     solve(on.view, 1, PARTICLE_STRIDE, st, on.dna, WORLD, DT, rng);
     expect(on.view[S.ENERGY]).toBeGreaterThan(100);
-    expect(on.view[S.MEMORY]).toBeGreaterThan(0);
+    expect(on.view[S.MEMORY]).toBe(0); // stationary → no attention
 
     const off = makeWorld(1);
     solve(off.view, 1, PARTICLE_STRIDE, createLawState(), off.dna, WORLD, DT, rng);
     expect(off.view[S.ENERGY]).toBe(100);
     expect(off.view[S.MEMORY]).toBe(0);
+
+    // A moving particle in an unpredicted state attends.
+    const moving = makeWorld(1);
+    moving.view[S.VEL_X] = 10;
+    solve(moving.view, 1, PARTICLE_STRIDE, st, moving.dna, WORLD, DT, rng);
+    expect(moving.view[S.MEMORY]).toBeGreaterThan(0);
   });
 
   it('PERCEPTION (105): velocity alignment within extended sensing range', () => {

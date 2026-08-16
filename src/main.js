@@ -547,25 +547,6 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: 'Selective chaos applied.' });
     });
 
-    bus.on('sim:playbackMode', ({ mode }) => {
-        // Playback speed modes (just toggle pause for now, future: dt multiplier)
-        switch (mode) {
-            case 'rewind':
-            case 'reverse':
-                paused = true;
-                bus.emit('sim:paused', { paused: true });
-                break;
-            case 'forward':
-                paused = false;
-                bus.emit('sim:paused', { paused: false });
-                break;
-            case 'fastforward':
-                paused = false;
-                // Future: multiply DT by 3
-                bus.emit('sim:paused', { paused: false });
-                break;
-        }
-    });
     bus.on('world:paramChanged', ({ key, value }) => {
         worldParams = applyWorldParam(worldParams, key, value);
         runtimeConfig.worldParams = worldParams;

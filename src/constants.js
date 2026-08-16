@@ -485,6 +485,7 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.GRAV,
       LAW_INDEXES.DRAG,
       LAW_INDEXES.ENTR,
+      LAW_INDEXES.WRAP,
       LAW_INDEXES.COLL,
       LAW_INDEXES.ACCR,
       LAW_INDEXES.PLANETARY,
@@ -915,14 +916,14 @@ export const LAW_HELP_DB = {
     system: "Uses MASS, DEAD, RADIUS and TEMPERATURE. With ACCR, mass concentrates until collapse; matter then rains in and the hole grows.",
   },
   ENTANGLEMENT: {
-    hint: "Entanglement: touching particles forge non-local quantum links.",
-    explanation: "Confirmed batch-21: particles that make contact become entangled (ENTANGLE_ID + phase 1) — momentum converges and signals relay between the pair at any distance; the phase decays (×0.998) until the link snaps, and a partner's death fires a recoil kick.",
-    system: "Stores the partner index in ENTANGLE_ID; ENTANGLE_PHASE decays the link over time. +TELEPATHY ×1.6, +COMMS ×1.5. Spooky action without any signal channel.",
+    hint: "Entanglement: touching particles forge correlated quantum links.",
+    explanation: "Particles that make contact become entangled (ENTANGLE_ID + phase 1). The link is a pure correlation — it carries no signals and transfers no momentum (no-signaling theorem); the shared phase decoheres (×0.998/tick) until the correlation snaps on both sides, and one partner's death collapses the pair. TELEPORT is the only legitimate use of the link: quantum state transfer.",
+    system: "Stores the partner index in ENTANGLE_ID; ENTANGLE_PHASE decays the shared correlation over time. No forces, no signal relay, no recoil — correlated collapse only. +TELEPATHY ×1.6, +COMMS ×1.5.",
   },
   HISTORY: {
     hint: "History: the world remembers where particles have been.",
-    explanation: "Confirmed batch-21: a coarse 12×12×12 spatial memory field accumulates particle presence (energy/mass-weighted, exponentially decaying); particles drift toward the field's centre of mass — archaeology as a force, long after the action moved on.",
-    system: "12×12×12 memory field, decaying exponentially. +MEMORY ×1.6, +PATTERN ×1.5. Past activity leaves a global attractor that steers new arrivals.",
+    explanation: "A coarse 12×12×12 spatial memory field accumulates particle presence (energy/mass-weighted, exponentially decaying); particles drift along the local memory-field gradient — archaeology as a local force, long after the action moved on.",
+    system: "12×12×12 memory field, decaying exponentially; per-particle local ∇History gradient (wrap-around central differences, six reads — no global field scan). +MEMORY ×1.6, +PATTERN ×1.5. Past activity leaves a local attractor that steers new arrivals.",
   },
 
   GRAV: {
@@ -1125,7 +1126,7 @@ export const LAW_HELP_DB = {
   TIME_DILATION: {
     hint: "Time dilation: gravity slows local time near massive bodies.",
     explanation: "Weak-field gravitational time dilation (v4.6.29): local time slows inside a softened gravitational potential summed over neighbouring masses — clocks run slower beside ACCR stars and SINGULARITY cores and at full speed in empty space. Replaces the old SOUL-gated bullet time with the actual GR mechanism.",
-    system: "Φ = Σ mⱼ/(rⱼ+0.5) over the local neighbourhood (capped 24 nearest); localDt = √(1 − clamp(2·Φ·0.001·synergy)), floored at 0.3. localDt scales AGE, oscillator phase and lifecycle time.",
+    system: "Φ = Σ mⱼ/(rⱼ+0.5) over the local neighbourhood (capped 24 nearest, self excluded, torus-wrapped distances); localDt = √(1 − clamp(2·Φ·0.001·synergy)), floored at 0.3. localDt scales AGE, oscillator phase and lifecycle time.",
     advanced: "A star-mass neighbour at r≈10 slows time ~11%; SINGULARITY cores approach the floor. Synergises with GRAV/ACCR clustering — dense cores literally age slower.",
   },
   DIMENSIONALITY: {

@@ -5,6 +5,7 @@
  */
 import { MAX_SPECIES, DNA_META, DNA_RANGES, DNA_INDEXES, DNA_COUNT } from '../constants.js';
 import { getSpeciesDNA, setSpeciesDNA, setDNAFloat, getDNAFloat } from '../dna/dnaBuffer.js';
+import { createSliderRow } from './sliderControl.js';
 
 const SPECIES_COLORS = ['#ff5050', '#ffc832', '#50ff78', '#78a0ff', '#643c8c'];
 const SPECIES_NAMES = ['Predator', 'Sol', 'Life', 'Aether', 'Void'];
@@ -195,25 +196,16 @@ function removeLastSpecies(dnaBuffer, bus, list, accordion) {
 function renderAccordion(container, dnaBuffer, bus) {
   if (!container) return;
   let html = '';
-  for (const group of ACCORDION_GROUPS) {
+  ACCORDION_GROUPS.forEach((group, gi) => {
     html += `<div class="accordion-section${group.name === 'BASIC' ? ' open' : ''}">`;
     html += `<div class="accordion-header"><span class="arrow">▶</span>${group.name}</div>`;
     html += `<div class="accordion-body">`;
     for (const idx of group.indices) {
       if (idx >= DNA_COUNT) continue;
-      const range = DNA_RANGES[idx];
-      const name = DNA_META[idx] || `DNA_${idx}`;
-      const val = dnaBuffer ? getDNAFloat(dnaBuffer, selectedSpecies, idx, range.min, range.max) : range.default;
-      const valDisp = val.toFixed(idx < 10 ? 2 : 3);
-      html += `<div class="accordion-slider-row">`
-            + `<label>${name}</label>`
-            + `<input type="range" min="${range.min}" max="${range.max}" step="${(range.max - range.min) / 1000}" `
-            + `value="${val}" data-param="${idx}" data-species="${selectedSpecies}">`
-            + `<span class="slider-val" data-param="${idx}">${valDisp}</span>`
-            + `</div>`;
+      html += `<div data-slider-slot="${gi}-${idx}"></div>`;
     }
     html += `</div></div>`;
-  }
+  });
   container.innerHTML = html;
 
   // Wire accordion headers
@@ -223,23 +215,29 @@ function renderAccordion(container, dnaBuffer, bus) {
     });
   });
 
-  // Wire sliders
-  container.querySelectorAll('input[type="range"]').forEach((slider) => {
-    slider.addEventListener('input', () => {
-      const idx = parseInt(slider.dataset.param, 10);
-      const species = parseInt(slider.dataset.species, 10);
-      const val = parseFloat(slider.value);
-      const range = DNA_RANGES[idx];
-      const display = container.querySelector(`.slider-val[data-param="${idx}"]`);
-      if (display) display.textContent = val.toFixed(2);
-
-      if (dnaBuffer) {
-        setDNAFloat(dnaBuffer, species, idx, val, range.min, range.max);
-        if (bus) {
-          bus.emit('dna:changed', { species, param: idx, value: val });
+  // Enhanced slider rows (min/max labels, lin/log, snap, hold-to-zoom)
+  container.querySelectorAll('[data-slider-slot]').forEach((slot) => {
+    const idx = parseInt(slot.dataset.sliderSlot.split('-')[1], 10);
+    if (!Number.isFinite(idx) || idx >= DNA_COUNT) return;
+    const range = DNA_RANGES[idx];
+    const name = DNA_META[idx] || `DNA_${idx}`;
+    const val = dnaBuffer ? getDNAFloat(dnaBuffer, selectedSpecies, idx, range.min, range.max) : range.default;
+    const row = createSliderRow({
+      label: name,
+      min: range.min,
+      max: range.max,
+      step: (range.max - range.min) / 1000,
+      value: val,
+      key: String(idx),
+      title: `${name} (DNA ${idx})`,
+      onChange: (value) => {
+        if (dnaBuffer) {
+          setDNAFloat(dnaBuffer, selectedSpecies, idx, value, range.min, range.max);
+          if (bus) bus.emit('dna:changed', { species: selectedSpecies, param: idx, value });
         }
-      }
+      },
     });
+    slot.replaceWith(row.el);
   });
 
   // Store refs for species list click handler

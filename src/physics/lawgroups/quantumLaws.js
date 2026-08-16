@@ -24,13 +24,14 @@ function applySuperposition(view, iBase, k, prng) {
   // Superposition (v4.6.29): a spread of 4 basis amplitudes over candidate
   // velocities (stay, +perp, −perp, boost). Phases rotate each tick; a
   // collapse event picks one basis with probability |a|² (Born rule), then
-  // renormalises — the real quantum measurement mechanism in a discrete toy.
+  // renormalises (L2) — the real quantum measurement mechanism in a discrete
+  // toy. Amplitudes are stored unnormalised; the collapse draw always uses
+  // p_b = |a_b|² / Σ|a|², never the raw amplitude.
   let a1 = view[iBase + S.SUPER_AMP_1] || 0;
   let a2 = view[iBase + S.SUPER_AMP_2] || 0;
   let a3 = view[iBase + S.SUPER_AMP_3] || 0;
   let a4 = view[iBase + S.SUPER_AMP_4] || 0;
-  const total = a1 + a2 + a3 + a4;
-  if (total <= 1e-6) {
+  if (a1 * a1 + a2 * a2 + a3 * a3 + a4 * a4 <= 1e-6) {
     a1 = 0.7; a2 = 0.1; a3 = 0.1; a4 = 0.1;
     view[iBase + S.SUPER_AMP_1] = a1;
     view[iBase + S.SUPER_AMP_2] = a2;
@@ -54,26 +55,31 @@ function applySuperposition(view, iBase, k, prng) {
   ];
 
   if (prng() < 0.02 * k) {
-    // Born-rule collapse: sample a basis by |amplitude|², renormalise.
+    // Born-rule collapse: sample basis b with p_b = |a_b|² / Σ|a|² (L2
+    // normalisation), then collapse to the measured eigenstate plus a tiny
+    // symmetric re-spread so interference can rebuild.
     const amps = [a1, a2, a3, a4];
-    const norm = a1 + a2 + a3 + a4;
-    const r = prng() * norm;
-    let acc = 0, basis = 0;
-    for (let b = 0; b < 4; b++) {
-      acc += amps[b];
-      if (r <= acc) { basis = b; break; }
+    let norm2 = 0;
+    for (let b = 0; b < 4; b++) norm2 += amps[b] * amps[b];
+    if (norm2 > 1e-12) {
+      const r = prng() * norm2;
+      let acc = 0, basis = 0;
+      for (let b = 0; b < 4; b++) {
+        acc += amps[b] * amps[b];
+        if (r <= acc) { basis = b; break; }
+      }
+      const o = offsets[basis];
+      const eps = 0.05;
+      view[iBase + S.SUPER_AMP_1] = basis === 0 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_2] = basis === 1 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_3] = basis === 2 ? 1 - 3 * eps : eps;
+      view[iBase + S.SUPER_AMP_4] = basis === 3 ? 1 - 3 * eps : eps;
+      return {
+        ax: clamp(nanGuard(o.x * k), -FORCE_LIMIT, FORCE_LIMIT),
+        ay: clamp(nanGuard(o.y * k), -FORCE_LIMIT, FORCE_LIMIT),
+        az: clamp(nanGuard(o.z * k), -FORCE_LIMIT, FORCE_LIMIT),
+      };
     }
-    const o = offsets[basis];
-    const spread = 0.05;
-    view[iBase + S.SUPER_AMP_1] = basis === 0 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_2] = basis === 1 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_3] = basis === 2 ? 1 - spread : spread / 3;
-    view[iBase + S.SUPER_AMP_4] = basis === 3 ? 1 - spread : spread / 3;
-    return {
-      ax: clamp(nanGuard(o.x * k), -FORCE_LIMIT, FORCE_LIMIT),
-      ay: clamp(nanGuard(o.y * k), -FORCE_LIMIT, FORCE_LIMIT),
-      az: clamp(nanGuard(o.z * k), -FORCE_LIMIT, FORCE_LIMIT),
-    };
   }
   // No collapse: gentle interference drift from the rotating phase.
   return {

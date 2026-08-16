@@ -181,12 +181,31 @@ describe('Batch 08 audit — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIM
       buf[PARTICLE_STRIDE + S.POS_Y] = 100;
       buf[PARTICLE_STRIDE + S.POS_Z] = 100;
       buf[PARTICLE_STRIDE + S.MASS] = 40;
-      expect(applyTimeDilation(lawsOn('TIME_DILATION'), buf, 0, 1, [1], 1)).toBeCloseTo(0.9165, 4);
+      expect(applyTimeDilation(lawsOn('TIME_DILATION'), buf, 0, 1, [1], 1, WORLD)).toBeCloseTo(0.9165, 4);
     });
 
     it('leaves empty space at full time speed', () => {
       const buf = view(1);
-      expect(applyTimeDilation(lawsOn('TIME_DILATION'), buf, 0, 1, [], 0)).toBe(1);
+      expect(applyTimeDilation(lawsOn('TIME_DILATION'), buf, 0, 1, [], 0, WORLD)).toBe(1);
+    });
+
+    it('excludes self-potential and wraps distances across the torus', () => {
+      // Self mass must not slow the particle's own clock.
+      const self = view(1);
+      self[S.MASS] = 40;
+      expect(applyTimeDilation(lawsOn('TIME_DILATION'), self, 0, 1, [0], 1, WORLD)).toBe(1);
+
+      // A mass parked near the far edge wraps across the torus to r ≈ 0.7 —
+      // the raw (unwrapped) distance would show no slowdown at all.
+      const wrap = view(2);
+      wrap[S.POS_X] = 1999.9;
+      wrap[S.POS_Y] = 100;
+      wrap[S.POS_Z] = 100;
+      wrap[PARTICLE_STRIDE + S.POS_X] = 0.1;
+      wrap[PARTICLE_STRIDE + S.POS_Y] = 100;
+      wrap[PARTICLE_STRIDE + S.POS_Z] = 100;
+      wrap[PARTICLE_STRIDE + S.MASS] = 40;
+      expect(applyTimeDilation(lawsOn('TIME_DILATION'), wrap, 0, 1, [1], 1, WORLD)).toBeCloseTo(0.9411, 3);
     });
 
     it('integration: a particle beside a massive body advances AGE slower', () => {
@@ -197,7 +216,8 @@ describe('Batch 08 audit — PHASE_RADIATION / SUBLIMATION / TIME_DILATION / DIM
       world.view[PARTICLE_STRIDE + S.POS_Z] = 100;
       world.view[PARTICLE_STRIDE + S.MASS] = 40;
       solve(world.view, 2, PARTICLE_STRIDE, lawsOn('TIME_DILATION'), world.dna, WORLD, DT, () => 0.5);
-      expect(world.view[PARTICLE_STRIDE + S.AGE]).toBeLessThanOrEqual(world.view[S.AGE]);
+      // The particle beside the massive body (p0, localDt ≈ 0.9165) ages slower.
+      expect(world.view[S.AGE]).toBeLessThanOrEqual(world.view[PARTICLE_STRIDE + S.AGE]);
     });
   });
 

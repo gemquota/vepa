@@ -1,15 +1,17 @@
 # AGENTS.md — VEPA Workspace Initialization & Codebase Audit
 
 > **Project:** VEPA — Vector Emergent Physics Automata
-> **Active Target:** **VEPA4 v7.0.0** (legacy label `4.7.0`; working tree; HEAD `7ddb832` = v4.6.26, 2026-08-07; 7.0.0 release draft uncommitted)
+> **Active Target:** **VEPA4 v7.0.0** (legacy label `4.7.0`; working tree; HEAD `247d0e6` = `backup: 7.0.0 draft + exports snapshot before master switch`, 2026-08-11; slider-controls WIP uncommitted)
 > **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
 > archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
-> **Working Branch:** `feature/multiplayer-investigation`
-> **Audit Hash:** `AGENTS_SYNC_v7.0.0_2026-08-10`
+> **Working Branch:** `feature/slider-controls`
+> **Audit Hash:** `AGENTS_SYNC_v7.0.0_2026-08-16`
 >
 > This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
 >
 > ⚠️ **Live workspace:** concurrent agent sessions commit releases frequently (4.6.11 → 4.6.18 all landed on 2026-08-06; the 4.6.19+ DNA-64 / law-RRP / multiplex WIP is uncommitted). This file is a **snapshot** — re-run the §10.4 sync check and `git log --oneline -3` before every task. **The code is the truth; this file is the map.**
+>
+> **Keep the map current (mandatory):** if the live git state differs from what this file records — HEAD hash, current branch, working-tree contents, or any version/date token — **update this file to match before doing any other work**. Concretely: refresh the **Active Target** / **Working Branch** lines in this header, the **§1 Branches** row, and the **§2.3 Git State** table (Current Branch, HEAD, Working tree, Backup branches); bump the **Audit Hash** above to `AGENTS_SYNC_<version>_<YYYY-MM-DD>` to record the re-sync; and correct any other stale references you touch. Never proceed on a stale map — the file must describe the commit you are actually working from. If you cannot verify the live state, say so rather than guessing.
 
 ---
 
@@ -23,7 +25,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | **Active version** | **VEPA4 v7.0.0** (legacy label `4.7.0`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
 | **Active tree** | repo root (VEPA v4 — "Integrated Intelligence"; `v4/` promoted to root 2026-08-10) |
 | **Legacy trees** | archived 2026-08-10 → `gemquota/vepa-archive` (root `src/` v2.5.0-era · `v3/`, `v3-backup/`, `v3-persistence-design/` · `vaa/`) |
-| **Branches** | `master` (stable) · `new` · `feature/multiplayer-investigation` (**current**) · `feature/nuclear-rewrite` |
+| **Branches** | `master` (stable) · `new` · `feature/slider-controls` (**current**) · `feature/multiplayer-investigation` · `feature/nuclear-rewrite` (remote) |
 | **Backup branches** | `backup/pre-*` — cut before risky work (see §10.4) |
 | **License** | ISC (`package.json`) |
 | **Package Manager** | npm (`package-lock.json`, `node_modules/` installed) |
@@ -112,12 +114,12 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 
 | Property | Value |
 |----------|-------|
-| **Current Branch** | `feature/multiplayer-investigation` |
-| **HEAD** | `7ddb832` — `v4.6.26: record production deploy URL` |
+| **Current Branch** | `feature/slider-controls` |
+| **HEAD** | `247d0e6` — `backup: 7.0.0 draft + exports snapshot before master switch` |
 | **Previous releases** | `d5f5692` — `v4.6.26: solver perf` · `20df5ec` — `v4.6.25: GPU performance` · `28e9a16` — `v4.6.24: chaos multiplex expansion` · `f1407e6` — `v4.6.23: law RRP batches 20-22` · `d0aba7e` — `v4.6.22` · `32b6750` — `v4.6.21` · `446855b` — `v4.6.20` · `dbb4a0f` — `v4.6.18` |
 | **Release tags** | **None yet** — adopt `vM.N.B` tagging per §10.4 (e.g. `v7.0.0`) |
-| **Backup branches** | `backup/pre-archive-restructure-20260810` (cut before the 2026-08-10 restructure), `backup/pre-multiplex-20260807`, `backup/pre-metrics-20260807`, `backup/pre-perf-20260807`, `backup/pre-cleanup-20260726`, `backup/pre-lpsbs-20260728`, `backup/pre-vepa4-20260801` |
-| **Working tree** | Dirty — **7.0.0 (legacy 4.7.0) release draft**: law RRP WIP (8 rewritten laws in `lawgroups/`, `laws.js`, `solver.js`, `constants.js` stride 85-95, `lawState.js` dependencies) + multiplex 4.6.27/4.6.28 WIP + the 2026-08-10 archive/restructure + docs restore/triage (staged, uncommitted). **Planned multiplayer update dropped** — P1 phone-grid WIP (`src/net/`, `src/ui/networkPanel.js`, `tests/unit/net.test.js`), LAN hub (`server/`), protocol lab (`multiplayer/`, `net-poc/`) and `docs/multiplayer/` removed from the tree (recoverable from `730f5dc` / backup branches) |
+| **Backup branches** | `backup/pre-master-switch-20260811` (cut before the master-switch attempt) · `backup/pre-archive-restructure-20260810` (cut before the 2026-08-10 restructure) · `backup/pre-multiplex-20260807` · `backup/pre-metrics-20260807` · `backup/pre-perf-20260807` · `backup/pre-cleanup-20260726` · `backup/pre-lpsbs-20260728` · `backup/pre-vepa4-20260801` |
+| **Working tree** | Dirty — **slider-controls WIP (uncommitted)**: new `src/ui/sliderControl.js` + `tests/unit/sliderControl.test.js`, panel/UI edits (`src/ui/dnaPanel.js`, `src/ui/settingsPanel.js`, `src/ui/speciesPanel.js`, `src/ui/worldPanel.js`, `src/ui/ui.js`, `src/main.js`, `index.html`, `style.css`), law/stride WIP (`src/constants.js`, `src/physics/*`), test-suite updates (`tests/audit/*`, `tests/unit/*`), a `CHANGELOG.md` draft edit, and an untracked `exports/` codebase-concat snapshot (`CHANGELOG.md.bak-20260811` present). **Planned multiplayer update dropped** — P1 phone-grid WIP (`src/net/`, `src/ui/networkPanel.js`, `tests/unit/net.test.js`), LAN hub (`server/`), protocol lab (`multiplayer/`, `net-poc/`) and `docs/multiplayer/` removed from the tree (recoverable from `730f5dc` / backup branches) |
 | **Remote** | `origin` → `github.com:gemquota/vepa.git` (`origin/HEAD` → `master`) |
 
 **Release cadence:** 4.6.11 → … → 4.6.18 all landed 2026-08-06; 4.6.24-4.6.26 landed 2026-08-07/08. The 4.6.27/4.6.28 changelog sections, the v4.6.29 law RRP WIP and the 7.0.0 release draft are uncommitted (not yet released). Always re-check HEAD and the changelog top on entry — do not assume this table is current.

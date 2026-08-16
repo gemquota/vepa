@@ -38,6 +38,8 @@ function makeWorld(count, spacing = 5) {
     view[b + S.CHARGE] = 0;
     view[b + S.TEMPERATURE] = 0;
     view[b + S.RADIUS] = 0.6;
+    view[b + S.ENTANGLE_ID] = -1;
+    view[b + S.ENTANGLE_PHASE] = 0;
     for (let d = 0; d < 42; d++) {
       const r = DNA_RANGES[d] || { min: -1, max: 1 };
       view[b + S.DNA_CACHE_START + d] = r.default ?? 0;
@@ -46,23 +48,37 @@ function makeWorld(count, spacing = 5) {
   return { view, dna };
 }
 
-describe('Batch 30 — UNCERTAINTY / TELEPORT / OBSERVER / PLANCK (indices 116-119)', () => {
-  it('UNCERTAINTY jitters position and adds a velocity kick', () => {
-    // Direct: prng 0.9 → pos +0.4*0.02 = 0.008, kick ax = 0.4*0.05 = 0.02
-    const buf = new Float32Array(1 * PARTICLE_STRIDE);
-    buf[S.POS_X] = 100; buf[S.POS_Y] = 100; buf[S.POS_Z] = 100;
-    const f = applyUncertainty(buf, 0, 1, rngHigh);
-    expect(buf[S.POS_X]).toBeCloseTo(100.008, 5);
-    expect(f.ax).toBeCloseTo(0.02, 5);
+function seqPrng(...draws) {
+  let i = 0;
+  return () => (i < draws.length ? draws[i++] : 0.5);
+}
 
-    // Integration: solver k=0.1 → position jitter + velocity kick survive a tick
+describe('Batch 30 — UNCERTAINTY / TELEPORT / OBSERVER / PLANCK (indices 116-119)', () => {
+  it('UNCERTAINTY applies the Heisenberg tradeoff: fast → position jitter, slow → velocity kick', () => {
+    // Fast particle (speed ≥ 0.5): position jitter only, no force, velocity untouched.
+    const fast = new Float32Array(1 * PARTICLE_STRIDE);
+    fast[S.POS_X] = 100; fast[S.POS_Y] = 100; fast[S.POS_Z] = 100;
+    fast[S.VEL_X] = 1;
+    const fFast = applyUncertainty(fast, 0, 1, rngHigh);
+    expect(fFast).toBeNull();
+    expect(fast[S.POS_X]).toBeCloseTo(100.008, 5); // (0.9−0.5)·0.02·k
+    expect(fast[S.VEL_X]).toBe(1);
+
+    // Slow particle (speed < 0.5): velocity kick only, position untouched.
+    const slow = new Float32Array(1 * PARTICLE_STRIDE);
+    slow[S.POS_X] = 100; slow[S.POS_Y] = 100; slow[S.POS_Z] = 100;
+    const fSlow = applyUncertainty(slow, 0, 1, rngHigh);
+    expect(fSlow.ax).toBeCloseTo(0.02, 5); // (0.9−0.5)·0.05·k
+    expect(slow[S.POS_X]).toBe(100);
+
+    // Integration: solver k=0.1 → stationary particle gets a velocity kick
     const w = makeWorld(1);
     const st = createLawState();
     set(st, LAW_INDEXES.UNCERTAINTY);
     expect(isSet(st, LAW_INDEXES.UNCERTAINTY)).toBe(true);
     solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rngHigh);
-    expect(w.view[S.POS_X]).toBeGreaterThan(100 + 0.0001);
     expect(Math.abs(w.view[S.VEL_X])).toBeGreaterThan(0.0001);
+    expect(w.view[S.POS_X]).toBeGreaterThan(100 + 0.00001);
 
     // Gate: no law → frozen
     const w2 = makeWorld(1);
@@ -72,31 +88,53 @@ describe('Batch 30 — UNCERTAINTY / TELEPORT / OBSERVER / PLANCK (indices 116-1
     expect(w2.view[S.VEL_X]).toBe(0);
   });
 
-  it('TELEPORT jumps to a random location and spends ENERGY', () => {
-    // Direct: prng 0.9 < 0.002*1000 → jump to 0.9*2000 = 1800, energy spent
-    const buf = new Float32Array(1 * PARTICLE_STRIDE);
-    buf[S.POS_X] = 100; buf[S.POS_Y] = 100; buf[S.POS_Z] = 100;
-    buf[S.ENERGY] = 100;
-    const result = applyTeleport(buf, 0, 2000, 1000, rngHigh);
+  it('TELEPORT transfers state to the entangled partner and collapses the sender', () => {
+    // Direct: trigger draw 0.001 < 0.002·k; jitter draws 0.9.
+    const buf = new Float32Array(2 * PARTICLE_STRIDE);
+    buf[base(0) + S.POS_X] = 100; buf[base(0) + S.POS_Y] = 100; buf[base(0) + S.POS_Z] = 100;
+    buf[base(0) + S.VEL_X] = 2;
+    buf[base(0) + S.ENERGY] = 100;
+    buf[base(0) + S.ENTANGLE_ID] = 1;
+    buf[base(0) + S.ENTANGLE_PHASE] = 1;
+    buf[base(1) + S.POS_X] = 300; buf[base(1) + S.POS_Y] = 100; buf[base(1) + S.POS_Z] = 100;
+    buf[base(1) + S.ENERGY] = 100;
+    buf[base(1) + S.ENTANGLE_ID] = 0;
+    buf[base(1) + S.ENTANGLE_PHASE] = 1;
+    const result = applyTeleport(buf, 0, 1, seqPrng(0.001, 0.9, 0.9, 0.9));
     expect(result).toBeNull();
-    expect(buf[S.POS_X]).toBeCloseTo(1800, 3);
-    expect(buf[S.ENERGY]).toBeLessThan(100);
+    expect(buf[base(1) + S.VEL_X]).toBe(2);          // state transferred
+    expect(buf[base(1) + S.ENERGY]).toBeCloseTo(130, 5); // +30% of sender energy
+    expect(buf[base(0) + S.ENERGY]).toBe(95);        // classical channel cost
+    expect(buf[base(0) + S.VEL_X]).toBeCloseTo(0.16, 5); // (0.9−0.5)·0.4 jitter
+    expect(buf[base(0) + S.POS_X]).toBe(100);        // nothing moves through space
+    expect(buf[base(0) + S.ENTANGLE_ID]).toBe(-1);   // link consumed both sides
+    expect(buf[base(1) + S.ENTANGLE_ID]).toBe(-1);
 
-    // Integration: solver k=0.5, prng 0.0009 < 0.001 → jump to 0.0009*2000 = 1.8
-    const w = makeWorld(1);
+    // Gate: no partner → no-op, energy preserved
+    const buf2 = new Float32Array(1 * PARTICLE_STRIDE);
+    buf2[S.ENERGY] = 100;
+    buf2[S.ENTANGLE_ID] = -1;
+    expect(applyTeleport(buf2, 0, 1, rngLow)).toBeNull();
+    expect(buf2[S.ENERGY]).toBe(100);
+
+    // Integration: solver k=0.5, trigger 0.0009 < 0.001 → partner adopts state
+    const w = makeWorld(2, 5);
+    w.view[S.ENTANGLE_ID] = 1;
+    w.view[S.ENTANGLE_PHASE] = 1;
+    w.view[PARTICLE_STRIDE + S.ENTANGLE_ID] = 0;
+    w.view[PARTICLE_STRIDE + S.ENTANGLE_PHASE] = 1;
+    w.view[S.VEL_X] = 2;
+    w.view[PARTICLE_STRIDE + S.ENERGY] = 100;
     const st = createLawState();
     set(st, LAW_INDEXES.TELEPORT);
     expect(isSet(st, LAW_INDEXES.TELEPORT)).toBe(true);
     solve(w.view, 1, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rngLow);
-    expect(w.view[S.POS_X]).toBeCloseTo(1.8, 1);
-    expect(w.view[S.ENERGY]).toBeLessThan(90);
-
-    // Gate: no law → position and energy frozen
-    const w2 = makeWorld(1);
-    const none = createLawState();
-    solve(w2.view, 1, PARTICLE_STRIDE, none, w2.dna, WORLD, DT, rngLow);
-    expect(w2.view[S.POS_X]).toBe(100);
-    expect(w2.view[S.ENERGY]).toBe(100);
+    solve(w.view, 2, PARTICLE_STRIDE, st, w.dna, WORLD, DT, rngLow);
+    expect(w.view[PARTICLE_STRIDE + S.VEL_X]).toBe(2);
+    expect(w.view[PARTICLE_STRIDE + S.ENERGY]).toBeCloseTo(130, 5);
+    expect(w.view[S.ENERGY]).toBe(95);
+    expect(w.view[S.ENTANGLE_ID]).toBe(-1);
+    expect(w.view[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(-1);
   });
 
   it('OBSERVER collapses a neighbour velocity toward the observer and imprints MEMORY', () => {
