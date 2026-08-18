@@ -1,11 +1,11 @@
 # AGENTS.md — VEPA Workspace Initialization & Codebase Audit
 
 > **Project:** VEPA — Vector Emergent Physics Automata
-> **Active Target:** **VEPA4 v7.3.0** (legacy label `4.7.4`; HEAD `807dcf9`, 2026-08-18; per-shard world params added to the chaos multiplex)
+> **Active Target:** **VEPA4 v7.6.0** (legacy label `4.7.7`; HEAD `b7c624c`, 2026-08-18; world-state save/load/compare/undo trilogy)
 > **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
 > archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
 > **Working Branch:** `master`
-> **Audit Hash:** `AGENTS_SYNC_v7.3.0_2026-08-18`
+> **Audit Hash:** `AGENTS_SYNC_v7.6.0_2026-08-18`
 >
 > This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
 >
@@ -22,7 +22,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | Attribute | Value |
 |-----------|-------|
 | **Repository** | `github.com/gemquota/vepa.git` |
-| **Active version** | **VEPA4 v7.3.0** (legacy label `4.7.4`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
+| **Active version** | **VEPA4 v7.6.0** (legacy label `4.7.7`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects |
 | **Active tree** | repo root (VEPA v4 — "Integrated Intelligence"; `v4/` promoted to root 2026-08-10) |
 | **Legacy trees** | archived 2026-08-10 → `gemquota/vepa-archive` (root `src/` v2.5.0-era · `v3/`, `v3-backup/`, `v3-persistence-design/` · `vaa/`) |
 | **Branches** | `master` (stable — **current**) · `new` · `feature/slider-controls` · `feature/multiplayer-investigation` · `feature/nuclear-rewrite` (remote) |
@@ -34,7 +34,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | **Module System** | ESM (`"type": "module"`) |
 | **Deploys** | Vercel prod `https://vepa-v4.vercel.app/` · GitHub Pages `/vepa/vepar/` |
 
-**Version alignment (new schema since 2026-08-10):** the product is **VEPA4**; versions use `major.minor.build` (npm-semver-native). `VERSION`, the top section of `CHANGELOG.md` (arrow token), `package.json#version`, and this file **must all read 7.3.0**. Since the 2026-08-10 restructure the root manifest IS the v4 manifest (the legacy v2 root `package.json` was archived with the legacy trees).
+**Version alignment (new schema since 2026-08-10):** the product is **VEPA4**; versions use `major.minor.build` (npm-semver-native). `VERSION`, the top section of `CHANGELOG.md` (arrow token), `package.json#version`, and this file **must all read 7.6.0**. Since the 2026-08-10 restructure the root manifest IS the v4 manifest (the legacy v2 root `package.json` was archived with the legacy trees).
 
 **GEMINI.md mandates (take precedence over this file):** every significant change must sync `CHANGELOG.md`, `README.md`, `SPEC.md`/`PLAN.md`, `GUIDE.md`, `LAW_HELP_DB`, and `audit-suite/` per GEMINI.md §1.1 (legacy `ENGINE_SSOT.md` / `docs/fullaudit.md` / `codex/` parity were archived 2026-08-10); the B-4RK principle (documentation as a feature — 4-tier `LAW_HELP_DB` for every law); bitmask discipline (`LAW_INDEXES` never hardcoded); and verify doc sync before declaring completion or you incur **Documentation Debt**. Read `GEMINI.md` on entry (§10.1).
 
@@ -53,7 +53,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 ├── GUIDE.md / GEMINI.md    ← user design guide + project mandates
 ├── index.html              ← app shell
 ├── style.css
-├── package.json            ← v4 manifest (7.3.0 — MUST match changelog top)
+├── package.json            ← v4 manifest (7.6.0 — MUST match changelog top)
 ├── package-lock.json
 ├── vercel.json             ← Vercel static build + COOP/COEP headers
 ├── vite.config.js / vitest.config.js
@@ -69,16 +69,18 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 │   ├── debug.js            ← on-canvas debug overlay
 │   ├── core/               ← eventBus.js, prng.js (SplitMix32)
 │   ├── state/              ← lawState.js (128-bit bitmask), particleBuffer.js,
-│   │                          worldParams.js, runtimeConfig.js,
-│   │                          defaultPresets.js, presetManager.js
+│   │                          worldParams.js, runtimeConfig.js, worldSave.js
+│   │                          (save/load/compare/undo), defaultPresets.js,
+│   │                          presetManager.js
 │   ├── dna/                ← dnaBuffer.js (species genome), expression.js
 │   ├── physics/            ← solver.js (MAX_FORCE 50, MAX_INTERACTIONS 500),
 │   │   │                      laws.js, synergy.js, spatialGrid.js (GRID_DIM 12)
 │   │   └── lawgroups/      ← 8 per-category law files + SPEC.md (law SSOT)
 │   ├── render/             ← renderer.js, spriteSync.js (PixiJS)
-│   ├── ui/                 ← 13 files: world, law, species, dna, dnaAnalytics,
-│   │                          preset, settings, intel, narrative, hud,
-│   │                          camera, tooltip + ui.js
+│   ├── ui/                 ← 14 files: world, law, species, dna, dnaAnalytics,
+│   │                          preset, save (World States tab + toolbar
+│   │                          quick-save/undo), settings, intel, narrative,
+│   │                          hud, camera, tooltip + ui.js
 │   ├── engines/            ← goal, insight, lineage, narrative, timeline
 │   ├── multiplex/          ← multiplex.js + multiplexUI.js + multiplexHelp.js (chaos multiplex)
 │   ├── spawn/              ← distribution.js (initial population)
@@ -115,11 +117,11 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | Property | Value |
 |----------|-------|
 | **Current Branch** | `master` |
-| **HEAD** | `807dcf9` — `feat(multiplex): elitist iteration, stable fitness, shard history + revert` (v7.2.0; the v7.3.0 per-shard world-params feature is uncommitted) |
-| **Previous releases** | `03af0c0` — `chore(release): v7.1.1 — 50+ dedicated law parameters` · `7f85296` — `feat(laws): LAW_PARAMETERS SSOT` · `807dcf9` lineage replaces the pre-restructure `4.6.x` line (see remote history) |
+| **HEAD** | `b7c624c` — `feat(ui): World States panel + toolbar quick-save/undo + compare overlay` (v7.6.0) |
+| **Previous releases** | `e1a1c99` — `feat(save): world compare + undo ring` (v7.5.0) · `964b1a3` — `feat(save): world-state save/load engine` (v7.4.0) · `921228e` — `feat(multiplex): per-shard world params` (v7.3.0) · `807dcf9` — `feat(multiplex): elitist iteration` (v7.2.0) · `03af0c0` — `chore(release): v7.1.1` |
 | **Release tags** | **None yet** — adopt `vM.N.B` tagging per §10.4 (e.g. `v7.0.0`) |
 | **Backup branches** | `backup/pre-master-switch-20260811` (cut before the master-switch attempt) · `backup/pre-archive-restructure-20260810` (cut before the 2026-08-10 restructure) · `backup/pre-multiplex-20260807` · `backup/pre-metrics-20260807` · `backup/pre-perf-20260807` · `backup/pre-cleanup-20260726` · `backup/pre-lpsbs-20260728` · `backup/pre-vepa4-20260801` · `backup/v47-multiplex-f6900f0` (pre-force-push v4.7 multiplex evolution, preserved for reference) |
-| **Working tree** | Dirty — **v7.3.0 per-shard world params (uncommitted)**: `src/multiplex/multiplex.js` (per-shard `worldParams`, `paramVariation`/`randomizeParams`, runtimeConfig swap in `stepMultiplex`, PARAMS compare row), `src/multiplex/multiplexUI.js` (PARAM VAR slider + Params checkbox), `src/multiplex/multiplexHelp.js` (`paramVar` entry), `tests/unit/multiplex.test.js` (+7 cases), `CHANGELOG.md` (v7.3.0 entry), `VERSION`/`package.json` (7.3.0). Untracked `v4-worktree/` leftover untouched |
+| **Working tree** | Clean (v7.4.0→v7.6.0 world-states trilogy committed; untracked `v4-worktree/` leftover untouched) |
 | **Remote** | `origin` → `github.com:gemquota/vepa.git` (`origin/HEAD` → `master`) |
 
 **Release cadence:** 4.6.11 → … → 4.6.18 all landed 2026-08-06; 4.6.24-4.6.26 landed 2026-08-07/08. The 4.6.27/4.6.28 changelog sections, the v4.6.29 law RRP WIP and the 7.0.0 release draft are uncommitted (not yet released). Always re-check HEAD and the changelog top on entry — do not assume this table is current.
