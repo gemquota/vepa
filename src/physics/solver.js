@@ -44,7 +44,6 @@ import {
   applyVoid,
   applyBond,
   applyReduction,
-  applyAlloy,
   applyTelepathy,
   applyClairvoyance,
   applyPrecognition,
@@ -111,6 +110,7 @@ import {
   setBuffer,
 } from './laws.js';
 import { createSynergyCache } from './synergy.js';
+import { applyAlloy, isBondedPair, mergeParticles } from './mergePhysics.js';
 import { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation } from './lawgroups/physicsLaws.js';
 import { applyAdiabatic, applyCompression, applyExpansion, applyEquilibrium, applyLatentHeat, applyRunaway } from './lawgroups/thermoLaws.js';
 import { applySymbiosis, applyParasite, applyHibernation, applyImmunity } from './lawgroups/biologyLaws.js';
@@ -129,14 +129,6 @@ const MAX_VELOCITY = 10.0;
 // larger inter-particle distances of a bigger world (baseline: 240³ world).
 const G = 0.2 * (WORLD_SIZE / 240) ** 2;   // lower gravity so particles don't instantly clump
 const DEFAULT_DT = 1.0;
-
-/** Blend a neighbor's color into a subject particle (dissolution). */
-function blendColor(view, subjBase, nbBase, ratio) {
-  const si = STRIDE_INDEXES;
-  view[subjBase + si.COLOR_R] += (view[nbBase + si.COLOR_R] - view[subjBase + si.COLOR_R]) * ratio;
-  view[subjBase + si.COLOR_G] += (view[nbBase + si.COLOR_G] - view[subjBase + si.COLOR_G]) * ratio;
-  view[subjBase + si.COLOR_B] += (view[nbBase + si.COLOR_B] - view[subjBase + si.COLOR_B]) * ratio;
-}
 
 // Preallocated neighbor buffer (avoids GC during solve)
 const NEIGHBOR_BUF_SIZE = 2000;
@@ -498,57 +490,28 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
             az += bounceForce * nz;
           }
 
-          // ── ACCR: softbody dissolution + gravitational collapse ──
+          // ── ACCR: true accretion — the pair becomes ONE body (v8.0.0) ──
+          // When the fusion gate passes (momentum or dwell), the two particles
+          // collapse into a single body: combined mass (× FUSION efficiency),
+          // centre-of-mass position, momentum-conserving velocity, and
+          // mass-weighted colour. Bonded pairs (BOND / POLYMER molecules) are
+          // excluded — a bond is not accretion; the orbs stay separate and
+          // attached. STOICHIOMETRY makes the merger exact (efficiency 1.0).
           if (accrOn && fusing) {
-            const isStarI = m1 > runtimeConfig.starMass;
-            const isStarJ = m2 > runtimeConfig.starMass;
             // FUSION DNA (9): mass-merging efficiency multiplier (0..1 → 0.5..1.5).
             const fusionMult = 0.5 + (dnaI[DNA_INDEXES.FUSION] || 0.5);
-            if (isStarI) {
-              // Collapse: star pulls overlapping matter in and dissolves it
-              const gain = (m2 * 0.04 + 0.02 * (m1 / runtimeConfig.starMass)) * fusionMult;
-              view[iBase + S.MASS] += gain;
-              view[jBase + S.MASS] = Math.max(0, m2 - gain);
-              if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
-              blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
+            const eff = active[LAW_INDEXES.STOICHIOMETRY] ? 1.0 : fusionMult;
+            if (!isBondedPair(view, iBase, jBase, stride)) {
+              mergeParticles(view, iBase, jBase, stride, { fusionMult: eff, worldSize });
+              // Fold the merged body back into the integration locals so the
+              // writeback and radius update reflect the new single particle.
+              px = view[iBase + S.POS_X];
+              py = view[iBase + S.POS_Y];
+              pz = view[iBase + S.POS_Z];
+              vx = view[iBase + S.VEL_X];
+              vy = view[iBase + S.VEL_Y];
+              vz = view[iBase + S.VEL_Z];
               mass = view[iBase + S.MASS];
-            } else if (isStarJ) {
-              // Neighbor star dissolves this particle
-              const loss = m1 * 0.04 * fusionMult;
-              view[iBase + S.MASS] = Math.max(0, m1 - loss);
-              view[jBase + S.MASS] += loss;
-              if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
-              mass = view[iBase + S.MASS];
-            } else if (m1 > m2 * 2.0) {
-              // Bigger body slowly absorbs the smaller (partial dissolution)
-              const gain = m2 * 0.04 * fusionMult;
-              view[iBase + S.MASS] += gain;
-              view[jBase + S.MASS] = Math.max(0, m2 - gain);
-              if (view[jBase + S.MASS] <= 0.05) view[jBase + S.DEAD] = 1.0;
-              blendColor(view, iBase, jBase, gain / Math.max(view[iBase + S.MASS], 0.001));
-              mass = view[iBase + S.MASS];
-            } else if (m2 > m1 * 2.0) {
-              // This particle dissolves into the bigger neighbor
-              const loss = m1 * 0.04 * fusionMult;
-              view[iBase + S.MASS] = Math.max(0, m1 - loss);
-              view[jBase + S.MASS] += loss;
-              if (view[iBase + S.MASS] <= 0.05) view[iBase + S.DEAD] = 1.0;
-              mass = view[iBase + S.MASS];
-            } else {
-              // Similar size: mutual dissolution — blend mass and color
-              const diff = (m2 - m1) * 0.02 * fusionMult;
-              view[iBase + S.MASS] += diff;
-              view[jBase + S.MASS] -= diff;
-              mass = view[iBase + S.MASS];
-              const cR = (view[iBase + S.COLOR_R] + view[jBase + S.COLOR_R]) * 0.5;
-              const cG = (view[iBase + S.COLOR_G] + view[jBase + S.COLOR_G]) * 0.5;
-              const cB = (view[iBase + S.COLOR_B] + view[jBase + S.COLOR_B]) * 0.5;
-              view[iBase + S.COLOR_R] += (cR - view[iBase + S.COLOR_R]) * 0.1;
-              view[iBase + S.COLOR_G] += (cG - view[iBase + S.COLOR_G]) * 0.1;
-              view[iBase + S.COLOR_B] += (cB - view[iBase + S.COLOR_B]) * 0.1;
-              view[jBase + S.COLOR_R] += (cR - view[jBase + S.COLOR_R]) * 0.1;
-              view[jBase + S.COLOR_G] += (cG - view[jBase + S.COLOR_G]) * 0.1;
-              view[jBase + S.COLOR_B] += (cB - view[jBase + S.COLOR_B]) * 0.1;
             }
           }
         }

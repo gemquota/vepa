@@ -21,6 +21,16 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.0] - 2026-08-18 → 8.0.0
+
+### Matter & Union — accretion is a true merger; bonds stay as separate attached orbs (Set A · Part 1)
+- `feat(physics):` **ACCR is now a real merger, not gradual dissolution.** When the fusion gate passes (FUSION_MOMENTUM momentum on impact, or FUSION_TIME continuous-contact dwell), the pair collapses into **one particle**: mass = (m1+m2)·(0.5+FUSION DNA), centre-of-mass position (toroid-aware), momentum-conserving velocity, and **mass-weighted colour** — the heavier body dominates the blend. Energy is mass-averaged too. The absorbed particle dies (DEAD), its third-party bonds are dropped so former partners can rebond. New self-contained `src/physics/mergePhysics.js` (`mergeParticles`, `isBondedPair`) shared by ACCR and ALLOY.
+- `feat(physics):` **not every union accretes** — BOND and POLYMER pairs are molecules: they stay as **two separate attached orbs** held at an equilibrium distance (existing spring behavior) and are explicitly excluded from merging (ACCR and ALLOY both check `isBondedPair`). ENTANGLEMENT / SYMBIOSIS / PARASITE remain separate-but-linked (phase / energy flows).
+- `feat(physics):` **ALLOY upgraded** to the same core — colour blend is now mass-weighted (was a flat 50/50 average), DNA averaging stays mass-weighted, and bonded pairs no longer dissolve into one body.
+- `feat(physics):` **STOICHIOMETRY makes mergers exact** — with the law active, FUSION efficiency is forced to 1.0 (no mass gained or lost).
+- `docs:` ACCR / ALLOY `LAW_HELP_DB` entries updated to the v8.0.0 semantics via a 4-tier patch module (`src/state/lawHelpPatches.js`), merged over the static table in `tooltip.js`.
+- `test:` `batch_02` rewritten to the merger semantics (combined mass, weighted colour, momentum + COM conservation, absorbed-neighbour DEAD) + new **bonded-pair-does-not-accrete** test; `batch_11` gains mass-weighted-colour and bonded-pair alloy guards. Full suite 672/678 (the 6 pre-existing law-category/audit baseline failures untouched).
+
 ## [4.7.7] - 2026-08-18 → 7.6.0
 
 ### World States UI — SAVES drawer tab, toolbar quick-save/undo, compare overlay

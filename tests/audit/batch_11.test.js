@@ -3,7 +3,8 @@ import { PARTICLE_STRIDE, STRIDE_INDEXES as S, DNA_RANGES, LAW_INDEXES, MAX_PART
 import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults, getDNAFloat } from '../../src/dna/dnaBuffer.js';
-import { setBuffer, applyReduction, applyAlloy, applyMelt, applyBoil } from '../../src/physics/laws.js';
+import { setBuffer, applyReduction, applyMelt, applyBoil } from '../../src/physics/laws.js';
+import { applyAlloy } from '../../src/physics/mergePhysics.js';
 import { solve } from '../../src/physics/solver.js';
 
 const WORLD = 2000;
@@ -141,6 +142,41 @@ describe('Batch 11 — REDUCTION / ALLOY / MELT / BOIL', () => {
     off[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
     applyAlloy(createLawState(), off, 0, PARTICLE_STRIDE, PARTICLE_STRIDE, 0.3, 1);
     expect(off[PARTICLE_STRIDE + S.DEAD]).toBe(0);
+  });
+
+  it('ALLOY (v8.0.0): colour blend is mass-weighted — the heavier partner dominates', () => {
+    const buf = view(2);
+    seed(buf, 2);
+    buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
+    buf[S.MASS] = 1.0;                    // survivor light
+    buf[PARTICLE_STRIDE + S.MASS] = 3.0;  // absorbed heavy
+    buf[S.COLOR_R] = 0;
+    buf[S.COLOR_B] = 255;
+    buf[PARTICLE_STRIDE + S.COLOR_R] = 255;
+    buf[PARTICLE_STRIDE + S.COLOR_B] = 0;
+    const state = createLawState();
+    set(state, LAW_INDEXES.ALLOY);
+    applyAlloy(state, buf, 0, PARTICLE_STRIDE, PARTICLE_STRIDE, 0.3, 1);
+    expect(buf[PARTICLE_STRIDE + S.DEAD]).toBe(1);
+    expect(buf[S.MASS]).toBeCloseTo(4.0, 5);
+    // weighted: red 255·3/4, blue 255·1/4
+    expect(buf[S.COLOR_R]).toBeCloseTo(191.25, 3);
+    expect(buf[S.COLOR_B]).toBeCloseTo(63.75, 3);
+  });
+
+  it('ALLOY (v8.0.0): a bonded pair alloys — it does not fuse into one body', () => {
+    const buf = view(2);
+    seed(buf, 2);
+    buf[PARTICLE_STRIDE + S.SPECIES_ID] = 1;
+    buf[S.BOND_PARTNER_1] = 1;
+    buf[PARTICLE_STRIDE + S.BOND_PARTNER_1] = 0;
+    buf[S.BOND_COUNT] = 1;
+    buf[PARTICLE_STRIDE + S.BOND_COUNT] = 1;
+    const state = createLawState();
+    set(state, LAW_INDEXES.ALLOY);
+    applyAlloy(state, buf, 0, PARTICLE_STRIDE, PARTICLE_STRIDE, 0.3, 1);
+    expect(buf[PARTICLE_STRIDE + S.DEAD]).toBe(0);
+    expect(buf[S.MASS]).toBeCloseTo(1.5, 5);
   });
 
   it('ALLOY integration: overlapping cross-species pair fuses fully in solve()', () => {

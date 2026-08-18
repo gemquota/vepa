@@ -5,6 +5,10 @@
  */
 import { LAW_INDEXES, LAW_HELP_DB, LAW_TO_CATEGORY, LAW_HUE_BY_INDEX } from '../constants.js';
 import { isSet, toggle as toggleLaw } from '../state/lawState.js';
+import { LAW_HELP_PATCHES } from '../state/lawHelpPatches.js';
+
+// v8.0.0 union-physics rework: overlay the updated ACCR / ALLOY entries.
+Object.assign(LAW_HELP_DB, LAW_HELP_PATCHES);
 
 let infoEl = null;
 let currentLawIdx = -1;
