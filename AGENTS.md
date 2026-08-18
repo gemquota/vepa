@@ -1,11 +1,11 @@
 # AGENTS.md — VEPA Workspace Initialization & Codebase Audit
 
 > **Project:** VEPA — Vector Emergent Physics Automata
-> **Active Target:** **VEPA4 v8.3.0** (legacy label `4.8.3`; HEAD `d70ad1b`, 2026-08-18; v8.3.0 Set F "Civilizations" committed + tagged (F.1–F.4: group registry, construction, economy, analytics); v8.2.0 Set E.1 field system at `eae1f58`; RRP E·F·A trilogy design in `docs/dev/rrp-trilogy/`; next: Set A — Living World (A.1 speciation → A.3 world events))
+> **Active Target:** **VEPA4 v8.4.0** (legacy label `4.8.4`; HEAD `1e5eead`, 2026-08-18; v8.4.0 Set A "Living World" committed + tagged — **RRP E·F·A trilogy complete** (E.1 v8.2.0 @ `eae1f58` · F v8.3.0 @ `d70ad1b` · A v8.4.0 @ `1e5eead`); design in `docs/dev/rrp-trilogy/`)
 > **Layout:** the `` tree was promoted to the repo root on 2026-08-10 (legacy trees
 > archived into `gemquota/vepa-archive`); ALL paths below are root-relative.
 > **Working Branch:** `master`
-> **Audit Hash:** `AGENTS_SYNC_v8.3.0_2026-08-18`
+> **Audit Hash:** `AGENTS_SYNC_v8.4.0_2026-08-18`
 >
 > This file is the canonical initialization prompt for any agent entering this workspace. It contains the codebase audit, architectural SSOT, conventions, and operational workflows. All agents **must** read this file first before any code modification. Version control is **strict** — read §10.4 (Version History Control Protocol) before any changelog edit or deploy.
 >
@@ -22,7 +22,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | Attribute | Value |
 |-----------|-------|
 | **Repository** | `github.com/gemquota/vepa.git` |
-| **Active version** | **VEPA4 v8.3.0** (legacy label `4.8.3`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects (committed + tagged `d70ad1b`) |
+| **Active version** | **VEPA4 v8.4.0** (legacy label `4.8.4`) — tracked in `CHANGELOG.md` + Conventional Commits `chore(release):` subjects (committed + tagged `1e5eead`) |
 | **Active tree** | repo root (VEPA v4 — "Integrated Intelligence"; `v4/` promoted to root 2026-08-10) |
 | **Legacy trees** | archived 2026-08-10 → `gemquota/vepa-archive` (root `src/` v2.5.0-era · `v3/`, `v3-backup/`, `v3-persistence-design/` · `vaa/`) |
 | **Branches** | `master` (stable — **current**) · `new` · `feature/slider-controls` · `feature/multiplayer-investigation` · `feature/nuclear-rewrite` (remote) |
@@ -34,7 +34,7 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | **Module System** | ESM (`"type": "module"`) |
 | **Deploys** | Vercel prod `https://vepa-seven.vercel.app/` · GitHub Pages `https://gemquota.github.io/vepa/` (both auto-deploy from pushes to `master`) |
 
-**Version alignment (new schema since 2026-08-10):** the product is **VEPA4**; versions use `major.minor.build` (npm-semver-native). `VERSION`, the top section of `CHANGELOG.md` (arrow token), `package.json#version`, and this file **must all read 8.3.0**. Since the 2026-08-10 restructure the root manifest IS the v4 manifest (the legacy v2 root `package.json` was archived with the legacy trees).
+**Version alignment (new schema since 2026-08-10):** the product is **VEPA4**; versions use `major.minor.build` (npm-semver-native). `VERSION`, the top section of `CHANGELOG.md` (arrow token), `package.json#version`, and this file **must all read 8.4.0**. Since the 2026-08-10 restructure the root manifest IS the v4 manifest (the legacy v2 root `package.json` was archived with the legacy trees).
 
 **GEMINI.md mandates (take precedence over this file):** every significant change must sync `CHANGELOG.md`, `README.md`, `SPEC.md`/`PLAN.md`, `GUIDE.md`, `LAW_HELP_DB`, and `audit-suite/` per GEMINI.md §1.1 (legacy `ENGINE_SSOT.md` / `docs/fullaudit.md` / `codex/` parity were archived 2026-08-10); the B-4RK principle (documentation as a feature — 4-tier `LAW_HELP_DB` for every law); bitmask discipline (`LAW_INDEXES` never hardcoded); and verify doc sync before declaring completion or you incur **Documentation Debt**. Read `GEMINI.md` on entry (§10.1).
 
@@ -53,13 +53,13 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 ├── GUIDE.md / GEMINI.md    ← user design guide + project mandates
 ├── index.html              ← app shell
 ├── style.css
-├── package.json            ← v4 manifest (8.3.0 — MUST match changelog top)
+├── package.json            ← v4 manifest (8.4.0 — MUST match changelog top)
 ├── package-lock.json
 ├── vercel.json             ← Vercel static build + COOP/COEP headers
 ├── vite.config.js / vitest.config.js
 ├── vepa4                   ← launcher: dev|build|preview|test|syntax|bench
 │
-├── src/                    ← v4 application source (55 JS files, ~18k LOC)
+├── src/                    ← v4 application source (58 JS files, ~20k LOC)
 │   ├── main.js             ← orchestrator, law shuffling, worker bridge
 │   ├── constants.js        ← SSOT: STRIDE_INDEXES, DNA_INDEXES (64) / DNA_COUNT
 │   │                          (64), DNA_META, DNA_RANGES, LAW_INDEXES (128),
@@ -79,16 +79,18 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 │   │   │                      fields.js (E.1 field grid: vectors/scalars/walls/wells/portals)
 │   │   └── lawgroups/      ← 8 per-category law files + SPEC.md (law SSOT)
 │   ├── render/             ← renderer.js, spriteSync.js (PixiJS)
-│   ├── ui/                 ← 15 files: world, law, species, dna, dnaAnalytics, groupAnalytics (F.4),
+│   ├── ui/                 ← 16 files: world, law, species, dna, dnaAnalytics, groupAnalytics (F.4),
+│   │                          ecoPanel (A.2),
 │   │                          preset, save (World States tab + toolbar
 │   │                          quick-save/undo), settings, intel, narrative,
 │   │                          hud, camera, tooltip + ui.js
-│   ├── engines/            ← goal, insight, lineage, narrative, timeline
+│   ├── engines/            ← goal, insight, lineage, narrative, timeline,
+│   │                          speciation (A.1), ecoEngine (A.2), worldEvents (A.3)
 │   ├── multiplex/          ← multiplex.js + multiplexUI.js + multiplexHelp.js (chaos multiplex)
 │   ├── spawn/              ← distribution.js (initial population)
 │   └── worker/             ← physics.worker.js (SharedArrayBuffer loop)
 │
-├── tests/                  ← vitest: 72 files / 710 tests (unit + audit + params);
+├── tests/                  ← vitest: 74 files / 718 tests (unit + audit + params);
 │                               legacy `run.mjs` node:test runner — do not use
 ├── bench/                  ← headless solver benchmark (vepa4 bench)
 ├── docs/                   ← v4 docs (mechanics/, dev/)
@@ -119,11 +121,11 @@ VEPA is a **GPU-accelerated (Web Workers + PixiJS/Canvas2D) emergent physics sim
 | Property | Value |
 |----------|-------|
 | **Current Branch** | `master` |
-| **HEAD** | `d70ad1b` — `chore(release): v8.3.0 — Set F "Civilizations": group registry, construction, economy, analytics (RRP E·F·A build 2)` |
+| **HEAD** | `1e5eead` — `chore(release): v8.4.0 — Set A "Living World": speciation, ecosystem analytics, world events (RRP E·F·A build 3)` |
 | **Previous releases** | `81d19c7` — `feat(ui): full-screen multiplex controls, law icon size toggle, restore Pages mirror` (v8.1.0) · `4b65316` — `feat(physics): accretion is now a true merger — one body, combined mass, mass-weighted colour` (v8.0.0) · `b7c624c` — `feat(ui): World States panel + toolbar quick-save/undo + compare overlay` (v7.6.0) · `9e3c8cd` — `fix(save): emit world:paramsRestored on restore` (v7.6.0) · `e1a1c99` — `feat(save): world compare + undo ring` (v7.5.0) · `964b1a3` — `feat(save): world-state save/load engine` (v7.4.0) |
-| **Release tags** | `v8.3.0`, `v8.2.0`, `v8.1.1`, `v8.1.0`, `v8.0.0` (repo tagging adopted at v8.0.0, 2026-08-18) |
+| **Release tags** | `v8.4.0`, `v8.3.0`, `v8.2.0`, `v8.1.1`, `v8.1.0`, `v8.0.0` (repo tagging adopted at v8.0.0, 2026-08-18) |
 | **Backup branches** | `backup/pre-master-switch-20260811` (cut before the master-switch attempt) · `backup/pre-archive-restructure-20260810` (cut before the 2026-08-10 restructure) · `backup/pre-multiplex-20260807` · `backup/pre-metrics-20260807` · `backup/pre-perf-20260807` · `backup/pre-cleanup-20260726` · `backup/pre-lpsbs-20260728` · `backup/pre-vepa4-20260801` · `backup/v47-multiplex-f6900f0` (pre-force-push v4.7 multiplex evolution, preserved for reference) |
-| **Working tree** | v8.3.0 clean (Set F — Civilizations committed + tagged `d70ad1b`); untracked `v4-worktree/` leftover untouched; next: Set A — Living World (A.1 speciation → A.3 world events, v8.4.0) |
+| **Working tree** | v8.4.0 clean — **RRP E·F·A trilogy complete** (E.1 v8.2.0 · F v8.3.0 · A v8.4.0 all committed + tagged); untracked `v4-worktree/` leftover untouched |
 | **Remote** | `origin` → `github.com:gemquota/vepa.git` (`origin/HEAD` → `master`) |
 
 **Release cadence:** 4.6.11 → … → 4.6.18 all landed 2026-08-06; 4.6.24-4.6.26 landed 2026-08-07/08. The 4.6.27/4.6.28 changelog sections, the v4.6.29 law RRP WIP and the 7.0.0 release draft are uncommitted (not yet released). Always re-check HEAD and the changelog top on entry — do not assume this table is current.
@@ -313,7 +315,7 @@ The **B-4RK principle** stands: documentation is not an afterthought; it is a fe
 
 ## 8. TESTING & QUALITY ASSURANCE
 
-- **Unit/audit:** `vepa4 test` (vitest 3.2.7, `tests/`). **72 files / 710 tests** (verified 2026-08-18 — 704 green; the 6 failures are the pre-existing law-category/audit baseline: 4× `lawCategories.test.js` + `batch_08` TIME_DILATION + `batch_30` TELEPORT — untouched by v8.2.0/v8.3.0). Config: `vitest.config.js` includes `tests/**/*.test.js`, node environment, 15 s timeout. Suite layout: `tests/unit/` (22 files incl. `drawer.test.js`, `fields.test.js`, `groupRegistry.test.js`, `constructionEconomy.test.js`), `tests/audit/` (`batch_01-32.test.js` + `params_batch_01-18.test.js` + `paramsHelpers.js`).
+- **Unit/audit:** `vepa4 test` (vitest 3.2.7, `tests/`). **74 files / 718 tests** (verified 2026-08-18 — 712 green; the 6 failures are the pre-existing law-category/audit baseline: 4× `lawCategories.test.js` + `batch_08` TIME_DILATION + `batch_30` TELEPORT — untouched by v8.2.0–v8.4.0). Config: `vitest.config.js` includes `tests/**/*.test.js`, node environment, 15 s timeout. Suite layout: `tests/unit/` (24 files incl. `drawer.test.js`, `fields.test.js`, `groupRegistry.test.js`, `constructionEconomy.test.js`, `livingWorld.test.js`), `tests/audit/` (`batch_01-32.test.js` + `params_batch_01-18.test.js` + `paramsHelpers.js`).
 - **E2E:** `npm run test:e2e` (Playwright) — ⚠️ **no `playwright.config.*` or `*.spec.js` files are committed yet**, so the script is currently unconfigured; treat e2e as aspirational until specs land.
 - **Syntax:** `vepa4 syntax` (`node --check` on `src` + `tests`).
 - **Audit docs:** `audit-suite/` — `fidelity-audit-v4.6.29.md` (updated duplicate for the 8 rewritten laws) + `historical/2026-08-10-v4.6.28/` (frozen pre-rewrite audit incl. `laws-rrp/batch_*.md`).
@@ -363,7 +365,7 @@ The **B-4RK principle** stands: documentation is not an afterthought; it is a fe
 | **DNA count confusion** | v4 has **48** DNA params (0-47); `DEFAULT_DNA_STRIDE = 64` is the genome buffer width, not a param count; the 42-param claim applies to the per-particle stride cache only |
 | **Law bitmask width** | The v4 law state is **128 bits** (4 × u32: low/high/ext/**quad**Flags) — not 96 bits. Serialized form is `{low, high, ext, quad}` |
 | **v2 law config** | Do not write nested `this.laws.pure/biol/chem/thermo/meta` objects — that is v2-era; v4 uses `lawState` + `LAW_INDEXES` + `isSet()` |
-| **Version drift (fixed 2026-08-06, re-based 2026-08-10)** | `VERSION`/changelog arrow token/`package.json#version` all read 8.3.0 (VEPA4 `major.minor.build`); keep them matched per §10.4 |
+| **Version drift (fixed 2026-08-06, re-based 2026-08-10)** | `VERSION`/changelog arrow token/`package.json#version` all read 8.4.0 (VEPA4 `major.minor.build`); keep them matched per §10.4 |
 | **Stale root manifest** | The legacy v2 root manifest is archived — `npm test` / `npm run build` now run the v4 suite from the root |
 | SharedArrayBuffer blocked | Serve with COOP/COEP (`vepa4 dev` handles; `vercel.json` ships them) |
 | Worker postMessage limits | Use Transferable objects for buffer transfers |
@@ -471,7 +473,7 @@ Built-ins live in `src/state/defaultPresets.js`: **PRIME_DEFAULT** (default worl
 
 ## 12. INTELLIGENCE ENGINES
 
-- **v4 (`src/engines/`):** `goalEngine.js` (world-constraint tuning), `insightEngine.js` (cluster detection / pattern logging), `lineageTracker.js` (genealogy), `narrativeEngine.js` (narrative generation), `timelineEngine.js` (history playback).
+- **v4 (`src/engines/`):** `goalEngine.js` (world-constraint tuning), `insightEngine.js` (cluster detection / pattern logging), `lineageTracker.js` (genealogy), `narrativeEngine.js` (narrative generation), `timelineEngine.js` (history playback), `speciationEngine.js` (A.1 DNA-slot speciation), `ecoEngine.js` (A.2 metrics ring: curves/biodiversity/food-web/niches), `worldEvents.js` (A.3 metrics-triggered + physics-confirmed events).
 - **Legacy (archived):** `personalityEngine.js`, `emergentParamEngine.js`, `narrativeConsciousness.js`, `persistenceEngine.js`, `levelEngine.js`, plus v2 `engines/` — archived 2026-08-10 with the legacy trees (in `gemquota/vepa-archive`).
 
 ---
