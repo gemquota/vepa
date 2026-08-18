@@ -48,10 +48,18 @@ export function createInsightEngine(bus, config = {}) {
  * @param {number}  particleCount  How many particles to inspect.
  * @param {number}  stride         Particle stride (100).
  * @param {number}  worldSize      World dimension for toroidal wrapping.
+ * @param {object}  [opts]         Optional activity gates (v8.1.1):
+ *   { lawActiveCount, motionGate } — when provided, scanning is skipped on
+ *   a lawless and/or motionless world so the log never fires at idle.
  */
-export function update(engine, particleBuffer, particleCount, stride, worldSize) {
+export function update(engine, particleBuffer, particleCount, stride, worldSize, opts = {}) {
   engine.frame++;
   if (engine.frame % engine.cfg.scanInterval !== 0) return;
+
+  // v8.1.1 activity gates — no active laws, or particles standing still,
+  // means there is nothing meaningful to detect. Opt-in (tests omit opts).
+  if (opts.lawActiveCount !== undefined && opts.lawActiveCount <= 0) return;
+  if (opts.motionGate && !hasMotion(particleBuffer, particleCount, stride, 0.05)) return;
 
   const clusters = detectClusters(
     particleBuffer, particleCount, stride, worldSize,
@@ -67,6 +75,26 @@ export function update(engine, particleBuffer, particleCount, stride, worldSize)
     }
     engine.bus.emit('cluster:detected', snapshot);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Activity gate — mean speed of alive particles                      */
+/* ------------------------------------------------------------------ */
+
+function hasMotion(buf, count, stride, threshold) {
+  let speedSum = 0;
+  let n = 0;
+  for (let i = 0; i < count; i++) {
+    const base = i * stride;
+    if (buf[base + STRIDE_INDEXES.DEAD] >= 0.5) continue;
+    const vx = buf[base + STRIDE_INDEXES.VEL_X] || 0;
+    const vy = buf[base + STRIDE_INDEXES.VEL_Y] || 0;
+    const vz = buf[base + STRIDE_INDEXES.VEL_Z] || 0;
+    speedSum += Math.sqrt(vx * vx + vy * vy + vz * vz);
+    n++;
+  }
+  if (n === 0) return false;
+  return speedSum / n >= threshold;
 }
 
 /* ------------------------------------------------------------------ */

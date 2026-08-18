@@ -1,7 +1,8 @@
 /**
  * VEPA v3 — Narrative / Log Panel
  * Scrollback display for narrative entries with voice-based coloring.
- * Auto-scrolls to bottom and caps at 100 entries.
+ * Newest entries render at the TOP (v8.1.1) and the panel autoscrolls to
+ * keep the newest entry visible; caps at 100 entries (oldest trimmed).
  */
 
 const MAX_ENTRIES = 100;
@@ -19,16 +20,14 @@ let container = null;
 let entryCount = 0;
 
 /**
- * Scroll the container to its bottom.
+ * Pin the container to the newest entry (top).
  */
-function scrollToBottom() {
-  if (container) {
-    container.scrollTop = container.scrollHeight;
-  }
+function scrollToNewest() {
+  if (container) container.scrollTop = 0;
 }
 
 /**
- * Append a single narrative entry to the panel.
+ * Append a single narrative entry to the top of the panel.
  * @param {{ voice?: string, text: string, timestamp?: number }} entry
  */
 function appendEntry(entry) {
@@ -46,16 +45,25 @@ function appendEntry(entry) {
                 + `<span class="narrative-time">${ts}</span> `
                 + `<span class="narrative-text">${escapeHtml(entry.text)}</span>`;
 
-  container.appendChild(div);
+  // Newest on top. When the user is already reading near the newest entry
+  // (pinned), autoscroll to keep it visible; otherwise preserve their
+  // reading position as older entries are pushed down below the viewport.
+  const wasPinned = container.scrollTop <= 24;
+  const prevHeight = container.scrollHeight;
+  container.prepend(div);
   entryCount++;
 
-  // Trim oldest entries if over cap
-  while (entryCount > MAX_ENTRIES && container.firstChild) {
-    container.removeChild(container.firstChild);
+  // Trim oldest entries (bottom) if over cap
+  while (entryCount > MAX_ENTRIES && container.lastChild) {
+    container.removeChild(container.lastChild);
     entryCount--;
   }
 
-  scrollToBottom();
+  if (wasPinned) {
+    scrollToNewest();
+  } else {
+    container.scrollTop += container.scrollHeight - prevHeight;
+  }
 }
 
 /**

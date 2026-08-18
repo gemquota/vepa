@@ -21,6 +21,7 @@ const VOICES = {
 
 const DEFAULTS = {
   cooldown: 15,          // minimum frames between entries from the same voice
+  globalCooldown: 45,    // minimum frames between ANY entry (v8.1.1 pacing)
   maxQueue: 20,          // max events to buffer before dropping oldest
 };
 
@@ -127,6 +128,7 @@ export function createNarrativeEngine(bus, config = {}) {
     bus,
     cfg,
     lastFrame: {},          // voiceKey -> last frame a narration was emitted
+    lastEmit: 0,            // last frame ANY narration was emitted (global pace)
     frame: 0,
     recentEvents: [],       // ring buffer of recent events
     entries: [],            // all emitted narrative entries
@@ -144,7 +146,13 @@ export function createNarrativeEngine(bus, config = {}) {
   });
   bus.on('law:toggled',      (data) => pushEvent(engine, 'law',     data));
   bus.on('lineage:branch',   (data) => pushEvent(engine, 'lineage', data));
-  bus.on('goal:adjusted',    (data) => pushEvent(engine, 'goal',    data));
+  // v8.1.1: insight-internal tuning (scanInterval/clusterRadius) has no
+  // visible effect — narrating it was noise. Only user-visible knobs are
+  // worth a log line.
+  bus.on('goal:adjusted', (data) => {
+    if (data && (data.parameter === 'scanInterval' || data.parameter === 'clusterRadius')) return;
+    pushEvent(engine, 'goal', data);
+  });
 
   return engine;
 }
@@ -162,10 +170,21 @@ export function createNarrativeEngine(bus, config = {}) {
 export function update(engine, particleBuffer, particleCount, stride) {
   engine.frame++;
 
+  // v8.1.1: global pacing — at most one entry per globalCooldown frames.
+  // Queued events accumulated while cooling down are dropped (transient
+  // commentary) so the log never floods.
+  if (engine.frame - engine.lastEmit < engine.cfg.globalCooldown) {
+    engine.recentEvents.length = 0;
+    return;
+  }
+
   // Process one event per frame (if any) to pace the narrative
   while (engine.recentEvents.length > 0) {
     const evt = engine.recentEvents.shift();
-    if (emitNarrative(engine, evt)) break;    // one narration per frame
+    if (emitNarrative(engine, evt)) {
+      engine.lastEmit = engine.frame;
+      break;    // one narration per frame
+    }
   }
 }
 

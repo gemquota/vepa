@@ -808,9 +808,13 @@ function computeMetrics() {
 function updateIntelligence() {
     if (!particleView || !particleCount) return;
 
-    // Insight — spatio-temporal cluster detection
+    // Insight — spatio-temporal cluster detection. v8.1.1: gated on active
+    // laws + particle motion so a fresh lawless/static world stays silent.
     if (insightEngine) {
-        updateInsight(insightEngine, particleView, particleCount, PARTICLE_STRIDE, worldSize);
+        updateInsight(insightEngine, particleView, particleCount, PARTICLE_STRIDE, worldSize, {
+            lawActiveCount: getLawCount(lawState),
+            motionGate: true,
+        });
     }
 
     // Narrative — paced multi-voice commentary on engine events
@@ -845,9 +849,11 @@ function updateIntelligence() {
         bus.emit('timeline:snapshot', { count: getTimelineList(timelineEngine).length });
     }
 
-    // Goal engine — evaluate and self-tune world constraints
+    // Goal engine — evaluate and self-tune world constraints. v8.1.1: only
+    // autotune while laws are active; on a lawless world the adjustments
+    // were pure log noise.
     const metrics = computeMetrics();
-    if (goalEngine) {
+    if (goalEngine && metrics.lawActiveCount > 0) {
         updateGoal(goalEngine, metrics);
     }
     if (tick % 30 === 0) {

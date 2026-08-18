@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.1] → 8.1.1 (hotfix)
+
+### Narrative log UX + idle-noise fixes
+- `fix(ui):` the **Narrative Log now shows newest entries at the TOP** and autoscrolls to keep them visible (reading position is preserved while scrolling back through history); oldest entries are trimmed from the bottom at the 100-entry cap (`src/ui/narrativePanel.js`).
+- `fix(engines):` **global log pacing** — at most one narrative entry per 45 frames (~0.75 s), queued events dropped while cooling down (`src/engines/narrativeEngine.js`).
+- `fix(engines):` **no more idle chatter** — insight cluster scanning is gated on active laws + particle motion (a fresh, lawless, static world stays silent); the goal engine no longer autotunes or narrates while zero laws are active (`src/engines/insightEngine.js`, `src/main.js`).
+- `fix(engines):` **goal adjustments for invisible insight knobs (scanInterval/clusterRadius) are no longer narrated** — only user-visible parameter changes get a log line.
+- `test`: full suite 672/678 (same 6 pre-existing law-category/audit baseline failures).
+
 ## [4.8.1] - 2026-08-18 → 8.1.0
 
 ### Interface & Deploy Mirror — full-screen multiplex controls, law icon size toggle, dual-hosting
