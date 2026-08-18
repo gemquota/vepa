@@ -49,6 +49,11 @@ export const MULTIPLEX_DEFAULTS = {
   popVariation: 1,
   keepSelected: false,       // iterate leaves the selected shard untouched (anchor)
   selectAfterIterate: 'none', // 'none' | 'fittest' | 'follow'
+  eliteCount: 0,             // top-N fittest shards survive each iteration untouched (0-4)
+  stagnationLimit: 5,        // generations without a best-fitness improvement before auto-iterate pauses (0 = off)
+  cooling: 0,                // per-iteration variation shrink toward the exploration floor (0-0.2)
+  adaptiveInterval: false,   // stretch the iterate interval ×1.5 while stagnant (cap 4000), reset on improvement
+  historyDepth: 6,           // generations of shard history kept for COMPARE/HIST + revert (1-12)
   importOnExit: true,        // exit imports the selected shard into the main world
   renderQuality: 'eco',      // 'eco' | 'full' — previews skip halos/grid, DPR 1.25
   fitnessWeights: {
@@ -90,6 +95,12 @@ export const MAX_SHARDS = 16;
 
 /** Floor for the dynamic per-shard population cap (keeps shards alive at 16×). */
 export const MIN_SHARD_POPULATION = 250;
+
+/** Exploration floor for cooling: variation never anneals below this. */
+export const VARIATION_FLOOR = 0.05;
+
+/** Cap for the adaptive iterate interval (base × up to ~10 at 400). */
+export const ADAPTIVE_INTERVAL_CAP = 4000;
 
 /** The 14 fitness metrics exposed to the FIT tab (weighted composite). */
 export const FITNESS_METRICS = Object.freeze([
@@ -159,6 +170,13 @@ export function createMultiplex(bus) {
     sourceSeed: (Date.now() & 0x7fffffff) | 0,
     worldSize: WORLD_SIZE,
     deltaHistory: [],
+    runningBounds: null,       // cross-generation min/max for stable fitness
+    bestFitness: null,         // best stable composite seen across generations
+    bestIteration: 0,          // generation index that produced bestFitness
+    stagnantGenerations: 0,    // generations without a best-fitness improvement
+    stagnantPaused: false,     // auto-iterate paused on convergence
+    history: [],               // on-screen grid states (generation history + revert)
+    currentInterval: null,     // adaptive iterate interval (null = use config base)
     container: null,
     onResize: null,
   };
@@ -179,10 +197,19 @@ export function startMultiplex(mx, source, config, container) {
   mx.active = true;
   mx.iteration = 0;
   mx.tick = 0;
+  mx.runningBounds = null;
+  mx.bestFitness = null;
+  mx.bestIteration = 0;
+  mx.stagnantGenerations = 0;
+  mx.stagnantPaused = false;
+  mx.history = [];
+  mx.currentInterval = null;
   mx.container = container || null;
   const seed = Math.max(1, Math.round(mx.config.seed) || 0);
   mx.sourceSeed = seed > 0 ? (seed & 0x7fffffff) | 0 : (Date.now() & 0x7fffffff) | 0;
   buildShards(mx, source, false);
+  // Generation 0 is the first on-screen grid state — history starts here.
+  recordHistory(mx, getFitnessReport(mx));
 }
 
 /**
@@ -205,16 +232,48 @@ export function stopMultiplex(mx) {
 
 /**
  * Regenerate every shard from the currently selected shard (new seeds).
+ * One fitness report per generation feeds selection, cross-generation bounds,
+ * progress tracking, and elite retention — no duplicate metric passes.
+ * @param {object} mx
+ * @param {{manual?: boolean}} [opts] - `manual` (user-triggered) re-arms a
+ *   run that auto-paused on stagnation.
  */
-export function iterateMultiplex(mx) {
+export function iterateMultiplex(mx, opts = {}) {
   if (!mx.active || mx.shards.length === 0) return;
   const cfg = mx.config || {};
+  // A manual iterate is an explicit "keep going" — re-arm a stagnant run.
+  if (opts.manual) {
+    mx.stagnantPaused = false;
+    mx.stagnantGenerations = 0;
+  }
   // Evolutionary pressure: each generation drifts the variation upward so
   // later generations explore more broadly (capped at full divergence).
   const drift = Math.max(0, Math.min(0.1, parseFloat(cfg.variationDrift) || 0));
   if (drift > 0) cfg.variation = Math.min(1, (cfg.variation || 0) + drift);
+  // Cooling (annealing): shrink variation toward the exploration floor each
+  // generation, so evolution explores broadly early and refines late. When
+  // both DRIFT and COOLING are set, cooling wins at the floor.
+  const cooling = Math.max(0, Math.min(0.5, parseFloat(cfg.cooling) || 0));
+  if (cooling > 0 && (cfg.variation || 0) > VARIATION_FLOOR) {
+    cfg.variation = Math.max(VARIATION_FLOOR, (cfg.variation || 0) * (1 - cooling));
+  }
+  // Selection policy ('none' | 'fittest' | 'follow'). 'none' is the explicit
+  // default, so autoSelectFittest only kicks in when no mode is chosen.
+  const mode = cfg.selectAfterIterate && cfg.selectAfterIterate !== 'none'
+    ? cfg.selectAfterIterate
+    : (cfg.autoSelectFittest ? 'fittest' : 'none');
+  // Elitist selection BEFORE the rebuild: rank the generation that just ran
+  // (differentiated, evolved states) and let the winner seed the next one.
+  // Selecting after the rebuild would rank freshly-spawned near-identical
+  // clones — under the default population weight they all tie at the cap and
+  // fittest degenerates to "always shard 0".
+  const report = getFitnessReport(mx);
+  if (mode === 'fittest') selectFittestShard(mx, report);
   const keepIndex = mx.selected;
   const prevSnapshot = snapshotShard(mx.shards[keepIndex]);
+  // Elite retention: snapshot the top-N fittest shards (by the stable
+  // composite) BEFORE the rebuild so the best lineage survives untouched.
+  const elites = buildEliteSnapshots(mx, report, keepIndex, cfg.keepSelected, cfg.eliteCount);
   const source = mx.shards[keepIndex];
   mx.iteration++;
   mx.sourceSeed = ((mx.sourceSeed + 7919) & 0x7fffffff) | 0;
@@ -223,10 +282,37 @@ export function iterateMultiplex(mx) {
   if (cfg.keepSelected && mx.shards[keepIndex]) {
     restoreShard(mx.shards[keepIndex], prevSnapshot);
   }
-  // Post-iterate selection policy ('none' | 'fittest' | 'follow').
-  const mode = cfg.selectAfterIterate || (cfg.autoSelectFittest ? 'fittest' : 'none');
-  if (mode === 'fittest') selectFittestShard(mx);
-  else if (mode === 'follow') selectFollowShard(mx, prevSnapshot, cfg.keepSelected ? keepIndex : -1);
+  for (const elite of elites) {
+    if (cfg.keepSelected && elite.id === keepIndex) continue; // anchor already restored
+    if (mx.shards[elite.id]) restoreShard(mx.shards[elite.id], elite.snap);
+  }
+  if (mode === 'follow') selectFollowShard(mx, prevSnapshot, cfg.keepSelected ? keepIndex : -1);
+  // Close the generation: expand the stable bounds and track best/stagnation
+  // (after the iteration counter bumps so bestIteration matches the UI).
+  updateRunningBounds(mx, report);
+  const progress = trackGenerationProgress(mx, report, parseFloat(cfg.stagnationLimit) || 0);
+  // Converged: auto-iterate pauses instead of burning ticks on identical
+  // generations. Manual iterates and UI re-arms clear the flag.
+  if (progress.stagnant && !mx.stagnantPaused) {
+    mx.stagnantPaused = true;
+    if (mx.bus) {
+      mx.bus.emit('multiplex:stagnant', { generation: mx.iteration, bestFitness: mx.bestFitness });
+    }
+  }
+  // Adaptive interval: stretch the cadence while generations plateau (less
+  // wasted compute), snap back to the base the moment the best improves.
+  const baseInterval = Math.max(1, Math.round(cfg.autoIterateInterval) || 400);
+  if (cfg.adaptiveInterval) {
+    mx.currentInterval = progress.improved
+      ? baseInterval
+      : Math.min(ADAPTIVE_INTERVAL_CAP, Math.round((mx.currentInterval || baseInterval) * 1.5));
+  } else {
+    mx.currentInterval = baseInterval;
+  }
+  recordDelta(mx);
+  // The on-screen grid (post-rebuild, elites restored) is a new history entry.
+  recordHistory(mx, report);
+  return { ...progress, iteration: mx.iteration };
 }
 
 /** Advance physics on every shard by one step. */
@@ -260,23 +346,31 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
   mx.lastTickMs = mx.lastTickMs === undefined ? tickMs : mx.lastTickMs * 0.85 + tickMs * 0.15;
   mx.tick++;
   mx.worldSize = worldSize;
+  // One pure per-tick measurement (the UI reads the report without recording).
+  recordDelta(mx);
   // Auto-iterate: hands-off guided evolution — regenerate every shard on a
-  // fixed cadence and (optionally) keep the fittest shard selected.
-  const interval = Math.max(1, Math.round(cfg.autoIterateInterval) || 400);
+  // fixed cadence. Selection policy lives inside iterateMultiplex (elitist
+  // pre-rebuild fittest, or post-rebuild follow).
+  const interval = mx.currentInterval || Math.max(1, Math.round(cfg.autoIterateInterval) || 400);
   const maxIter = Math.max(0, Math.round(cfg.maxIterations) || 0);
   const withinLimit = maxIter === 0 || mx.iteration < maxIter;
-  if (cfg.autoIterate && mx.shards.length > 0 && withinLimit && (mx.tick % interval === 0)) {
+  // stagnantPaused: evolution converged — auto-iterate stands down until a
+  // manual iterate (or a knob change) re-arms it.
+  if (cfg.autoIterate && mx.shards.length > 0 && withinLimit && !mx.stagnantPaused && (mx.tick % interval === 0)) {
     iterateMultiplex(mx);
-    if (cfg.autoSelectFittest) selectFittestShard(mx);
   }
 }
 
-/** Select the highest-fitness shard (default weights = alive-only ranking). */
-export function selectFittestShard(mx) {
-  const report = getFitnessReport(mx);
+/**
+ * Select the highest-fitness shard (default weights = alive-only ranking).
+ * Accepts an already-computed report so iterateMultiplex pays for the metric
+ * pass once and reuses it for selection, bounds, progress and elites.
+ */
+export function selectFittestShard(mx, report) {
+  const rep = report || getFitnessReport(mx);
   let best = -1;
   let bestFitness = -Infinity;
-  for (const entry of report.perShard) {
+  for (const entry of rep.perShard) {
     if (entry.fitness > bestFitness) {
       bestFitness = entry.fitness;
       best = entry.id;
@@ -452,7 +546,8 @@ export function computeShardMetrics(shard, worldSize = WORLD_SIZE) {
     out.mobility = mobilitySum / alive;
     out.signal = signalSum / alive;
     out.bonds = bondsSum / alive;
-    // Shannon evenness over the species present (J = H / ln(S)).
+    // Shannon evenness over the species present (J = H / ln(S)). A shard
+    // holding a single species is a monoculture — not diverse — so it scores 0.
     const counts = [...speciesCounts.values()];
     if (counts.length > 1) {
       let h = 0;
@@ -462,7 +557,7 @@ export function computeShardMetrics(shard, worldSize = WORLD_SIZE) {
       }
       out.diversity = h / Math.log(counts.length);
     } else {
-      out.diversity = counts.length === 1 ? 1 : 0;
+      out.diversity = 0;
     }
     // Spatial entropy over the 4×4×4 occupancy grid, normalized by ln(bins).
     let e = 0;
@@ -502,8 +597,10 @@ export function computeShardMetrics(shard, worldSize = WORLD_SIZE) {
 /**
  * Full fitness report: min-max normalizes the 13 base metrics across shards,
  * applies fitness modes (min → 1−norm), derives the per-shard DELTA metric
- * (mean deviation from the other shards), computes the weighted composite,
- * and pushes avgDelta into mx.deltaHistory (cap ALIVE_WINDOW_SIZE).
+ * (mean deviation from the other shards), and computes the weighted composite.
+ * PURE — reading the report never mutates controller state: the rolling
+ * delta window is only written by recordDelta() (once per tick/iteration),
+ * and the cross-generation bounds only by updateRunningBounds().
  */
 export function getFitnessReport(mx) {
   const shards = mx.shards || [];
@@ -515,7 +612,14 @@ export function getFitnessReport(mx) {
   const weights = (mx.config && mx.config.fitnessWeights) || MULTIPLEX_DEFAULTS.fitnessWeights;
   const modes = (mx.config && mx.config.fitnessModes) || MULTIPLEX_DEFAULTS.fitnessModes;
 
-  // Min-max normalize + mode flip on the base metrics.
+  // Snapshot the raw (pre-normalization) values before the in-place
+  // normalization below — they feed the stable cross-generation rawFitness.
+  for (const r of raw) r.rawMetrics = { ...r.metrics };
+
+  // Min-max normalize + mode flip on the base metrics. Zero span (one shard,
+  // or all shards identical) normalizes to 1 — the shard is both the min and
+  // the max — so a lone shard scores its full weight instead of collapsing
+  // every composite to 0 and disabling fittest selection.
   for (const key of BASE_FITNESS_METRICS) {
     let min = Infinity;
     let max = -Infinity;
@@ -527,12 +631,15 @@ export function getFitnessReport(mx) {
     const span = max - min;
     const mode = modes[key];
     for (const r of raw) {
-      const norm = span === 0 ? 0 : (r.metrics[key] - min) / span;
+      const norm = span === 0 ? 1 : (r.metrics[key] - min) / span;
       r.metrics[key] = mode === 'min' ? 1 - norm : norm;
     }
   }
 
-  // Delta: mean |score − mean(other shards)| over the base metrics.
+  // Delta: mean |score − mean(other shards)| over the base metrics. A shard
+  // with no peers (single-shard grid) has zero divergence from "others".
+  // r.rawDelta feeds the avgDelta stat (mean raw divergence across shards);
+  // r.metrics.delta is the min-max normalized form used by the weight.
   for (const r of raw) {
     let sum = 0;
     for (const key of BASE_FITNESS_METRICS) {
@@ -543,23 +650,25 @@ export function getFitnessReport(mx) {
         others += o.metrics[key];
         cnt++;
       }
-      const meanOthers = cnt ? others / cnt : 0;
+      const meanOthers = cnt ? others / cnt : r.metrics[key];
       sum += Math.abs(r.metrics[key] - meanOthers);
     }
-    r.metrics.delta = sum / BASE_FITNESS_METRICS.length;
+    r.rawDelta = sum / BASE_FITNESS_METRICS.length;
   }
   {
     let min = Infinity;
     let max = -Infinity;
     for (const r of raw) {
-      const v = r.metrics.delta;
+      const v = r.rawDelta;
       if (v < min) min = v;
       if (v > max) max = v;
     }
     const span = max - min;
     const mode = modes.delta;
     for (const r of raw) {
-      const norm = span === 0 ? 0 : (r.metrics.delta - min) / span;
+      // Zero span means no divergence at all — normalized delta is 0, not 1
+      // (unlike the base metrics, where the lone shard IS both min and max).
+      const norm = span === 0 ? 0 : (r.rawDelta - min) / span;
       r.metrics.delta = mode === 'min' ? 1 - norm : norm;
     }
   }
@@ -569,6 +678,7 @@ export function getFitnessReport(mx) {
     (a, key) => a + Math.max(0, parseFloat(weights[key]) || 0),
     0,
   );
+  const bounds = mx.runningBounds || null;
   const perShard = raw.map((r) => {
     let fitness;
     if (weightSum > 0) {
@@ -579,16 +689,149 @@ export function getFitnessReport(mx) {
     } else {
       fitness = r.metrics.population || 0;
     }
-    return { id: r.id, fitness, metrics: r.metrics };
+    // Stable cross-generation score: raw base metrics normalized against the
+    // running min/max bounds accumulated by updateRunningBounds (null on the
+    // first generation → falls back to the within-generation normalization,
+    // so rawFitness === fitness until bounds exist). DELTA stays derived.
+    let rawFitness;
+    if (weightSum > 0) {
+      rawFitness = FITNESS_METRICS.reduce((a, key) => {
+        const w = Math.max(0, parseFloat(weights[key]) || 0);
+        if (w === 0) return a;
+        let v;
+        if (key === 'delta') {
+          v = r.metrics.delta || 0;
+        } else if (bounds && Number.isFinite(bounds.min[key]) && Number.isFinite(bounds.max[key])) {
+          const span = bounds.max[key] - bounds.min[key];
+          const norm = span <= 0 ? 1 : (r.rawMetrics[key] - bounds.min[key]) / span;
+          v = modes[key] === 'min' ? 1 - norm : norm;
+        } else {
+          v = r.metrics[key] || 0;
+        }
+        return a + w * v;
+      }, 0) / weightSum;
+    } else {
+      rawFitness = r.rawMetrics.population || 0;
+    }
+    return { id: r.id, fitness, rawFitness, rawMetrics: r.rawMetrics, metrics: r.metrics };
   });
 
-  const avgDelta = perShard.length
-    ? perShard.reduce((a, e) => a + e.metrics.delta, 0) / perShard.length
+  // avgDelta is the mean RAW divergence across shards — the per-generation
+  // spread readout — not the normalized ranking form.
+  const avgDelta = raw.length
+    ? raw.reduce((a, e) => a + e.rawDelta, 0) / raw.length
     : 0;
+  return { perShard, avgDelta, rollingDelta: (mx.deltaHistory || []).slice() };
+}
+
+/**
+ * Append the current avg-delta to mx.deltaHistory (cap ALIVE_WINDOW_SIZE).
+ * This is the ONLY writer to the rolling window — call it once per step and
+ * once per iteration, never from per-frame display code.
+ * @param {object} mx
+ * @returns {number} the recorded avg delta
+ */
+export function recordDelta(mx) {
+  const report = getFitnessReport(mx);
   mx.deltaHistory = mx.deltaHistory || [];
-  mx.deltaHistory.push(avgDelta);
+  mx.deltaHistory.push(report.avgDelta);
   if (mx.deltaHistory.length > ALIVE_WINDOW_SIZE) mx.deltaHistory.shift();
-  return { perShard, avgDelta, rollingDelta: mx.deltaHistory.slice() };
+  return report.avgDelta;
+}
+
+/**
+ * Expand the cross-generation running bounds from one generation's raw
+ * metrics (called once per iteration, after the report is computed). The
+ * bounds make rawFitness comparable across generations: a score of 0.9 in
+ * generation 1 and generation 9 means the same thing.
+ * @param {object} mx
+ * @param {object} report - output of getFitnessReport
+ */
+export function updateRunningBounds(mx, report) {
+  const entries = report && report.perShard;
+  if (!entries || !entries.length) return;
+  mx.runningBounds = mx.runningBounds || { min: {}, max: {} };
+  for (const key of BASE_FITNESS_METRICS) {
+    for (const entry of entries) {
+      const v = entry.rawMetrics ? entry.rawMetrics[key] : 0;
+      if (!Number.isFinite(mx.runningBounds.min[key]) || v < mx.runningBounds.min[key]) {
+        mx.runningBounds.min[key] = v;
+      }
+      if (!Number.isFinite(mx.runningBounds.max[key]) || v > mx.runningBounds.max[key]) {
+        mx.runningBounds.max[key] = v;
+      }
+    }
+  }
+}
+
+/**
+ * Record per-generation progress on the stable composite: best-so-far
+ * fitness, the generation that produced it, and a stagnation counter that
+ * increments whenever a generation fails to beat the best. `limit` is the
+ * stagnationLimit config (0 disables convergence detection).
+ * @returns {{bestFitness: number, bestIteration: number,
+ *   stagnantGenerations: number, improved: boolean, stagnant: boolean}}
+ */
+export function trackGenerationProgress(mx, report, limit) {
+  let best = -Infinity;
+  for (const entry of report.perShard) {
+    if (entry.rawFitness > best) best = entry.rawFitness;
+  }
+  const improved = mx.bestFitness == null || best > mx.bestFitness + 1e-9;
+  if (improved) {
+    mx.bestFitness = best;
+    mx.bestIteration = mx.iteration;
+    mx.stagnantGenerations = 0;
+  } else {
+    mx.stagnantGenerations = (mx.stagnantGenerations || 0) + 1;
+  }
+  return {
+    bestFitness: mx.bestFitness,
+    bestIteration: mx.bestIteration,
+    stagnantGenerations: mx.stagnantGenerations,
+    improved,
+    stagnant: limit > 0 && mx.stagnantGenerations >= limit,
+  };
+}
+
+/**
+ * Per-metric shard comparison matrix for the COMPARE tab. Pure: rows = the
+ * 13 RAW base metrics (delta is derived, not a comparable measurement),
+ * columns = shards, values are the RAW (un-normalized) metrics so the table
+ * shows real magnitudes. The best cell per row is flagged (highest for 'max'
+ * mode, lowest for 'min' mode) so a glance shows which shard leads on each
+ * axis.
+ * @returns {{rows: Array<{key: string, mode: string, values: number[],
+ *   bestId: number, bestValue: number}>, shardIds: number[]}}
+ */
+export function compareShards(mx) {
+  const shards = mx.shards || [];
+  const worldSize = mx.worldSize || WORLD_SIZE;
+  const modes = (mx.config && mx.config.fitnessModes) || MULTIPLEX_DEFAULTS.fitnessModes;
+  const raw = shards.map((shard) => ({
+    id: shard.id,
+    metrics: computeShardMetrics(shard, worldSize),
+  }));
+  const rows = BASE_FITNESS_METRICS.map((key) => {
+    const mode = modes[key] === 'min' ? 'min' : 'max';
+    let bestId = -1;
+    let bestValue = mode === 'min' ? Infinity : -Infinity;
+    for (const r of raw) {
+      const v = r.metrics[key];
+      if ((mode === 'min' && v < bestValue) || (mode === 'max' && v > bestValue)) {
+        bestValue = v;
+        bestId = r.id;
+      }
+    }
+    return {
+      key,
+      mode,
+      values: raw.map((r) => r.metrics[key]),
+      bestId,
+      bestValue: bestId >= 0 ? bestValue : 0,
+    };
+  });
+  return { rows, shardIds: raw.map((r) => r.id) };
 }
 
 /** Full snapshot of a shard's view, DNA, laws, PRNG and counters. */
@@ -636,6 +879,190 @@ export function restoreShard(shard, snap) {
   shard.offspring = snap.offspring;
   shard.aliveWindow = snap.aliveWindow ? snap.aliveWindow.slice() : [];
   shard.prevAlive = snap.prevAlive;
+}
+
+/**
+ * Record the current on-screen grid state into mx.history (capped at
+ * config.historyDepth). Every entry stores the generation's config + best
+ * bookkeeping, a light per-shard record (DNA/laws — enough to rebuild the
+ * lineage) and FULL snapshots of the selected + fittest shards (enough to
+ * revert their exact evolved state). The revert action is itself recorded,
+ * so every revert is undoable.
+ */
+function recordHistory(mx, report) {
+  const depth = Math.max(1, Math.min(12, Math.round(mx.config && mx.config.historyDepth) || 6));
+  const entry = {
+    generation: mx.iteration,
+    config: {
+      ...mx.config,
+      fitnessWeights: { ...(mx.config && mx.config.fitnessWeights) },
+      fitnessModes: { ...(mx.config && mx.config.fitnessModes) },
+    },
+    bestFitness: mx.bestFitness,
+    bestIteration: mx.bestIteration,
+    stagnantGenerations: mx.stagnantGenerations || 0,
+    selected: mx.selected,
+    shards: mx.shards.map(lightRecord),
+    snapshots: {},
+  };
+  const fittest = fittestFromReport(report);
+  const snapIds = new Set([mx.selected]);
+  if (fittest >= 0) snapIds.add(fittest);
+  for (const id of snapIds) {
+    if (mx.shards[id]) entry.snapshots[id] = snapshotShard(mx.shards[id]);
+  }
+  mx.history.push(entry);
+  if (mx.history.length > depth) mx.history.splice(0, mx.history.length - depth);
+}
+
+/** Compact per-shard lineage record: DNA, law flags, species, population. */
+function lightRecord(shard) {
+  return {
+    id: shard.id,
+    dna: Array.from(shard.dna),
+    laws: {
+      low: shard.laws.lowFlags[0] || 0,
+      high: shard.laws.highFlags[0] || 0,
+      ext: shard.laws.extFlags[0] || 0,
+      quad: shard.laws.quadFlags[0] || 0,
+    },
+    speciesCount: shard.speciesCount || 5,
+    count: shard.count || 0,
+  };
+}
+
+/** Highest-fitness shard id from a report (or -1). */
+function fittestFromReport(report) {
+  if (!report || !report.perShard || !report.perShard.length) return -1;
+  let bestId = -1;
+  let bestFitness = -Infinity;
+  for (const entry of report.perShard) {
+    if (entry.fitness > bestFitness) {
+      bestFitness = entry.fitness;
+      bestId = entry.id;
+    }
+  }
+  return bestId;
+}
+
+/**
+ * Snapshot the top-N shards by stable rawFitness before a rebuild so their
+ * evolved state can be restored afterwards (elitism). Returns [{ id, snap }].
+ */
+function buildEliteSnapshots(mx, report, keepIndex, keepSelected, eliteCount) {
+  const n = Math.max(0, Math.min(4, Math.round(parseFloat(eliteCount) || 0)));
+  if (n === 0) return [];
+  const ranked = report.perShard
+    .filter((e) => !(keepSelected && e.id === keepIndex))
+    .slice()
+    .sort((a, b) => b.rawFitness - a.rawFitness)
+    .slice(0, n);
+  return ranked.map((e) => ({ id: e.id, snap: snapshotShard(mx.shards[e.id]) }));
+}
+
+/**
+ * Rebuild the grid from a recorded generation (see recordHistory). The
+ * current state is recorded first, so the revert itself is undoable. Full
+ * particle state is restored for the shards that carry full snapshots
+ * (selected + fittest at record time); every other shard is re-spawned from
+ * its recorded DNA/laws/world params — comparison futures are re-rolled from
+ * the lineage, which keeps history memory-bounded.
+ * @param {object} mx
+ * @param {number} generation - history entry generation to restore
+ * @returns {boolean} whether a matching generation was found and restored
+ */
+export function revertMultiplex(mx, generation) {
+  if (!mx.active || !mx.shards.length) return false;
+  const entry = mx.history.find((h) => h.generation === generation);
+  if (!entry) return false;
+  // The current grid state becomes a history entry, so reverting is undoable.
+  recordHistory(mx, getFitnessReport(mx));
+  mx.config = {
+    ...mx.config,
+    ...entry.config,
+    fitnessWeights: { ...entry.config.fitnessWeights },
+    fitnessModes: { ...entry.config.fitnessModes },
+  };
+  mx.iteration = entry.generation;
+  mx.bestFitness = entry.bestFitness;
+  mx.bestIteration = entry.bestIteration;
+  mx.stagnantGenerations = entry.stagnantGenerations;
+  mx.stagnantPaused = false;
+  mx.runningBounds = null;
+  mx.currentInterval = null;
+  rebuildFromRecords(mx, entry);
+  selectShard(mx, Math.min(entry.selected, mx.shards.length - 1));
+  if (mx.bus) mx.bus.emit('multiplex:reverted', { generation: mx.iteration });
+  return true;
+}
+
+/** Rebuild mx.shards from a history entry's per-shard lineage records. */
+function rebuildFromRecords(mx, entry) {
+  const old = mx.shards;
+  mx.shards = [];
+  const total = Math.max(1, Math.min(MAX_SHARDS, entry.shards.length));
+  mx.populationCap = computeShardPopulationCap(total, mx.config.populationScale);
+  // Re-roll comparison futures from the recorded lineage: the record already
+  // encodes that generation's variety, so no fresh randomization is applied.
+  const spawnConfig = {
+    ...mx.config,
+    deriveMode: 'spawn',
+    variation: 0,
+    randomizeLaws: false,
+    randomizeDNA: false,
+    randomizePopulation: false,
+  };
+  for (const rec of entry.shards) {
+    const seed = ((mx.sourceSeed + rec.id * 104729) & 0x7fffffff) | 0;
+    const prev = old[rec.id];
+    const recycle = prev ? prev : null;
+    const shard = createShard(rec.id, seed, sourceFromRecord(rec), { ...spawnConfig, spawnSpecies: rec.speciesCount }, mx.populationCap, recycle);
+    // Reuse the DOM cell when the grid layout is unchanged.
+    if (prev) {
+      shard.wrapper = prev.wrapper;
+      shard.canvas = prev.canvas;
+      shard.renderer = prev.renderer;
+    }
+    mx.shards.push(shard);
+  }
+  // Tear down surplus cells from a previously larger grid.
+  for (let i = total; i < old.length; i++) {
+    if (old[i].wrapper && old[i].wrapper.parentNode) {
+      old[i].wrapper.parentNode.removeChild(old[i].wrapper);
+    }
+  }
+  // Restore exact evolved state where full snapshots exist (count-safe).
+  for (const key of Object.keys(entry.snapshots || {})) {
+    const id = Number(key);
+    const shard = mx.shards[id];
+    const snap = entry.snapshots[id];
+    if (shard && snap && snap.count <= shard.maxCount) {
+      restoreShard(shard, snap);
+    }
+  }
+  mx.selected = Math.min(mx.selected, mx.shards.length - 1);
+  mountShards(mx);
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(() => resizeMultiplex(mx));
+  }
+}
+
+/** Synthesize a createShard source from a history light record. */
+function sourceFromRecord(rec) {
+  const laws = createLawState();
+  laws.lowFlags[0] = rec.laws.low || 0;
+  laws.highFlags[0] = rec.laws.high || 0;
+  laws.extFlags[0] = rec.laws.ext || 0;
+  laws.quadFlags[0] = rec.laws.quad || 0;
+  const dna = createDNABuffer();
+  dna.set(rec.dna || []);
+  return {
+    view: new Float32Array(0),
+    count: 0,
+    dna,
+    laws,
+    speciesCount: rec.speciesCount || 5,
+  };
 }
 
 /**

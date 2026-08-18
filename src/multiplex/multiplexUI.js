@@ -16,6 +16,8 @@ import {
   summarizeMultiplex,
   selectShard,
   getFitnessReport,
+  compareShards,
+  revertMultiplex,
   MULTIPLEX_DEFAULTS,
   FITNESS_METRICS,
   MAX_SHARDS,
@@ -71,8 +73,20 @@ export function createMultiplexController(bus, getSource, applyShard) {
       <div class="mpx-metrics-body">
         <div id="mpx-metrics-chips" class="mpx-metrics-chips"></div>
         <div id="mpx-metrics-stats" class="mpx-metrics-stats"></div>
+        <button id="mpx-ch-toggle" class="mpx-ch-toggle" type="button">▸ COMPARE / HIST</button>
+        <div id="mpx-ch-body" class="mpx-ch-body collapsed">
+          <div id="mpx-compare" class="mpx-compare"></div>
+          <div id="mpx-history" class="mpx-history"></div>
+        </div>
       </div>`;
     overlay.appendChild(metricsDrawer);
+    metricsDrawer.querySelector('#mpx-ch-toggle').addEventListener('click', () => {
+      const body = metricsDrawer.querySelector('#mpx-ch-body');
+      const toggle = metricsDrawer.querySelector('#mpx-ch-toggle');
+      const collapsed = body.classList.toggle('collapsed');
+      if (toggle) toggle.textContent = collapsed ? '▸ COMPARE / HIST' : '▾ COMPARE / HIST';
+      if (!collapsed) updateHistTab();
+    });
     metricsDrawer.querySelector('#mpx-metrics-toggle').addEventListener('click', () => {
       metricsDrawer.classList.toggle('collapsed');
       const btn = metricsDrawer.querySelector('#mpx-metrics-toggle');
@@ -83,6 +97,35 @@ export function createMultiplexController(bus, getSource, applyShard) {
     grid = document.createElement('div');
     grid.id = GRID_ID;
     overlay.appendChild(grid);
+
+    // COMPARE/HIST section styles — kept local so the metrics drawer stays
+    // self-contained; mirrors the mpx palette (style.css vars).
+    if (!document.getElementById('mpx-compare-styles')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'mpx-compare-styles';
+      styleEl.textContent = `
+        .mpx-compare { max-height: 170px; overflow: auto; border: 1px solid var(--border); border-radius: 4px; font-size: 8px; margin-top: 6px; }
+        .mpx-compare-table { border-collapse: collapse; width: 100%; }
+        .mpx-compare-table th, .mpx-compare-table td { padding: 2px 5px; text-align: right; white-space: nowrap; }
+        .mpx-compare-table thead th { font-family: var(--font-mono); letter-spacing: 1px; color: var(--text-secondary); cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--bg-panel); }
+        .mpx-compare-table thead th:hover, .mpx-compare-table thead th.selected { color: var(--accent-red); }
+        .mpx-compare-table tbody td:first-child { text-align: left; color: var(--text-secondary); letter-spacing: 1px; }
+        .mpx-compare-val { color: var(--text-primary); }
+        .mpx-compare-val.best { color: var(--accent-red); font-weight: bold; background: rgba(255,74,74,0.10); }
+        .mpx-history { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-top: 6px; }
+        .mpx-hist-row { display: flex; align-items: center; gap: 6px; font-size: 8px; letter-spacing: 1px; color: var(--text-secondary); padding: 2px 4px; border-radius: 3px; }
+        .mpx-hist-row.current { background: rgba(255,74,74,0.14); color: var(--accent-red); }
+        .mpx-hist-gen { flex: 0 0 28px; color: var(--text-primary); }
+        .mpx-hist-best { flex: 1; }
+        .mpx-hist-revert { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 3px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; cursor: pointer; padding: 2px 6px; }
+        .mpx-hist-revert:hover:not(:disabled) { border-color: var(--accent-red); color: var(--accent-red); }
+        .mpx-hist-revert:disabled { opacity: 0.4; cursor: default; }
+        .mpx-ch-toggle { background: none; border: 1px solid var(--border); border-radius: 3px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; cursor: pointer; padding: 2px 6px; margin-top: 6px; }
+        .mpx-ch-toggle:hover { border-color: var(--accent-red); color: var(--accent-red); }
+        .mpx-ch-body.collapsed { display: none; }
+      `;
+      document.head.appendChild(styleEl);
+    }
 
     // Bottom controls drawer — slim bar with the iterate/exit actions and
     // grid stats. All settings now live in the initial setup screen.
@@ -248,6 +291,29 @@ export function createMultiplexController(bus, getSource, applyShard) {
             <input id="mpx-drift" type="range" min="0" max="0.05" step="0.005" value="0">
             <span class="mpx-set-value" id="mpx-drift-value">0</span>
           </div>
+          <div class="mpx-set-row" data-mpx-help="stagLimit">
+            <span class="mpx-set-label">STAG LIMIT</span>
+            <input id="mpx-stag-limit" type="range" min="0" max="20" step="1" value="5">
+            <span class="mpx-set-value" id="mpx-stag-limit-value">5</span>
+          </div>
+          <div class="mpx-set-row" data-mpx-help="elites">
+            <span class="mpx-set-label">ELITES</span>
+            <input id="mpx-elites" type="number" min="0" max="4" step="1" value="0">
+            <span class="mpx-set-value" id="mpx-elites-value">0</span>
+          </div>
+          <div class="mpx-set-row" data-mpx-help="cooling">
+            <span class="mpx-set-label">COOLING</span>
+            <input id="mpx-cooling" type="range" min="0" max="0.2" step="0.01" value="0">
+            <span class="mpx-set-value" id="mpx-cooling-value">0%</span>
+          </div>
+          <div class="mpx-set-row" data-mpx-help="adaptInt">
+            <label class="mpx-check"><input id="mpx-adapt" type="checkbox"><span>ADAPT INT</span></label>
+          </div>
+          <div class="mpx-set-row" data-mpx-help="histDepth">
+            <span class="mpx-set-label">HIST DEPTH</span>
+            <input id="mpx-hist-depth" type="number" min="1" max="12" step="1" value="6">
+            <span class="mpx-set-value" id="mpx-hist-depth-value">6</span>
+          </div>
         </div>
 
         <div class="chaos-modal-section">
@@ -356,6 +422,35 @@ export function createMultiplexController(bus, getSource, applyShard) {
       driftValue.textContent = String(parseFloat(drift.value) || 0);
     });
 
+    const stagLimit = modal.querySelector('#mpx-stag-limit');
+    const stagLimitValue = modal.querySelector('#mpx-stag-limit-value');
+    stagLimit.addEventListener('input', () => {
+      const v = parseInt(stagLimit.value, 10) || 0;
+      stagLimitValue.textContent = v > 0 ? String(v) : 'OFF';
+    });
+
+    const elites = modal.querySelector('#mpx-elites');
+    const elitesValue = modal.querySelector('#mpx-elites-value');
+    elites.addEventListener('input', () => {
+      const v = Math.max(0, Math.min(4, parseInt(elites.value, 10) || 0));
+      elites.value = v;
+      elitesValue.textContent = String(v);
+    });
+
+    const cooling = modal.querySelector('#mpx-cooling');
+    const coolingValue = modal.querySelector('#mpx-cooling-value');
+    cooling.addEventListener('input', () => {
+      coolingValue.textContent = Math.round((parseFloat(cooling.value) || 0) * 100) + '%';
+    });
+
+    const histDepth = modal.querySelector('#mpx-hist-depth');
+    const histDepthValue = modal.querySelector('#mpx-hist-depth-value');
+    histDepth.addEventListener('input', () => {
+      const v = Math.max(1, Math.min(12, parseInt(histDepth.value, 10) || 6));
+      histDepth.value = v;
+      histDepthValue.textContent = String(v);
+    });
+
     const simSpeed = modal.querySelector('#mpx-sim-speed');
     const simSpeedValue = modal.querySelector('#mpx-sim-speed-value');
     simSpeed.addEventListener('input', () => {
@@ -425,6 +520,11 @@ export function createMultiplexController(bus, getSource, applyShard) {
         paused: modal.querySelector('#mpx-paused').checked,
         maxIterations: Math.max(0, parseInt(modal.querySelector('#mpx-max-iters').value, 10) || 0),
         variationDrift: parseFloat(modal.querySelector('#mpx-drift').value) || 0,
+        stagnationLimit: Math.max(0, parseInt(modal.querySelector('#mpx-stag-limit').value, 10) || 0),
+        eliteCount: Math.max(0, Math.min(4, parseInt(modal.querySelector('#mpx-elites').value, 10) || 0)),
+        cooling: Math.max(0, Math.min(0.2, parseFloat(modal.querySelector('#mpx-cooling').value) || 0)),
+        adaptiveInterval: modal.querySelector('#mpx-adapt').checked,
+        historyDepth: Math.max(1, Math.min(12, parseInt(modal.querySelector('#mpx-hist-depth').value, 10) || 6)),
         renderQuality: modal.querySelector('#mpx-eco').checked ? 'eco' : 'full',
         importOnExit: modal.querySelector('#mpx-import-on-exit').checked,
         fitnessWeights: { ...fit.weights },
@@ -491,6 +591,19 @@ export function createMultiplexController(bus, getSource, applyShard) {
     setVal('#mpx-drift', c.variationDrift ?? 0);
     const drv = modal.querySelector('#mpx-drift-value');
     if (drv) drv.textContent = String(c.variationDrift ?? 0);
+    setVal('#mpx-stag-limit', c.stagnationLimit ?? 5);
+    const slv = modal.querySelector('#mpx-stag-limit-value');
+    if (slv) slv.textContent = (c.stagnationLimit ?? 5) > 0 ? String(c.stagnationLimit ?? 5) : 'OFF';
+    setVal('#mpx-elites', c.eliteCount ?? 0);
+    const elv = modal.querySelector('#mpx-elites-value');
+    if (elv) elv.textContent = String(c.eliteCount ?? 0);
+    setVal('#mpx-cooling', c.cooling ?? 0);
+    const cov = modal.querySelector('#mpx-cooling-value');
+    if (cov) cov.textContent = Math.round((c.cooling ?? 0) * 100) + '%';
+    check('#mpx-adapt', c.adaptiveInterval === true);
+    setVal('#mpx-hist-depth', c.historyDepth ?? 6);
+    const hdv = modal.querySelector('#mpx-hist-depth-value');
+    if (hdv) hdv.textContent = String(c.historyDepth ?? 6);
     setVal('#mpx-sim-speed', c.simSpeed ?? 1);
     const ssv = modal.querySelector('#mpx-sim-speed-value');
     if (ssv) ssv.textContent = ((c.simSpeed ?? 1)).toFixed(2) + '×';
@@ -559,7 +672,8 @@ export function createMultiplexController(bus, getSource, applyShard) {
 
   function iterate() {
     if (!mx.active) return;
-    iterateMultiplex(mx);
+    // Manual iterate: explicitly re-arm a run that paused on stagnation.
+    iterateMultiplex(mx, { manual: true });
     updateDrawer();
   }
 
@@ -582,7 +696,73 @@ export function createMultiplexController(bus, getSource, applyShard) {
       const sum = summarizeMultiplex(mx);
       const sel = report.perShard.find((e) => e.id === mx.selected);
       const ms = mx.lastTickMs === undefined ? 0 : mx.lastTickMs;
-      stats.textContent = `ALIVE ${sum.alive} · CAP ${sum.populationCap} · ΔSEL ${sel ? sel.metrics.delta.toFixed(2) : '—'} · ΔAVG ${report.avgDelta.toFixed(2)} · ITER ${mx.iteration} · MS ${ms.toFixed(2)}`;
+      const best = mx.bestFitness == null ? '—' : Number(mx.bestFitness).toFixed(2);
+      const stag = mx.stagnantGenerations || 0;
+      const limit = mx.config.stagnationLimit || 0;
+      const stagTxt = limit > 0 ? `${stag}/${limit}` : String(stag);
+      stats.textContent = `ALIVE ${sum.alive} · CAP ${sum.populationCap} · ΔSEL ${sel ? sel.metrics.delta.toFixed(2) : '—'} · ΔAVG ${report.avgDelta.toFixed(2)} · ITER ${mx.iteration} · BEST ${best} · STAG ${stagTxt}${mx.stagnantPaused ? ' · ⏸ CONVERGED' : ''} · MS ${ms.toFixed(2)}`;
+    }
+    updateHistTab();
+  }
+
+  /**
+   * COMPARE/HIST section: per-metric shard comparison matrix (best cell per
+   * row highlighted, honoring min/max modes) + generation history with
+   * REVERT buttons. Rendered on the 24-frame metrics cadence.
+   */
+  function updateHistTab() {
+    if (!metricsDrawer || !mx.active || !mx.shards.length) return;
+    const body = metricsDrawer.querySelector('#mpx-ch-body');
+    if (body && body.classList.contains('collapsed')) return;
+    const compare = metricsDrawer.querySelector('#mpx-compare');
+    const history = metricsDrawer.querySelector('#mpx-history');
+    if (compare) {
+      const matrix = compareShards(mx);
+      const fmt = (v) => (Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—');
+      compare.innerHTML = `
+        <table class="mpx-compare-table">
+          <thead><tr>
+            <th></th>
+            ${matrix.shardIds.map((id) => `
+              <th class="mpx-compare-shard${id === mx.selected ? ' selected' : ''}" data-shard="${id}" title="Select S${String(id + 1).padStart(2, '0')}">S${String(id + 1).padStart(2, '0')}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${matrix.rows.map((row) => `
+              <tr>
+                <td title="${row.key} (${row.mode})">${row.key.toUpperCase()}</td>
+                ${row.values.map((v, i) => {
+                  const id = matrix.shardIds[i];
+                  return `<td class="mpx-compare-val${id === row.bestId ? ' best' : ''}">${fmt(v)}</td>`;
+                }).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      compare.querySelectorAll('.mpx-compare-shard').forEach((th) => {
+        th.addEventListener('click', () => selectShard(mx, parseInt(th.dataset.shard, 10)));
+      });
+    }
+    if (history) {
+      history.innerHTML = mx.history.map((entry) => {
+        const current = entry.generation === mx.iteration;
+        const best = entry.bestFitness == null ? '—' : Number(entry.bestFitness).toFixed(2);
+        return `<div class="mpx-hist-row${current ? ' current' : ''}">
+          <span class="mpx-hist-gen">G${entry.generation}</span>
+          <span class="mpx-hist-best">BEST ${best}</span>
+          <button class="mpx-btn mpx-hist-revert" data-gen="${entry.generation}" type="button" ${current ? 'disabled' : ''}>${current ? 'LIVE' : '◀ REVERT'}</button>
+        </div>`;
+      }).join('');
+      history.querySelectorAll('.mpx-hist-revert').forEach((btn) => {
+        btn.addEventListener('click', () => revertTo(parseInt(btn.dataset.gen, 10)));
+      });
+    }
+  }
+
+  /** Rebuild the grid from a recorded generation (the revert is undoable). */
+  function revertTo(generation) {
+    if (!mx.active) return;
+    if (revertMultiplex(mx, generation)) {
+      updateDrawer();
+      if (bus) bus.emit('multiplex:reverted', { generation });
     }
   }
 
@@ -593,13 +773,21 @@ export function createMultiplexController(bus, getSource, applyShard) {
     const iterStat = drawer.querySelector('#mpx-stat-iteration');
     if (gridStat) gridStat.textContent = `${mx.config.cols}×${mx.config.rows} · ${mx.shards.length} SIMS`;
     if (selStat) selStat.textContent = `SELECTED S${String(mx.selected + 1).padStart(2, '0')}`;
-    if (iterStat) iterStat.textContent = `ITERATION ${mx.iteration}`;
+    if (iterStat) {
+      const best = mx.bestFitness == null ? '—' : Number(mx.bestFitness).toFixed(2);
+      const stag = mx.stagnantGenerations || 0;
+      const limit = mx.config.stagnationLimit || 0;
+      const stagTxt = limit > 0 ? `${stag}/${limit}` : String(stag);
+      iterStat.textContent = `ITERATION ${mx.iteration} · BEST ${best} @G${mx.bestIteration} · STAG ${stagTxt}${mx.stagnantPaused ? ' · ⏸ CONVERGED' : ''}`;
+    }
     updateMetricsDrawer();
   }
 
   // Re-select / stats refresh comes through the bus too.
   if (bus) {
     bus.on('multiplex:selected', updateDrawer);
+    bus.on('multiplex:stagnant', updateDrawer);
+    bus.on('multiplex:reverted', updateDrawer);
   }
 
   return {

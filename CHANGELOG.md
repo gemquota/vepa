@@ -21,6 +21,17 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.3] - 2026-08-18 → 7.2.0
+
+### Multiplex evolution overhaul — elitist iteration, stable fitness, shard history + revert
+- `feat(multiplex):` auto-iteration now selects BEFORE the rebuild (elitism) — fittest ranks the *evolved* generation that just ran and seeds the next one from its winner, instead of ranking freshly-spawned near-identical clones (which degenerated to "always shard 0" under the population weight). `eliteCount` (0–4) additionally snapshots the top-N fittest shards pre-rebuild and restores their exact evolved state afterwards, so the best lineages survive untouched.
+- `feat(multiplex):` convergence detection — `stagnationLimit` tracks generations without a best-fitness improvement; auto-iterate pauses (⏸ CONVERGED readout + `multiplex:stagnant` bus event) instead of burning ticks on identical generations. Manual ITERATE re-arms the run; a knob change or raising the limit does too.
+- `feat(multiplex):` annealing + adaptive cadence — `cooling` shrinks variation toward a 0.05 exploration floor each generation (coexists with DRIFT; cooling wins at the floor). `adaptiveInterval` stretches the iterate cadence ×1.5 while stagnant (cap 4000) and snaps back to the base the moment the best improves.
+- `feat(multiplex):` stable cross-generation fitness — fitness reports are now pure reads (never mutate controller state); `recordDelta` is the single writer to the rolling delta window (once per tick/iteration). Running min/max bounds across generations (`updateRunningBounds`) feed a stable `rawFitness` comparable between generation 1 and generation 50. Zero-span normalization fixed — a lone/identical shard scores its full weight instead of collapsing to 0; a single-species shard is a monoculture (diversity 0).
+- `feat(ui):` NEW COMPARE/HIST section in the metrics drawer — per-metric shard comparison matrix (13 raw metrics, best cell per row highlighted honoring min/max modes; click a column header to select that shard) plus a generation history with REVERT. Every on-screen generation is recorded (light lineage records + full snapshots of the selected & fittest shards); reverting is itself recorded, so every revert is undoable. BEST/STAG/⏸ CONVERGED readouts added to the drawer stats.
+- `feat(ui):` new setup-screen knobs — STAG LIMIT, ELITES, COOLING, ADAPT INT, HIST DEPTH.
+- `test(multiplex):` +20 cases (48 total in `tests/unit/multiplex.test.js`): report purity, zero-span, monoculture, elitist fittest, stagnation pause/re-arm, elite preservation, annealing floor, adaptive cadence, compare matrix, history cap + revert/undo. Full suite 649/655 (the 6 pre-existing law-category/audit failures on the v7.1.1 baseline are untouched).
+
 ## [4.7.2] - 2026-08-16 → 7.1.1
 
 ### Release

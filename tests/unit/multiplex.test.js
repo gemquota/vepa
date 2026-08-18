@@ -24,8 +24,17 @@ import {
   copyShardToWorld,
   computeShardPopulationCap,
   getFitnessReport,
+  computeShardMetrics,
+  recordDelta,
+  updateRunningBounds,
+  trackGenerationProgress,
+  compareShards,
+  revertMultiplex,
   MULTIPLEX_DEFAULTS,
   MIN_SHARD_POPULATION,
+  ALIVE_WINDOW_SIZE,
+  ADAPTIVE_INTERVAL_CAP,
+  VARIATION_FLOOR,
 } from '../../src/multiplex/multiplex.js';
 
 const S = STRIDE_INDEXES;
@@ -518,5 +527,314 @@ describe('Multiplex fitness + iteration (v4.6.24)', () => {
         expect(mx.shards[i].dna).toBe(prev[i].dna);
       }
     }
+  });
+});
+
+// ── v7.2: elitist iteration, stable fitness, shard history + revert ──
+
+/** Minimal source with explicit species count (variation off = deterministic). */
+function mkSource(count = 4, species = 2) {
+  const view = new Float32Array(MAX_PARTICLES * PARTICLE_STRIDE);
+  for (let i = 0; i < count; i++) {
+    const b = i * PARTICLE_STRIDE;
+    view[b + S.POS_X] = 100 + i * 10;
+    view[b + S.POS_Y] = 100;
+    view[b + S.POS_Z] = 100;
+    view[b + S.SPECIES_ID] = i % species;
+    view[b + S.DEAD] = 0;
+    view[b + S.AGE] = i * 5;
+    view[b + S.ENERGY] = 50 + i * 10;
+  }
+  return {
+    view,
+    count,
+    speciesCount: species,
+    dna: createDNABuffer(),
+    laws: createLawState(),
+  };
+}
+
+/** Deterministic 2×1 grid (seed 42) with the given config merged in. */
+function startMx(config) {
+  const mx = createMultiplex(null);
+  startMultiplex(mx, mkSource(4, 2), { seed: 42, cols: 2, rows: 1, ...config }, null);
+  return mx;
+}
+
+describe('fitness report purity + normalization (v7.2)', () => {
+  it('is pure — reading the report never mutates controller state', () => {
+    const mx = startMx({ variation: 0.4 });
+    getFitnessReport(mx);
+    getFitnessReport(mx);
+    expect(mx.deltaHistory).toEqual([]); // recordDelta is the only writer
+    expect(mx.runningBounds).toBeNull();
+  });
+
+  it('zero span (single shard) normalizes to 1 instead of collapsing to 0', () => {
+    const mx = startMx({ cols: 1, rows: 1, variation: 0 });
+    const report = getFitnessReport(mx);
+    expect(report.perShard[0].metrics.population).toBe(1);
+    expect(report.perShard[0].fitness).toBe(1);
+    expect(report.avgDelta).toBe(0); // no peers → zero divergence
+  });
+
+  it('recordDelta is the only writer to deltaHistory and caps the window', () => {
+    const mx = startMx({ variation: 0.4 });
+    const avg = recordDelta(mx);
+    expect(mx.deltaHistory).toEqual([avg]);
+    for (let i = 0; i < ALIVE_WINDOW_SIZE + 5; i++) recordDelta(mx);
+    expect(mx.deltaHistory).toHaveLength(ALIVE_WINDOW_SIZE);
+  });
+
+  it('a single-species shard scores diversity 0 (monoculture)', () => {
+    const mx = createMultiplex(null);
+    startMultiplex(mx, mkSource(4, 1), { seed: 1, cols: 1, rows: 1, variation: 0 }, null);
+    expect(computeShardMetrics(mx.shards[0], WORLD_SIZE).diversity).toBe(0);
+  });
+});
+
+describe('iterateMultiplex policies (v7.2)', () => {
+  it('fittest mode selects the winner of the EVOLVED generation before rebuilding', () => {
+    const mx = startMx({ selectAfterIterate: 'fittest', variation: 0.3 });
+    for (let i = 0; i < 2; i++) mx.shards[0].view[i * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[0].prevAlive = 0;
+    expect(mx.selected).toBe(0);
+    iterateMultiplex(mx);
+    expect(mx.selected).toBe(1); // winner seeds the next generation
+    expect(mx.shards[1].tick).toBe(0); // fresh descendant of the winner
+  });
+
+  it('autoSelectFittest alone (default selectAfterIterate) still selects fittest', () => {
+    const mx = startMx({ autoSelectFittest: true, variation: 0.2 });
+    for (let i = 0; i < 3; i++) mx.shards[1].view[i * PARTICLE_STRIDE + S.DEAD] = 1;
+    mx.shards[1].prevAlive = 0;
+    iterateMultiplex(mx);
+    expect(mx.selected).toBe(0);
+  });
+
+  it('keepSelected restores the anchor across iteration', () => {
+    const mx = startMx({ keepSelected: true, selectAfterIterate: 'none', variation: 0.3 });
+    const beforeBuf = Array.from(mx.shards[0].view.subarray(0, mx.shards[0].count * PARTICLE_STRIDE));
+    iterateMultiplex(mx);
+    expect(Array.from(mx.shards[0].view.subarray(0, mx.shards[0].count * PARTICLE_STRIDE))).toEqual(beforeBuf);
+    // Sibling was regenerated with variation → different buffer.
+    expect(Array.from(mx.shards[1].view.subarray(0, mx.shards[1].count * PARTICLE_STRIDE))).not.toEqual(beforeBuf);
+  });
+});
+
+describe('stepMultiplex delta history (v7.2)', () => {
+  it('records one delta sample per tick regardless of UI reads', () => {
+    const mx = startMx({ variation: 0.2, selectAfterIterate: 'none' });
+    for (let t = 0; t < 5; t++) {
+      getFitnessReport(mx); // simulated per-frame UI read — must not record
+      stepMultiplex(mx, 1, 1, WORLD_SIZE);
+    }
+    expect(mx.deltaHistory).toHaveLength(5);
+    expect(mx.shards[0].tick).toBe(5);
+  });
+});
+
+describe('generation progress + convergence (v7.2)', () => {
+  it('report carries rawMetrics and rawFitness (== fitness before bounds exist)', () => {
+    const mx = startMx({ variation: 0.4 });
+    const report = getFitnessReport(mx);
+    expect(report.perShard.length).toBe(2);
+    for (const entry of report.perShard) {
+      expect(entry.rawMetrics.population).toBeGreaterThanOrEqual(0);
+      expect(entry.rawFitness).toBeCloseTo(entry.fitness, 6); // first gen: same normalization
+    }
+    expect(mx.runningBounds).toBeNull(); // pure report never seeds bounds
+  });
+
+  it('updateRunningBounds expands min/max across generations', () => {
+    const mx = startMx({ variation: 0.4 });
+    const r1 = getFitnessReport(mx);
+    updateRunningBounds(mx, r1);
+    const min1 = mx.runningBounds.min.population;
+    const max1 = mx.runningBounds.max.population;
+    // Kill every particle in shard 1 → a new lower population bound.
+    for (let p = 0; p < 4; p++) mx.shards[1].view[p * PARTICLE_STRIDE + S.DEAD] = 1;
+    const r2 = getFitnessReport(mx);
+    updateRunningBounds(mx, r2);
+    expect(mx.runningBounds.min.population).toBeLessThan(min1);
+    expect(mx.runningBounds.max.population).toBe(max1);
+    // Bounds now make rawFitness stable and comparable across generations.
+    const stable = getFitnessReport(mx);
+    for (const entry of stable.perShard) {
+      expect(entry.rawFitness).toBeGreaterThanOrEqual(0);
+      expect(entry.rawFitness).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('trackGenerationProgress records best and counts stagnation', () => {
+    const mx = startMx({ variation: 0 });
+    mx.iteration = 1;
+    const r1 = getFitnessReport(mx);
+    const p1 = trackGenerationProgress(mx, r1, 5);
+    expect(p1.improved).toBe(true); // first generation seeds the best
+    expect(p1.bestIteration).toBe(1);
+    expect(p1.stagnantGenerations).toBe(0);
+    const firstBest = p1.bestFitness;
+    // Identical shards, no variation → no improvement → stagnation accrues.
+    const r2 = getFitnessReport(mx);
+    const p2 = trackGenerationProgress(mx, r2, 5);
+    expect(p2.improved).toBe(false);
+    expect(p2.bestFitness).toBe(firstBest);
+    expect(p2.stagnantGenerations).toBe(1);
+    expect(p2.stagnant).toBe(false);
+    const r3 = getFitnessReport(mx);
+    const p3 = trackGenerationProgress(mx, r3, 2);
+    expect(p3.stagnant).toBe(true); // 2 stagnant >= limit 2
+  });
+
+  it('auto-iteration pauses once the stagnation limit is hit, manual iterate re-arms', () => {
+    const mx = startMx({
+      variation: 0,
+      autoIterate: true,
+      autoIterateInterval: 2,
+      stagnationLimit: 2,
+      selectAfterIterate: 'none',
+    });
+    // Identical shards can never improve the best → stagnation accrues.
+    for (let t = 0; t < 6; t++) stepMultiplex(mx, 1, 1, WORLD_SIZE); // ticks 1..6
+    // Gen 1 improves (seeds best), gens 2-3 stagnate → paused at iteration 3.
+    expect(mx.iteration).toBe(3);
+    expect(mx.stagnantGenerations).toBe(2);
+    expect(mx.stagnantPaused).toBe(true);
+    // Auto-iterate stands down: more steps do not bump the iteration.
+    for (let t = 0; t < 4; t++) stepMultiplex(mx, 1, 1, WORLD_SIZE);
+    expect(mx.iteration).toBe(3);
+    // Manual iterate re-arms the run: the pause clears and the stagnation
+    // counter restarts (the manual generation itself still can't improve,
+    // so it already counts as the first stagnant generation).
+    const prog = iterateMultiplex(mx, { manual: true });
+    expect(mx.stagnantPaused).toBe(false);
+    expect(mx.stagnantGenerations).toBe(1);
+    expect(prog.iteration).toBe(4);
+    // And auto-iteration resumes on the cadence.
+    stepMultiplex(mx, 1, 1, WORLD_SIZE); // tick 1 (post-iterate)
+    stepMultiplex(mx, 1, 1, WORLD_SIZE); // tick 2 → auto-iterate fires
+    expect(mx.iteration).toBe(5);
+  });
+
+  it('eliteCount preserves the fittest shard state across iteration', () => {
+    const mx = startMx({ variation: 0.4, selectAfterIterate: 'none' });
+    mx.config.eliteCount = 1;
+    const report = getFitnessReport(mx);
+    let best = report.perShard[0];
+    for (const e of report.perShard) if (e.rawFitness > best.rawFitness) best = e;
+    const bestId = best.id;
+    const before = mx.shards[bestId];
+    const n = before.count * PARTICLE_STRIDE;
+    const viewBefore = Array.from(before.view.subarray(0, n));
+    const dnaBefore = Array.from(before.dna);
+    iterateMultiplex(mx);
+    // The elite slot was rebuilt fresh, then restored — byte-identical state.
+    const after = mx.shards[bestId];
+    expect(after.count).toBe(before.count);
+    expect(Array.from(after.view.subarray(0, n))).toEqual(viewBefore);
+    expect(Array.from(after.dna)).toEqual(dnaBefore);
+  });
+});
+
+describe('shard comparison + history/revert + annealing (v7.2)', () => {
+  it('new defaults: cooling, adaptive interval, history depth are present', () => {
+    expect(MULTIPLEX_DEFAULTS.cooling).toBe(0);
+    expect(MULTIPLEX_DEFAULTS.adaptiveInterval).toBe(false);
+    expect(MULTIPLEX_DEFAULTS.historyDepth).toBe(6);
+    expect(MULTIPLEX_DEFAULTS.eliteCount).toBe(0);
+    expect(MULTIPLEX_DEFAULTS.stagnationLimit).toBe(5);
+    expect(ADAPTIVE_INTERVAL_CAP).toBeGreaterThan(0);
+    expect(VARIATION_FLOOR).toBe(0.05);
+  });
+
+  it('compareShards builds a per-metric matrix with best-per-row honors', () => {
+    const mx = startMx({ variation: 0.4 });
+    mx.config.fitnessModes = { ...mx.config.fitnessModes, energy: 'min' };
+    const matrix = compareShards(mx);
+    expect(matrix.shardIds).toEqual([0, 1]);
+    expect(matrix.rows).toHaveLength(13); // raw base metrics (delta is derived)
+    for (const row of matrix.rows) {
+      expect(row.values).toHaveLength(2);
+      expect([0, 1]).toContain(row.bestId);
+      const want = row.mode === 'min' ? Math.min(...row.values) : Math.max(...row.values);
+      expect(row.bestValue).toBe(want);
+      expect(row.values[row.bestId]).toBe(want);
+    }
+    // The energy row honors the min mode: bestId = shard with the lowest energy.
+    const energy = matrix.rows.find((r) => r.key === 'energy');
+    expect(energy.mode).toBe('min');
+    expect(energy.values[energy.bestId]).toBe(Math.min(...energy.values));
+  });
+
+  it('records every on-screen generation into history, capped at depth', () => {
+    const mx = startMx({ variation: 0.4, historyDepth: 2 });
+    expect(mx.history.length).toBe(1); // generation 0 recorded at start
+    expect(mx.history[0].generation).toBe(0);
+    expect(mx.history[0].shards.length).toBe(2); // light per-shard records
+    expect(Object.keys(mx.history[0].snapshots).length).toBeGreaterThan(0); // selected+fittest full snaps
+    iterateMultiplex(mx);
+    iterateMultiplex(mx);
+    iterateMultiplex(mx);
+    expect(mx.history.map((h) => h.generation)).toEqual([2, 3]); // capped at depth 2
+  });
+
+  it('revertMultiplex rebuilds the grid from a recorded generation (and is undoable)', () => {
+    const mx = startMx({ variation: 0.4, historyDepth: 6 });
+    iterateMultiplex(mx);
+    iterateMultiplex(mx); // now on generation 2; history holds G0..G2
+    const g0 = mx.history.find((h) => h.generation === 0);
+    const g0Dna = g0.shards.map((r) => Array.from(r.dna));
+    expect(mx.bestFitness).not.toBeNull();
+    expect(revertMultiplex(mx, 0)).toBe(true);
+    expect(mx.iteration).toBe(0);
+    expect(mx.bestFitness).toBeNull(); // bookkeeping restored to G0
+    expect(mx.shards.length).toBe(2);
+    expect(mx.shards.map((s) => Array.from(s.dna))).toEqual(g0Dna);
+    // The revert was recorded → reverting again returns to generation 2.
+    const last = mx.history[mx.history.length - 1];
+    expect(last.generation).toBe(2);
+    expect(revertMultiplex(mx, last.generation)).toBe(true);
+    expect(mx.iteration).toBe(2);
+  });
+
+  it('revertMultiplex refuses unknown generations and inactive grids', () => {
+    const mx = startMx({ variation: 0.4 });
+    expect(revertMultiplex(mx, 99)).toBe(false);
+    stopMultiplex(mx);
+    expect(revertMultiplex(mx, 0)).toBe(false);
+  });
+
+  it('cooling anneals variation toward the exploration floor', () => {
+    const mx = startMx({ variation: 0.5, cooling: 0.1 });
+    iterateMultiplex(mx);
+    expect(mx.config.variation).toBeCloseTo(0.45, 5); // 0.5 × (1 − 0.1)
+    for (let i = 0; i < 30; i++) iterateMultiplex(mx);
+    expect(mx.config.variation).toBeCloseTo(VARIATION_FLOOR, 5); // clamped at floor
+  });
+
+  it('adaptive interval stretches while stagnant and snaps back on improvement', () => {
+    const mx = startMx({ variation: 0, adaptiveInterval: true, autoIterateInterval: 10 });
+    iterateMultiplex(mx); // first generation seeds the best → base interval
+    expect(mx.currentInterval).toBe(10);
+    iterateMultiplex(mx); // stagnant → ×1.5
+    expect(mx.currentInterval).toBe(15);
+    iterateMultiplex(mx); // stagnant again → ×1.5 (capped at ADAPTIVE_INTERVAL_CAP)
+    expect(mx.currentInterval).toBeGreaterThan(15);
+    expect(mx.currentInterval).toBeLessThanOrEqual(ADAPTIVE_INTERVAL_CAP);
+    // Force an improvement: a higher best seeds → interval snaps back to base.
+    mx.bestFitness = 0;
+    iterateMultiplex(mx);
+    expect(mx.currentInterval).toBe(10);
+    // stepMultiplex honors the stretched cadence.
+    const mx2 = startMx({ variation: 0, adaptiveInterval: true, autoIterate: true, autoIterateInterval: 2 });
+    stepMultiplex(mx2, 1, 1, WORLD_SIZE); // tick 1
+    stepMultiplex(mx2, 1, 1, WORLD_SIZE); // tick 2 → iterate (gen 1 seeds best)
+    expect(mx2.iteration).toBe(1);
+    expect(mx2.currentInterval).toBe(2);
+    stepMultiplex(mx2, 1, 1, WORLD_SIZE); // tick 3
+    stepMultiplex(mx2, 1, 1, WORLD_SIZE); // tick 4 → iterate (stagnant) → interval 3
+    expect(mx2.iteration).toBe(2);
+    expect(mx2.currentInterval).toBe(3);
   });
 });
