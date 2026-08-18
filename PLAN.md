@@ -82,6 +82,15 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.7.0 — 2026-08-18)
+
+- **Set G — Memory & Culture** (build 2 of the RRP D·G·H trilogy): persistent
+  per-species / per-group memory buffers (`src/state/memoryBuffers.js`) outlive
+  particles and generations; child species inherit parent culture on
+  speciation, groups blend member memories into a collective, and species
+  memory adapts to energy / density / extinction-epoch conditions, decaying
+  without rehearsal. See `CHANGELOG.md` [8.7.0].
+
 ## Milestone note (v8.6.0 — 2026-08-18)
 
 - **Set D — Deep Time & Epochs** (build 1 of the RRP D·G·H trilogy; design in

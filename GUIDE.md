@@ -116,6 +116,21 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     is declared — each is journaled and answered reversibly (drought on
     extinction, fertilization on recovery) through the undo ring + fields.
 
+### Memory & Culture (v8.7)
+*   **Traits outlive bodies:** species and groups carry persistent memory
+    buffers (activity / cohesion / exploration / threat) that survive
+    individual particles and generations — unlike the per-particle cache.
+*   **Speciation inherits culture:** when a species splits, the child blends
+    its parent's learned memory at the CULTURAL TRANSMISSION rate (genome stays
+    separate).
+*   **Groups enculturate:** a group continuously blends its member species'
+    memories into a collective; memory fades without rehearsal and dead
+    groups' memory is pruned.
+*   **Conditions shape behavior:** every 60 ticks each species' memory drifts
+    toward its actual state — energy sets activity, density sets cohesion,
+    sparse species explore while dense species hold, and an open extinction
+    epoch raises threat.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

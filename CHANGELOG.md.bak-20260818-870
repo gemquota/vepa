@@ -21,14 +21,6 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.7] - 2026-08-18 → 8.7.0
-
-### Set G — Memory & Culture: learned traits survive (D·G·H trilogy, build 2)
-- `feat(memory):` **persistent memory buffers** (`src/state/memoryBuffers.js`) — per-species and per-group Float32Array memory (4 channels: activity / cohesion / exploration / threat) that survives individual particles and generations, unlike the per-particle stride cache. Lazy allocation, blend/adapt/decay/prune/reset helpers, compact snapshots.
-- `feat(culture):` **cultural transmission** — a child species inherits its parent's learned memory on speciation (not its genome), gated by the existing CULTURAL TRANSMISSION slider; every group continuously blends its member species' memories into a collective culture.
-- `feat(adaptation):` **behavioral adaptation** — each species' memory shifts toward current conditions every 60 ticks: activity tracks avg energy, cohesion tracks density, sparse species explore / dense species hold, and threat rises while an extinction epoch is open (Set D). Memory decays without rehearsal.
-- `test:` +6 (`tests/unit/memoryCulture.test.js`) — lazy alloc + identity, blend/clamp, cultural inheritance, signal adaptation with NaN/undefined skip, decay + group prune, reset + snapshot. Full suite 738 (732 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
-
 ## [4.8.6] - 2026-08-18 → 8.6.0
 
 ### Set D — Deep Time & Epochs: the world remembers (D·G·H trilogy, build 1)

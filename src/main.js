@@ -30,6 +30,7 @@ import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageT
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createGroupRegistry, updateGroups, groupCount, declareGroup } from './state/groupRegistry.js';
+import { createMemoryBuffers, speciesMemory, groupMemory, blendMemory, adaptMemory, decayMemory, pruneGroupMemory, resetMemoryBuffers, MEM } from './state/memoryBuffers.js';
 import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
 import { getFields, writeField } from './physics/fields.js';
@@ -58,6 +59,7 @@ let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
 let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
 let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
+let memoryBuffers = null; // Set G.1 — persistent species/group memory
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
@@ -177,6 +179,7 @@ async function boot() {
     ecoEngine = createEcoEngine(bus);
     worldEventEngine = createWorldEventEngine(bus);
     epochEngine = createEpochEngine(bus);
+    memoryBuffers = createMemoryBuffers();
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
     setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
@@ -739,6 +742,11 @@ function setDNAFromProfile(species, profile) {
     // it), splits + extinctions hit the narrative journal and ECO feed.
     bus.on('speciation:split', ({ parent, child }) => {
         speciesCount = Math.max(speciesCount, child + 1);
+        // Set G.2 — cultural inheritance: the child species inherits the
+        // parent's learned memory (not its genome) at the transmission rate.
+        if (memoryBuffers) {
+            blendMemory(speciesMemory(memoryBuffers, child), speciesMemory(memoryBuffers, parent), worldParams.CULTURAL_TRANSMISSION || 0.5);
+        }
         bus.emit('species:sync', { count: speciesCount });
         bus.emit('narrative:system', { text: `Speciation burst: S${parent} diverged into S${child}.` });
     });
@@ -924,6 +932,25 @@ function computeMetrics() {
     };
 }
 
+/** Set G.3 — shift each species' learned memory toward current conditions. */
+function adaptCultureFromMetrics(buffers, metrics) {
+    const rate = (worldParams.CULTURAL_TRANSMISSION || 0.5) * 0.5;
+    const threatSignal = epochEngine && epochEngine.extinctionOpen ? 1 : 0;
+    for (const key of Object.keys(metrics.speciesPop || {})) {
+        const id = Number(key);
+        const pop = metrics.speciesPop[key] || 0;
+        const energy = metrics.speciesEnergy[key] || 0;
+        const avgEnergy = pop ? energy / pop : 0;
+        const mem = speciesMemory(buffers, id);
+        adaptMemory(mem, [
+            Math.max(0, Math.min(1, avgEnergy / 100)),      // ACTIVITY ← energy
+            Math.max(-1, Math.min(1, (pop / 200) * 2 - 1)), // COHESION ← density
+            pop > 100 ? -0.5 : 0.5,                         // EXPLORATION ← sparse explores
+            threatSignal,                                   // THREAT ← extinction epoch
+        ], rate);
+    }
+}
+
 /** Run insight, narrative, lineage, timeline, and goal engines each tick. */
 function updateIntelligence() {
     if (!particleView || !particleCount) return;
@@ -1018,6 +1045,25 @@ function updateIntelligence() {
         });
         for (const ev of epochEvents) bus.emit(ev.type, ev);
     }
+    // Memory & Culture (Set G) — persistent species/group memory: cultural
+    // transmission (group ← member species), behavioral adaptation from
+    // energy/density/epoch conditions, then decay + group prune.
+    if (memoryBuffers) {
+        if (groupRegistry) {
+            const liveGroups = new Set(groupRegistry.groups.keys());
+            for (const g of groupRegistry.groups.values()) {
+                const gmem = groupMemory(memoryBuffers, g.id);
+                for (const sp of g.species || []) {
+                    blendMemory(gmem, speciesMemory(memoryBuffers, sp), (worldParams.CULTURAL_TRANSMISSION || 0.5) * 0.2);
+                }
+            }
+            pruneGroupMemory(memoryBuffers, liveGroups);
+        }
+        if (tick % 60 === 0) {
+            adaptCultureFromMetrics(memoryBuffers, metrics);
+            decayMemory(memoryBuffers);
+        }
+    }
     if (tick % 30 === 0) {
         bus.emit('sim:metrics', metrics);
         if (groupRegistry) {
@@ -1054,6 +1100,7 @@ function resetIntelligence() {
         worldEventEngine.events.length = 0;
     }
     if (epochEngine) resetEpoch(epochEngine);
+    if (memoryBuffers) resetMemoryBuffers(memoryBuffers);
 }
 
 function renderLoop(now) {

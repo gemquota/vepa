@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.6.0** (legacy label `4.8.6`). Retroactive mapping of the v4 line:
+  current: **8.7.0** (legacy label `4.8.7`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -24,7 +24,7 @@ explicit law.
 npm install
 npm run dev    # Dev server with COOP/COEP headers
 npm run build  # Production build
-npm test       # Unit tests (76 files / 732 tests)
+npm test       # Unit tests (77 files / 738 tests)
 ```
 
 ## Deployments
@@ -105,6 +105,11 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   snapshots you can restore; population collapse and rebound are detected,
   journaled, and answered reversibly with drought / fertilization field
   writes. The benchmark report SPA now serves at `/bench-report/`.
+- **Memory & Culture (v8.7)** — learned traits outlive the particles that
+  learned them: per-species and per-group memory buffers persist across
+  generations. Child species inherit their parent's culture on speciation,
+  groups blend their members' memories into a collective, and each species'
+  memory adapts to energy, density and extinction epochs.
 
 ## Architecture
 
