@@ -141,6 +141,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
         <div class="mpx-body-header">
           <span class="mpx-title">MULTIPLEX</span>
           <span class="mpx-header-actions">
+            <button id="mpx-settings" class="mpx-btn mpx-icon" title="Open the full multiplex controls" data-mpx-help="drawer">⚙</button>
             <button id="mpx-help" class="mpx-btn mpx-icon mpx-help-btn" type="button" title="Open the multiplex guide" data-mpx-help="help">?</button>
             <button id="mpx-minimize" class="mpx-btn mpx-icon" title="Minimize" data-mpx-help="drawer">▼</button>
           </span>
@@ -171,6 +172,8 @@ export function createMultiplexController(bus, getSource, applyShard) {
     drawer.querySelector('#mpx-iterate').addEventListener('click', iterate);
     drawer.querySelector('#mpx-exit').addEventListener('click', exit);
     drawer.querySelector('#mpx-help').addEventListener('click', openMultiplexHelp);
+    // Reopen the full setup screen mid-run — every multiplex control lives there.
+    drawer.querySelector('#mpx-settings').addEventListener('click', openModal);
 
     // Initial setup screen (long-press the Chaos button) — every multiplex
     // setting lives here so the run is fully configured up front.
@@ -187,7 +190,10 @@ export function createMultiplexController(bus, getSource, applyShard) {
     modal.id = MODAL_ID;
     modal.innerHTML = `
       <div class="chaos-modal-panel">
-        <div class="chaos-modal-title">CHAOS MULTIPLEX</div>
+        <div class="chaos-modal-title-row">
+          <div class="chaos-modal-title">CHAOS MULTIPLEX</div>
+          <button id="mpx-fullscreen" class="mpx-btn mpx-icon mpx-fullscreen-btn" type="button" title="Open full-screen">⛶</button>
+        </div>
         <p class="chaos-modal-sub">Guided evolution — X×Y concurrent futures, one shared camera.</p>
 
         <div class="chaos-modal-section">
@@ -354,6 +360,13 @@ export function createMultiplexController(bus, getSource, applyShard) {
 
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
+    });
+    // ⛶ FULL — expand the controls to the whole viewport (v8.1).
+    const fullBtn = modal.querySelector('#mpx-fullscreen');
+    fullBtn.addEventListener('click', () => {
+      const isFull = modal.classList.toggle('fullscreen');
+      fullBtn.textContent = isFull ? '🗗' : '⛶';
+      fullBtn.title = isFull ? 'Exit full-screen' : 'Open full-screen';
     });
     modal.querySelector('#mpx-cancel').addEventListener('click', closeModal);
     modal.querySelector('#mpx-start').addEventListener('click', () => {

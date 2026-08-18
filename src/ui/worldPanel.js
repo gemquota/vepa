@@ -60,6 +60,7 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 // Track which law is currently selected for info display
 let selectedLawIdx = -1;
 let viewMode = 'icon';  // 'icon' | 'word' — which mode the law grid shows
+let iconSize = 'big';   // 'big' | 'compact' — icon tile size (v8.1 toggle)
 
 // ── Law set presets (theorycrafted) ─────────────────────────────
 // Each preset lists law names; indices resolve via LAW_INDEXES at load.
@@ -142,7 +143,7 @@ export function createWorldPanel(bus, lawStateObj) {
       });
     });
 
-    // [◈ icon] [ABC list] — toggle between the icon grid and the word list.
+    // [◈ icon] [ABC list] [▦ size] — view mode + icon size toggles.
     let group = filterRow.querySelector('.view-mode-group');
     if (!group) {
       group = document.createElement('div');
@@ -155,12 +156,17 @@ export function createWorldPanel(bus, lawStateObj) {
       btnWord.className = 'view-mode-toggle law-mode-abc';
       btnWord.title = 'List view';
       btnWord.textContent = 'ABC';
-      group.append(btnIcon, btnWord);
+      const btnSize = document.createElement('button');
+      btnSize.className = 'view-mode-toggle law-mode-size';
+      btnSize.title = 'Toggle icon size: big (double-size tiles) / compact (old dense grid)';
+      btnSize.textContent = '▦';
+      group.append(btnIcon, btnWord, btnSize);
       filterRow.appendChild(group);
 
       const sync = () => {
         btnIcon.classList.toggle('active', viewMode === 'icon');
         btnWord.classList.toggle('active', viewMode === 'word');
+        btnSize.classList.toggle('active', iconSize === 'compact');
         renderLawGrid(grid, lawStateObj, bus);
       };
       btnIcon.addEventListener('click', () => {
@@ -169,6 +175,10 @@ export function createWorldPanel(bus, lawStateObj) {
       });
       btnWord.addEventListener('click', () => {
         viewMode = 'word';
+        sync();
+      });
+      btnSize.addEventListener('click', () => {
+        iconSize = iconSize === 'compact' ? 'big' : 'compact';
         sync();
       });
     }
@@ -208,7 +218,9 @@ export function setSelectedLaw(idx) {
 
 function renderLawGrid(grid, lawStateObj, bus) {
   const isWordMode = viewMode === 'word';
-  grid.className = isWordMode ? 'law-grid word-mode' : 'law-icon-grid';
+  grid.className = isWordMode
+    ? 'law-grid word-mode'
+    : 'law-icon-grid' + (iconSize === 'compact' ? ' compact' : '');
 
   let html = '';
   // One row per law category (physics / biology / chemistry / thermo / meta)

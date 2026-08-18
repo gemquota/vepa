@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.1] - 2026-08-18 → 8.1.0
+
+### Interface & Deploy Mirror — full-screen multiplex controls, law icon size toggle, dual-hosting
+- `feat(ui):` the **Chaos Multiplex setup screen can now open FULL-SCREEN** — a ⛶ toggle in the modal header expands the controls to the whole viewport and back. Long-pressing the ☢️ toolbar button (or the ⚛️ button) opens this screen; while a multiplex is running, a new **⚙ button in the bottom controls drawer** reopens the full setup at any time.
+- `feat(ui):` the **LAWS tab gains an icon-size toggle** (▦ in the view-mode group next to ◈ icon / ABC list) — switch between the current double-size icon tiles and the old compact dense icon grid (`#law-grid.law-icon-grid.compact`).
+- `ci:` restored `.github/workflows/deploy.yml` (root layout, `VITE_BASE=/vepa/`, gh-pages branch via peaceiris) so every push to master auto-mirrors to GitHub Pages at https://gemquota.github.io/vepa/ alongside the Vercel auto-deploy (https://vepa-seven.vercel.app/). `vite.config.js` now honors `VITE_BASE` for the Pages base (`/vepa/`) while keeping `VERCEL=1` → `/` and the local launcher default `/vepa/vepar/`.
+- `docs:` AGENTS.md deploy rows corrected (Vercel `vepa-seven`, Pages `/vepa/` project page).
+- `test`: full suite 672/678 (the same 6 pre-existing law-category/audit baseline failures, untouched); both build variants verified (default `/vepa/vepar/` and Pages `/vepa/`).
+
 ## [4.8.0] - 2026-08-18 → 8.0.0
 
 ### Matter & Union — accretion is a true merger; bonds stay as separate attached orbs (Set A · Part 1)
