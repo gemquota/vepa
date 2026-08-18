@@ -86,6 +86,14 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   field grid, trade treasury between close neighbours (market prices written
   onto the INFO field), and collapse when membership dies. Watch it all in
   DATA > 🏙️ CIVILIZATIONS: territory overlay, network graph, economy Sankey.
+- **A living world (v8.4)** — species diverge: when a species' isolation
+  (spread + wall pinning in the E fields) exceeds its SPECIATION_THRESHOLD, a
+  third of its members split into a new species that claims an extinct-freed
+  slot (queued at the 64-slot cap). DATA > 🌿 ECO tracks population curves,
+  biodiversity, oscillation, the food-web and niches; world events (famine /
+  bloom / collapse) are metrics-triggered, physics-confirmed, and respond
+  reversibly through the undo ring + field writes. Multiplex shards now
+  evolve their species independently.
 
 ## Architecture
 

@@ -21,6 +21,9 @@ import { initUI } from './ui/ui.js';
 import { initCamera, resetCamera, setWorldSize } from './ui/camera.js';
 import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
 import { createInsightEngine, update as updateInsight } from './engines/insightEngine.js';
+import { createSpeciationEngine, updateSpeciation } from './engines/speciation.js';
+import { createEcoEngine } from './engines/ecoEngine.js';
+import { createWorldEventEngine } from './engines/worldEvents.js';
 import { createNarrativeEngine, update as updateNarrative } from './engines/narrativeEngine.js';
 import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageTracker.js';
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
@@ -28,7 +31,7 @@ import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getT
 import { createGroupRegistry, updateGroups, groupCount, declareGroup } from './state/groupRegistry.js';
 import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
-import { getFields } from './physics/fields.js';
+import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
 import {
@@ -52,6 +55,7 @@ let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 // v4 — intelligence engines
 let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
 let groupRegistry = null; // Set F.1 — social groups (declared + detected)
+let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
@@ -166,6 +170,10 @@ async function boot() {
     goalEngine = createGoalEngine(bus);
     timelineEngine = createTimelineEngine(bus, { autoSnapshotInterval: 0, maxSnapshots: 20 });
     groupRegistry = createGroupRegistry();
+    // Set A — Living World engines (speciation A.1 / eco ring A.2 / events A.3)
+    speciationEngine = createSpeciationEngine(bus, { prng: () => prng.next() });
+    ecoEngine = createEcoEngine(bus);
+    worldEventEngine = createWorldEventEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
     setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
@@ -724,6 +732,43 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: `Declared group ${g.name}.` });
     });
 
+    // Set A.1 — speciation: the child claims its slot (roster grows to show
+    // it), splits + extinctions hit the narrative journal and ECO feed.
+    bus.on('speciation:split', ({ parent, child }) => {
+        speciesCount = Math.max(speciesCount, child + 1);
+        bus.emit('species:sync', { count: speciesCount });
+        bus.emit('narrative:system', { text: `Speciation burst: S${parent} diverged into S${child}.` });
+    });
+    bus.on('speciation:extinct', ({ species }) => {
+        bus.emit('narrative:system', { text: `S${species} went extinct — its slot is freed.` });
+    });
+
+    // Set A.3 — world events: metrics-triggered + physics-confirmed; the
+    // response is reversible — an undo-ring checkpoint first, then world-param
+    // nudges and E-field writes (droughts / fertilization).
+    bus.on('worldEvent:triggered', ({ type }) => {
+        undoRing.commit(currentWorldState());
+        const fs = getFields();
+        let text = '';
+        if (type === 'famine') {
+            worldParams = applyWorldParam(worldParams, 'SPAWN_RATE', (worldParams.SPAWN_RATE || 0) + 2);
+            if (fs) writeField(fs, 'INFO', worldSize * 0.25, worldSize * 0.25, worldSize * 0.5, -8);
+            text = 'Famine confirmed — drought cells written, spawn rate raised.';
+        } else if (type === 'bloom') {
+            worldParams = applyWorldParam(worldParams, 'SPAWN_RATE', Math.max(0, (worldParams.SPAWN_RATE || 0) - 2));
+            if (fs) writeField(fs, 'INFO', worldSize * 0.75, worldSize * 0.75, worldSize * 0.5, 8);
+            text = 'Bloom confirmed — fertilization written, spawn rate eased.';
+        } else if (type === 'collapse') {
+            worldParams = applyWorldParam(worldParams, 'SPAWN_RATE', (worldParams.SPAWN_RATE || 0) + 5);
+            worldParams = applyWorldParam(worldParams, 'MUTATION_RATE', (worldParams.MUTATION_RATE || 0) + 0.05);
+            if (fs) writeField(fs, 'INFO', worldSize * 0.5, worldSize * 0.5, worldSize * 0.5, 12);
+            text = 'Collapse confirmed — emergency spawn + mutation rescue.';
+        }
+        runtimeConfig.worldParams = worldParams;
+        bus.emit('narrative:system', { text: text || `${type} event.` });
+        bus.emit('world:paramApplied', { key: 'SPAWN_RATE', value: worldParams.SPAWN_RATE });
+    });
+
     bus.on('world:paramChanged', ({ key, value }) => {
         worldParams = applyWorldParam(worldParams, key, value);
         runtimeConfig.worldParams = worldParams;
@@ -798,12 +843,27 @@ function wireGoalEvents() {
 function computeMetrics() {
     let alive = 0, energySum = 0;
     const speciesAlive = new Set();
+    // Per-species detail for the eco engine (A.2 metrics ring): population,
+    // energy, mass and position sums — one pass, all fed to the ring.
+    const speciesPop = {};
+    const speciesEnergy = {};
+    const speciesMass = {};
+    const speciesPos = {};
     for (let i = 0; i < particleCount; i++) {
         const base = i * PARTICLE_STRIDE;
         if (particleView[base + STRIDE_INDEXES.DEAD] < 0.5 && (particleView[base + STRIDE_INDEXES.MASS] || 0) > 0) {
             alive++;
-            energySum += particleView[base + STRIDE_INDEXES.ENERGY] || 0;
-            speciesAlive.add(particleView[base + STRIDE_INDEXES.SPECIES_ID]);
+            const sp = particleView[base + STRIDE_INDEXES.SPECIES_ID] || 0;
+            const e = particleView[base + STRIDE_INDEXES.ENERGY] || 0;
+            energySum += e;
+            speciesAlive.add(sp);
+            speciesPop[sp] = (speciesPop[sp] || 0) + 1;
+            speciesEnergy[sp] = (speciesEnergy[sp] || 0) + e;
+            speciesMass[sp] = (speciesMass[sp] || 0) + (particleView[base + STRIDE_INDEXES.MASS] || 0);
+            const pos = speciesPos[sp] || (speciesPos[sp] = [0, 0, 0]);
+            pos[0] += particleView[base + STRIDE_INDEXES.POS_X];
+            pos[1] += particleView[base + STRIDE_INDEXES.POS_Y];
+            pos[2] += particleView[base + STRIDE_INDEXES.POS_Z];
         }
     }
     const clusterCount = insightEngine && insightEngine.lastClusters
@@ -816,6 +876,10 @@ function computeMetrics() {
         avgEnergy: alive ? energySum / alive : 0,
         frameDelta: fps,
         lawActiveCount: getLawCount(lawState),
+        speciesPop,
+        speciesEnergy,
+        speciesMass,
+        speciesPos,
     };
 }
 
@@ -885,10 +949,22 @@ function updateIntelligence() {
         const eco = runEconomy(groupRegistry, particleView, particleCount, getFields(), { tick });
         if (eco.trades > 0) bus.emit('economy:trade', eco);
     }
+    // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
+    // field isolation is exceeded; children claim extinct-freed slots.
+    if (speciationEngine && metrics.lawActiveCount > 0) {
+        const specEvents = updateSpeciation(speciationEngine, particleView, particleCount, PARTICLE_STRIDE, dnaBuffer, worldSize, {
+            lawActiveCount: metrics.lawActiveCount,
+            fieldSystem: getFields(),
+        });
+        for (const ev of specEvents) bus.emit(ev.type, ev);
+    }
     if (tick % 30 === 0) {
         bus.emit('sim:metrics', metrics);
         if (groupRegistry) {
             bus.emit('groups:analytics', { registry: groupRegistry, metrics });
+        }
+        if (ecoEngine) {
+            bus.emit('eco:analytics', { eco: ecoEngine });
         }
     }
 }
@@ -899,7 +975,24 @@ function resetIntelligence() {
     if (insightEngine) { insightEngine.frame = 0; insightEngine.history = []; insightEngine.lastClusters = null; }
     if (goalEngine) { goalEngine.frame = 0; goalEngine.history = []; }
     if (timelineEngine) clearTimelineEngine(timelineEngine);
-    if (groupRegistry) { groupRegistry.groups.clear(); groupRegistry.nextId = 1; groupRegistry.frame = 0; groupRegistry.events.length = 0; }
+    if (groupRegistry) { groupRegistry.groups.clear(); groupRegistry.nextId = 1; groupRegistry.frame = 0; groupRegistry.events.length = 0; groupRegistry.tradeLog.length = 0; }
+    // Set A — reset speciation state (fresh slot census), eco ring and event
+    // baseline on every restart so nothing carries across worlds.
+    if (speciationEngine) {
+        speciationEngine.pending.length = 0;
+        speciationEngine.seenSpecies.clear();
+        speciationEngine.splits.length = 0;
+        speciationEngine.frame = 0;
+    }
+    if (ecoEngine) { ecoEngine.ring.length = 0; ecoEngine.foodWeb.clear(); ecoEngine.niches.clear(); ecoEngine.splits.length = 0; ecoEngine.extinct.length = 0; }
+    if (worldEventEngine) {
+        worldEventEngine.baselineTotal = 0;
+        worldEventEngine.baselineEnergy = 0;
+        worldEventEngine.samples = 0;
+        worldEventEngine.confirm = 0;
+        worldEventEngine.cooldownUntil = 0;
+        worldEventEngine.events.length = 0;
+    }
 }
 
 function renderLoop(now) {

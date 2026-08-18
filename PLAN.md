@@ -82,6 +82,18 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.4.0 — 2026-08-18)
+
+- **Set A — Living World** (build 3, completing the E·F·A trilogy): DNA-slot
+  speciation (`src/engines/speciation.js`) splits qualifying species under the
+  SPECIATION_THRESHOLD × field-isolation gate, children claim extinct-freed
+  slots (queue at cap), with burst/extinction events; the ECO sub-tab
+  (DATA > 🌿) shows population curves, biodiversity, oscillation, food-web and
+  niches via the metrics ring (`src/engines/ecoEngine.js`); world events
+  (`src/engines/worldEvents.js`) are metrics-triggered + physics-confirmed and
+  respond through undo-ring checkpoints + field writes; multiplex shards now
+  evolve species independently. See `CHANGELOG.md` [8.4.0].
+
 ## Milestone note (v8.3.0 — 2026-08-18)
 
 - **Set F — Civilizations** (build 2 of the RRP E·F·A trilogy): the group registry

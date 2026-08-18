@@ -66,6 +66,29 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     too. Watch the overlay, network graph, and economy Sankey in the
     CIVILIZATIONS sub-tab.
 
+### The Living World (v8.4 — DATA > 🌿 ECO)
+*   **Speciation is a physics fact:** a species splits when its isolation —
+    how spread out it is, plus how many members are pinned against walls in
+    the E.1 field grid — crosses its SPECIATION_THRESHOLD DNA. Lower the
+    threshold in the DNA panel and evolution runs wild; raise it and the dish
+    stabilises.
+*   **Slots are recycled:** the parent keeps its species slot; the child takes
+    the first extinct-freed slot. If all 64 are alive, the split queues until
+    an extinction frees one. Watch bursts (✦) and extinctions (✖) in the ECO
+    feed.
+*   **The ECO sub-tab reads the dish:** population curves, biodiversity
+    (Shannon), oscillation (STABLE/MILD/WILD), a food-web graph (bigger
+    species preying on overlapping smaller ones), and each species' niche
+    (centroid + radius).
+*   **The dish narrates its own disasters:** FAMINE (population + energy
+    crash), BLOOM (surge), COLLAPSE (near-total extinction). Each must
+    persist across two checks (no false alarms) and cools down between
+    events. The response is reversible — an undo-ring checkpoint, a world-param
+    nudge, and a field write (drought / fertilization).
+*   **Multiplex shards evolve on their own:** each chaos-multiplex shard runs
+    its own speciation, so guided evolution explores species-level futures;
+    fitness sees the species count.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

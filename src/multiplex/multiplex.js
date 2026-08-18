@@ -17,7 +17,8 @@ import {
 } from '../constants.js';
 import { createParticleBuffer } from '../state/particleBuffer.js';
 import { createDNABuffer, getDNAFloat, setDNAFloat } from '../dna/dnaBuffer.js';
-import { createLawState } from '../state/lawState.js';
+import { createLawState, getActiveCount } from '../state/lawState.js';
+import { createSpeciationEngine, updateSpeciation } from '../engines/speciation.js';
 import { createWorldParams, clampWorldParam } from '../state/worldParams.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
 import { solve, drainOffspring } from '../physics/solver.js';
@@ -357,6 +358,13 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
       spawnShardOffspring(shard);
       updateShardWindow(shard);
       shard.tick++;
+      // Set A.3 — per-shard speciation: field isolation proxied by the
+      // shard's own wall preset; silent so shards never touch the main bus.
+      updateSpeciation(shard.speciation, shard.view, shard.count, PARTICLE_STRIDE, shard.dna, worldSize, {
+        lawActiveCount: getActiveCount(shard.laws),
+        wallFactor: shard.worldParams ? Math.min(1, Math.round(shard.worldParams.WALLS_PRESET || 0) / 3) : 0,
+        silent: true,
+      });
     }
   } finally {
     runtimeConfig.worldParams = savedWorldParams;
@@ -1261,6 +1269,9 @@ function createShard(index, seed, source, config, maxCount, recycle) {
     canvas: null,
     wrapper: null,
     renderer: null,
+    // Set A.3 — shards evolve species independently (silent engine: no bus
+    // emissions / roster growth; fitness sees species count via metrics).
+    speciation: createSpeciationEngine(null, { prng: () => prng.next() }),
   };
 
   if (config.deriveMode === 'spawn') {
