@@ -35,6 +35,20 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     *   **Void:** Open system where matter "evaporates" out of bounds.
     *   **Sticky:** Zero-velocity adhesion at the edge of space.
 
+### The Dish as a Medium (v8.2 — SETUP > WORLD > ENVIRONMENT > MEDIUM)
+*   **The Idea:** the world is more than a box — a coarse 3D field grid
+    (12³–24³ cells, auto-scaled to WORLD SIZE) carries ambient WIND, EM,
+    THERMAL and INFO fields. Particles feel them as forces: winds push along
+    their flow, heat/info push down-gradient, gravity wells pull radially.
+*   **Walls are a LAW now:** pick a WALLS preset (border / ring / cross) and
+    thickness — the cells become impassable **only while the COLL law is on**
+    (the hard-matter toggle). Without COLL the walls are decorative; ghost laws
+    (TUNNELING / TELEPORT / ASTRAL) walk straight through them.
+*   **Portals:** PORTALS > 0 pairs distant cells — enter one and you exit the
+    other, matter and momentum intact.
+*   **Field sliders are live:** turn WIND FIELD up mid-run and the breeze
+    builds within a few seconds; no restart needed.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

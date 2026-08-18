@@ -34,6 +34,22 @@ export const WORLD_PARAM_DEFS = [
   { key: 'RADIATION_LEVEL', label: 'RADIATION LEVEL', min: 0, max: 5, default: 1, step: 0.5, group: 'ENVIRONMENT', subgroup: 'THERMAL' },
   { key: 'CRITICAL_TEMP', label: 'CRITICAL TEMP', min: 0.05, max: 0.5, default: 0.2, step: 0.05, group: 'ENVIRONMENT', subgroup: 'THERMAL' }, // T_C shared by SUPERCONDUCTIVITY (unbind above) + BOSONIC (BEC below)
   { key: 'SPAWN_RATE', label: 'REGULAR SPAWN /S', min: 0, max: 100, default: 5, step: 1, group: 'ENVIRONMENT', subgroup: 'POPULATION' },
+  // ── MEDIUM (v8.2 E.1 — Matter & Medium field substrate) ──
+  // The dish itself: a coarse 3D field grid (12³–24³ cells) with named vector
+  // fields (WIND/EM), scalar fields (THERMAL/INFO), impassable walls, gravity
+  // wells, and paired portals. Field forces apply when a strength is nonzero;
+  // walls are impassable only while the COLL law is on (the hard-matter toggle).
+  { key: 'FIELD_GRID_DIM', label: 'FIELD GRID DIM', min: 0, max: 24, default: 0, step: 1, group: 'ENVIRONMENT', subgroup: 'MEDIUM' }, // 0 = auto (12–24 scaled to world size)
+  { key: 'FIELD_WIND', label: 'WIND FIELD', min: 0, max: 5, default: 0, step: 0.5, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'FIELD_THERMAL', label: 'THERMAL FIELD', min: 0, max: 5, default: 0, step: 0.5, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'FIELD_EM', label: 'EM FIELD', min: 0, max: 5, default: 0, step: 0.5, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'FIELD_INFO', label: 'INFO FIELD', min: 0, max: 5, default: 0, step: 0.5, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'FIELD_DIFFUSION', label: 'FIELD DIFFUSION', min: 0, max: 0.5, default: 0.1, step: 0.05, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'WALLS_PRESET', label: 'WALLS', min: 0, max: 3, default: 0, step: 1, group: 'ENVIRONMENT', subgroup: 'MEDIUM' }, // 0 = off, 1 = border, 2 = ring, 3 = cross — impassable with COLL
+  { key: 'WALL_THICKNESS', label: 'WALL THICKNESS', min: 1, max: 5, default: 2, step: 1, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'WELL_COUNT', label: 'GRAVITY WELLS', min: 0, max: 16, default: 0, step: 1, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'WELL_STRENGTH', label: 'WELL STRENGTH', min: 0, max: 5, default: 1, step: 0.5, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
+  { key: 'PORTAL_COUNT', label: 'PORTALS', min: 0, max: 8, default: 0, step: 1, group: 'ENVIRONMENT', subgroup: 'MEDIUM' },
   // ── BIOLOGY ──
   { key: 'SPECIES_INTERACTION', label: 'SPECIES INTERACTION', min: -2, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },
   { key: 'ENERGY_TRANSFER', label: 'ENERGY TRANSFER', min: 0, max: 2, default: 1, step: 0.1, group: 'BIOLOGY', subgroup: 'INTERACTION' },

@@ -21,6 +21,18 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.2] → 8.2.0
+
+### Set E.1 — Matter & Medium: the dish becomes a field (E·F·A trilogy, build 1)
+- `feat(physics):` new **field system** (`src/physics/fields.js` — v8.2 E.1 of the RRP E·F·A trilogy, design in `docs/dev/rrp-trilogy/`): a coarse 3D field grid (12³–24³ cells, auto-scaled to world size; `FIELD_GRID_DIM` 0 = auto) holding named **vector fields** (WIND, EM), **scalar fields** (THERMAL, INFO), an **impassable-wall** flag grid, deterministic **gravity wells**, and paired **portals**. Rebuilt only when its structural config changes; strengths are read live.
+- `feat(world):` new **MEDIUM subgroup** in SETUP > WORLD > ENVIRONMENT (11 sliders): FIELD GRID DIM · WIND FIELD · THERMAL FIELD · EM FIELD · INFO FIELD · FIELD DIFFUSION · WALLS (off | border | ring | cross) · WALL THICKNESS · GRAVITY WELLS · WELL STRENGTH · PORTALS. Fields relax toward their slider targets every tick (live, no restart).
+- `feat(physics):` particle coupling is a **gradient force** (HISTORY-law precedent) — vector fields push along their flow, scalar fields push down-gradient, wells pull radially. Ambient features run whenever any law is active; the zero-laws hard freeze is preserved.
+- `feat(physics):` **walls are the COLL law's hard-matter toggle** — impassable (velocity-only reflect, pushed just outside the wall cell) only while COLL is on; ghost laws (TUNNELING / TELEPORT / ASTRAL) pass through; without COLL walls are decorative. **Portals** teleport matter between paired cells (ambient).
+- `feat(physics):` **generalized advection** — each vector field carries each scalar field along its flow; scalar diffusion + decay, gentle WIND circulation, EM dissipation (`advanceFields`).
+- `feat(api):` unified **`writeField(system, name, x, y, z, delta)`** — the single write entry point for laws, groups (Set F constructions) and player tools.
+- `test`: new `tests/unit/fields.test.js` (17 tests) — grid auto-scale + clamps, enablement gating, structural build (walls/wells/portals), writeField/forces, ambient seeding, diffusion, well pull, wall reflect, portal teleport, and solver integration (wind drift, COLL-gated walls, pass-through without COLL). Full suite **689/695** (the same 6 pre-existing law-category/audit baseline failures, untouched).
+- `docs:` RRP E·F·A trilogy artifacts (`docs/dev/rrp-trilogy/` intent + mermaid + traceability) land with this release per R9.3; `PLAN.md` milestone note added.
+
 ## [4.8.1] → 8.1.1 (hotfix)
 
 ### Narrative log UX + idle-noise fixes

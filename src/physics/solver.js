@@ -119,6 +119,7 @@ import { applyAntenna, applyShielding, applyPolarization } from './lawgroups/emL
 import { applyNavigation, applyEncryption } from './lawgroups/infoLaws.js';
 import { applyConsciousness, applyPerception, applySynchronicity } from './lawgroups/metaLaws.js';
 import { applySuperposition, applyTunneling, applyDecoherence, applyWaveParticle, applyUncertainty, applyTeleport, applyObserver, applyPlanck, applyCoherence, applyBosonic, applyFermionic, applySpin, applySpectral, applyWavefunction, applyHyperplane, applyAntimatter } from './lawgroups/quantumLaws.js';
+import { ensureFields, fieldsEnabled, advanceFields, sampleFieldForces, wellForce, resolveWall, portalAt } from './fields.js';
 
 // ── Solver Constants ──
 
@@ -195,6 +196,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
   const WP = runtimeConfig.worldParams || {};
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
+
+  // Field system (v8.2 E.1 — Matter & Medium): the dish itself. Rebuilt only
+  // when its structural config (world size, dim, wall/well/portal layout)
+  // changes; field strengths are read live. Ambient medium features (wind /
+  // thermal / EM / info fields, gravity wells, portals) are active whenever
+  // the sim runs (any law on — the zero-laws freeze above still applies);
+  // walls are additionally gated by the COLL hard-matter toggle.
+  const fieldsOn = fieldsEnabled(WP);
+  let fieldSystem = null;
+  if (fieldsOn) fieldSystem = ensureFields(worldSize, WP);
 
   // Fate clock — advances once per tick so species destiny points wander.
   advanceFateClock(dt);
@@ -1146,7 +1157,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // History — write presence into the spatial memory field, then drift
     // along the local memory-field gradient (archaeology as a force).
-    if (active[LAW_INDEXES.HISTORY]) {
+    // ── Field system — advance the medium once per solve ──
+  // Ambient seeding toward the FIELD_* sliders + diffusion/decay + advection.
+  if (fieldsOn) {
+    advanceFields(fieldSystem, dt, WP);
+  }
+
+  if (active[LAW_INDEXES.HISTORY]) {
       applyHistoryWrite(iBase, px, py, pz, worldSize);
       const histForce = applyHistoryForce(iBase, px, py, pz, worldSize, 0.8 * syn[LAW_INDEXES.HISTORY]);
       if (histForce) {
@@ -1154,6 +1171,20 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         ay += histForce.ay;
         az += histForce.az;
       }
+    }
+
+    // ── Field system (v8.2 E.1): ambient medium forces ──
+    // Vector fields (WIND/EM) push along their flow; scalar fields
+    // (THERMAL/INFO) push down-gradient; gravity wells pull radially.
+    if (fieldsOn) {
+      const ff = sampleFieldForces(fieldSystem, px, py, pz, WP);
+      ax += ff.ax;
+      ay += ff.ay;
+      az += ff.az;
+      const wf = wellForce(fieldSystem, px, py, pz, WP);
+      ax += wf.ax;
+      ay += wf.ay;
+      az += wf.az;
     }
 
     // ── Drag ──
@@ -1289,6 +1320,35 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       else if (py >= worldSize) { py = worldSize - 0.01; vy = -Math.abs(vy) * wallReflect; }
       if (pz < 0) { pz = 0; vz = Math.abs(vz) * wallReflect; }
       else if (pz >= worldSize) { pz = worldSize - 0.01; vz = -Math.abs(vz) * wallReflect; }
+    }
+
+    // ── Field medium: portals + hard walls (v8.2 E.1) ──
+    // Portals teleport matter between paired cells (ambient feature - any
+    // law on). Walls are impassable only while the COLL law (the hard-matter
+    // toggle) is on; ghost laws (TUNNELING / TELEPORT / ASTRAL) pass through.
+    // The response is velocity-only: push out of the wall cell and reflect
+    // the velocity component pointing into it.
+    if (fieldsOn && fieldSystem.portals.length > 0) {
+      const dest = portalAt(fieldSystem, px, py, pz);
+      if (dest) {
+        px = dest.x;
+        py = dest.y;
+        pz = dest.z;
+      }
+    }
+    if (
+      active[LAW_INDEXES.COLL] &&
+      fieldsOn &&
+      fieldSystem.hasWalls &&
+      !(active[LAW_INDEXES.TUNNELING] || active[LAW_INDEXES.TELEPORT] || active[LAW_INDEXES.ASTRAL])
+    ) {
+      const w = resolveWall(fieldSystem, px, py, pz, vx, vy, vz);
+      px = w.px;
+      py = w.py;
+      pz = w.pz;
+      vx = w.vx;
+      vy = w.vy;
+      vz = w.vz;
     }
 
     // ── NaN guard ──

@@ -76,6 +76,10 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   never vanish, and zooming preserves depth.
 - **Drawer minimize** — a dedicated `▁` button in the tab bar collapses the
   bottom drawer to a strip (`▔` restores it).
+- **The dish is a field (v8.2)** — SETUP > WORLD > ENVIRONMENT gains a MEDIUM
+  subgroup: WIND/THERMAL/EM/INFO field sliders, gravity wells, paired portals,
+  and wall presets (border/ring/cross) that become impassable hard matter while
+  the COLL law is on.
 
 ## Architecture
 

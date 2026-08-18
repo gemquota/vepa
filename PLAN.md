@@ -81,3 +81,12 @@ npx vite build                                        # clean bundle
 - **`vepa4 bench`** headless harness (throughput / per-law / all-law stress / JSON).
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
+
+## Milestone note (v8.2.0 — 2026-08-18)
+
+- **Set E.1 — Matter & Medium** (first build of the RRP E·F·A trilogy; design in
+  `docs/dev/rrp-trilogy/`): the dish becomes a field — `src/physics/fields.js` adds a
+  coarse 3D field grid (12³–24³, auto-scaled) with vector (WIND/EM) + scalar
+  (THERMAL/INFO) fields, COLL-gated impassable walls (hard-matter toggle), gravity
+  wells, and paired portals; 11 new MEDIUM world sliders; gradient-force coupling,
+  generalized advection, and the unified `writeField` API. See `CHANGELOG.md` [8.2.0].
