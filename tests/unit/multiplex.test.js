@@ -10,6 +10,8 @@ import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createDNABuffer } from '../../src/dna/dnaBuffer.js';
 import { createLawState, set } from '../../src/state/lawState.js';
 import { SplitMix32 } from '../../src/core/prng.js';
+import { createWorldParams, WORLD_PARAM_DEFS } from '../../src/state/worldParams.js';
+import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import {
   createMultiplex,
   startMultiplex,
@@ -753,14 +755,21 @@ describe('shard comparison + history/revert + annealing (v7.2)', () => {
     mx.config.fitnessModes = { ...mx.config.fitnessModes, energy: 'min' };
     const matrix = compareShards(mx);
     expect(matrix.shardIds).toEqual([0, 1]);
-    expect(matrix.rows).toHaveLength(13); // raw base metrics (delta is derived)
-    for (const row of matrix.rows) {
+    // 13 raw base metrics (delta is derived) + the informational PARAMS row.
+    expect(matrix.rows).toHaveLength(14);
+    const metricRows = matrix.rows.filter((r) => r.key !== 'params');
+    for (const row of metricRows) {
       expect(row.values).toHaveLength(2);
       expect([0, 1]).toContain(row.bestId);
       const want = row.mode === 'min' ? Math.min(...row.values) : Math.max(...row.values);
       expect(row.bestValue).toBe(want);
       expect(row.values[row.bestId]).toBe(want);
     }
+    // The informational PARAMS row measures knob divergence from the source world.
+    const paramsRow = matrix.rows.find((r) => r.key === 'params');
+    expect(paramsRow.mode).toBe('info');
+    expect(paramsRow.bestId).toBe(-1);
+    expect(paramsRow.values).toHaveLength(2);
     // The energy row honors the min mode: bestId = shard with the lowest energy.
     const energy = matrix.rows.find((r) => r.key === 'energy');
     expect(energy.mode).toBe('min');
@@ -836,5 +845,124 @@ describe('shard comparison + history/revert + annealing (v7.2)', () => {
     stepMultiplex(mx2, 1, 1, WORLD_SIZE); // tick 4 → iterate (stagnant) → interval 3
     expect(mx2.iteration).toBe(2);
     expect(mx2.currentInterval).toBe(3);
+  });
+});
+
+describe('per-shard world params (v7.3)', () => {
+  it('paramVariation 0 leaves world params identical to the source world', () => {
+    const baseParams = createWorldParams();
+    runtimeConfig.worldParams = baseParams;
+    const mx = startMx({
+      seed: 9001,
+      variation: 1,
+      paramVariation: 0,
+      randomizeParams: true,
+      randomizeLaws: false,
+      randomizeDNA: false,
+      randomizePopulation: false,
+    });
+    expect(mx.baseWorldParams).toEqual(baseParams);
+    for (const shard of mx.shards) {
+      expect(shard.worldParams).toEqual(baseParams);
+    }
+    stopMultiplex(mx);
+    runtimeConfig.worldParams = baseParams; // restore the singleton
+  });
+
+  it('paramVariation 1 perturbs knobs within their defined ranges', () => {
+    const baseParams = createWorldParams();
+    runtimeConfig.worldParams = baseParams;
+    const mx = startMx({
+      seed: 4242,
+      variation: 1,
+      paramVariation: 1,
+      randomizeParams: true,
+      randomizeLaws: false,
+      randomizeDNA: false,
+      randomizePopulation: false,
+    });
+    for (const shard of mx.shards) {
+      expect(shard.worldParams).not.toEqual(baseParams);
+      for (const def of WORLD_PARAM_DEFS) {
+        const v = shard.worldParams[def.key];
+        expect(v).toBeGreaterThanOrEqual(def.min - 1e-6);
+        expect(v).toBeLessThanOrEqual(def.max + 1e-6);
+      }
+    }
+    stopMultiplex(mx);
+    runtimeConfig.worldParams = baseParams;
+  });
+
+  it('randomizeParams false blocks world-param perturbation', () => {
+    const baseParams = createWorldParams();
+    runtimeConfig.worldParams = baseParams;
+    const mx = startMx({
+      seed: 4242,
+      variation: 1,
+      paramVariation: 1,
+      randomizeParams: false,
+      randomizeLaws: false,
+      randomizeDNA: false,
+      randomizePopulation: false,
+    });
+    for (const shard of mx.shards) {
+      expect(shard.worldParams).toEqual(baseParams);
+    }
+    stopMultiplex(mx);
+    runtimeConfig.worldParams = baseParams;
+  });
+
+  it('iteration keeps a perturbed lineage (source shard params seed the next generation)', () => {
+    const mx = startMx({ variation: 0.4, selectAfterIterate: 'none', seed: 7 });
+    const base = createWorldParams();
+    const gen0 = { ...mx.shards[0].worldParams };
+    expect(gen0).not.toEqual(base); // variation × paramVariation perturbed the knobs
+    iterateMultiplex(mx);
+    const gen1 = mx.shards[0].worldParams;
+    let perturbed = 0;
+    let inherited = 0;
+    for (const key of Object.keys(base)) {
+      if (gen1[key] !== base[key]) perturbed++;
+      if (gen0[key] !== base[key] && gen1[key] === gen0[key]) inherited++;
+    }
+    expect(perturbed).toBeGreaterThan(0); // lineage still diverges from defaults
+    expect(inherited).toBeGreaterThan(0); // and carries evolved knobs forward
+    stopMultiplex(mx);
+  });
+
+  it('stepMultiplex restores the live world params (no leakage)', () => {
+    const baseParams = createWorldParams();
+    runtimeConfig.worldParams = baseParams;
+    const mx = startMx({ variation: 0.5, seed: 11 });
+    expect(mx.shards[0].worldParams).not.toEqual(baseParams); // derived + perturbed
+    stepMultiplex(mx, 0.25, 1, WORLD_SIZE);
+    expect(runtimeConfig.worldParams).toBe(baseParams); // restored exactly
+    stopMultiplex(mx);
+    runtimeConfig.worldParams = baseParams;
+  });
+
+  it('revert restores the recorded world params', () => {
+    const mx = startMx({ variation: 0.5, selectAfterIterate: 'none', historyDepth: 6 });
+    const gen0Params = { ...mx.history[0].shards[0].worldParams };
+    iterateMultiplex(mx); // gen 1
+    iterateMultiplex(mx); // gen 2
+    expect(mx.shards[0].worldParams).not.toEqual(gen0Params);
+    expect(revertMultiplex(mx, 0)).toBe(true);
+    expect(mx.iteration).toBe(0);
+    expect(mx.shards[0].worldParams).toEqual(gen0Params);
+    stopMultiplex(mx);
+  });
+
+  it('compare includes a PARAMS divergence row against the source world', () => {
+    const baseParams = createWorldParams();
+    runtimeConfig.worldParams = baseParams;
+    const mx = startMx({ variation: 1, paramVariation: 1, seed: 99 });
+    const { rows } = compareShards(mx);
+    const paramsRow = rows.find((r) => r.key === 'params');
+    expect(paramsRow).toBeTruthy();
+    expect(paramsRow.values.length).toBe(mx.shards.length);
+    expect(Math.max(...paramsRow.values)).toBeGreaterThan(0);
+    stopMultiplex(mx);
+    runtimeConfig.worldParams = baseParams;
   });
 });

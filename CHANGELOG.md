@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.4] - 2026-08-18 → 7.3.0
+
+### Per-shard world parameters — each shard solves under its own law-tuning regime
+- `feat(multiplex):` shards now carry their own `worldParams` — derived from the live WORLD panel state at start, then perturbed per shard. `paramVariation` (0–1) controls how aggressively the law-tuning knobs (GLOBAL_G, TIDAL_SCALE, ACIDITY_PH, COULOMB_CONSTANT, …) drift, clamped to each definition's range; the `randomizeParams` toggle gates the aspect entirely. `stepMultiplex` swaps each shard's knobs into the solver for the duration of its tick and restores the live world's params afterwards — a synchronous, race-free swap that needs no solver changes.
+- `feat(multiplex):` parameter lineage survives iteration — the selected shard's evolved knobs seed the next generation; `keepSelected` anchors and elite snapshots restore them byte-identical; history records + REVERT restore the recorded parameter regimes exactly.
+- `feat(ui):` setup screen gained a **Params** checkbox under RANDOMIZE ASPECTS and a **PARAM VAR** slider in the VARIATION section; the COMPARE matrix gained an informational **PARAMS** row showing how many knobs each shard has drifted from the world you configured.
+- `docs(multiplex):` new `paramVar` help entry + updated RANDOMIZE/VARIATION explanations in `multiplexHelp.js`.
+- `test(multiplex):` +7 cases (54 total in `tests/unit/multiplex.test.js`): zero-variation identity, clamped perturbation ranges, `randomizeParams` off, perturbed-lineage inheritance across iteration, `runtimeConfig` no-leakage after stepping, revert restores recorded params, PARAMS compare row. Full suite 656/662 (the 6 pre-existing law-category/audit failures on the baseline are untouched).
+
 ## [4.7.3] - 2026-08-18 → 7.2.0
 
 ### Multiplex evolution overhaul — elitist iteration, stable fitness, shard history + revert

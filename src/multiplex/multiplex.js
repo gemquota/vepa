@@ -1,8 +1,9 @@
 // ============================================================================
 // VEPA4 — Chaos Multiplex Engine
 // Renders X×Y concurrent simulations in a grid, all sharing one camera.
-// Each shard is an independent { buffer, dna, laws, prng } derived from a
-// source simulation (the selected shard) with per-aspect variation, so the
+// Each shard is an independent { buffer, dna, laws, prng, worldParams }
+// derived from a source simulation (the selected shard) with per-aspect
+// variation (laws, DNA, population, world parameters), so the
 // guided-evolution workflow can compare many futures side by side.
 // ============================================================================
 
@@ -17,6 +18,8 @@ import {
 import { createParticleBuffer } from '../state/particleBuffer.js';
 import { createDNABuffer, getDNAFloat, setDNAFloat } from '../dna/dnaBuffer.js';
 import { createLawState } from '../state/lawState.js';
+import { createWorldParams, clampWorldParam } from '../state/worldParams.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
 import { solve, drainOffspring } from '../physics/solver.js';
 import { createRenderer, renderFrame, resize as resizeRenderer } from '../render/renderer.js';
 import { initCamera } from '../ui/camera.js';
@@ -30,6 +33,7 @@ export const MULTIPLEX_DEFAULTS = {
   randomizeLaws: true,
   randomizeDNA: true,
   randomizePopulation: true,
+  randomizeParams: true,   // perturb world-param (law-tuning) knobs between shards
   variation: 0.5,
   deriveMode: 'clone', // 'clone' | 'spawn'
   autoIterate: false,        // regenerate all shards every autoIterateInterval ticks
@@ -47,6 +51,7 @@ export const MULTIPLEX_DEFAULTS = {
   lawVariation: 1,           // per-aspect multipliers on the master VARIATION knob
   dnaVariation: 1,
   popVariation: 1,
+  paramVariation: 1,         // world-param (law-tuning knob) variation
   keepSelected: false,       // iterate leaves the selected shard untouched (anchor)
   selectAfterIterate: 'none', // 'none' | 'fittest' | 'follow'
   eliteCount: 0,             // top-N fittest shards survive each iteration untouched (0-4)
@@ -177,6 +182,7 @@ export function createMultiplex(bus) {
     stagnantPaused: false,     // auto-iterate paused on convergence
     history: [],               // on-screen grid states (generation history + revert)
     currentInterval: null,     // adaptive iterate interval (null = use config base)
+    baseWorldParams: null,     // world params the multiplex was derived from
     container: null,
     onResize: null,
   };
@@ -204,6 +210,9 @@ export function startMultiplex(mx, source, config, container) {
   mx.stagnantPaused = false;
   mx.history = [];
   mx.currentInterval = null;
+  // The live WORLD panel state is the parameter baseline every shard derives
+  // from (and the COMPARE tab's PARAMS row measures divergence against).
+  mx.baseWorldParams = { ...(runtimeConfig.worldParams || createWorldParams()) };
   mx.container = container || null;
   const seed = Math.max(1, Math.round(mx.config.seed) || 0);
   mx.sourceSeed = seed > 0 ? (seed & 0x7fffffff) | 0 : (Date.now() & 0x7fffffff) | 0;
@@ -323,24 +332,34 @@ export function stepMultiplex(mx, dt, simSpeed, worldSize) {
   const substeps = Math.max(1, Math.min(8, Math.round(cfg.substeps) || 1));
   const subDt = effDt / substeps;
   const t0 = performance.now();
-  for (const shard of mx.shards) {
-    if (shard.count <= 0) continue;
-    for (let s = 0; s < substeps; s++) {
-      solve(
-        shard.view,
-        shard.count,
-        PARTICLE_STRIDE,
-        shard.laws,
-        shard.dna,
-        worldSize,
-        subDt,
-        () => shard.prng.next(),
-      );
+  // Per-shard world params: the solver reads the runtimeConfig singleton, so
+  // each shard's knobs are swapped in for the duration of its tick and the
+  // live world's params are restored afterwards. The whole loop is
+  // synchronous (no awaits), so the swap is race-free on the main thread.
+  const savedWorldParams = runtimeConfig.worldParams;
+  try {
+    for (const shard of mx.shards) {
+      if (shard.count <= 0) continue;
+      if (shard.worldParams) runtimeConfig.worldParams = shard.worldParams;
+      for (let s = 0; s < substeps; s++) {
+        solve(
+          shard.view,
+          shard.count,
+          PARTICLE_STRIDE,
+          shard.laws,
+          shard.dna,
+          worldSize,
+          subDt,
+          () => shard.prng.next(),
+        );
+      }
+      collectDeadSlots(shard);
+      spawnShardOffspring(shard);
+      updateShardWindow(shard);
+      shard.tick++;
     }
-    collectDeadSlots(shard);
-    spawnShardOffspring(shard);
-    updateShardWindow(shard);
-    shard.tick++;
+  } finally {
+    runtimeConfig.worldParams = savedWorldParams;
   }
   const tickMs = performance.now() - t0;
   mx.lastTickMs = mx.lastTickMs === undefined ? tickMs : mx.lastTickMs * 0.85 + tickMs * 0.15;
@@ -831,6 +850,25 @@ export function compareShards(mx) {
       bestValue: bestId >= 0 ? bestValue : 0,
     };
   });
+  // PARAMS — how many world-param knobs each shard has drifted from the world
+  // the multiplex was derived from. Informational (no best cell): it answers
+  // "how far is this shard's physics regime from the world I configured".
+  const baseParams = mx.baseWorldParams || {};
+  rows.push({
+    key: 'params',
+    mode: 'info',
+    values: raw.map((r) => {
+      const shard = shards[r.id];
+      if (!shard || !shard.worldParams) return 0;
+      let diff = 0;
+      for (const k of Object.keys(baseParams)) {
+        if (shard.worldParams[k] !== baseParams[k]) diff++;
+      }
+      return diff;
+    }),
+    bestId: -1,
+    bestValue: 0,
+  });
   return { rows, shardIds: raw.map((r) => r.id) };
 }
 
@@ -855,6 +893,7 @@ export function snapshotShard(shard) {
     offspring: shard.offspring || 0,
     aliveWindow: shard.aliveWindow ? shard.aliveWindow.slice() : [],
     prevAlive: shard.prevAlive,
+    worldParams: shard.worldParams ? { ...shard.worldParams } : null,
   };
 }
 
@@ -879,6 +918,7 @@ export function restoreShard(shard, snap) {
   shard.offspring = snap.offspring;
   shard.aliveWindow = snap.aliveWindow ? snap.aliveWindow.slice() : [];
   shard.prevAlive = snap.prevAlive;
+  if (snap.worldParams) shard.worldParams = { ...snap.worldParams };
 }
 
 /**
@@ -928,6 +968,7 @@ function lightRecord(shard) {
     },
     speciesCount: shard.speciesCount || 5,
     count: shard.count || 0,
+    worldParams: shard.worldParams ? { ...shard.worldParams } : null,
   };
 }
 
@@ -1011,6 +1052,7 @@ function rebuildFromRecords(mx, entry) {
     randomizeLaws: false,
     randomizeDNA: false,
     randomizePopulation: false,
+    randomizeParams: false,
   };
   for (const rec of entry.shards) {
     const seed = ((mx.sourceSeed + rec.id * 104729) & 0x7fffffff) | 0;
@@ -1062,6 +1104,7 @@ function sourceFromRecord(rec) {
     dna,
     laws,
     speciesCount: rec.speciesCount || 5,
+    worldParams: rec.worldParams ? { ...rec.worldParams } : null,
   };
 }
 
@@ -1184,6 +1227,15 @@ function createShard(index, seed, source, config, maxCount, recycle) {
   laws.quadFlags[0] = source.laws.quadFlags[0] || 0;
 
   const prng = new SplitMix32(seed);
+  // World params: derived from the source shard when it has them (evolutionary
+  // continuity across iterations), else the live WORLD panel state, else fresh
+  // defaults. Perturbed per-shard by applyVariation, then swapped into the
+  // runtimeConfig singleton during stepMultiplex so each shard solves under its
+  // own law-tuning knobs.
+  const sourceParams =
+    (source && source.worldParams) ||
+    runtimeConfig.worldParams ||
+    createWorldParams();
   // SPAWN MODE builds a fresh population from config.spawnSpecies species
   // (clamped 1-5); CLONE mode inherits the source's species count.
   const spawnSpecies = Math.max(1, Math.min(5, Math.round(config.spawnSpecies) || 5));
@@ -1196,6 +1248,7 @@ function createShard(index, seed, source, config, maxCount, recycle) {
     sourceDna: dna.slice(), // pre-variation genome this shard derived from
     laws,
     prng,
+    worldParams: { ...sourceParams },
     maxCount,
     count: Math.min(source.count || 0, maxCount),
     speciesCount: config.deriveMode === 'spawn' ? spawnSpecies : (source.speciesCount || 5),
@@ -1272,6 +1325,21 @@ function applyVariation(shard, config) {
       shard.view[b + S.VEL_X] += (prng.next() - 0.5) * 0.2 * v * popV;
       shard.view[b + S.VEL_Y] += (prng.next() - 0.5) * 0.2 * v * popV;
       shard.view[b + S.VEL_Z] += (prng.next() - 0.5) * 0.2 * v * popV;
+    }
+  }
+
+  // World-param variation: perturb the law-tuning knobs (relative to their
+  // current value, clamped to each def's range) so shards explore different
+  // parameter regimes — not just different laws/DNA/population.
+  const paramV = config.paramVariation === undefined ? 0 : aspect(config.paramVariation);
+  if (config.randomizeParams !== false && paramV > 0 && shard.worldParams) {
+    const keys = Object.keys(shard.worldParams);
+    for (const key of keys) {
+      if (prng.next() < v * paramV * 0.35) {
+        const cur = shard.worldParams[key];
+        const span = Math.max(Math.abs(cur) * 0.5, 0.05);
+        shard.worldParams[key] = clampWorldParam(key, cur + (prng.next() - 0.5) * 2 * span);
+      }
     }
   }
 }

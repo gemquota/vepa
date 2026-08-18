@@ -204,6 +204,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
           <label class="chaos-check" data-mpx-help="randomize"><input id="mpx-rand-laws" type="checkbox" checked><span>Laws</span></label>
           <label class="chaos-check" data-mpx-help="randomize"><input id="mpx-rand-dna" type="checkbox" checked><span>DNA</span></label>
           <label class="chaos-check" data-mpx-help="randomize"><input id="mpx-rand-pop" type="checkbox" checked><span>Population</span></label>
+          <label class="chaos-check" data-mpx-help="randomize"><input id="mpx-rand-params" type="checkbox" checked><span>Params</span></label>
         </div>
 
         <div class="chaos-modal-section">
@@ -226,6 +227,11 @@ export function createMultiplexController(bus, getSource, applyShard) {
             <span class="mpx-set-label">POP VAR</span>
             <input id="mpx-pop-var" type="range" min="0" max="1" step="0.05" value="1">
             <span class="mpx-set-value" id="mpx-pop-var-value">100%</span>
+          </div>
+          <div class="mpx-set-row" data-mpx-help="paramVar">
+            <span class="mpx-set-label">PARAM VAR</span>
+            <input id="mpx-param-var" type="range" min="0" max="1" step="0.05" value="1">
+            <span class="mpx-set-value" id="mpx-param-var-value">100%</span>
           </div>
         </div>
 
@@ -378,6 +384,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
     wirePct('#mpx-law-var', '#mpx-law-var-value');
     wirePct('#mpx-dna-var', '#mpx-dna-var-value');
     wirePct('#mpx-pop-var', '#mpx-pop-var-value');
+    wirePct('#mpx-param-var', '#mpx-param-var-value');
     wirePct('#mpx-pop-scale', '#mpx-pop-scale-value');
 
     const seed = modal.querySelector('#mpx-seed');
@@ -503,10 +510,12 @@ export function createMultiplexController(bus, getSource, applyShard) {
         randomizeLaws: modal.querySelector('#mpx-rand-laws').checked,
         randomizeDNA: modal.querySelector('#mpx-rand-dna').checked,
         randomizePopulation: modal.querySelector('#mpx-rand-pop').checked,
+        randomizeParams: modal.querySelector('#mpx-rand-params').checked,
         variation: parseFloat(modal.querySelector('#mpx-variation').value) || 0,
         lawVariation: parseFloat(modal.querySelector('#mpx-law-var').value) || 1,
         dnaVariation: parseFloat(modal.querySelector('#mpx-dna-var').value) || 1,
         popVariation: parseFloat(modal.querySelector('#mpx-pop-var').value) || 1,
+        paramVariation: parseFloat(modal.querySelector('#mpx-param-var').value) || 1,
         deriveMode: (modal.querySelector('input[name="mpx-derive"]:checked') || {}).value || 'clone',
         populationScale: parseFloat(modal.querySelector('#mpx-pop-scale').value) || 1,
         seed: Math.max(0, parseInt(modal.querySelector('#mpx-seed').value, 10) || 0),
@@ -554,6 +563,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
     check('#mpx-rand-laws', c.randomizeLaws !== false);
     check('#mpx-rand-dna', c.randomizeDNA !== false);
     check('#mpx-rand-pop', c.randomizePopulation !== false);
+    check('#mpx-rand-params', c.randomizeParams !== false);
     setVal('#mpx-variation', c.variation || 0);
     const vv = modal.querySelector('#mpx-variation-value');
     if (vv) vv.textContent = Math.round((c.variation || 0) * 100) + '%';
@@ -565,6 +575,7 @@ export function createMultiplexController(bus, getSource, applyShard) {
     setPct('#mpx-law-var', '#mpx-law-var-value', c.lawVariation ?? 1);
     setPct('#mpx-dna-var', '#mpx-dna-var-value', c.dnaVariation ?? 1);
     setPct('#mpx-pop-var', '#mpx-pop-var-value', c.popVariation ?? 1);
+    setPct('#mpx-param-var', '#mpx-param-var-value', c.paramVariation ?? 1);
     const derive = modal.querySelector(`input[name="mpx-derive"][value="${c.deriveMode || 'clone'}"]`);
     if (derive) derive.checked = true;
     setPct('#mpx-pop-scale', '#mpx-pop-scale-value', c.populationScale ?? 1);

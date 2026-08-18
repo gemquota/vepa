@@ -27,13 +27,13 @@ export const MULTIPLEX_HELP_DB = {
     section: 'setup',
     title: 'RANDOMIZE ASPECTS',
     hint: 'Which aspects get varied between shards.',
-    explanation: 'Laws, DNA and Population can be randomized independently. Unchecking an aspect keeps it identical to the source across every shard — e.g. vary DNA only to explore behaviour with fixed laws.',
+    explanation: 'Laws, DNA, Population and World Parameters can be randomized independently. Unchecking an aspect keeps it identical to the source across every shard — e.g. vary DNA only to explore behaviour with fixed laws, or disable Params to keep every shard in the same physics regime.',
   },
   variation: {
     section: 'setup',
     title: 'VARIATION',
     hint: 'Master divergence knob between shards.',
-    explanation: 'How far each shard drifts from the source simulation. 0% produces identical clones; 100% produces wildly divergent futures. LAW VAR / DNA VAR / POP VAR scale this master knob per aspect.',
+    explanation: 'How far each shard drifts from the source simulation. 0% produces identical clones; 100% produces wildly divergent futures. LAW VAR / DNA VAR / POP VAR / PARAM VAR scale this master knob per aspect.',
   },
   lawVar: {
     section: 'setup',
@@ -52,6 +52,12 @@ export const MULTIPLEX_HELP_DB = {
     title: 'POP VAR',
     hint: 'Per-aspect multiplier on VARIATION for population.',
     explanation: 'Controls how much positions and velocities are jittered when a shard is derived. 0 keeps the population layout identical; 1 applies the full master VARIATION strength.',
+  },
+  paramVar: {
+    section: 'setup',
+    title: 'PARAM VAR',
+    hint: 'Per-aspect multiplier on VARIATION for world parameters.',
+    explanation: 'Controls how aggressively each shard\u2019s law-tuning knobs (the WORLD panel sliders: GLOBAL_G, TIDAL_SCALE, ACIDITY_PH, COULOMB_CONSTANT, …) are perturbed when the shard is derived. Each shard solves under its own parameter regime — a different gravity well, a different acid bath, a different quantum world. 0 keeps every knob identical to the source; 1 applies the full master VARIATION strength. The COMPARE tab\u2019s PARAMS row shows how many knobs each shard has drifted from the world you configured.',
   },
   derive: {
     section: 'setup',
