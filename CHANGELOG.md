@@ -21,6 +21,13 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.5] - 2026-08-18 → 7.4.0
+
+### World State Save/Load engine — full-fidelity snapshots, IndexedDB store, portable exports
+- `feat(save):` new `src/state/worldSave.js` — `captureWorldState()` snapshots the complete world (particle buffer, species DNA, 128-bit law state, all world params, runtimeConfig knobs, world size, tick) with per-save summary metadata (alive / species / laws-on / avg mass·energy·speed) for cheap comparison; `restoreWorldState()` applies it back onto the live buffers in place (counts clamped to `MAX_PARTICLES`/`MAX_SPECIES`, params re-clamped via `clampWorldParam`).
+- `feat(save):` storage is IndexedDB-backed (`vepa4-world-saves`) with a localStorage fallback, capped at 24 saves; `createWorldSaveStore()` accepts an injected adapter so tests run headless. `exportWorldSave()` / `parseWorldSave()` provide portable `.vepa.json` files (chunked base64 typed arrays — stack-safe on 1 MB buffers) with a format-version guard.
+- `test(save):` new `tests/unit/worldSave.test.js` — 13 cases: capture shape + summary, byte-identical round-trip restore, count/param clamping, invalid-payload guards, export→import→restore fidelity, foreign/version guards, store save/load/list/remove via in-memory adapter. Full suite 669/675 (the 6 pre-existing law-category/audit failures on the baseline are untouched).
+
 ## [4.7.4] - 2026-08-18 → 7.3.0
 
 ### Per-shard world parameters — each shard solves under its own law-tuning regime
