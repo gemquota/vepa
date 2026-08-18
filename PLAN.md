@@ -82,6 +82,17 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.3.0 — 2026-08-18)
+
+- **Set F — Civilizations** (build 2 of the RRP E·F·A trilogy): the group registry
+  (`src/state/groupRegistry.js`) brings declared + detected groups with
+  leader/forager/builder roles, unbounded multi-species membership (stride
+  GROUP_ID 96 / GROUP_ROLE 97), and collapse death; construction
+  (`src/state/construction.js`) writes nests/hives + roads into the E.1 field
+  grid with griefing caps; the economy (`src/state/economy.js`) adds treasury,
+  pairwise trade and grid market prices; DATA > 🏙️ CIVILIZATIONS shows the
+  territory overlay, network graph and economy Sankey. See `CHANGELOG.md` [8.3.0].
+
 ## Milestone note (v8.2.0 — 2026-08-18)
 
 - **Set E.1 — Matter & Medium** (first build of the RRP E·F·A trilogy; design in

@@ -49,6 +49,23 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
 *   **Field sliders are live:** turn WIND FIELD up mid-run and the breeze
     builds within a few seconds; no restart needed.
 
+### The Rise of Civilizations (v8.3 — DATA > 🏙️ CIVILIZATIONS)
+*   **Groups form organically:** dense clusters of communicative/affine
+    particles (contact threshold + DNA) become detected groups; you can also
+    DECLARE a group for a set of species (bus `group:declare`), and it recruits
+    ungrouped particles of those species on contact.
+*   **Roles:** the strongest voice (signal + memory + energy) leads; rigid
+    particles build; skittish/strong ones forage.
+*   **They build:** nests/hives appear at territory centroids and roads link
+    neighbouring groups — written into the E.1 field grid, so physics feels
+    them (INFO gradients) and they decay naturally.
+*   **They trade:** close groups exchange treasury proportional to their gap
+    (mean-reverting market prices written onto the grid). Foragers produce
+    income, leaders tithe.
+*   **They die:** membership collapse dissolves a group; prolonged shrink does
+    too. Watch the overlay, network graph, and economy Sankey in the
+    CIVILIZATIONS sub-tab.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

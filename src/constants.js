@@ -90,6 +90,13 @@ export const STRIDE_INDEXES = {
   SUPER_PHASE:     93,
   WAVE_MEASURED:   94,
   SELF_MODEL_SPEED: 95,
+  // ── Group membership (Set F.1 "Civilizations") ──
+  // Registry-owned fields on the free reserved tail (96-99). The RRP design
+  // asked for 68/85, but 68 is PHASE_1 (quantum law state) and 85 is
+  // CHAOS_STATE_X; these free slots avoid clobbering law state. Persisted
+  // saves carry the whole buffer, so membership survives save/load.
+  GROUP_ID:        96, // group registry id (0 = ungrouped)
+  GROUP_ROLE:      97, // 0 none, 1 leader, 2 forager, 3 builder
 };
 
 // --- DNA Indexes (42 parameters) ---

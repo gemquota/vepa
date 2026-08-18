@@ -1806,6 +1806,16 @@ body {
   flex: 1;
   accent-color: var(--accent-purple);
 }
+/* ── Group analytics (Set F.4 — civilizations dashboard) ── */
+.ga-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 6px;
+  border: 1px solid rgba(120, 140, 200, 0.18);
+  border-radius: 4px;
+  background: rgba(6, 10, 22, 0.55);
+}
 .intel-log {
   margin-top: 6px;
   font-size: 10px;

@@ -80,6 +80,12 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   subgroup: WIND/THERMAL/EM/INFO field sliders, gravity wells, paired portals,
   and wall presets (border/ring/cross) that become impassable hard matter while
   the COLL law is on.
+- **Civilizations (v8.3)** — groups emerge and build: dense communicative
+  clusters become groups (declared or detected) with leader/forager/builder
+  roles and multi-species membership; they build nests/hives + roads into the
+  field grid, trade treasury between close neighbours (market prices written
+  onto the INFO field), and collapse when membership dies. Watch it all in
+  DATA > 🏙️ CIVILIZATIONS: territory overlay, network graph, economy Sankey.
 
 ## Architecture
 

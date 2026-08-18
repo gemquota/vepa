@@ -25,6 +25,10 @@ import { createNarrativeEngine, update as updateNarrative } from './engines/narr
 import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageTracker.js';
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
+import { createGroupRegistry, updateGroups, groupCount, declareGroup } from './state/groupRegistry.js';
+import { applyConstructions } from './state/construction.js';
+import { runEconomy } from './state/economy.js';
+import { getFields } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
 import {
@@ -47,6 +51,7 @@ const DT = 0.25;
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 // v4 — intelligence engines
 let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
+let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
@@ -160,6 +165,7 @@ async function boot() {
     lineageEngine = createLineageTracker(bus);
     goalEngine = createGoalEngine(bus);
     timelineEngine = createTimelineEngine(bus, { autoSnapshotInterval: 0, maxSnapshots: 20 });
+    groupRegistry = createGroupRegistry();
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
     setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
@@ -710,6 +716,14 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: 'Selective chaos applied.' });
     });
 
+    // Set F.1 — declared groups: a player/preset creates a named group for a
+    // set of species; the registry recruits ungrouped members on contact.
+    bus.on('group:declare', ({ name, speciesIds }) => {
+        if (!groupRegistry) return;
+        const g = declareGroup(groupRegistry, name, speciesIds);
+        bus.emit('narrative:system', { text: `Declared group ${g.name}.` });
+    });
+
     bus.on('world:paramChanged', ({ key, value }) => {
         worldParams = applyWorldParam(worldParams, key, value);
         runtimeConfig.worldParams = worldParams;
@@ -798,6 +812,7 @@ function computeMetrics() {
         populationAlive: alive,
         speciesAlive: speciesAlive.size,
         clusterCount,
+        groupCount: groupRegistry ? groupRegistry.groups.size : 0,
         avgEnergy: alive ? energySum / alive : 0,
         frameDelta: fps,
         lawActiveCount: getLawCount(lawState),
@@ -856,8 +871,25 @@ function updateIntelligence() {
     if (goalEngine && metrics.lawActiveCount > 0) {
         updateGoal(goalEngine, metrics);
     }
+
+    // Group registry (Set F.1) — declared + detected social groups. Same
+    // law/motion gate as insight: a fresh lawless world forms nothing.
+    if (groupRegistry && metrics.lawActiveCount > 0) {
+        const groupEvents = updateGroups(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, null, {
+            lawActiveCount: metrics.lawActiveCount,
+        });
+        for (const ev of groupEvents) bus.emit(ev.type, ev);
+        // Construction (F.2) — nests/hives + roads into the field grid.
+        applyConstructions(groupRegistry, getFields(), { tick });
+        // Economy (F.3) — treasury, pairwise trade, market prices.
+        const eco = runEconomy(groupRegistry, particleView, particleCount, getFields(), { tick });
+        if (eco.trades > 0) bus.emit('economy:trade', eco);
+    }
     if (tick % 30 === 0) {
         bus.emit('sim:metrics', metrics);
+        if (groupRegistry) {
+            bus.emit('groups:analytics', { registry: groupRegistry, metrics });
+        }
     }
 }
 
@@ -867,6 +899,7 @@ function resetIntelligence() {
     if (insightEngine) { insightEngine.frame = 0; insightEngine.history = []; insightEngine.lastClusters = null; }
     if (goalEngine) { goalEngine.frame = 0; goalEngine.history = []; }
     if (timelineEngine) clearTimelineEngine(timelineEngine);
+    if (groupRegistry) { groupRegistry.groups.clear(); groupRegistry.nextId = 1; groupRegistry.frame = 0; groupRegistry.events.length = 0; }
 }
 
 function renderLoop(now) {

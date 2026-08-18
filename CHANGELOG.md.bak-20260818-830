@@ -21,17 +21,6 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.3] - 2026-08-18 → 8.3.0
-
-### Set F — Civilizations: groups, construction, economy, analytics (E·F·A trilogy, build 2: F.1–F.4)
-- `feat(groups):` **group registry** (`src/state/groupRegistry.js`) — the social unit of the dish. Groups exist through BOTH paths: **declared** (a player/preset names a group for a set of species; it seeds and recruits ungrouped particles of those species on contact) and **detected** (dense communicative clusters form organically from contact thresholds + DNA — species affinity / signal — persist while dense, dissolve on membership collapse or prolonged shrink). Membership is **unbounded and multi-species** (alliances), with **leader / forager / builder roles** assigned by signal+memory+energy score, stiffness/bond-angle, and jitter+force/speed. Membership lives on the stride at GROUP_ID (96) / GROUP_ROLE (97) — the design asked for 68/85, but 68 is PHASE_1 (quantum law state) and 85 is CHAOS_STATE_X, so the genuinely free reserved tail is used instead (no law state clobbered). The pass runs on a 30-frame cadence from the intelligence loop, gated on active laws + motion so a fresh lawless world stays quiet.
-- `feat(construction):` **nests/hives + roads** (`src/state/construction.js`) — each group with real membership builds a nest at its territory centroid (INFO pocket + warm THERMAL heart) and neighbouring groups connect with INFO corridors along the line between centroids, all through the unified `writeField` API from Set E.1. **Griefing caps** (design risk #4): ≤96 writes per 15-frame pass, road length capped, nearest-two-neighbour road web.
-- `feat(economy):` **full toy economy** (`src/state/economy.js`) — foragers produce treasury income, leaders tithe, close groups (centroid distance < 450) **trade pairwise** proportionally to their treasury gap (mean-reverting price discovery), and each group's **market price** (treasury per member) is written onto the INFO field at its centroid. Trade history lands in a bounded 40-entry ring (`registry.tradeLog`) for the analytics layer.
-- `feat(ui):` **CIVILIZATIONS sub-tab** (DATA > 🏙️, `src/ui/groupAnalytics.js`) — live summary strip (groups / members / treasury / trade volume), **territory overlay** (top-down projection of bounding boxes + centroids), **network graph** (nodes = groups, edges = trade routes), and **economy Sankey** (treasury bars + trade-flow arrows). Canvas 2D, ~2 Hz redraw, fully bus-decoupled (`groups:analytics` every 30 ticks).
-- `feat(groups):` group:declared / group:formed / group:dissolved / economy:trade events emitted on the bus (narrative + analytics consumers).
-- `test:` +15 unit tests (`tests/unit/groupRegistry.test.js` ×8, `tests/unit/constructionEconomy.test.js` ×7) — declared seeding vs. emergent exclusion (claimed-set fix), extinction collapse, shrink grace, write caps, trade direction/volume, distant-group no-trade, price writes. Full suite 704/710 (baseline 689/695 + 15; the 6 failures remain the documented pre-existing law-category/audit trio).
-- `fix(groups):` the emergent detector no longer scoops freshly-seeded declared members (stride GROUP_ID is stale until writeback — a `claimed` set for the pass closes the race); extinction with zero live particles now dissolves every group instead of early-returning; `STALE_GRACE` is tunable via opts for tests.
-
 ## [4.8.2] → 8.2.0
 
 ### Set E.1 — Matter & Medium: the dish becomes a field (E·F·A trilogy, build 1)
