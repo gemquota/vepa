@@ -1,19 +1,24 @@
 // ============================================================================
-// VEPA v3 — Spatial Hash Grid
-// 12x12x12 partitioning for O(N) neighbor lookups in the N-body simulation.
+// VEPA4 — Spatial Hash Grid
+// Coarse N³ partitioning for O(N) neighbor lookups in the N-body simulation.
+// Resolution (dim), the per-cell insert cap (cellCap) and the neighbor gather
+// cap are runtime-tunable performance knobs (SETUP > WORLD > PERFORMANCE);
+// the exported defaults preserve the classic 12³ / 100 / unlimited behaviour.
 // ============================================================================
 
 import { WORLD_SIZE } from '../constants.js';
 
-export const GRID_DIM = 12;
+export const GRID_DIM = 12;           // default resolution (12³ cells)
+export const DEFAULT_CELL_CAP = 100;  // default per-cell insert cap
 
 /**
  * Create an empty spatial grid.
- * @returns {{ cells: number[][], counts: Int32Array, cellSize: number, dim: number }}
+ * @param {number} [dim] - Grid resolution (dim³ cells). Default 12.
+ * @param {number} [cellCap] - Max particles retained per cell. Default 100.
  */
-export function createGrid() {
-  const cellSize = WORLD_SIZE / GRID_DIM;
-  const totalCells = GRID_DIM * GRID_DIM * GRID_DIM;
+export function createGrid(dim = GRID_DIM, cellCap = DEFAULT_CELL_CAP) {
+  const cellSize = WORLD_SIZE / dim;
+  const totalCells = dim * dim * dim;
   const cells = new Array(totalCells);
   for (let i = 0; i < totalCells; i++) {
     cells[i] = [];
@@ -22,7 +27,8 @@ export function createGrid() {
     cells,
     counts: new Int32Array(totalCells),
     cellSize,
-    dim: GRID_DIM,
+    dim,
+    cellCap,
   };
 }
 
@@ -37,20 +43,20 @@ export function clear(grid) {
 }
 
 /**
- * Map a world coordinate to a cell index (toroidal).
+ * Map a world coordinate to a cell coordinate (toroidal).
  */
-function toCell(coord, cellSize) {
+function toCell(coord, cellSize, dim) {
   if (!Number.isFinite(coord) || !Number.isFinite(cellSize) || cellSize <= 0) return 0;
   let c = Math.floor(coord / cellSize);
-  c = ((c % GRID_DIM) + GRID_DIM) % GRID_DIM;
+  c = ((c % dim) + dim) % dim;
   return c;
 }
 
 /**
  * Compute flat cell index from 3D grid coordinates.
  */
-function cellIndex(cx, cy, cz) {
-  return cz * GRID_DIM * GRID_DIM + cy * GRID_DIM + cx;
+function cellIndex(cx, cy, cz, dim) {
+  return cz * dim * dim + cy * dim + cx;
 }
 
 /**
@@ -63,13 +69,13 @@ function cellIndex(cx, cy, cz) {
  * @param {number} worldSize - World size for toroidal wrapping
  */
 export function insert(grid, index, px, py, pz, worldSize) {
-  const cx = toCell(px, grid.cellSize);
-  const cy = toCell(py, grid.cellSize);
-  const cz = toCell(pz, grid.cellSize);
-  const ci = cellIndex(cx, cy, cz);
+  const cx = toCell(px, grid.cellSize, grid.dim);
+  const cy = toCell(py, grid.cellSize, grid.dim);
+  const cz = toCell(pz, grid.cellSize, grid.dim);
+  const ci = cellIndex(cx, cy, cz, grid.dim);
   const cell = grid.cells[ci];
   if (!cell) return;
-  if (cell.length < 100) {
+  if (cell.length < grid.cellCap) {
     cell.push(index);
     grid.counts[ci]++;
   }
@@ -85,24 +91,27 @@ export function insert(grid, index, px, py, pz, worldSize) {
  * @param {number} pz - Query particle Z
  * @param {number} worldSize
  * @param {number[]} out - Preallocated output array
+ * @param {number} [maxNeighbors] - Gather cap (truncates the neighbourhood;
+ *        the performance knob NEIGHBOR_BUF). Defaults to unlimited.
  * @returns {number} number of neighbors written to out
  */
-export function getNeighbors(grid, px, py, pz, worldSize, out) {
-  const cx = toCell(px, grid.cellSize);
-  const cy = toCell(py, grid.cellSize);
-  const cz = toCell(pz, grid.cellSize);
+export function getNeighbors(grid, px, py, pz, worldSize, out, maxNeighbors = Infinity) {
+  const cx = toCell(px, grid.cellSize, grid.dim);
+  const cy = toCell(py, grid.cellSize, grid.dim);
+  const cz = toCell(pz, grid.cellSize, grid.dim);
   let count = 0;
 
   for (let dz = -1; dz <= 1; dz++) {
-    const nz = ((cz + dz) % GRID_DIM + GRID_DIM) % GRID_DIM;
+    const nz = ((cz + dz) % grid.dim + grid.dim) % grid.dim;
     for (let dy = -1; dy <= 1; dy++) {
-      const ny = ((cy + dy) % GRID_DIM + GRID_DIM) % GRID_DIM;
+      const ny = ((cy + dy) % grid.dim + grid.dim) % grid.dim;
       for (let dx = -1; dx <= 1; dx++) {
-        const nx = ((cx + dx) % GRID_DIM + GRID_DIM) % GRID_DIM;
-        const ci = cellIndex(nx, ny, nz);
+        const nx = ((cx + dx) % grid.dim + grid.dim) % grid.dim;
+        const ci = cellIndex(nx, ny, nz, grid.dim);
         const cell = grid.cells[ci];
         if (!cell) continue;
         for (let k = 0; k < cell.length; k++) {
+          if (count >= maxNeighbors) return count;
           out[count++] = cell[k];
         }
       }

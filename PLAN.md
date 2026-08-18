@@ -82,6 +82,17 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.5.0 — 2026-08-18)
+
+- **Performance knobs**: the spatial-grid resolution / per-cell cap / neighbour
+  gather cap (`src/physics/spatialGrid.js`) and the pair-interaction budget
+  (`src/physics/solver.js`) are now runtime-tunable from a new SETUP > WORLD >
+  PERFORMANCE accordion (`MAX_INTERACTIONS`, `NEIGHBOR_BUF`, `GRID_DIM`,
+  `CELL_CAP`). `bench/solver.bench.mjs --knobs` sweeps the
+  MAX_INTERACTIONS × NEIGHBOR_BUF matrix (median-of-rounds). Measured: ~30%
+  throughput at 10k particles by lowering MAX_INTERACTIONS 500 → 100. See
+  `CHANGELOG.md` [8.5.0].
+
 ## Milestone note (v8.4.0 — 2026-08-18)
 
 - **Set A — Living World** (build 3, completing the E·F·A trilogy): DNA-slot

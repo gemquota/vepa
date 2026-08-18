@@ -124,7 +124,7 @@ import { ensureFields, fieldsEnabled, advanceFields, sampleFieldForces, wellForc
 // ── Solver Constants ──
 
 const MAX_FORCE = 50.0;
-const MAX_INTERACTIONS = 500;
+const DEFAULT_MAX_INTERACTIONS = 500; // live override: WP.MAX_INTERACTIONS
 const MAX_VELOCITY = 10.0;
 // Gravity scaled with world size so gravitational pull stays effective at the
 // larger inter-particle distances of a bigger world (baseline: 240³ world).
@@ -132,15 +132,24 @@ const G = 0.2 * (WORLD_SIZE / 240) ** 2;   // lower gravity so particles don't i
 const DEFAULT_DT = 1.0;
 
 // Preallocated neighbor buffer (avoids GC during solve)
-const NEIGHBOR_BUF_SIZE = 2000;
-const _neighborBuf = new Array(NEIGHBOR_BUF_SIZE);
+const DEFAULT_NEIGHBOR_BUF = 2000;    // live override: WP.NEIGHBOR_BUF
+let _neighborBuf = new Array(DEFAULT_NEIGHBOR_BUF);
+function ensureNeighborBuf(cap) {
+  if (_neighborBuf.length < cap) _neighborBuf = new Array(cap);
+  return _neighborBuf;
+}
 
 // ── Spatial Grid (module-scoped, reused across ticks) ──
 
 let _grid = null;
+let _gridFingerprint = '';
 
-function ensureGrid() {
-  if (!_grid) _grid = createGrid();
+function ensureGrid(dim, cellCap) {
+  const fp = dim + '|' + cellCap;
+  if (!_grid || _gridFingerprint !== fp) {
+    _grid = createGrid(dim, cellCap);
+    _gridFingerprint = fp;
+  }
   return _grid;
 }
 
@@ -168,7 +177,6 @@ function readDNAFromCache(view, base, dnaOut) {
  * @param {Function} prng - PRNG function returning [0,1)
  */
 export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer, worldSize, dt, prng) {
-  const grid = ensureGrid();
   setBuffer(particleBuffer);
   const view = particleBuffer; // Float32Array or SharedArrayBuffer view
   const S = STRIDE_INDEXES;
@@ -196,6 +204,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
   const WP = runtimeConfig.worldParams || {};
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
+
+  // Performance knobs (SETUP > WORLD > PERFORMANCE) — read live; the grid is
+  // rebuilt only when its resolution / cell cap changes.
+  const maxInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
+  const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
+  const gridDim = Math.max(6, Math.min(64, Math.round(WP.GRID_DIM ?? 12)));
+  const cellCap = Math.max(1, Math.min(500, Math.round(WP.CELL_CAP ?? 100)));
+  const grid = ensureGrid(gridDim, cellCap);
+  const nb = ensureNeighborBuf(neighborCap);
 
   // Field system (v8.2 E.1 — Matter & Medium): the dish itself. Rebuilt only
   // when its structural config (world size, dim, wall/well/portal layout)
@@ -247,8 +264,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const py = view[base + S.POS_Y];
       const pz = view[base + S.POS_Z];
       if (Number.isFinite(px) && Number.isFinite(py) && Number.isFinite(pz)) {
-        nCount = Math.min(getNeighbors(grid, px, py, pz, worldSize, _neighborBuf), 24);
-        nBuf = _neighborBuf;
+        nCount = Math.min(getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap), 24);
+        nBuf = nb;
       }
     }
     localDt[i] = applyTimeDilation(
@@ -274,10 +291,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         if (!Number.isFinite(gx) || !Number.isFinite(gy) || !Number.isFinite(gz)) continue;
         const soul = view[base + S.SOUL];
         if (!Number.isFinite(soul) || soul < 0.01) continue;
-        const gCount = getNeighbors(grid, gx, gy, gz, worldSize, _neighborBuf);
-        const gLimit = Math.min(gCount, MAX_INTERACTIONS);
+        const gCount = getNeighbors(grid, gx, gy, gz, worldSize, nb, neighborCap);
+        const gLimit = Math.min(gCount, maxInteractions);
         for (let n = 0; n < gLimit; n++) {
-          const l = _neighborBuf[n];
+          const l = nb[n];
           const lBase = l * stride;
           if (view[lBase + S.DEAD] >= 0.5) continue;
           let gdx = view[lBase + S.POS_X] - gx;
@@ -341,11 +358,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // ── Pairwise neighbor loop ──
 
-    const nCount = getNeighbors(grid, px, py, pz, worldSize, _neighborBuf);
-    const limit = Math.min(nCount, MAX_INTERACTIONS);
+    const nCount = getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
+    const limit = Math.min(nCount, maxInteractions);
 
     for (let n = 0; n < limit; n++) {
-      const j = _neighborBuf[n];
+      const j = nb[n];
       if (j === i) continue;
 
       const jBase = j * stride;
@@ -1371,9 +1388,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     // Bond/Polymer non-overlap constraint
     if (active[LAW_INDEXES.BOND] || active[LAW_INDEXES.POLYMER]) {
-      const nCount2 = getNeighbors(grid, px, py, pz, worldSize, _neighborBuf);
-      for (let n2 = 0; n2 < Math.min(nCount2, MAX_INTERACTIONS); n2++) {
-        const bj = _neighborBuf[n2];
+      const nCount2 = getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
+      for (let n2 = 0; n2 < Math.min(nCount2, maxInteractions); n2++) {
+        const bj = nb[n2];
         if (bj === i) continue;
         const bPtr = bj * stride;
         if (view[bPtr + S.DEAD] >= 0.5) continue;

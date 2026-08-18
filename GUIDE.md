@@ -89,6 +89,22 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     its own speciation, so guided evolution explores species-level futures;
     fitness sees the species count.
 
+### Performance Knobs (v8.5 — SETUP > WORLD > PERFORMANCE)
+*   **The interaction budget is yours now:** GRID RESOLUTION (6–64), CELL
+    PARTICLE CAP (1–500), MAX INTERACTIONS (8–4000) and NEIGHBOR BUFFER
+    (24–16384) live in their own accordion section and take effect next tick —
+    no restart.
+*   **Lower MAX INTERACTIONS for dense dishes:** the pair loop is the hot
+    path, so cutting it trades pair fidelity for speed. At ~10k particles the
+    default 500 → 100 cut runs ~30% faster; the sparse default world barely
+    notices.
+*   **NEIGHBOR BUFFER caps the gather** before the pair cap applies — if it is
+    smaller than MAX INTERACTIONS it binds first (fewer candidate neighbours
+    are ever considered).
+*   **Measure, don't guess:** `vepa4 bench --knobs` prints the full
+    MAX INTERACTIONS × NEIGHBOR BUFFER matrix so you can tune against your own
+    machine before touching the sliders.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

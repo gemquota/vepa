@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **7.0.0** (legacy label `4.7.0`). Retroactive mapping of the v4 line:
+  current: **8.5.0** (legacy label `4.8.5`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -24,7 +24,7 @@ explicit law.
 npm install
 npm run dev    # Dev server with COOP/COEP headers
 npm run build  # Production build
-npm test       # Unit tests (69 files / 617 tests)
+npm test       # Unit tests (75 files / 726 tests)
 ```
 
 ## Deployments
@@ -94,6 +94,11 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   bloom / collapse) are metrics-triggered, physics-confirmed, and respond
   reversibly through the undo ring + field writes. Multiplex shards now
   evolve their species independently.
+- **Performance knobs (v8.5)** — SETUP > WORLD > PERFORMANCE exposes the
+  solver's interaction budget live: GRID RESOLUTION, CELL PARTICLE CAP,
+  MAX INTERACTIONS and NEIGHBOR BUFFER. Lowering MAX INTERACTIONS buys ~30%
+  at dense populations in exchange for truncated pair physics; `vepa4 bench
+  --knobs` sweeps the trade-off matrix.
 
 ## Architecture
 

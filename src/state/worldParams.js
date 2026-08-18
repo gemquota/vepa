@@ -129,6 +129,12 @@ export const WORLD_PARAM_DEFS = [
   { key: 'UNCERTAINTY_SIGMA', label: 'UNCERTAINTY SIGMA', min: 0.01, max: 1, default: 0.1, step: 0.01, group: 'QUANTUM', subgroup: 'PROBABILITY' },
   { key: 'ANTIMATTER_ANNIHILATION_YIELD', label: 'ANNIHILATION YIELD', min: 0, max: 10, default: 5, step: 0.5, group: 'QUANTUM', subgroup: 'ENERGY' },
   { key: 'SPIN_PRECESSION_FREQ', label: 'SPIN PRECESSION FREQ', min: 0, max: 10, default: 1, step: 0.5, group: 'QUANTUM', subgroup: 'STATE' },
+
+  // ── PERFORMANCE ── (solver spatial-grid & interaction knobs)
+  { key: 'GRID_DIM', label: 'GRID RESOLUTION', min: 6, max: 64, default: 12, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
+  { key: 'CELL_CAP', label: 'CELL PARTICLE CAP', min: 1, max: 500, default: 100, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
+  { key: 'MAX_INTERACTIONS', label: 'MAX INTERACTIONS', min: 8, max: 4000, default: 500, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
+  { key: 'NEIGHBOR_BUF', label: 'NEIGHBOR BUFFER', min: 24, max: 16384, default: 2000, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

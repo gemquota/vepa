@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VEPA4 — Solver Benchmark Report</title>
+<style>
+  :root {
+    --bg: #07090e;
+    --panel: #0d1118;
+    --line: #1c2432;
+    --ink: #cfe0f2;
+    --dim: #7d8ea6;
+    --accent: #4fd1c5;
+    --accent2: #f5a3b5;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background:
+      radial-gradient(1200px 600px at 70% -10%, rgba(79,209,197,.10), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .5px; }
+  h2 { font-size: 13px; margin: 28px 0 10px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+  .sub { color: var(--dim); margin-bottom: 20px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  .chip b { color: var(--accent); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; max-width: 900px; background: var(--panel); border: 1px solid var(--line); }
+  th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+  td:first-child, th:first-child { text-align: left; }
+  tbody tr:hover { background: rgba(79,209,197,.05); }
+  canvas { display: block; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 900px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  .card h3 { margin: 0 0 8px; font-size: 12px; color: var(--ink); letter-spacing: .5px; }
+  .card canvas { width: 100%; border: 0; }
+  .note { color: var(--dim); font-size: 11px; margin-top: 24px; }
+  .warn { color: var(--accent2); }
+</style>
+</head>
+<body>
+  <h1>VEPA4 — Solver Benchmark Report</h1>
+  <div class="sub">Median-of-rounds, independently seeded. Lower ms/tick is better. Regenerate with <code>node bench/solver.bench.mjs --report</code>.</div>
+  <div id="meta" class="meta"></div>
+
+  <h2>N scaling — default 10-law set</h2>
+  <canvas id="scaling" width="900" height="260"></canvas>
+  <table id="scaling-table"></table>
+
+  <h2>MAX_INTERACTIONS × NEIGHBOR_BUF matrix</h2>
+  <table id="matrix"></table>
+
+  <h2>Knob sweeps</h2>
+  <div class="grid2" id="sweeps"></div>
+
+  <div class="note" id="foot"></div>
+
+<script src="./data.js"></script>
+<script>
+  const D = window.BENCH_DATA;
+  const fmt = (n, d = 2) => Number(n).toFixed(d);
+
+  // Meta chips
+  const meta = document.getElementById('meta');
+  const chips = [
+    ['Generated', new Date(D.generatedAt).toLocaleString()],
+    ['Particles (report)', D.reportParams.count],
+    ['Rounds', D.reportParams.rounds],
+    ['Budget', D.reportParams.budget + ' ms'],
+    ['Stride', D.solver.particleStride],
+    ['Laws', D.solver.lawCount],
+    ['World size', D.solver.worldSize],
+    ['Baseline knobs', `GRID ${D.baseline.GRID_DIM} · CELLCAP ${D.baseline.CELL_CAP} · MAXINT ${D.baseline.MAX_INTERACTIONS} · NBUF ${D.baseline.NEIGHBOR_BUF}`],
+  ];
+  meta.innerHTML = chips.map(([k, v]) => `<span class="chip">${k}: <b>${v}</b></span>`).join('');
+
+  // Line chart helper
+  function drawLine(canvas, labels, series, opts = {}) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pad = { l: 56, r: 16, t: 18, b: 34 };
+    ctx.clearRect(0, 0, W, H);
+    const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+    let max = 0;
+    for (const s of series) for (const v of s.values) max = Math.max(max, v);
+    max = max * 1.08 || 1;
+    const x = (i) => pad.l + (i / (labels.length - 1)) * plotW;
+    const y = (v) => pad.t + plotH - (v / max) * plotH;
+
+    // gridlines
+    ctx.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx.fillStyle = 'rgba(125,142,166,.8)';
+    ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'right';
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad.t + (g / 4) * plotH;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
+      ctx.fillText(fmt(max - (g / 4) * max, 1), pad.l - 6, gy + 3);
+    }
+    ctx.textAlign = 'center';
+    labels.forEach((lab, i) => ctx.fillText(lab, x(i), H - pad.b + 16));
+
+    series.forEach((s) => {
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      s.values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+      ctx.stroke();
+      s.values.forEach((v, i) => {
+        ctx.fillStyle = s.color;
+        ctx.beginPath(); ctx.arc(x(i), y(v), 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+  }
+
+  // Scaling chart + table
+  const sc = D.scaling;
+  drawLine(document.getElementById('scaling'),
+    sc.map((r) => r.count.toLocaleString()),
+    [{ values: sc.map((r) => r.msPerTick), color: '#4fd1c5' }]);
+  const st = document.getElementById('scaling-table');
+  st.innerHTML = '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>ms/tick</th><th>ticks/s</th><th>µs/particle</th></tr></thead><tbody>' +
+    sc.map((r) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.ticksPerSec)}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
+    '</tbody>';
+
+  // Matrix table
+  const mat = D.matrix;
+  const cols = mat[0].cells.map((c) => c.interactions);
+  const mt = document.getElementById('matrix');
+  mt.innerHTML = '<thead><tr><th>NEIGHBOR_BUF \\ MAX_INTERACTIONS</th>' +
+    cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
+    mat.map((row) => `<tr><td>${row.neighbors}</td>` + row.cells.map((c) => `<td>${fmt(c.msPerTick)}</td>`).join('') + '</tr>').join('') +
+    '</tbody>';
+
+  // Sweeps
+  const sweeps = [
+    { key: 'gridDim', title: 'GRID_DIM', color: '#4fd1c5' },
+    { key: 'cellCap', title: 'CELL_CAP', color: '#f5a3b5' },
+    { key: 'maxInteractions', title: 'MAX_INTERACTIONS', color: '#f7c873' },
+    { key: 'neighborBuf', title: 'NEIGHBOR_BUF', color: '#9aa7ff' },
+  ];
+  const wrap = document.getElementById('sweeps');
+  wrap.innerHTML = sweeps.map((s, idx) => `
+    <div class="card">
+      <h3>${s.title} sweep</h3>
+      <canvas id="sweep-${idx}" width="420" height="180"></canvas>
+      <table><thead><tr><th>${s.title}</th><th>ms/tick</th><th>min</th><th>max</th></tr></thead><tbody>
+        ${D[s.key].map((r) => `<tr><td>${r.value}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.minMs)}</td><td>${fmt(r.maxMs)}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`).join('');
+  sweeps.forEach((s, idx) => {
+    drawLine(document.getElementById('sweep-' + idx),
+      D[s.key].map((r) => r.value),
+      [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }]);
+  });
+
+  document.getElementById('foot').innerHTML =
+    `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +
+    `baseline ${JSON.stringify(D.baseline)} · default laws [${D.solver.defaultLaws.join(', ')}].`;
+</script>
+</body>
+</html>
