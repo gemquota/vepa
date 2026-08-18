@@ -486,6 +486,7 @@ function setDNAFromProfile(species, profile) {
         bus.emit('species:sync', { count: speciesCount });
         bus.emit('dna:sync');
         bus.emit('law:sync');
+        bus.emit('world:paramsRestored');
         bus.emit('world:restored', { particleCount, speciesCount, worldSize });
     };
     // Auto-snapshot triggers (user-selected set: chaos, restart/reset, preset
