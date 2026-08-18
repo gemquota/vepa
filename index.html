@@ -30,6 +30,8 @@
                     <button id="chaos-multiplex-btn" class="sq-btn" title="Chaos multiplex (open multiplexer)">⚛️</button>
                     <button id="restart-btn" class="sq-btn" title="Restart">🔄</button>
                     <button id="hard-reset-btn" class="sq-btn" title="Reset">🗑️</button>
+                    <button id="save-btn" class="sq-btn" title="Quick-save current world">💾</button>
+                    <button id="undo-btn" class="sq-btn" title="Undo (restore previous world state)" disabled>⏪</button>
                     <button id="help-toggle" class="sq-btn" title="Help">?</button>
                 </div>
             </div>
@@ -41,6 +43,7 @@
                     <div class="tabs">
                         <button id="drawer-zoom-out" class="tab-btn drawer-zoom-btn" title="Zoom out" aria-label="Zoom out">−</button>
                         <button class="tab-btn active" data-tab="tab-setup" title="Setup" aria-label="Setup">⚙️</button>
+                        <button class="tab-btn" data-tab="tab-saves" title="World states (save / load / compare / undo)" aria-label="World states">🗃️</button>
                         <button class="tab-btn" data-tab="tab-data" title="Data" aria-label="Data">📊</button>
                         <button id="drawer-zoom-in" class="tab-btn drawer-zoom-btn" title="Zoom in" aria-label="Zoom in">+</button>
                         <button id="drawer-hide-btn" class="tab-btn drawer-hide-btn" title="Hide drawer" aria-label="Hide drawer">▼</button>
@@ -147,6 +150,10 @@
                         <div id="setup-settings" class="sub-tab-content">
                             <div id="laws-panel"></div>
                         </div>
+                    </div>
+
+                    <div id="tab-saves" class="tab-content">
+                        <div id="saves-panel"></div>
                     </div>
                 </div>
             </div>

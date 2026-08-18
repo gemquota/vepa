@@ -10,6 +10,7 @@ import { createSpeciesPanel } from './speciesPanel.js';
 import { createDNAAnalytics } from './dnaAnalytics.js';
 import { createNarrativePanel } from './narrativePanel.js';
 import { createPresetPanel } from './presetPanel.js';
+import { createSavePanel } from './savePanel.js';
 import { createSettingsPanel } from './settingsPanel.js';
 import { initTooltip } from './tooltip.js';
 import { resetCamera } from './camera.js';
@@ -34,6 +35,7 @@ export function initUI(bus, lawStateObj, dnaBuffer) {
   createDNAAnalytics(bus);
   createNarrativePanel(bus);
   createPresetPanel(bus);
+  createSavePanel(bus);
   createSettingsPanel(bus, lawStateObj);
   initTooltip(bus, lawStateObj);
 }

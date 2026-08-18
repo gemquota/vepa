@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.7] - 2026-08-18 → 7.6.0
+
+### World States UI — SAVES drawer tab, toolbar quick-save/undo, compare overlay
+- `feat(ui):` new 🗃️ **SAVES** drawer tab (`src/ui/savePanel.js`) between Setup and Data — name + 💾 SAVE row, ⏪ UNDO / ⏩ REDO buttons with an AUTO-SNAPSHOT toggle, the save list (name · time · ALIVE · SP · LAWS with 📂 LOAD / ⇄ COMPARE / ⬇ EXPORT / 🗑 per row), and 📂 IMPORT for `.vepa.json` files. LOAD is undoable (auto-snapshot first); DELETE asks for confirmation.
+- `feat(ui):` toolbar gains **💾 quick-save** (auto-named `QUICK HH:MM`) and **⏪ undo** buttons (disabled while the ring is empty, re-enabled live via `world:undoState`).
+- `feat(ui):` **COMPARE overlay** — side-by-side matrix of LIVE vs the selected saves (alive / species / laws-on / avg mass·energy·speed / tick / paramsDelta, best cell per row), plus a COMPARE ALL button; styling mirrors the multiplex palette, self-contained in the panel.
+- `feat(ui):` restored worlds re-render the WORLD sliders (`world:paramsRestored` → `renderWorldSliders`) so panel positions match the loaded params.
+- `test`: full suite 669/675 (6 pre-existing baseline failures untouched); `vite build` clean.
+
 ## [4.7.6] - 2026-08-18 → 7.5.0
 
 ### World Compare + Undo ring — auto-snapshots before every destructive action, two-stack undo/redo

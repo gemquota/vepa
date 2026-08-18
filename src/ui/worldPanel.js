@@ -187,6 +187,12 @@ export function createWorldPanel(bus, lawStateObj) {
 
   // ── Listen for law sync ──
   bus.on('law:sync', () => renderLawGrid(grid, lawStateObj, bus));
+
+  // World-state restore (v7.6) — re-render the sliders so their positions
+  // match the restored params (values are read live at render time).
+  bus.on('world:paramsRestored', () => {
+    if (params) renderWorldSliders(params, bus);
+  });
 }
 
 /**
