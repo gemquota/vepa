@@ -21,14 +21,6 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.8] - 2026-08-18 → 8.8.0
-
-### Set H — Agency & Narrative: the story acts (D·G·H trilogy, build 3 — trilogy complete)
-- `feat(agency):` **narrative actor** (`src/engines/agencyEngine.js`) — the Narrative Consciousness gains bounded, reversible hands: on a cadence it evaluates the world and emits one action — a spawn-rate rescue while an extinction epoch is open, an INFO fertilization when energy runs low, or a cooling INFO write when the dish overpopulates. Every action commits an undo checkpoint first and journals to the narrative log.
-- `feat(goals):` **goal-driven species** (`src/engines/goalBehavior.js`) — each species' learned memory (Set G) becomes a behavioral goal: high threat → flee, high exploration → seek, otherwise hold. Small bounded velocity nudges applied after the solve; physics still decides everything else.
-- `feat(milestones):` **world milestones** — emergent once-only quests (eight species, three civilizations, 1,500 lives, abundant energy) detected from the metrics ring and journaled.
-- `test:` +9 (`tests/unit/agencyNarrative.test.js`) — actor decisions (rescue/fertilize/balance/silent), cadence + cooldown + lawless gate, milestone idempotence, reset; goal derivation (flee/seek/hold) + nudge direction. Full suite 747 (741 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
-
 ## [4.8.7] - 2026-08-18 → 8.7.0
 
 ### Set G — Memory & Culture: learned traits survive (D·G·H trilogy, build 2)

@@ -82,6 +82,15 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.8.0 — 2026-08-18)
+
+- **Set H — Agency & Narrative** (build 3, completing the RRP D·G·H trilogy):
+  the narrative actor (`src/engines/agencyEngine.js`) takes bounded,
+  undo-able actions (rescue nudges + field writes) on a cadence; species
+  memory drives goal behavior (`src/engines/goalBehavior.js` — flee / seek /
+  hold velocity nudges); once-only world milestones are detected and
+  journaled. See `CHANGELOG.md` [8.8.0].
+
 ## Milestone note (v8.7.0 — 2026-08-18)
 
 - **Set G — Memory & Culture** (build 2 of the RRP D·G·H trilogy): persistent

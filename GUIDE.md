@@ -131,6 +131,17 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     sparse species explore while dense species hold, and an open extinction
     epoch raises threat.
 
+### Agency & Narrative (v8.8)
+*   **The story acts:** the Narrative Consciousness now takes bounded, reversible
+    actions — when an extinction epoch is open it raises the spawn rate; when
+    energy runs low it fertilizes the INFO field; when the dish overpopulates
+    it writes a cooling pocket. Every move is undoable and journaled.
+*   **Memory becomes behavior:** a species with high learned THREAT flees the
+    centre, high EXPLORATION seeks it, otherwise it holds — small velocity
+    nudges, the physics still rules.
+*   **Milestones are quests:** eight species, three civilizations, 1,500 lives
+    and abundant energy each fire a one-time journal entry as they emerge.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

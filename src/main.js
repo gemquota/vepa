@@ -31,6 +31,8 @@ import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createGroupRegistry, updateGroups, groupCount, declareGroup } from './state/groupRegistry.js';
 import { createMemoryBuffers, speciesMemory, groupMemory, blendMemory, adaptMemory, decayMemory, pruneGroupMemory, resetMemoryBuffers, MEM } from './state/memoryBuffers.js';
+import { createAgencyEngine, updateAgency, detectMilestones, resetAgency } from './engines/agencyEngine.js';
+import { computeSpeciesGoals, applyGoalNudges } from './engines/goalBehavior.js';
 import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
 import { getFields, writeField } from './physics/fields.js';
@@ -60,6 +62,9 @@ let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
 let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
 let memoryBuffers = null; // Set G.1 — persistent species/group memory
+let agencyEngine = null; // Set H.1 — narrative actor + world milestones
+let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
+let seenMilestones = new Set(); // Set H.3 — once-only world milestones
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
@@ -180,6 +185,7 @@ async function boot() {
     worldEventEngine = createWorldEventEngine(bus);
     epochEngine = createEpochEngine(bus);
     memoryBuffers = createMemoryBuffers();
+    agencyEngine = createAgencyEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
     setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
@@ -806,6 +812,24 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: `Restored epoch ${era}.` });
     });
 
+    // Set H.1 — agency actions: bounded, reversible, journaled.
+    bus.on('agency:action', ({ action }) => {
+        undoRing.commit(currentWorldState());
+        let text = '';
+        if (action.kind === 'param') {
+            worldParams = applyWorldParam(worldParams, action.key, action.value);
+            runtimeConfig.worldParams = worldParams;
+            if (action.key === 'SPAWN_RATE') spawnRate = worldParams.SPAWN_RATE;
+            text = `The narrative acts: ${action.key} → ${worldParams[action.key]} (${action.reason}).`;
+            bus.emit('world:paramApplied', { key: action.key, value: worldParams[action.key] });
+        } else if (action.kind === 'field') {
+            const fs = getFields();
+            if (fs) writeField(fs, action.name, action.x, action.y, action.z, action.delta);
+            text = `The narrative acts: ${action.reason} — ${action.name} field written.`;
+        }
+        bus.emit('narrative:system', { text: text || 'The narrative acts.' });
+    });
+
     bus.on('world:paramChanged', ({ key, value }) => {
         worldParams = applyWorldParam(worldParams, key, value);
         runtimeConfig.worldParams = worldParams;
@@ -1062,9 +1086,29 @@ function updateIntelligence() {
         if (tick % 60 === 0) {
             adaptCultureFromMetrics(memoryBuffers, metrics);
             decayMemory(memoryBuffers);
+            // Set H.2 — re-derive per-species goals from the updated memory.
+            speciesGoals = computeSpeciesGoals(memoryBuffers, Object.keys(metrics.speciesPop || {}).map(Number));
         }
     }
+    // Set H.2 — goal-driven velocity nudges (seek / flee from memory goals).
+    if (speciesGoals.size > 0) {
+        applyGoalNudges(particleView, particleCount, PARTICLE_STRIDE, speciesGoals, worldSize);
+    }
+    // Set H.1 — the narrative actor may take one bounded, reversible action.
+    if (agencyEngine) {
+        const agencyEvents = updateAgency(agencyEngine, {
+            metrics,
+            extinctionOpen: epochEngine ? epochEngine.extinctionOpen : false,
+            spawnRate,
+            worldSize,
+        });
+        for (const ev of agencyEvents) bus.emit(ev.type, ev);
+    }
     if (tick % 30 === 0) {
+        // Set H.3 — world milestones (once-only quests).
+        for (const m of detectMilestones(metrics, seenMilestones)) {
+            bus.emit('narrative:system', { text: m.text });
+        }
         bus.emit('sim:metrics', metrics);
         if (groupRegistry) {
             bus.emit('groups:analytics', { registry: groupRegistry, metrics });
@@ -1101,6 +1145,9 @@ function resetIntelligence() {
     }
     if (epochEngine) resetEpoch(epochEngine);
     if (memoryBuffers) resetMemoryBuffers(memoryBuffers);
+    if (agencyEngine) resetAgency(agencyEngine);
+    speciesGoals = new Map();
+    seenMilestones.clear();
 }
 
 function renderLoop(now) {
