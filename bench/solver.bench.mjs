@@ -11,7 +11,7 @@
  *   node bench/solver.bench.mjs --all                # stress: every law on
  *   node bench/solver.bench.mjs --scale              # scaling curve (N sweep)
  *   node bench/solver.bench.mjs --knobs              # MAX_INTERACTIONS × NEIGHBOR_BUF sweep
- *   node bench/solver.bench.mjs --report             # full dataset → bench/report/data.js
+ *   node bench/solver.bench.mjs --report             # full dataset → public/bench-report/data.js
  *   node bench/solver.bench.mjs --json               # machine-readable output
  *   node bench/solver.bench.mjs --particles 2500 --ticks 120 --warmup 40
  */
@@ -352,13 +352,13 @@ function knobSweep() {
 }
 
 // ── Report generation (benchmark SPA dataset) ──────────────────────────
-// Produces bench/report/data.js — a `window.BENCH_DATA` payload consumed by
-// bench/report/index.html. Sweeps each performance knob independently, the
+// Produces public/bench-report/data.js — a `window.BENCH_DATA` payload consumed by
+// public/bench-report/index.html (served by Vite as /bench-report/). Sweeps each performance knob independently, the
 // MAX_INTERACTIONS × NEIGHBOR_BUF interaction matrix, and the N scaling curve,
 // all with the same median-of-rounds rigour as --scale/--knobs.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPORT_PATH = resolve(__dirname, 'report', 'data.js');
+const REPORT_PATH = resolve(__dirname, '..', 'public', 'bench-report', 'data.js');
 
 function csvFlag(name, fallback) {
   const raw = args.includes(name) ? flag(name) : fallback;

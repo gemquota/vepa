@@ -82,6 +82,17 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.6.0 — 2026-08-18)
+
+- **Set D — Deep Time & Epochs** (build 1 of the RRP D·G·H trilogy; design in
+  `docs/dev/rrp-trilogy-2/`): the world advances through named eras on a tick
+  boundary (`src/engines/epochEngine.js`) with restorable full-world snapshots
+  (capped at 16); extinction / recovery are threshold-gated population deltas,
+  answered reversibly via undo checkpoint + INFO field writes. The new TIME
+  world-param group exposes TIME SPEED (live `runtimeConfig.simSpeed`), EPOCH
+  LENGTH, and the two thresholds. The benchmark SPA now serves from
+  `public/bench-report/`. See `CHANGELOG.md` [8.6.0].
+
 ## Milestone note (v8.5.0 — 2026-08-18)
 
 - **Performance knobs**: the spatial-grid resolution / per-cell cap / neighbour

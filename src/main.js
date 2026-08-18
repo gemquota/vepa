@@ -24,6 +24,7 @@ import { createInsightEngine, update as updateInsight } from './engines/insightE
 import { createSpeciationEngine, updateSpeciation } from './engines/speciation.js';
 import { createEcoEngine } from './engines/ecoEngine.js';
 import { createWorldEventEngine } from './engines/worldEvents.js';
+import { createEpochEngine, updateEpoch, getEpochs, getEpochSnapshot, resetEpoch } from './engines/epochEngine.js';
 import { createNarrativeEngine, update as updateNarrative } from './engines/narrativeEngine.js';
 import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageTracker.js';
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
@@ -56,6 +57,7 @@ let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
 let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
 let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
+let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
@@ -174,6 +176,7 @@ async function boot() {
     speciationEngine = createSpeciationEngine(bus, { prng: () => prng.next() });
     ecoEngine = createEcoEngine(bus);
     worldEventEngine = createWorldEventEngine(bus);
+    epochEngine = createEpochEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
     setGoalValue(goalEngine, 'maxForce', runtimeConfig.maxForce);
@@ -769,6 +772,32 @@ function setDNAFromProfile(species, profile) {
         bus.emit('world:paramApplied', { key: 'SPAWN_RATE', value: worldParams.SPAWN_RATE });
     });
 
+    // Set D.1 — epoch events: reversible responses + era navigation.
+    bus.on('epoch:extinction', () => {
+        undoRing.commit(currentWorldState());
+        const fs = getFields();
+        if (fs) writeField(fs, 'INFO', worldSize * 0.25, worldSize * 0.25, worldSize * 0.5, -8);
+        bus.emit('narrative:system', { text: 'An extinction epoch has begun — drought cells written.' });
+    });
+    bus.on('epoch:recovery', () => {
+        const fs = getFields();
+        if (fs) writeField(fs, 'INFO', worldSize * 0.75, worldSize * 0.75, worldSize * 0.5, 8);
+        bus.emit('narrative:system', { text: 'The world recovers — fertilization written.' });
+    });
+    bus.on('epoch:boundary', ({ era, name }) => {
+        bus.emit('narrative:system', { text: `Epoch ${era} begins: ${name}.` });
+    });
+    bus.on('epoch:list', () => {
+        bus.emit('epoch:listResponse', { eras: epochEngine ? getEpochs(epochEngine) : [] });
+    });
+    bus.on('epoch:restore', ({ era }) => {
+        if (!epochEngine) return;
+        const snapshot = getEpochSnapshot(epochEngine, era);
+        if (!snapshot) return;
+        applyWorldRestore(snapshot);
+        bus.emit('narrative:system', { text: `Restored epoch ${era}.` });
+    });
+
     bus.on('world:paramChanged', ({ key, value }) => {
         worldParams = applyWorldParam(worldParams, key, value);
         runtimeConfig.worldParams = worldParams;
@@ -780,6 +809,18 @@ function setDNAFromProfile(species, profile) {
                 break;
             case 'SPAWN_RATE':
                 spawnRate = worldParams.SPAWN_RATE;
+                break;
+            case 'TIME_SPEED':
+                runtimeConfig.simSpeed = worldParams.TIME_SPEED;
+                break;
+            case 'EPOCH_LENGTH':
+                if (epochEngine) epochEngine.cfg.epochLength = worldParams.EPOCH_LENGTH;
+                break;
+            case 'EXTINCTION_THRESHOLD':
+                if (epochEngine) epochEngine.cfg.extinctionThreshold = worldParams.EXTINCTION_THRESHOLD;
+                break;
+            case 'RECOVERY_THRESHOLD':
+                if (epochEngine) epochEngine.cfg.recoveryThreshold = worldParams.RECOVERY_THRESHOLD;
                 break;
             case 'PARTICLE_COUNT':
             case 'MAX_POP':
@@ -958,6 +999,25 @@ function updateIntelligence() {
         });
         for (const ev of specEvents) bus.emit(ev.type, ev);
     }
+    // Epochs (Set D.1) — era boundaries, full-world snapshots, extinction/recovery.
+    if (epochEngine) {
+        const epochEvents = updateEpoch(epochEngine, particleView, particleCount, PARTICLE_STRIDE, {
+            tick,
+            captureFn: () => captureWorldState({
+                view: particleView,
+                count: particleCount,
+                speciesCount,
+                dna: dnaBuffer,
+                laws: lawState,
+                worldParams,
+                runtime: runtimeConfig,
+                worldSize,
+                tick,
+                name: `Epoch ${epochEngine.era}`,
+            }),
+        });
+        for (const ev of epochEvents) bus.emit(ev.type, ev);
+    }
     if (tick % 30 === 0) {
         bus.emit('sim:metrics', metrics);
         if (groupRegistry) {
@@ -993,6 +1053,7 @@ function resetIntelligence() {
         worldEventEngine.cooldownUntil = 0;
         worldEventEngine.events.length = 0;
     }
+    if (epochEngine) resetEpoch(epochEngine);
 }
 
 function renderLoop(now) {

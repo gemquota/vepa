@@ -105,6 +105,17 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
     MAX INTERACTIONS × NEIGHBOR BUFFER matrix so you can tune against your own
     machine before touching the sliders.
 
+### Deep Time (v8.6 — SETUP > WORLD > TIME)
+*   **TIME SPEED (0.1–10×)** is a real physics change, not a UI trick — it
+    multiplies the solver timestep, so slow-motion and fast-forward actually
+    change how the dish evolves (and how many particles per second spawn).
+*   **EPOCH LENGTH** sets how many ticks make an era. Every boundary names a
+    new epoch and snapshots the whole world, so you can restore any earlier era
+    (`epoch:restore`) like a save point.
+*   **EXTINCTION / RECOVERY THRESH** tune when a population collapse or rebound
+    is declared — each is journaled and answered reversibly (drought on
+    extinction, fertilization on recovery) through the undo ring + fields.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

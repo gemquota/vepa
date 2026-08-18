@@ -135,6 +135,12 @@ export const WORLD_PARAM_DEFS = [
   { key: 'CELL_CAP', label: 'CELL PARTICLE CAP', min: 1, max: 500, default: 100, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'MAX_INTERACTIONS', label: 'MAX INTERACTIONS', min: 8, max: 4000, default: 500, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
   { key: 'NEIGHBOR_BUF', label: 'NEIGHBOR BUFFER', min: 24, max: 16384, default: 2000, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
+
+  // ── TIME (v8.6 D.2 — Deep Time & Epochs) ──
+  { key: 'TIME_SPEED', label: 'TIME SPEED', min: 0.1, max: 10, default: 1, step: 0.1, group: 'TIME', subgroup: 'TIME' },
+  { key: 'EPOCH_LENGTH', label: 'EPOCH LENGTH', min: 60, max: 6000, default: 600, step: 60, group: 'TIME', subgroup: 'ERAS' },
+  { key: 'EXTINCTION_THRESHOLD', label: 'EXTINCTION THRESH', min: 0.05, max: 0.9, default: 0.35, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
+  { key: 'RECOVERY_THRESHOLD', label: 'RECOVERY THRESH', min: 0.2, max: 1, default: 0.7, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

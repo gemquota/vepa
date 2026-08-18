@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.5.0** (legacy label `4.8.5`). Retroactive mapping of the v4 line:
+  current: **8.6.0** (legacy label `4.8.6`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -24,7 +24,7 @@ explicit law.
 npm install
 npm run dev    # Dev server with COOP/COEP headers
 npm run build  # Production build
-npm test       # Unit tests (75 files / 726 tests)
+npm test       # Unit tests (76 files / 732 tests)
 ```
 
 ## Deployments
@@ -99,6 +99,12 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   MAX INTERACTIONS and NEIGHBOR BUFFER. Lowering MAX INTERACTIONS buys ~30%
   at dense populations in exchange for truncated pair physics; `vepa4 bench
   --knobs` sweeps the trade-off matrix.
+- **Deep Time (v8.6)** — the world remembers: SETUP > WORLD > TIME adds TIME
+  SPEED (0.1–10×, a real solver-dt change), EPOCH LENGTH, and extinction /
+  recovery thresholds. Eras advance on the epoch boundary with full-world
+  snapshots you can restore; population collapse and rebound are detected,
+  journaled, and answered reversibly with drought / fertilization field
+  writes. The benchmark report SPA now serves at `/bench-report/`.
 
 ## Architecture
 
