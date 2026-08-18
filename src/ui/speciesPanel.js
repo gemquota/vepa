@@ -150,6 +150,8 @@ function renderSpeciesList(container, dnaBuffer) {
 
 /** Add a new species by cloning species 0's DNA into the next free slot. */
 function addSpecies(dnaBuffer, bus, list, accordion) {
+  // Let the world-save undo ring capture the pre-change roster.
+  if (bus) bus.emit('species:aboutToChange');
   if (speciesCount >= MAX_SPECIES) {
     if (bus) bus.emit('narrative:system', { text: 'Species roster full (64 max).' });
     return;
@@ -169,6 +171,8 @@ function addSpecies(dnaBuffer, bus, list, accordion) {
 
 /** Remove the species at index `idx`, compacting the roster. */
 function removeSpeciesAt(idx, dnaBuffer, bus) {
+  // Let the world-save undo ring capture the pre-change roster.
+  if (bus) bus.emit('species:aboutToChange');
   if (speciesCount <= 1) return;
   if (idx < 0 || idx >= speciesCount) return;
   for (let s = idx; s < speciesCount - 1; s++) {

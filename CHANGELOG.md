@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.7.6] - 2026-08-18 → 7.5.0
+
+### World Compare + Undo ring — auto-snapshots before every destructive action, two-stack undo/redo
+- `feat(save):` `compareWorldSaves()` builds a side-by-side matrix (LIVE vs saves) over the stored summary metadata — alive / species / laws-on / avg mass·energy·speed / tick, plus a `paramsDelta` row counting how many world-param knobs each save drifted from the live world; best-cell markers honor min/max modes (reusing the multiplex COMPARE pattern).
+- `feat(save):` two-stack undo ring (`createUndoRing`) — `commit()` checkpoints the world (fingerprint-deduped), `undo(current)` restores the last checkpoint while pushing the current world onto the redo stack, `redo(current)` walks back. Every undo is itself redo-able; new commits clear the redo stack (classic semantics). Capped at 8 checkpoints.
+- `feat(save):` wired into `main.js` — auto-snapshots commit **before** the user-selected destructive actions (Chaos, Restart, preset load, species roster edits via a new `species:aboutToChange` event in `speciesPanel.js`, world-param changes debounced to 1/s with the pre-change world captured before the apply handler). `sim:hardReset` persists the pre-reset world as a named `AUTO pre-reset HH:MM` save so it survives the page reload. Loads/undo/redo restore through `restoreWorldState` and resync every consumer (`species:sync`/`dna:sync`/`law:sync`, camera world size, offspring ring, intelligence engines).
+- `feat(save):` full bus command surface for the upcoming SAVES UI — `world:save/load/undo/redo/list/remove/export/import/compare/toggleAutoUndo` with `world:listResponse`, `world:compareResponse`, `world:exported`, `world:undoState` replies.
+- `test(save):` compare-matrix + undo-ring coverage added in `tests/unit/worldSave.test.js` (fingerprint dedup, two-stack walk, cap eviction, param-only fingerprint changes). Full suite 669/675 (6 pre-existing baseline failures untouched).
+
 ## [4.7.5] - 2026-08-18 → 7.4.0
 
 ### World State Save/Load engine — full-fidelity snapshots, IndexedDB store, portable exports

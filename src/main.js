@@ -27,6 +27,15 @@ import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
+import {
+  captureWorldState,
+  restoreWorldState,
+  exportWorldSave,
+  parseWorldSave,
+  createWorldSaveStore,
+  compareWorldSaves,
+  createUndoRing,
+} from './state/worldSave.js';
 initDebug();
 logDebug('main module loaded');
 
@@ -48,6 +57,16 @@ let worldSize = WORLD_SIZE;
 // Mirrored into runtimeConfig.worldParams so the solver reads live values.
 let worldParams = createWorldParams();
 runtimeConfig.worldParams = worldParams;
+// World State Save/Load (v7.4+): persistent save store, in-memory undo ring,
+// and auto-snapshot bookkeeping. The ring is the two-stack undo/redo model;
+// auto-snapshots commit before destructive actions (chaos, restart, reset,
+// preset load, species roster edits, world-param bursts) so every unwanted
+// change is one ⏪ away — and every undo is itself redo-able.
+const saveStore = createWorldSaveStore();
+const undoRing = createUndoRing();
+let undoEnabled = true;
+let lastParamSnapshotAt = 0;
+const PARAM_SNAPSHOT_DEBOUNCE = 1200;
 let spawnRate = worldParams.SPAWN_RATE;
 let spawnAccumulator = 0;
 // Begin with all laws disabled — movement and interaction only exist once
@@ -423,6 +442,149 @@ function setDNAFromProfile(species, profile) {
         dnaBuffer[species * 64 + paramIdx] = Math.round(normalized * 65535);
     }
 }function wireEvents() {
+    // ── World State Save/Load + Undo ring (v7.4+/v7.5) ──
+    // Registered FIRST so auto-snapshots observe the pre-action world: bus
+    // listeners fire in registration order, and the handlers below mutate
+    // laws/DNA/params/roster only after these capture lines run.
+    const currentWorldState = (name = '') => captureWorldState({
+        view: particleView,
+        count: particleCount,
+        speciesCount,
+        dna: dnaBuffer,
+        laws: lawState,
+        worldParams,
+        runtime: runtimeConfig,
+        worldSize,
+        tick,
+        name,
+    });
+    const emitUndoState = () => {
+        bus.emit('world:undoState', { canUndo: undoRing.canUndo(), canRedo: undoRing.canRedo(), enabled: undoEnabled });
+    };
+    const commitAutoSnapshot = () => {
+        if (!undoEnabled) return;
+        if (multiplexController && multiplexController.isActive()) return; // frozen main world
+        if (particleCount <= 0) return; // skip empty boots
+        undoRing.commit(currentWorldState());
+        emitUndoState();
+    };
+    // Restore a captured state onto the live world + resync every consumer.
+    const applyWorldRestore = (state) => {
+        const out = restoreWorldState(state, {
+            view: particleView,
+            dna: dnaBuffer,
+            laws: lawState,
+            worldParams,
+            runtime: runtimeConfig,
+        });
+        particleCount = out.particleCount;
+        speciesCount = out.speciesCount;
+        worldSize = out.worldSize;
+        setWorldSize(out.worldSize);
+        resetOffspringRing();
+        resetIntelligence();
+        bus.emit('species:sync', { count: speciesCount });
+        bus.emit('dna:sync');
+        bus.emit('law:sync');
+        bus.emit('world:restored', { particleCount, speciesCount, worldSize });
+    };
+    // Auto-snapshot triggers (user-selected set: chaos, restart/reset, preset
+    // load, species roster, world-param changes).
+    bus.on('sim:chaos', () => commitAutoSnapshot());
+    bus.on('sim:restart', () => commitAutoSnapshot());
+    bus.on('preset:load', () => commitAutoSnapshot());
+    bus.on('species:aboutToChange', () => commitAutoSnapshot());
+    // World-param changes: capture the pre-change world once per debounce
+    // window (registered before the apply handler below, so the OLD params
+    // are still live when this fires).
+    bus.on('world:paramChanged', () => {
+        if (!undoEnabled) return;
+        const now = Date.now();
+        if (now - lastParamSnapshotAt < PARAM_SNAPSHOT_DEBOUNCE) return;
+        if (multiplexController && multiplexController.isActive()) return;
+        if (particleCount <= 0) return;
+        lastParamSnapshotAt = now;
+        undoRing.commit(currentWorldState());
+        emitUndoState();
+    });
+    // Reset reloads the page, which would wipe the in-memory ring — persist
+    // the pre-reset world as a named save so it survives (user can LOAD or 🗑).
+    bus.on('sim:hardReset', () => {
+        if (particleCount <= 0) return;
+        const d = new Date();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        saveStore.save(currentWorldState(`AUTO pre-reset ${hh}:${mm}`)).then((res) => {
+            if (res && res.ok) logDebug('pre-reset world saved for rollback');
+        });
+    });
+    // ── World save/load commands (called by the SAVES panel + toolbar) ──
+    bus.on('world:save', async ({ name }) => {
+        const n = String(name || '').trim();
+        if (!n) return;
+        const res = await saveStore.save(currentWorldState(n));
+        bus.emit('world:list');
+        bus.emit('world:saved', { name: n, ok: !!(res && res.ok), error: res && res.error });
+    });
+    bus.on('world:load', async ({ name }) => {
+        const state = await saveStore.load(String(name || ''));
+        if (!state) return;
+        commitAutoSnapshot(); // the load itself is undoable
+        applyWorldRestore(state);
+        bus.emit('world:loaded', { name: state.name });
+        emitUndoState();
+    });
+    bus.on('world:undo', () => {
+        const target = undoRing.undo(currentWorldState());
+        if (!target) return;
+        applyWorldRestore(target);
+        emitUndoState();
+    });
+    bus.on('world:redo', () => {
+        const target = undoRing.redo(currentWorldState());
+        if (!target) return;
+        applyWorldRestore(target);
+        emitUndoState();
+    });
+    bus.on('world:list', async () => {
+        const saves = await saveStore.list();
+        bus.emit('world:listResponse', { saves });
+    });
+    bus.on('world:remove', async ({ name }) => {
+        await saveStore.remove(String(name || ''));
+        bus.emit('world:list');
+    });
+    bus.on('world:export', async ({ name }) => {
+        const state = await saveStore.load(String(name || ''));
+        if (!state) return;
+        bus.emit('world:exported', { name: state.name, json: exportWorldSave(state) });
+    });
+    bus.on('world:import', async ({ json }) => {
+        try {
+            const state = parseWorldSave(json);
+            const res = await saveStore.save(state);
+            bus.emit('world:list');
+            bus.emit('world:imported', { ok: !!(res && res.ok), error: res && res.error });
+        } catch (e) {
+            bus.emit('world:imported', { ok: false, error: String((e && e.message) || e) });
+        }
+    });
+    bus.on('world:compare', async ({ names }) => {
+        const wanted = Array.isArray(names) ? names : [];
+        const loaded = [];
+        for (const n of wanted) {
+            const state = await saveStore.load(String(n));
+            if (state) loaded.push(state);
+        }
+        const matrix = compareWorldSaves(currentWorldState('LIVE'), loaded);
+        bus.emit('world:compareResponse', { matrix });
+    });
+    bus.on('world:toggleAutoUndo', ({ enabled }) => {
+        undoEnabled = enabled !== false;
+        emitUndoState();
+    });
+    emitUndoState();
+
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', (opts = {}) => {
