@@ -10,7 +10,7 @@ const rng = lcg(7);
 describe('Batch 02 — MAX_POP / SHAPE / SPAWN_CENTRES / SPAWN_CENTRE_RANDOM', () => {
   it('MAX_POP: soft cap = min(MAX_POP, MAX_PARTICLES)', () => {
     expect(spawnCaps(cfg({ MAX_POP: 1000 })).softCap).toBe(1000);
-    expect(spawnCaps(cfg({ MAX_POP: 50000 })).softCap).toBe(MAX_PARTICLES);
+    expect(spawnCaps(cfg({ MAX_POP: MAX_PARTICLES })).softCap).toBe(MAX_PARTICLES);
     expect(spawnCaps(cfg({ MAX_POP: 50 })).softCap).toBe(100);
   });
 

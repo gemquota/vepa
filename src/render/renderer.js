@@ -191,6 +191,12 @@ export function drawParticles(renderer, particleBuffer, particleCount, stride, w
         // 3D camera projection (pan, zoom, orbit)
         const { sx, sy, sr } = projectPoint(x, y, z, worldSize, width, height);
 
+        // Off-screen cull (perf overhaul for large populations): skip the
+        // phenotype + draw work for particles projected well outside the
+        // viewport. The margin covers the glow halo of the largest stars.
+        const CULL_MARGIN = 48;
+        if (sx < -CULL_MARGIN || sx > width + CULL_MARGIN || sy < -CULL_MARGIN || sy > height + CULL_MARGIN) continue;
+
         // Phenotype expression (pass the shared view — avoids per-particle allocation).
         // Eco previews skip the HSL modulation entirely — stored base colour is
         // already species-distinct and the per-particle hsl→rgb round trip is a

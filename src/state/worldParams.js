@@ -13,9 +13,9 @@ export const WORLD_PARAM_DEFS = [
   // ── SPACE ──
   { key: 'WORLD_SIZE', label: 'WORLD SIZE', min: 50, max: 20000, default: WORLD_SIZE, step: 100, group: 'SPACE', subgroup: 'WORLD' },
   { key: 'GROUND_HEIGHT', label: 'GROUND HEIGHT', min: 0, max: 1, default: 0.9, step: 0.05, group: 'SPACE', subgroup: 'WORLD' },
-  { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 20000, default: 1000, step: 100, group: 'SPACE', subgroup: 'POPULATION' },
-  { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 5000, default: 250, step: 10, group: 'SPACE', subgroup: 'POPULATION' },
-  { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 50000, default: 5000, step: 100, group: 'SPACE', subgroup: 'POPULATION' },
+  { key: 'PARTICLE_COUNT', label: 'PARTICLE COUNT', min: 100, max: 100000, default: 1000, step: 100, group: 'SPACE', subgroup: 'POPULATION' },
+  { key: 'INITIAL_POP', label: 'INITIAL POPULATION', min: 10, max: 50000, default: 250, step: 10, group: 'SPACE', subgroup: 'POPULATION' },
+  { key: 'MAX_POP', label: 'MAX POPULATION', min: 100, max: 100000, default: 5000, step: 100, group: 'SPACE', subgroup: 'POPULATION' },
   { key: 'SHAPE', label: 'DISTRIBUTION', min: 0, max: 1, default: 0, step: 0.05, group: 'SPACE', subgroup: 'DISTRIBUTION' },
   { key: 'SPAWN_CENTRES', label: 'CENTRES', min: 1, max: 64, default: 1, step: 1, group: 'SPACE', subgroup: 'DISTRIBUTION' },
   { key: 'SPAWN_CENTRE_RANDOM', label: 'CENTRE SCATTER', min: 0, max: 1, default: 0.5, step: 0.05, group: 'SPACE', subgroup: 'DISTRIBUTION' },
@@ -134,7 +134,7 @@ export const WORLD_PARAM_DEFS = [
   { key: 'GRID_DIM', label: 'GRID RESOLUTION', min: 6, max: 64, default: 12, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'CELL_CAP', label: 'CELL PARTICLE CAP', min: 1, max: 500, default: 100, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'MAX_INTERACTIONS', label: 'MAX INTERACTIONS', min: 8, max: 4000, default: 500, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
-  { key: 'NEIGHBOR_BUF', label: 'NEIGHBOR BUFFER', min: 24, max: 16384, default: 2000, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
+  { key: 'NEIGHBOR_BUF', label: 'NEIGHBOR BUFFER', min: 24, max: 32768, default: 2000, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
 
   // ── TIME (v8.6 D.2 — Deep Time & Epochs) ──
   { key: 'TIME_SPEED', label: 'TIME SPEED', min: 0.1, max: 10, default: 1, step: 0.1, group: 'TIME', subgroup: 'TIME' },
@@ -175,6 +175,17 @@ export const WORLD_PARAM_DEFS = [
   { key: 'QUANTUM_TUNNEL_RATE', label: 'TUNNEL RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'QUANTUM' },
   { key: 'QUANTUM_TUNNEL_ENERGY', label: 'TUNNEL ENERGY GATE', min: 5, max: 200, default: 40, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
   { key: 'QUANTUM_OBSERVER_RADIUS', label: 'OBSERVER RADIUS', min: 0, max: 200, default: 40, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
+  // Set O — Stellar Physics (v8.15 O.1–O.3): dense cells seed stars that fuse
+  // accreted mass into radiant THERMAL/INFO + a warm ENERGY feed; past BLACK
+  // HOLE HORIZON they collapse to accreting, Hawking-emitting black holes;
+  // past SUPERNOVA MASS they detonate (shockwave + exotic element seeding).
+  { key: 'STELLAR_FORM', label: 'STAR FORM MASS', min: 0, max: 100, default: 20, step: 5, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_MAX', label: 'MAX STARS', min: 0, max: 16, default: 4, step: 1, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_SEPARATION', label: 'STAR SEPARATION', min: 1, max: 8, default: 3, step: 1, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_RADIANCE', label: 'STAR RADIANCE', min: 0, max: 5, default: 1, step: 0.1, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_HORIZON', label: 'BLACK HOLE HORIZON', min: 50, max: 1000, default: 250, step: 25, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_SUPERNOVA', label: 'SUPERNOVA MASS', min: 100, max: 2000, default: 400, step: 25, group: 'MATTER', subgroup: 'STELLAR' },
+  { key: 'STELLAR_HAWKING', label: 'HAWKING RATE', min: 0, max: 1, default: 0.05, step: 0.01, group: 'MATTER', subgroup: 'STELLAR' },
 
   // ── SOCIETY (v8.9 I.1 · v8.10 J.1 · v8.11 K.1 — the I·J·K trilogy) ──
   // Crafting economy (Set I), governance + relations (Set J) and infrastructure

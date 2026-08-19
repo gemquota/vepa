@@ -21,6 +21,26 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.15] - 2026-08-19 → 8.15.0
+
+### Set O — Stellar Physics: the dish scales to the cosmos (O·P·Q trilogy, build 1)
+- `feat(stellar):` **stars** (decision O.1, `src/state/stellar.js`) — dense cells where particle mass + energy converge above STAR FORM MASS seed a star at the cell centre (Set M's E=mc² mass-energy equivalence pays off). A star fuses its accreted mass into radiant output: THERMAL + INFO field writes plus a warm ENERGY feed to the region — conserved (output is drawn from the consumed mass). Min star separation keeps the sky sparse (risk O.1).
+- `feat(stellar):` **black holes** (decision O.2) — a star past BLACK HOLE HORIZON collapses into a black hole: a wider accretion radius (capture), no radiant feed (light can't escape), and slow Hawking-style re-emission of a HAWKING RATE share of its mass back into the THERMAL field (conserved, leak-proof).
+- `feat(stellar):` **supernovae** (decision O.3) — a star past SUPERNOVA MASS (and off cooldown) detonates: a radial shockwave scatters nearby particles outward and damages their energy, a THERMAL burst floods the cell, and heavy elements seed the region as a few EXOTIC field cells + INFO (bounded cascade via a per-pass cap + remnant cooldown, risk O.2).
+- `feat(world):` new **MATTER > STELLAR** world-param subgroup — STAR FORM MASS (0–100, 20), MAX STARS (0–16, 4), STAR SEPARATION (1–8, 3), STAR RADIANCE (0–5, 1), BLACK HOLE HORIZON (50–1000, 250), SUPERNOVA MASS (100–2000, 400), HAWKING RATE (0–1, 0.05).
+- `feat(ui):` `stellar:pass` events (formed / black-hole / supernova) emitted on the bus for the narrative journal.
+
+### Rich prime substrate — the default world is now genuinely emergent
+- `feat(boot):` the PRIME_DEFAULT starter law set adds **COMMS + LEARN + CULTURE + AFFINITY + STIGMERGY** (communication, hebbian learning, cultural transmission, species affinity, stigmergic trails) so groups, cultures, memory and speciation layers are live from first boot — not just raw physics.
+- `feat(boot):` a fresh boot applies a rich medium overlay (`applyPrimeWorldConfig`) — THERMAL 0.5 + INFO 0.5 fields (feed extraction/governance/infrastructure/economy), 3 gravity wells (seed group + star formation), and 4 clustered spawn centres with a 0.15 centre bias (spatial structure for speciation). Kept as a boot overlay rather than changing `WORLD_PARAM_DEFS` defaults so the audit suite's neutral `createWorldParams()` baseline is untouched; Reset (reload) re-applies, Restart preserves the player's live tuning.
+
+### Population cap 2,500 → 100,000 + render cull (performance overhaul)
+- `perf(particles):` `MAX_PARTICLES` raised 2,500 → **100,000** (`src/constants.js`); the WORLD-panel caps follow — PARTICLE COUNT max 100k, MAX POPULATION max 100k, INITIAL POPULATION max 50k, NEIGHBOR BUFFER max 32,768. The particle buffer (100k × stride 100 = 40 MB SharedArrayBuffer) and the solver's on-demand neighbour buffer scale cleanly.
+- `perf(render):` `src/render/renderer.js` now **culls off-screen particles** before the phenotype + draw work (48 px margin covers the largest star halos) — the Canvas2D hot loop stops paying for particles outside the viewport at large N.
+- `bench:` solver scaling curve regenerated out to 100,000 particles (`public/bench-report/data.js`) — 1,000 → 5.2 ms/tick … 100,000 → 8.1 s/tick headless on the default 10-law set, confirming the spatial-grid solver stays O(N)-ish in memory and bounded by the interaction cap (the full report lives at `/bench-report/`).
+- `test:` +13 (`tests/unit/stellar.test.js`) — cadence gate + force, star formation (threshold, min separation, off switches), radiant output + energy feed + accretion, black-hole collapse + Hawking emission, supernova shockwave/damage/element-seed/remnant-cooldown, determinism, world-param defs; updated the two population-cap audit assertions for the new slider ranges. Full suite 839 (833 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
+- `docs:` the O·P·Q trilogy opens ("The World Goes Cosmic", from v8.15.0) — designs already locked in `docs/dev/rrp-trilogy-5/` (O stellar physics → P synthetic life → Q cosmology).
+
 ## [4.8.14] - 2026-08-19 → 8.14.1 (hotfix rebuild of 8.14.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
 
 ### Fix — the dish renders again (blank-canvas regression from the v8.11.1 boot fix)

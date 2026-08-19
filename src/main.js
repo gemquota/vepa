@@ -42,6 +42,7 @@ import { runInfrastructure } from './state/infrastructure.js';
 import { createExoticState, stepExoticMatter } from './state/exoticMatter.js';
 import { stepRelativity } from './state/relativity.js';
 import { createQuantumState, stepQuantumMacro } from './state/quantumMacro.js';
+import { createStellarState, stepStellar } from './state/stellar.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -71,6 +72,7 @@ let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
 let memoryBuffers = null; // Set G.1 — persistent species/group memory
 let exoticState = null; // Set L.1 — exotic matter zones + per-particle states
 let quantumState = null; // Set N.1 — macroscale superposition + entanglement
+let stellarState = null; // Set O.1 — stars, black holes, supernovae
 let agencyEngine = null; // Set H.1 — narrative actor + world milestones
 let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
 let seenMilestones = new Set(); // Set H.3 — once-only world milestones
@@ -102,6 +104,25 @@ let spawnAccumulator = 0;
 // the solver preserves: no laws → no movement, no interaction, no state change.
 const DEFAULT_LAWS = PRIME_DEFAULT.laws;
 
+/**
+ * Apply the rich PRIME_DEFAULT substrate onto the live world params at boot.
+ * Kept separate from WORLD_PARAM_DEFS defaults so the audit suite's neutral
+ * baseline is untouched; only a fresh boot (or Reset → reload) gets this.
+ */
+function applyPrimeWorldConfig() {
+    const overrides = {
+        FIELD_THERMAL: 0.5,   // thermal gradient → extraction + governance
+        FIELD_INFO: 0.5,      // info medium → economy/markets + lensing
+        WELL_COUNT: 3,        // gravity wells → density → groups + stars
+        SPAWN_CENTRES: 4,     // clustered start → speciation structure
+        SPAWN_CENTRE_BIAS: 0.15,
+    };
+    for (const [key, value] of Object.entries(overrides)) {
+        worldParams = applyWorldParam(worldParams, key, value);
+    }
+    runtimeConfig.worldParams = worldParams;
+}
+
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
 
@@ -128,6 +149,15 @@ async function boot() {
     for (const name of DEFAULT_LAWS) {
         if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
     }
+
+    // Rich boot substrate (v8.15): the WORLD-panel defaults stay neutral (the
+    // audit suite pins createWorldParams() as its baseline), but a fresh boot
+    // applies a denser, more emergent medium — thermal + info fields feed the
+    // economy/governance/infrastructure/culture layers, a few gravity wells
+    // seed group + star formation, and clustered spawn centres give speciation
+    // spatial structure. Reset (reload) re-applies; Restart preserves the live
+    // values so the player's tuning is never clobbered.
+    applyPrimeWorldConfig();
 
     spawnDefaultPopulation();
 
@@ -198,6 +228,7 @@ async function boot() {
     memoryBuffers = createMemoryBuffers();
     exoticState = createExoticState();
     quantumState = createQuantumState();
+    stellarState = createStellarState();
     agencyEngine = createAgencyEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
@@ -1114,6 +1145,16 @@ function updateIntelligenceCore() {
         });
         if (qm.collapsed > 0 || qm.tunneled > 0 || qm.observed > 0) bus.emit('quantum:pass', qm);
     }
+    // Set O — Stellar Physics (O.1–O.3): dense cells seed stars that fuse
+    // accreted mass into radiant output, collapse to black holes past a
+    // horizon, and detonate as supernovae past a mass cap. Ambient: runs
+    // whenever laws are active, gated on its own cadence.
+    if (stellarState && metrics.lawActiveCount > 0) {
+        const st = stepStellar(stellarState, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams,
+        });
+        if (st.formed > 0 || st.blackHoles > 0 || st.supernovae > 0) bus.emit('stellar:pass', st);
+    }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
     if (speciationEngine && metrics.lawActiveCount > 0) {
@@ -1220,6 +1261,7 @@ function resetIntelligence() {
     if (memoryBuffers) resetMemoryBuffers(memoryBuffers);
     exoticState = createExoticState(particleCount);
     quantumState = createQuantumState(particleCount);
+    stellarState = createStellarState();
     if (agencyEngine) resetAgency(agencyEngine);
     speciesGoals = new Map();
     seenMilestones.clear();

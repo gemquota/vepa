@@ -47,7 +47,7 @@ describe('Batch 01 — WORLD_SIZE / GROUND_HEIGHT / PARTICLE_COUNT / INITIAL_POP
 
   it('PARTICLE_COUNT: hard cap = min(PARTICLE_COUNT, MAX_PARTICLES)', () => {
     expect(spawnCaps(cfg({ PARTICLE_COUNT: 500 })).hardCap).toBe(500);
-    expect(spawnCaps(cfg({ PARTICLE_COUNT: 20000 })).hardCap).toBe(MAX_PARTICLES);
+    expect(spawnCaps(cfg({ PARTICLE_COUNT: MAX_PARTICLES })).hardCap).toBe(MAX_PARTICLES);
     expect(spawnCaps(cfg({ PARTICLE_COUNT: 50 })).hardCap).toBe(100); // min clamp
   });
 
@@ -60,11 +60,11 @@ describe('Batch 01 — WORLD_SIZE / GROUND_HEIGHT / PARTICLE_COUNT / INITIAL_POP
     expect(initialPopulationTarget(cfg({ INITIAL_POP: 5000 }), small)).toBe(100);
   });
 
-  it('INITIAL_POP: applyWorldParam clamps to [10, 5000]', () => {
+  it('INITIAL_POP: applyWorldParam clamps to [10, 50000]', () => {
     let s = applyWorldParam(createWorldParams(), 'INITIAL_POP', 5);
     expect(s.INITIAL_POP).toBe(10);
-    s = applyWorldParam(s, 'INITIAL_POP', 9999);
-    expect(s.INITIAL_POP).toBe(5000);
+    s = applyWorldParam(s, 'INITIAL_POP', 99999);
+    expect(s.INITIAL_POP).toBe(50000);
   });
 
   it('gate: neutral defaults keep a single centre at the world middle', () => {

@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.14.1** (legacy label `4.8.14`). Retroactive mapping of the v4 line:
+  current: **8.15.0** (legacy label `4.8.15`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -110,6 +110,16 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   generations. Child species inherit their parent's culture on speciation,
   groups blend their members' memories into a collective, and each species'
   memory adapts to energy, density and extinction epochs.
+- **Stellar Physics (v8.15)** — the dish scales to the cosmos (opening the
+  O·P·Q trilogy, "The World Goes Cosmic"): dense cells where mass + energy
+  converge seed **stars** that fuse accreted mass into radiant THERMAL/INFO +
+  a warm ENERGY feed; past BLACK HOLE HORIZON they collapse into accreting,
+  Hawking-emitting **black holes**; past SUPERNOVA MASS they **detonate** — a
+  radial shockwave that scatters and damages nearby particles plus exotic
+  heavy-element seeding. SETUP > WORLD > MATTER > STELLAR. The default world
+  now boots with a rich emergent substrate (COMMS / LEARN / CULTURE /
+  AFFINITY / STIGMERGY laws + thermal/info fields + gravity wells + clustered
+  spawn centres), and the population cap rises to **100,000 particles**.
 - **Quantum Macroscale (v8.14)** — particles go non-classical (build 3,
   **closing** the L·M·N physics frontier): slow, isolated particles hold a
   deterministic second position state that collapses to one branch on the

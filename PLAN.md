@@ -82,6 +82,31 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.15.0 — 2026-08-19)
+
+- **Set O — Stellar Physics** (build 1, OPENING the RRP O·P·Q trilogy —
+  "The World Goes Cosmic"): a deterministic stellar substrate pass
+  (`src/state/stellar.js`) seeds **stars** where particle mass + energy
+  converge (E=mc² from Set M pays off), fuses their accreted mass into
+  radiant THERMAL/INFO + a warm ENERGY feed, collapses them into
+  **black holes** past BLACK HOLE HORIZON (wider accretion, no radiant
+  feed, slow Hawking re-emission), and **detonates** them past SUPERNOVA
+  MASS — a radial shockwave (scatter + damage) + exotic heavy-element
+  seeding + a remnant on cooldown. New MATTER > STELLAR world-param
+  subgroup (7 knobs). No new laws (128/128 budget — decision O.1).
+- **Rich prime substrate:** PRIME_DEFAULT gains COMMS / LEARN / CULTURE /
+  AFFINITY / STIGMERGY so groups, hebbian learning, cultural transmission,
+  communication and speciation are live from first boot; a boot overlay
+  (`applyPrimeWorldConfig`) turns on thermal + info fields (0.5 each),
+  3 gravity wells and 4 clustered spawn centres — kept out of
+  `WORLD_PARAM_DEFS` defaults so the audit suite's neutral baseline is
+  untouched.
+- **Population cap 2,500 → 100,000:** `MAX_PARTICLES` raised; WORLD-panel
+  caps follow (PARTICLE COUNT / MAX POP 100k, INITIAL POP 50k, NEIGHBOR
+  BUFFER 32,768); the renderer culls off-screen particles (perf overhaul).
+  Benchmark scaling curve regenerated to 100k (`/bench-report/`). See
+  `CHANGELOG.md` [8.15.0].
+
 ## Milestone note (v8.14.1 — 2026-08-19)
 
 - **Hotfix (blank-canvas regression):** the dish renders again. Set J/K's
