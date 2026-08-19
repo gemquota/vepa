@@ -37,6 +37,7 @@ import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
 import { runArtifacts } from './state/artifacts.js';
 import { runGovernance } from './state/governance.js';
+import { runInfrastructure } from './state/infrastructure.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -1053,6 +1054,13 @@ function updateIntelligence() {
         // drives raids / commerce / dispersal.
         const gov = runGovernance(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
         for (const ev of gov.events) bus.emit(ev.type, ev);
+        // Infrastructure (Set K.1) — extract ambient field energy into the
+        // treasury (conserved), allied grids feed member ENERGY, and
+        // era-progressed mega-structures (WALL/BRIDGE/HUB) execute on target.
+        const inf = runInfrastructure(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams, era: epochEngine ? epochEngine.era : 0,
+        });
+        for (const ev of inf.events) bus.emit(ev.type, ev);
     }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.

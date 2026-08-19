@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.10.0** (legacy label `4.8.8`). Retroactive mapping of the v4 line:
+  current: **8.11.0** (legacy label `4.8.8`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -24,7 +24,7 @@ explicit law.
 npm install
 npm run dev    # Dev server with COOP/COEP headers
 npm run build  # Production build
-npm test       # Unit tests (80 files / 769 tests)
+npm test       # Unit tests (81 files / 780 tests)
 ```
 
 ## Deployments
@@ -110,6 +110,12 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   generations. Child species inherit their parent's culture on speciation,
   groups blend their members' memories into a collective, and each species'
   memory adapts to energy, density and extinction epochs.
+- **Infrastructure & Energy (v8.11)** — civilizations power the dish:
+  groups harvest ambient field energy into treasury (conserved), allied
+  grids feed member energy along the alliance, and era-progressed
+  mega-structures (WALL / BRIDGE / HUB) complete on a treasury investment
+  cadence. This closes the I·J·K trilogy — the literal third trilogy of the
+  3×3 trilogy³ (E·F·A exists · D·G·H remembers & acts · I·J·K builds).
 - **Society & Governance (v8.10)** — civilizations govern: every group derives
   an AGGRESSION / OPENNESS / MIGRATION policy from member memory + treasury;
   similar neighbors ally (shared treasury pool), opposed neighbors conflict at

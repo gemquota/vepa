@@ -82,6 +82,18 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.11.0 — 2026-08-18)
+
+- **Set K — Infrastructure & Energy** (build 3, COMPLETING the RRP I·J·K
+  trilogy — the literal third trilogy, closing the 3×3 trilogy³): resource
+  extraction (`src/state/infrastructure.js`) turns ambient INFO/THERMAL
+  field energy into treasury (conserved — the field loses what the treasury
+  gains); allied energy grids feed member ENERGY from the treasury; and
+  era-progressed mega-structures (WALL / BRIDGE / HUB) complete on a
+  MEGA_INVEST cadence with hard write caps. SOCIETY > ENERGY knobs join the
+  accordion. Arc: E·F·A the world exists → D·G·H it remembers & acts → I·J·K
+  it builds. See `CHANGELOG.md` [8.11.0].
+
 ## Milestone note (v8.10.0 — 2026-08-18)
 
 - **Set J — Society & Governance** (build 2 of the RRP I·J·K trilogy):

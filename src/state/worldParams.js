@@ -152,6 +152,10 @@ export const WORLD_PARAM_DEFS = [
   { key: 'POLICY_SHIFT', label: 'POLICY SHIFT', min: 0, max: 1, default: 0.1, step: 0.05, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
   { key: 'ALLIANCE_RANGE', label: 'ALLIANCE RANGE', min: 100, max: 1000, default: 350, step: 25, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
   { key: 'CONFLICT_THRESHOLD', label: 'CONFLICT THRESH', min: 0.1, max: 1, default: 0.5, step: 0.05, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
+  // Set K — infrastructure + energy
+  { key: 'HARVEST_RATE', label: 'HARVEST RATE', min: 0, max: 1, default: 0.1, step: 0.05, group: 'SOCIETY', subgroup: 'ENERGY' },
+  { key: 'GRID_FEED', label: 'GRID FEED', min: 0, max: 0.5, default: 0.05, step: 0.01, group: 'SOCIETY', subgroup: 'ENERGY' },
+  { key: 'MEGA_INVEST', label: 'MEGA INVEST', min: 5, max: 100, default: 20, step: 5, group: 'SOCIETY', subgroup: 'ENERGY' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

@@ -76,6 +76,8 @@ function freshGroup(id, name, declared, species) {
     allies: new Set(),   // Set J — allied group ids (shared treasury pooling)
     conflicts: new Map(), // Set J — id → { since, cooldownUntil }
     stability: 1,        // Set J — 0..1 from policy × treasury
+    infra: { harvested: 0, grid: 0 }, // Set K — extraction + grid stats
+    mega: null,          // Set K — active mega-structure { kind, progress, target }
   };
 }
 
@@ -103,6 +105,8 @@ export function getGroupSummaries(registry) {
       policy: { ...g.policy },
       allies: [...g.allies],
       stability: g.stability,
+      infra: { ...g.infra },
+      mega: g.mega ? { ...g.mega } : null,
       age: g.age,
     });
   }

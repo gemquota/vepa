@@ -21,17 +21,6 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.11] - 2026-08-18 → 8.11.0
-
-### Set K — Infrastructure & Energy: civilizations power the dish (I·J·K trilogy, build 3 — the 3×3 trilogy³ COMPLETE)
-- `feat(infrastructure):` **resource extraction** (`src/state/infrastructure.js`) — every group harvests ambient field energy at its territory centroid: INFO + THERMAL scalar values become treasury at HARVEST_RATE, and the SAME amount is consumed from the field (conservation — design risk K.4, no free energy). `g.infra.harvested` tracks the take.
-- `feat(infrastructure):` **energy grids** — allied groups share power: each group with allies spends a small treasury cost per member (GRID_FEED × allies, half-rate treasury cost) and feeds that member's ENERGY pool (harvest → treasury → members; still conserved, capped at 100).
-- `feat(infrastructure):` **mega-structures** — long-horizon coordinated builds: WALL (impassable ring at the territory corners), BRIDGE (INFO corridor toward the nearest non-ally), HUB (THERMAL + INFO heart at the centroid). A group with treasury ≥ 300 and no active project initiates one (kind rotates by group id — deterministic); each pass it invests MEGA_INVEST into progress, advancing faster in later eras (era-progressed, +0.5 per era); at target the build executes with a hard 24-write cap (design risk #2 — no griefing) and journals `infra:mega-init` / `infra:mega-complete`.
-- `feat(world):` **SOCIETY > ENERGY** world-param subgroup — HARVEST RATE (0–1, default 0.1), GRID FEED (0–0.5, default 0.05), MEGA INVEST (5–100, default 20), read live by the pass.
-- `feat(ui):` group summaries now carry infra stats and the active mega project (`getGroupSummaries`).
-- `docs:` the I·J·K trilogy is complete — the literal third trilogy closing the 3×3 **trilogy³**: E·F·A the world *exists* (fields → civilizations → living world), D·G·H it *remembers & acts* (deep time → memory → agency), I·J·K it *builds* (tools → society → infrastructure).
-- `test:` +11 (`tests/unit/infrastructure.test.js`) — cadence gate, extraction harvest + field conservation + empty-field no-op, grid feed (both allies) + no-allies no-op + energy ceiling, mega initiate/invest/complete + second-project auto-start, era acceleration, WALL ring + interior pass-through, BRIDGE corridor, summaries. Full suite 780 (774 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
-
 ## [4.8.10] - 2026-08-18 → 8.10.0
 
 ### Set J — Society & Governance: civilizations govern (I·J·K trilogy, build 2)

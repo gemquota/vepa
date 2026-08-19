@@ -142,6 +142,18 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
 *   **Milestones are quests:** eight species, three civilizations, 1,500 lives
     and abundant energy each fire a one-time journal entry as they emerge.
 
+### Infrastructure & Energy (v8.11 — SETUP > WORLD > SOCIETY)
+*   **Groups harvest:** every group draws ambient INFO/THERMAL field energy
+    into its treasury — and the field really loses it (no free power).
+*   **Allies grid:** allied groups pipe treasury into member energy pools,
+    keeping their citizens fed between meals.
+*   **Mega-structures:** wealthy groups start long builds — WALL (impassable
+    corner ring), BRIDGE (INFO corridor to a neighbour), HUB (a warm,
+    information-dense civic heart) — that advance faster in later eras and
+    execute with griefing caps.
+*   **The trilogy³ closes:** the world exists (E·F·A), remembers and acts
+    (D·G·H), and now builds (I·J·K).
+
 ### Society & Governance (v8.10 — SETUP > WORLD > SOCIETY)
 *   **Groups govern:** each group derives a policy — AGGRESSION (learned fear +
     poverty), OPENNESS (surplus + wanderlust), MIGRATION (wanderlust +
