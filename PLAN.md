@@ -82,6 +82,18 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.14.1 — 2026-08-19)
+
+- **Hotfix (blank-canvas regression):** the dish renders again. Set J/K's
+  `runGovernance` / `runInfrastructure` calls passed one argument too many,
+  so `getFields()` landed in the `opts` slot and threw `Cannot read
+  properties of null (reading 'force')` every frame once the v8.11.1 boot
+  fix enabled laws — killing the frame's render before `syncSprites` and
+  leaving an empty canvas. Calls corrected to the 5-param signatures, and
+  `updateIntelligence()` is now a guarded wrapper so a bad pass can never
+  blank the canvas again. Browser-verified: ~6,000 lit pixels, zero page
+  errors. See `CHANGELOG.md` [8.14.1].
+
 ## Milestone note (v8.14.0 — 2026-08-19)
 
 - **Set N — Quantum Macroscale** (build 3, CLOSING the RRP L·M·N trilogy —

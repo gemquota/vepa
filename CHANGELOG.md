@@ -21,6 +21,13 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.14] - 2026-08-19 → 8.14.1 (hotfix rebuild of 8.14.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
+
+### Fix — the dish renders again (blank-canvas regression from the v8.11.1 boot fix)
+- `fix(render):` a fresh load showed **no particles at all** (empty canvas, responsive UI). Root cause: `runGovernance` (Set J, v8.10.0) and `runInfrastructure` (Set K, v8.11.0) were **called with one argument too many** — both are 5-param functions (`registry, view, stride, fieldSystem, opts`) but `src/main.js` passed 6, so `getFields()` landed in the `opts` slot. That never fired while the sim booted with **zero laws** (the whole group block was gated on `lawActiveCount > 0` — the "frozen but visible" world), but the v8.11.1 boot fix enabled the PRIME_DEFAULT starter laws, so `runGovernance` ran every frame with `opts = null` → `Cannot read properties of null (reading 'force')` threw inside `updateIntelligence` **before** `syncSprites`, silently killing the frame's render. Fixed by dropping the stray `particleCount` argument from both calls (Set L/M/N passes already had correct arity).
+- `fix(robustness):` `updateIntelligence()` is now a guarded wrapper — a single failing intelligence pass logs to the debug overlay and continues instead of killing the whole frame loop's render. The canvas can no longer go blank from a bad pass.
+- `test:` full suite re-run — 820/826 green (the 6 failures are the documented pre-existing `lawCategories` ×4 + `batch_08` TIME_DILATION + `batch_30` TELEPORT baseline, untouched); governance + infrastructure + exotic + relativity + quantum unit files (68 tests) green. `vepa4 syntax` + `vepa4 build` clean. **Browser-verified:** Playwright headless load of the production bundle — `sim-canvas` goes from 0 → ~6,000 lit pixels with zero page errors.
+
 ## [4.8.14] - 2026-08-19 → 8.14.0
 
 ### Set N — Quantum Macroscale: particles go non-classical (L·M·N trilogy, build 3 — the physics frontier completes)

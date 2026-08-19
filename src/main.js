@@ -990,6 +990,17 @@ function adaptCultureFromMetrics(buffers, metrics) {
 
 /** Run insight, narrative, lineage, timeline, and goal engines each tick. */
 function updateIntelligence() {
+    // Guard: a single failing intelligence pass must never kill the frame
+    // loop (which would blank the canvas while the UI stays responsive).
+    try {
+        updateIntelligenceCore();
+    } catch (e) {
+        console.error('intelligence pass error:', e);
+        logDebug('INTELLIGENCE ERROR: ' + (e && (e.stack || e.message) || e), 'error');
+    }
+}
+
+function updateIntelligenceCore() {
     if (!particleView || !particleCount) return;
 
     // Insight — spatio-temporal cluster detection. v8.1.1: gated on active
@@ -1062,12 +1073,12 @@ function updateIntelligence() {
         // migration) from member memory + treasury; alliances pool treasuries,
         // conflicts write tension at the border and raise threat memory; policy
         // drives raids / commerce / dispersal.
-        const gov = runGovernance(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
+        const gov = runGovernance(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
         for (const ev of gov.events) bus.emit(ev.type, ev);
         // Infrastructure (Set K.1) — extract ambient field energy into the
         // treasury (conserved), allied grids feed member ENERGY, and
         // era-progressed mega-structures (WALL/BRIDGE/HUB) execute on target.
-        const inf = runInfrastructure(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+        const inf = runInfrastructure(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), {
             tick, worldParams, era: epochEngine ? epochEngine.era : 0,
         });
         for (const ev of inf.events) bus.emit(ev.type, ev);
