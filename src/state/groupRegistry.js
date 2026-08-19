@@ -72,6 +72,10 @@ function freshGroup(id, name, declared, species) {
     underMinTicks: 0,
     treasury: 0, // F.3 economy
     artifacts: { TOOL: 0, WEAPON: 0, BARRIER: 0 }, // Set I — crafted inventory
+    policy: { aggression: 0, openness: 0, migration: 0 }, // Set J — governance vector
+    allies: new Set(),   // Set J — allied group ids (shared treasury pooling)
+    conflicts: new Map(), // Set J — id → { since, cooldownUntil }
+    stability: 1,        // Set J — 0..1 from policy × treasury
   };
 }
 
@@ -96,6 +100,9 @@ export function getGroupSummaries(registry) {
       maxX: g.maxX, maxY: g.maxY, maxZ: g.maxZ,
       treasury: g.treasury,
       artifacts: { ...g.artifacts },
+      policy: { ...g.policy },
+      allies: [...g.allies],
+      stability: g.stability,
       age: g.age,
     });
   }

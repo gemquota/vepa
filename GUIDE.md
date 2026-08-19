@@ -142,6 +142,17 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
 *   **Milestones are quests:** eight species, three civilizations, 1,500 lives
     and abundant energy each fire a one-time journal entry as they emerge.
 
+### Society & Governance (v8.10 — SETUP > WORLD > SOCIETY)
+*   **Groups govern:** each group derives a policy — AGGRESSION (learned fear +
+    poverty), OPENNESS (surplus + wanderlust), MIGRATION (wanderlust +
+    crowding) — that shifts slowly as conditions change.
+*   **Allies share:** close groups with similar policy ally and pool their
+    treasuries; opposed neighbors fight at the border, cooling down between
+    skirmishes.
+*   **Policy is behavior:** aggressive groups raid their nearest non-ally,
+    open groups earn commerce bonuses, migrating groups disperse their
+    members — all bounded, all readable in the DATA panels.
+
 ### Tools & Artifacts (v8.9 — SETUP > WORLD > SOCIETY)
 *   **Groups build:** any group with builders can spend treasury to craft
     TOOL / WEAPON / BARRIER artifacts (up to 12 of each, decaying under a

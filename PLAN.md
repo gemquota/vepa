@@ -82,6 +82,17 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.10.0 — 2026-08-18)
+
+- **Set J — Society & Governance** (build 2 of the RRP I·J·K trilogy):
+  per-group policy vector (`src/state/governance.js`) derived from Set G
+  member memory + F.3 treasury (aggression / openness / migration, blended at
+  POLICY_SHIFT); close groups with similar policy ally and pool treasuries,
+  opposed groups conflict at the border (negative INFO writes + threat-memory
+  nudges, cooldown-gated); policy drives bounded raids, commerce income and
+  dispersal nudges. SOCIETY > GOVERNANCE knobs join the accordion. See
+  `CHANGELOG.md` [8.10.0].
+
 ## Milestone note (v8.9.0 — 2026-08-18)
 
 - **Set I — Tools & Artifacts** (build 1 of the RRP I·J·K trilogy — the literal

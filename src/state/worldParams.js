@@ -148,6 +148,10 @@ export const WORLD_PARAM_DEFS = [
   // the trilogy. Values are read live by the per-set passes.
   { key: 'CRAFT_COST', label: 'CRAFT COST', min: 10, max: 200, default: 40, step: 10, group: 'SOCIETY', subgroup: 'CRAFTING' },
   { key: 'ARTIFACT_DECAY', label: 'ARTIFACT DECAY', min: 0, max: 0.1, default: 0.004, step: 0.001, group: 'SOCIETY', subgroup: 'CRAFTING' },
+  // Set J — governance + relations
+  { key: 'POLICY_SHIFT', label: 'POLICY SHIFT', min: 0, max: 1, default: 0.1, step: 0.05, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
+  { key: 'ALLIANCE_RANGE', label: 'ALLIANCE RANGE', min: 100, max: 1000, default: 350, step: 25, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
+  { key: 'CONFLICT_THRESHOLD', label: 'CONFLICT THRESH', min: 0.1, max: 1, default: 0.5, step: 0.05, group: 'SOCIETY', subgroup: 'GOVERNANCE' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

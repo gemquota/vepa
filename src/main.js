@@ -36,6 +36,7 @@ import { computeSpeciesGoals, applyGoalNudges } from './engines/goalBehavior.js'
 import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
 import { runArtifacts } from './state/artifacts.js';
+import { runGovernance } from './state/governance.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -1046,6 +1047,12 @@ function updateIntelligence() {
         // barriers write impassable wall cells at the territory edge.
         const art = runArtifacts(groupRegistry, getFields(), { tick, worldParams, memoryBuffers });
         if (art.crafted > 0 || art.decayed > 0 || art.walls > 0) bus.emit('artifacts:pass', art);
+        // Governance (Set J.1) — per-group policy vector (aggression/openness/
+        // migration) from member memory + treasury; alliances pool treasuries,
+        // conflicts write tension at the border and raise threat memory; policy
+        // drives raids / commerce / dispersal.
+        const gov = runGovernance(groupRegistry, particleView, particleCount, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
+        for (const ev of gov.events) bus.emit(ev.type, ev);
     }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
