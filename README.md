@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.15.0** (legacy label `4.8.15`). Retroactive mapping of the v4 line:
+  current: **8.15.1** (legacy label `4.8.15`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -99,6 +99,12 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   MAX INTERACTIONS and NEIGHBOR BUFFER. Lowering MAX INTERACTIONS buys ~30%
   at dense populations in exchange for truncated pair physics; `vepa4 bench
   --knobs` sweeps the trade-off matrix.
+- **Performance overhaul (v8.15.1)** — AUTO-TUNE (on by default) scales the
+  spatial-grid resolution with population density (dim ≈ ∛(N/1.4), floored at
+  the classic 12³) so total pairwise work stays ~flat as N grows: the 100k
+  world is ~9× faster (≈0.9 s/tick headless vs ~8.1 s) and μs/particle stays
+  ~flat instead of exploding with density. The gravity/affinity/stigmergy hot
+  path is allocation-free and the time-dilation buffer is reused across ticks.
 - **Deep Time (v8.6)** — the world remembers: SETUP > WORLD > TIME adds TIME
   SPEED (0.1–10×, a real solver-dt change), EPOCH LENGTH, and extinction /
   recovery thresholds. Eras advance on the epoch boundary with full-world

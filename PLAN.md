@@ -82,6 +82,17 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.15.1 — 2026-08-19)
+
+- **Performance overhaul (hotfix rebuild of 8.15.0):** `AUTO_TUNE` world param
+  (PERFORMANCE, default on) scales the spatial-grid resolution with particle
+  density (dim ≈ ∛(N/1.4), floored at the classic 12³) so the neighbour gather
+  and total pairwise work stay ~flat as N grows instead of exploding. The
+  gravity/affinity/stigmergy pairwise path is allocation-free (scratch `out`
+  objects) and the per-tick `localDt` buffer is reused. Headless scaling curve
+  re-measured: 10k 146→60 ms/tick, 25k 932→154 ms/tick, 100k ~8.1 s→0.91 s —
+  ~6× at 25k, ~9× at 100k, μs/particle ~flat. See `CHANGELOG.md` [8.15.1].
+
 ## Milestone note (v8.15.0 — 2026-08-19)
 
 - **Set O — Stellar Physics** (build 1, OPENING the RRP O·P·Q trilogy —

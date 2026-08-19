@@ -114,7 +114,7 @@ function nanGuard(val) {
 // ============================================================================
 // 1. GRAVITY
 // ============================================================================
-export function applyGravity(p1Ptr, p2Ptr, dx, dy, dz, dist, G) {
+export function applyGravity(p1Ptr, p2Ptr, dx, dy, dz, dist, G, out) {
   const buf = buffer_global;
   const SOFTENING = 0.5;
   const m1 = readDNA(p1Ptr, D.HIDDEN_MASS) + buf[p1Ptr + S.MASS];
@@ -146,11 +146,12 @@ export function applyGravity(p1Ptr, p2Ptr, dx, dy, dz, dist, G) {
   }
 
   const invDist = 1.0 / (dist + 0.001);
-  return {
-    ax: nanGuard(dx * invDist * force),
-    ay: nanGuard(dy * invDist * force),
-    az: nanGuard(dz * invDist * force),
-  };
+  const fx = nanGuard(dx * invDist * force);
+  const fy = nanGuard(dy * invDist * force);
+  const fz = nanGuard(dz * invDist * force);
+  // Allocation-free fast path: write into the caller's scratch object.
+  if (out) { out.ax = fx; out.ay = fy; out.az = fz; return out; }
+  return { ax: fx, ay: fy, az: fz };
 }
 
 // ============================================================================
@@ -704,38 +705,36 @@ export function applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, di
 // ============================================================================
 // 17. AFFINITY
 // ============================================================================
-export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, synergy) {
+export function applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, synergy, out) {
   if (!isSet(lawState, LAW_INDEXES.AFFINITY)) return null; // AFFINITY=9
   if (distSq < 1) return null;
 
   const speciesI = view[iBase + S.SPECIES_ID];
   const speciesJ = view[jBase + S.SPECIES_ID];
   const affinityI = view[iBase + S.DNA_CACHE_START + 41]; // SPECIES_AFFINITY=41
+  const invDist = 1 / Math.sqrt(distSq);
 
+  let fx = 0, fy = 0, fz = 0;
   if (speciesI === speciesJ) {
     // Same-species cohesion: SPECIES_AFFINITY BOOSTS the attraction — the
     // pull grows with positive affinity and is inert at 0. Xenophobic
     // species (affinity < 0) get no same-species pull at all.
     const strength = 0.1 * Math.max(0, affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
-    const invDist = 1 / Math.sqrt(distSq);
-    return {
-      ax: dx * invDist * strength,
-      ay: dy * invDist * strength,
-      az: dz * invDist * strength,
-    };
-  }
-
-  if (affinityI < 0) {
+    fx = dx * invDist * strength;
+    fy = dy * invDist * strength;
+    fz = dz * invDist * strength;
+  } else if (affinityI < 0) {
     const strength = 0.05 * Math.abs(affinityI) * synergy * (worldParams().SPECIES_INTERACTION ?? 1);
-    const invDist = 1 / Math.sqrt(distSq);
-    return {
-      ax: -dx * invDist * strength,
-      ay: -dy * invDist * strength,
-      az: -dz * invDist * strength,
-    };
+    fx = -dx * invDist * strength;
+    fy = -dy * invDist * strength;
+    fz = -dz * invDist * strength;
+  } else {
+    return null;
   }
 
-  return null;
+  // Allocation-free fast path: write into the caller's scratch object.
+  if (out) { out.ax = fx; out.ay = fy; out.az = fz; return out; }
+  return { ax: fx, ay: fy, az: fz };
 }
 
 // ============================================================================
@@ -2439,7 +2438,7 @@ export function applyTrailWrite(p1Ptr, px, py, pz, vx, vy, vz) {
  * Batch-17 (match irl): the pull falls off with distance to the marker and
  * scales with freshness — a marker far from its owner's current position is
  * stale (evaporated) and pulls weakly. */
-export function applyStigmergyForce(p1Ptr, p2Ptr, k) {
+export function applyStigmergyForce(p1Ptr, p2Ptr, k, out) {
   const buf = buffer_global;
   const tx = buf[p2Ptr + S.TRAIL_X] || 0;
   const ty = buf[p2Ptr + S.TRAIL_Y] || 0;
@@ -2456,11 +2455,12 @@ export function applyStigmergyForce(p1Ptr, p2Ptr, k) {
   const freshness = 1.0 / (1.0 + ownerDist * 0.02);
   // Distance falloff: pheromone strength drops with distance from the marker.
   const falloff = 1.0 / (1.0 + dd * 0.1);
-  return {
-    ax: nanGuard((ddx / dd) * k * freshness * falloff),
-    ay: nanGuard((ddy / dd) * k * freshness * falloff),
-    az: nanGuard((ddz / dd) * k * freshness * falloff),
-  };
+  const fx = nanGuard((ddx / dd) * k * freshness * falloff);
+  const fy = nanGuard((ddy / dd) * k * freshness * falloff);
+  const fz = nanGuard((ddz / dd) * k * freshness * falloff);
+  // Allocation-free fast path: write into the caller's scratch object.
+  if (out) { out.ax = fx; out.ay = fy; out.az = fz; return out; }
+  return { ax: fx, ay: fy, az: fz };
 }
 
 /** SIGNAL_BOOST — relay signal to a neighbor on contact.

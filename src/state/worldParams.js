@@ -131,6 +131,7 @@ export const WORLD_PARAM_DEFS = [
   { key: 'SPIN_PRECESSION_FREQ', label: 'SPIN PRECESSION FREQ', min: 0, max: 10, default: 1, step: 0.5, group: 'QUANTUM', subgroup: 'STATE' },
 
   // ── PERFORMANCE ── (solver spatial-grid & interaction knobs)
+  { key: 'AUTO_TUNE', label: 'AUTO-TUNE GRID & INTERACTIONS', min: 0, max: 1, default: 1, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'GRID_DIM', label: 'GRID RESOLUTION', min: 6, max: 64, default: 12, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'CELL_CAP', label: 'CELL PARTICLE CAP', min: 1, max: 500, default: 100, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'MAX_INTERACTIONS', label: 'MAX INTERACTIONS', min: 8, max: 4000, default: 500, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },

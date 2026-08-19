@@ -6,15 +6,17 @@ describe('Performance knobs — WORLD_PARAM_DEFS', () => {
   const perfDefs = WORLD_PARAM_DEFS.filter((d) => d.group === 'PERFORMANCE');
 
   it('exposes a dedicated PERFORMANCE accordion group', () => {
-    expect(perfDefs.length).toBe(4);
+    expect(perfDefs.length).toBe(5);
   });
 
-  it('defines the four solver knobs with classic defaults', () => {
+  it('defines the solver knobs with classic defaults', () => {
     const byKey = Object.fromEntries(perfDefs.map((d) => [d.key, d]));
+    expect(byKey.AUTO_TUNE).toBeTruthy();
     expect(byKey.GRID_DIM).toBeTruthy();
     expect(byKey.CELL_CAP).toBeTruthy();
     expect(byKey.MAX_INTERACTIONS).toBeTruthy();
     expect(byKey.NEIGHBOR_BUF).toBeTruthy();
+    expect(byKey.AUTO_TUNE.default).toBe(1);
     expect(byKey.GRID_DIM.default).toBe(12);
     expect(byKey.CELL_CAP.default).toBe(100);
     expect(byKey.MAX_INTERACTIONS.default).toBe(500);
@@ -23,6 +25,7 @@ describe('Performance knobs — WORLD_PARAM_DEFS', () => {
 
   it('lands in createWorldParams with the documented defaults', () => {
     const state = createWorldParams();
+    expect(state.AUTO_TUNE).toBe(1);
     expect(state.GRID_DIM).toBe(12);
     expect(state.CELL_CAP).toBe(100);
     expect(state.MAX_INTERACTIONS).toBe(500);

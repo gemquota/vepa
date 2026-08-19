@@ -21,6 +21,15 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.15] - 2026-08-19 → 8.15.1 (hotfix rebuild of 8.15.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
+
+### Performance overhaul — near-linear scaling to 100,000 particles
+- `perf(solver):` **density-scaled auto grid** (`AUTO_TUNE`, default on) — the spatial grid now refines its resolution with population density (dim ≈ ∛(N/1.4), floored at the classic 12³). The 27-cell neighbour gather — and therefore total pairwise work — stays ~flat as N grows instead of exploding with density: ~19³ at 10k, ~26³ at 25k, ~42³ at 100k. Populations ≤2,500 keep the classic 12³, so existing worlds behave exactly as before; set AUTO-TUNE off to drive GRID RESOLUTION manually.
+- `perf(solver):` **allocation-free hot path** — `applyGravity`, `applyAffinity` and `applyStigmergyForce` now accept an optional scratch `out` object (fresh-object return preserved for tests/other callers); the solver reuses three module-scoped force scratch objects, eliminating millions of per-pair object allocations per tick.
+- `perf(solver):` the per-tick `localDt` time-dilation buffer is now reused (grow-on-demand) instead of allocating a fresh `Float32Array(particleCount)` every tick (400 KB/tick of churn at 100k).
+- `bench:` scaling curve re-measured headless (default 10-law set, median-of-3-rounds): 500 → 1.26 ms/tick, 2,500 → 12.4 ms/tick, 10,000 → 59.6 ms/tick (was ~146), 25,000 → 154 ms/tick (was ~932), 50,000 → 369 ms/tick, 100,000 → 906 ms/tick (was ~8.1 s) — μs/particle is now ~flat (2.5 → 9.1) instead of rising past 37. ~2.4× at 10k, ~6× at 25k, ~9× at 100k.
+- `test:` `tests/unit/perfKnobs.test.js` updated for the new AUTO_TUNE knob (5 PERFORMANCE params). Full suite 833 green (the 6 failures are the documented pre-existing law-category/audit baseline, untouched); `vepa4 syntax` + `vepa4 build` clean.
+
 ## [4.8.15] - 2026-08-19 → 8.15.0
 
 ### Set O — Stellar Physics: the dish scales to the cosmos (O·P·Q trilogy, build 1)

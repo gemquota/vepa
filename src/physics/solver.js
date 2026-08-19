@@ -139,6 +139,18 @@ function ensureNeighborBuf(cap) {
   return _neighborBuf;
 }
 
+// Per-tick scratch buffers, reused across solves to avoid GC pressure in the
+// O(N) / pairwise hot loops (at 100k particles a fresh Float32Array + three
+// per-pair force objects every tick adds up to hundreds of MB of churn).
+let _localDt = new Float32Array(0);
+function ensureLocalDt(n) {
+  if (_localDt.length < n) _localDt = new Float32Array(n);
+  return _localDt;
+}
+const _gravOut = { ax: 0, ay: 0, az: 0 };
+const _affOut = { ax: 0, ay: 0, az: 0 };
+const _stigOut = { ax: 0, ay: 0, az: 0 };
+
 // ── Spatial Grid (module-scoped, reused across ticks) ──
 
 let _grid = null;
@@ -206,10 +218,20 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   const effG = G * (Number.isFinite(WP.GLOBAL_G) ? WP.GLOBAL_G : 1);
 
   // Performance knobs (SETUP > WORLD > PERFORMANCE) — read live; the grid is
-  // rebuilt only when its resolution / cell cap changes.
+  // rebuilt only when its resolution / cell cap changes. AUTO_TUNE (default
+  // on) scales the grid resolution with population density so the 27-cell
+  // neighbour gather — and therefore total pairwise work — stays ~flat as N
+  // grows (dim ≈ ∛(N / 1.4), clamped to the slider range). The classic 12³
+  // resolution is the floor, so populations ≤2,500 behave exactly as before;
+  // above that the grid refines with density — ~19³ at 10k, ~26³ at 25k,
+  // ~42³ at 100k — keeping the neighbour gather roughly flat instead of
+  // exploding with density.
   const maxInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
   const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
-  const gridDim = Math.max(6, Math.min(64, Math.round(WP.GRID_DIM ?? 12)));
+  const autoTune = (WP.AUTO_TUNE ?? 1) !== 0;
+  const gridDim = autoTune
+    ? Math.max(12, Math.min(64, Math.round(Math.cbrt(Math.max(1, particleCount) / 1.4))))
+    : Math.max(6, Math.min(64, Math.round(WP.GRID_DIM ?? 12)));
   const cellCap = Math.max(1, Math.min(500, Math.round(WP.CELL_CAP ?? 100)));
   const grid = ensureGrid(gridDim, cellCap);
   const nb = ensureNeighborBuf(neighborCap);
@@ -254,7 +276,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // feeds a softened potential (capped neighbourhood) so local time slows
   // beside massive bodies. Empty space runs at full speed.
 
-  const localDt = new Float32Array(particleCount);
+  const localDt = ensureLocalDt(particleCount);
   const timeDilActive = active[LAW_INDEXES.TIME_DILATION];
   for (let i = 0; i < particleCount; i++) {
     const base = i * stride;
@@ -391,7 +413,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
       if (active[LAW_INDEXES.GRAV]) {
         const gravSynergy = syn[LAW_INDEXES.GRAV];
-        const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy);
+        const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy, _gravOut);
         if (gravForce) {
           // Gravitational collapse: stars pull nearby matter much harder
           const mI = view[iBase + S.MASS];
@@ -548,7 +570,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // ── Affinity ──
 
       if (active[LAW_INDEXES.AFFINITY]) {
-        const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, syn[LAW_INDEXES.AFFINITY]);
+        const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, syn[LAW_INDEXES.AFFINITY], _affOut);
         if (affinityForce) {
           ax += affinityForce.ax;
           ay += affinityForce.ay;
@@ -856,7 +878,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
       if (active[LAW_INDEXES.STIGMERGY]) {
-        const stigForce = applyStigmergyForce(iBase, jBase, 0.3 * syn[LAW_INDEXES.STIGMERGY]);
+        const stigForce = applyStigmergyForce(iBase, jBase, 0.3 * syn[LAW_INDEXES.STIGMERGY], _stigOut);
         if (stigForce) {
           ax += stigForce.ax;
           ay += stigForce.ay;
