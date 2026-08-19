@@ -39,6 +39,7 @@ import { runEconomy } from './state/economy.js';
 import { runArtifacts } from './state/artifacts.js';
 import { runGovernance } from './state/governance.js';
 import { runInfrastructure } from './state/infrastructure.js';
+import { createExoticState, stepExoticMatter } from './state/exoticMatter.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -66,6 +67,7 @@ let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
 let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
 let memoryBuffers = null; // Set G.1 — persistent species/group memory
+let exoticState = null; // Set L.1 — exotic matter zones + per-particle states
 let agencyEngine = null; // Set H.1 — narrative actor + world milestones
 let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
 let seenMilestones = new Set(); // Set H.3 — once-only world milestones
@@ -191,6 +193,7 @@ async function boot() {
     worldEventEngine = createWorldEventEngine(bus);
     epochEngine = createEpochEngine(bus);
     memoryBuffers = createMemoryBuffers();
+    exoticState = createExoticState();
     agencyEngine = createAgencyEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
@@ -1065,6 +1068,17 @@ function updateIntelligence() {
         });
         for (const ev of inf.events) bus.emit(ev.type, ev);
     }
+    // Set L — Exotic Matter (L.1): EXOTIC field zones tag particles with
+    // antimatter/dark/strange/negative states — annihilation bursts conserved
+    // energy, dark matter dims and self-powers, strange matter converts
+    // neighbours, negative mass repels from density. Ambient: runs whenever
+    // laws are active, gated on its own cadence.
+    if (exoticState && metrics.lawActiveCount > 0) {
+        const exo = stepExoticMatter(exoticState, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams,
+        });
+        if (exo.annihilated > 0 || exo.converted > 0) bus.emit('exotic:pass', exo);
+    }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
     if (speciationEngine && metrics.lawActiveCount > 0) {
@@ -1169,6 +1183,7 @@ function resetIntelligence() {
     }
     if (epochEngine) resetEpoch(epochEngine);
     if (memoryBuffers) resetMemoryBuffers(memoryBuffers);
+    exoticState = createExoticState(particleCount);
     if (agencyEngine) resetAgency(agencyEngine);
     speciesGoals = new Map();
     seenMilestones.clear();

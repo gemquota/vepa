@@ -21,7 +21,22 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.12] - 2026-08-19 → 8.11.1
+## [4.8.12] - 2026-08-19 → 8.12.0
+
+### Set L — Exotic Matter: the substrate transforms (L·M·N trilogy, build 1 — the physics frontier opens)
+- `feat(exotic):` **EXOTIC field zones** (`src/state/exoticMatter.js`) — the field grid gains an EXOTIC scalar (magnitude = zone kind: 1 ANTIMATTER, 2 DARK, 3 STRANGE, 4 NEGATIVE). Zones seed deterministically at world start (no PRNG — formulaic placement like buildWells) and are re-asserted into the field each pass against ambient decay/diffusion, with a hard write cap (design risk L.1 — no griefing). The 128-law budget is untouched (decision L.1: world params + state passes only).
+- `feat(exotic):` **matter states** — a parallel per-particle state array (memoryBuffers alignment discipline, lazy growth) tags particles inside zones; the tag persists after leaving (STATE HALF LIFE) and clears on death, so boundaries don't flicker.
+- `feat(exotic):` **annihilation** (decision L.2) — antimatter + normal matter within a radius annihilate: the two ENERGY pools burst into the THERMAL field at the midpoint (energy in = energy out, no free energy), the antimatter particle dies and the normal one is destroyed by energy loss. Capped at 8 pairs/pass (no annihilation storms).
+- `feat(exotic):` **dark matter** (decision L.3) — dark-tagged particles render dim (ALPHA 0.25) and are self-powered (ENERGY floor 10) — the ghost matter of the dish; leaving the zone restores visibility.
+- `feat(exotic):` **strange conversion** (decision L.4) — strange particles convert normal neighbours within range at EXOTIC_STRANGE_RATE, decided by a deterministic integer hash (no PRNG); converted particles gain mass (×1.5, capped at 8 — below the star-collapse threshold). Capped at 6/pass (no contagion runaway).
+- `feat(exotic):` **negative mass** (decision L.5) — negative-tagged particles feel inverted gravity: a small velocity nudge up the local THERMAL+INFO density gradient (repelled from mass concentrations), well under the physics clamps.
+- `feat(world):` new **MATTER > EXOTIC** world-param subgroup (SETUP > WORLD) — EXOTIC ZONES (0–16, default 3), ZONE SIZE (1–4, 2), ANNIHILATION RADIUS (0–200, 30), STRANGE RATE (0–1, 0.02), NEGATIVE STRENGTH (0–5, 1), STATE HALF LIFE (1–100, 20). Rendered automatically by the generic world-panel group derivation.
+- `feat(ui):` exotic events (`exotic:annihilate` / `exotic:convert`) emitted on the bus for the narrative journal.
+- `docs:` RRP L·M·N trilogy artifacts (`docs/dev/rrp-trilogy-4/` intent + traceability + mermaid) land with this release per R9.3 — the fourth trilogy opening the second 3×3 **trilogy³** (the physics frontier: L exotic matter → M relativity → N quantum macroscale); build order locked (L v8.12.0 · M v8.13.0 · N v8.14.0). The full 18-set lifecycle designs (O·P·Q cosmic + R·S·T completion) land in `docs/dev/rrp-trilogy-5/` + `docs/dev/rrp-trilogy-6/`.
+- `docs(changelog):` the v8.11.1 hotfix entry's legacy label corrected from `[4.8.12]` to `[4.8.11]` (hotfixes reuse their base version's legacy label, per the `[4.8.1] → 8.1.1` convention) so `[4.8.12]` belongs to this Set L release.
+- `test:` +18 (`tests/unit/exoticMatter.test.js`) — cadence gate + force, lazy array growth, zone seeding determinism + 0-off + re-seed, zone writes, tagging + death-clear + half-life decay, annihilation (conserved burst + death) + cap, dark dim + floor + restore, strange conversion (rate 1/0 + mass cap), negative anti-gravity nudge + no-gradient no-op, summaries, determinism, world-param defs. Full suite 798 (792 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
+
+## [4.8.11] - 2026-08-19 → 8.11.1 (hotfix rebuild of 8.11.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
 
 ### Fix — the dish is alive on boot
 - `fix(boot):` a fresh load previously booted with **zero laws enabled** (`DEFAULT_LAWS = []` in `src/main.js`) and the solver has a deliberate zero-laws hard freeze (no laws → no movement, no interaction, no state change) — the world sat perfectly still while the UI stayed responsive, reading as broken. `src/main.js` now boots with the **PRIME_DEFAULT starter law set** (`GRAV, DRAG, ENTR, WRAP, COLL, LIFE, GLOW, REPRO, PHENOTYPE, GENOTYPE`), sourced from `PRIME_DEFAULT.laws` as the single source of truth, so motion, interaction and life begin immediately on load.

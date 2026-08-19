@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.11.0** (legacy label `4.8.8`). Retroactive mapping of the v4 line:
+  current: **8.12.0** (legacy label `4.8.12`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -110,6 +110,13 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   generations. Child species inherit their parent's culture on speciation,
   groups blend their members' memories into a collective, and each species'
   memory adapts to energy, density and extinction epochs.
+- **Exotic Matter (v8.12)** — the substrate transforms (first build of the
+  L·M·N physics frontier, opening the second 3×3 trilogy³): SETUP > WORLD >
+  MATTER > EXOTIC seeds deterministic exotic zones on the field grid
+  (ANTIMATTER / DARK / STRANGE / NEGATIVE). Antimatter annihilates with
+  normal matter into conserved energy bursts, dark matter dims and
+  self-powers, strange matter contagiously converts neighbours (mass-gain),
+  and negative mass repels from mass concentrations.
 - **Infrastructure & Energy (v8.11)** — civilizations power the dish:
   groups harvest ambient field energy into treasury (conserved), allied
   grids feed member energy along the alliance, and era-progressed

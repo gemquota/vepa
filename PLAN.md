@@ -82,6 +82,22 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.12.0 — 2026-08-19)
+
+- **Set L — Exotic Matter** (build 1, OPENING the RRP L·M·N trilogy — the
+  fourth trilogy, starting the second 3×3 trilogy³: the physics frontier):
+  the field grid gains an EXOTIC scalar (`src/physics/fields.js`) whose
+  magnitude encodes zone kind (1 ANTIMATTER, 2 DARK, 3 STRANGE, 4 NEGATIVE);
+  `src/state/exoticMatter.js` seeds zones deterministically (no PRNG),
+  tags particles with a parallel per-particle matter state (half-life
+  persistence), and applies conserved annihilation bursts, dark-matter
+  ghosting (dim + self-powered), contagious strange conversion (mass-gain,
+  capped), and negative-mass anti-gravity nudges. New MATTER > EXOTIC
+  world-param subgroup. No new laws (128/128 budget — decision L.1).
+  Arc #2: L·M·N the substrate transforms → O·P·Q the world goes cosmic →
+  R·S·T it completes (designs in `docs/dev/rrp-trilogy-4/5/6/`).
+  See `CHANGELOG.md` [8.12.0].
+
 ## Milestone note (v8.11.0 — 2026-08-18)
 
 - **Set K — Infrastructure & Energy** (build 3, COMPLETING the RRP I·J·K

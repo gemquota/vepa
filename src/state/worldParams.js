@@ -142,6 +142,18 @@ export const WORLD_PARAM_DEFS = [
   { key: 'EXTINCTION_THRESHOLD', label: 'EXTINCTION THRESH', min: 0.05, max: 0.9, default: 0.35, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
   { key: 'RECOVERY_THRESHOLD', label: 'RECOVERY THRESH', min: 0.2, max: 1, default: 0.7, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
 
+  // ── MATTER (v8.12 L.1 — Exotic Matter, the L·M·N physics frontier) ──
+  // Exotic zones are regions of the EXOTIC scalar field (magnitude = zone
+  // kind: 1 ANTIMATTER, 2 DARK, 3 STRANGE, 4 NEGATIVE); particles inside a
+  // zone are tagged with an exotic matter state that persists briefly after
+  // leaving. 0 zones = exotic matter off (the dish stays mundane).
+  { key: 'EXOTIC_COUNT', label: 'EXOTIC ZONES', min: 0, max: 16, default: 3, step: 1, group: 'MATTER', subgroup: 'EXOTIC' },
+  { key: 'EXOTIC_ZONE_SIZE', label: 'ZONE SIZE', min: 1, max: 4, default: 2, step: 1, group: 'MATTER', subgroup: 'EXOTIC' },
+  { key: 'EXOTIC_ANNIHILATE_RADIUS', label: 'ANNIHILATION RADIUS', min: 0, max: 200, default: 30, step: 5, group: 'MATTER', subgroup: 'EXOTIC' },
+  { key: 'EXOTIC_STRANGE_RATE', label: 'STRANGE RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'EXOTIC' },
+  { key: 'EXOTIC_NEGATIVE_STRENGTH', label: 'NEGATIVE STRENGTH', min: 0, max: 5, default: 1, step: 0.1, group: 'MATTER', subgroup: 'EXOTIC' },
+  { key: 'EXOTIC_HALF_LIFE', label: 'STATE HALF LIFE', min: 1, max: 100, default: 20, step: 1, group: 'MATTER', subgroup: 'EXOTIC' },
+
   // ── SOCIETY (v8.9 I.1 · v8.10 J.1 · v8.11 K.1 — the I·J·K trilogy) ──
   // Crafting economy (Set I), governance + relations (Set J) and infrastructure
   // extraction/grids (Set K) all live here — one accordion that grows across
