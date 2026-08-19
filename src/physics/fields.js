@@ -214,6 +214,18 @@ export function writeField(system, name, px, py, pz, delta) {
   }
 }
 
+/**
+ * Set the impassable-wall flag at a world position (Set I barriers). Walls are
+ * physically impassable only while the COLL law is on (the hard-matter toggle),
+ * like the preset walls — this is the same wall grid, just written at runtime.
+ */
+export function writeWall(system, px, py, pz, on = true) {
+  if (!system) return;
+  const c = cellOf(system, px, py, pz);
+  system.walls[idx(system.dim, c.x, c.y, c.z)] = on ? 1 : 0;
+  if (on) system.hasWalls = true;
+}
+
 // ── Sampling (trilinear) ─────────────────────────────────────────────────────
 
 function sampleScalar(system, name, fx, fy, fz) {

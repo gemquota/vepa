@@ -142,6 +142,16 @@ Stable macro-structures are rarely the result of a single parameter. They emerge
 *   **Milestones are quests:** eight species, three civilizations, 1,500 lives
     and abundant energy each fire a one-time journal entry as they emerge.
 
+### Tools & Artifacts (v8.9 — SETUP > WORLD > SOCIETY)
+*   **Groups build:** any group with builders can spend treasury to craft
+    TOOL / WEAPON / BARRIER artifacts (up to 12 of each, decaying under a
+    maintenance cost the treasury must cover).
+*   **Tools pay:** each TOOL adds an income dividend to the treasury.
+*   **Weapons calm:** each WEAPON dampens the group's learned THREAT memory,
+    so its species flee less and hold ground instead.
+*   **Barriers fence:** each BARRIER writes impassable wall cells at the
+    territory's corners — real walls the COLL law respects.
+
 ### E. The Categorical Law Colors
 Laws are now color-coded by category to help you navigate the system status at a glance:
 *   **BLUE (Physics):** Gravity, Drag, Entropy, Wrap, Collision, Accretion, Planetary.

@@ -35,6 +35,7 @@ import { createAgencyEngine, updateAgency, detectMilestones, resetAgency } from 
 import { computeSpeciesGoals, applyGoalNudges } from './engines/goalBehavior.js';
 import { applyConstructions } from './state/construction.js';
 import { runEconomy } from './state/economy.js';
+import { runArtifacts } from './state/artifacts.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -1040,6 +1041,11 @@ function updateIntelligence() {
         // Economy (F.3) — treasury, pairwise trade, market prices.
         const eco = runEconomy(groupRegistry, particleView, particleCount, getFields(), { tick });
         if (eco.trades > 0) bus.emit('economy:trade', eco);
+        // Artifacts (Set I.1) — treasury-funded TOOL/WEAPON/BARRIER inventory:
+        // tools pay an income dividend, weapons damp threat memory (H.2 flee),
+        // barriers write impassable wall cells at the territory edge.
+        const art = runArtifacts(groupRegistry, getFields(), { tick, worldParams, memoryBuffers });
+        if (art.crafted > 0 || art.decayed > 0 || art.walls > 0) bus.emit('artifacts:pass', art);
     }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
@@ -1125,7 +1131,7 @@ function resetIntelligence() {
     if (insightEngine) { insightEngine.frame = 0; insightEngine.history = []; insightEngine.lastClusters = null; }
     if (goalEngine) { goalEngine.frame = 0; goalEngine.history = []; }
     if (timelineEngine) clearTimelineEngine(timelineEngine);
-    if (groupRegistry) { groupRegistry.groups.clear(); groupRegistry.nextId = 1; groupRegistry.frame = 0; groupRegistry.events.length = 0; groupRegistry.tradeLog.length = 0; }
+    if (groupRegistry) { groupRegistry.groups.clear(); groupRegistry.nextId = 1; groupRegistry.frame = 0; groupRegistry.events.length = 0; groupRegistry.tradeLog.length = 0; groupRegistry.craftLog.length = 0; }
     // Set A — reset speciation state (fresh slot census), eco ring and event
     // baseline on every restart so nothing carries across worlds.
     if (speciationEngine) {

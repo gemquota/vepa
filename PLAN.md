@@ -82,6 +82,19 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.9.0 — 2026-08-18)
+
+- **Set I — Tools & Artifacts** (build 1 of the RRP I·J·K trilogy — the literal
+  third trilogy completing the 3×3 trilogy³; design in
+  `docs/dev/rrp-trilogy-3/`): per-group artifact registry
+  (`src/state/artifacts.js`) — TOOL / WEAPON / BARRIER inventories crafted
+  from treasury by builders, decay under maintenance, and act through the
+  existing substrate: TOOL dividends into the treasury, WEAPON dampens the
+  group THREAT memory (Set H.2 flee), BARRIER writes impassable wall cells at
+  the territory edge via the new `writeWall` API. The new SOCIETY world-param
+  group (SETUP > WORLD) hosts CRAFT COST + ARTIFACT DECAY and grows across
+  the trilogy. See `CHANGELOG.md` [8.9.0].
+
 ## Milestone note (v8.8.0 — 2026-08-18)
 
 - **Set H — Agency & Narrative** (build 3, completing the RRP D·G·H trilogy):

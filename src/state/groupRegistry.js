@@ -44,6 +44,7 @@ export function createGroupRegistry() {
     frame: 0,
     events: [],        // drained + emitted by main.js
     tradeLog: [],      // F.3 economy ring (bounded by economy.js)
+    craftLog: [],      // Set I — artifact craft/decay ring (bounded by artifacts.js)
   };
 }
 
@@ -70,6 +71,7 @@ function freshGroup(id, name, declared, species) {
     age: 0,
     underMinTicks: 0,
     treasury: 0, // F.3 economy
+    artifacts: { TOOL: 0, WEAPON: 0, BARRIER: 0 }, // Set I — crafted inventory
   };
 }
 
@@ -93,6 +95,7 @@ export function getGroupSummaries(registry) {
       minX: g.minX, minY: g.minY, minZ: g.minZ,
       maxX: g.maxX, maxY: g.maxY, maxZ: g.maxZ,
       treasury: g.treasury,
+      artifacts: { ...g.artifacts },
       age: g.age,
     });
   }

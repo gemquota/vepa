@@ -21,17 +21,6 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
-## [4.8.9] - 2026-08-18 → 8.9.0
-
-### Set I — Tools & Artifacts: civilizations build (I·J·K trilogy, build 1 — trilogy³ arc)
-- `feat(artifacts):` **artifact registry** (`src/state/artifacts.js`) — every group with real membership holds a per-group inventory of TOOL / WEAPON / BARRIER artifacts, crafted by spending treasury (builders do the work — a group without builders can't craft). Crafting is rate-capped (every 6 ticks), cost-gated (CRAFT_COST), inventory-capped (12 per kind) and spreads deterministically across kinds via a rarest-kind rule (design risk I.1 — no crafting inflation).
-- `feat(artifacts):` **decay economy** — every pass levies a treasury maintenance cost per artifact (ARTIFACT_DECAY); artifacts the treasury can't cover are lost and journaled. Craft/decay history lands in a bounded 40-entry ring (`registry.craftLog`) for the analytics layer.
-- `feat(artifacts):` **effects (field/memory based, no new physics — decision I.2)** — TOOL pays an income dividend straight into the treasury (×2 per artifact); WEAPON dampens the group's collective THREAT memory so its species flee less (feeds the Set H.2 goal behavior); BARRIER writes impassable wall cells at the territory bounding-box corners via a new unified `writeWall` export on the E.1 field system (impassable while COLL is on, like preset walls), hard-capped at 48 writes per pass (design risk #2 — no barrier griefing).
-- `feat(world):` new **SOCIETY** world-param group (SETUP > WORLD > SOCIETY > CRAFTING) — CRAFT COST (10–200, default 40) and ARTIFACT DECAY (0–0.1, default 0.004), read live by the pass. The accordion grows across the I·J·K trilogy (Set J governance + Set K infrastructure knobs land here).
-- `feat(ui):` group summaries now carry the inventory (`getGroupSummaries` → `artifacts`) so the F.4 CIVILIZATIONS panel can show it.
-- `docs:` RRP I·J·K trilogy artifacts (`docs/dev/rrp-trilogy-3/` intent + traceability + mermaid) land with this release per R9.3 — the literal third trilogy completing the 3×3 trilogy³ (E·F·A exists → D·G·H remembers & acts → I·J·K builds). Build order locked (I v8.9.0 · J v8.10.0 · K v8.11.0).
-- `test:` +11 (`tests/unit/artifacts.test.js`) — cadence gate + force, craft cost/rate/treasury/builders gates, rarest-kind spread, inventory cap, maintenance decay + loss, TOOL dividend, WEAPON threat damp, BARRIER corner walls + interior pass-through, griefing cap, summaries + no-op aggregate. Full suite 758 (752 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
-
 ## [4.8.8] - 2026-08-18 → 8.8.0
 
 ### Set H — Agency & Narrative: the story acts (D·G·H trilogy, build 3 — trilogy complete)

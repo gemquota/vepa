@@ -141,6 +141,13 @@ export const WORLD_PARAM_DEFS = [
   { key: 'EPOCH_LENGTH', label: 'EPOCH LENGTH', min: 60, max: 6000, default: 600, step: 60, group: 'TIME', subgroup: 'ERAS' },
   { key: 'EXTINCTION_THRESHOLD', label: 'EXTINCTION THRESH', min: 0.05, max: 0.9, default: 0.35, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
   { key: 'RECOVERY_THRESHOLD', label: 'RECOVERY THRESH', min: 0.2, max: 1, default: 0.7, step: 0.05, group: 'TIME', subgroup: 'ERAS' },
+
+  // ── SOCIETY (v8.9 I.1 · v8.10 J.1 · v8.11 K.1 — the I·J·K trilogy) ──
+  // Crafting economy (Set I), governance + relations (Set J) and infrastructure
+  // extraction/grids (Set K) all live here — one accordion that grows across
+  // the trilogy. Values are read live by the per-set passes.
+  { key: 'CRAFT_COST', label: 'CRAFT COST', min: 10, max: 200, default: 40, step: 10, group: 'SOCIETY', subgroup: 'CRAFTING' },
+  { key: 'ARTIFACT_DECAY', label: 'ARTIFACT DECAY', min: 0, max: 0.1, default: 0.004, step: 0.001, group: 'SOCIETY', subgroup: 'CRAFTING' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));
