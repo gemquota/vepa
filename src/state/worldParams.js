@@ -162,6 +162,19 @@ export const WORLD_PARAM_DEFS = [
   { key: 'LIGHT_SPEED', label: 'LIGHT SPEED (C)', min: 100, max: 2000, default: 600, step: 50, group: 'MATTER', subgroup: 'RELATIVITY' },
   { key: 'LENSING_STRENGTH', label: 'LENSING STRENGTH', min: 0, max: 1, default: 0.1, step: 0.05, group: 'MATTER', subgroup: 'RELATIVITY' },
   { key: 'MASS_ENERGY_RATE', label: 'MASS-ENERGY RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'RELATIVITY' },
+  // Set N — Quantum Macroscale (v8.14 N.1–N.4): deterministic superposition
+  // with collapse-on-interaction, macro entanglement (reuses stride 75–76),
+  // ENERGY-gated wall tunneling, and DNA-gated observer collapse. The
+  // TUNNELING / SUPERPOSITION laws stay untouched — these knobs tune the
+  // ambient macroscale pass.
+  { key: 'QUANTUM_SUPERPOSITION_RATE', label: 'SUPERPOSITION RATE', min: 0, max: 1, default: 0.15, step: 0.05, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_SPREAD', label: 'SUPERPOSITION SPREAD', min: 0, max: 100, default: 25, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_COLLAPSE_RADIUS', label: 'COLLAPSE RADIUS', min: 0, max: 200, default: 30, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_ENTANGLE_RATE', label: 'ENTANGLE RATE', min: 0, max: 1, default: 0.1, step: 0.05, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_ENERGY_SHARE', label: 'ENERGY SHARE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_TUNNEL_RATE', label: 'TUNNEL RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_TUNNEL_ENERGY', label: 'TUNNEL ENERGY GATE', min: 5, max: 200, default: 40, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
+  { key: 'QUANTUM_OBSERVER_RADIUS', label: 'OBSERVER RADIUS', min: 0, max: 200, default: 40, step: 5, group: 'MATTER', subgroup: 'QUANTUM' },
 
   // ── SOCIETY (v8.9 I.1 · v8.10 J.1 · v8.11 K.1 — the I·J·K trilogy) ──
   // Crafting economy (Set I), governance + relations (Set J) and infrastructure

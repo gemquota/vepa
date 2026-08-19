@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.13.0** (legacy label `4.8.13`). Retroactive mapping of the v4 line:
+  current: **8.14.0** (legacy label `4.8.14`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -24,7 +24,7 @@ explicit law.
 npm install
 npm run dev    # Dev server with COOP/COEP headers
 npm run build  # Production build
-npm test       # Unit tests (81 files / 780 tests)
+npm test       # Unit tests (84 files / 826 tests)
 ```
 
 ## Deployments
@@ -110,6 +110,15 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   generations. Child species inherit their parent's culture on speciation,
   groups blend their members' memories into a collective, and each species'
   memory adapts to energy, density and extinction epochs.
+- **Quantum Macroscale (v8.14)** — particles go non-classical (build 3,
+  **closing** the L·M·N physics frontier): slow, isolated particles hold a
+  deterministic second position state that collapses to one branch on the
+  first interaction (speed burst, neighbour, or lifetime), superposed pairs
+  entangle across distance — sharing ENERGY and momentum, measuring one
+  collapses both — high-ENERGY particles tunnel through impassable walls
+  (probability × energy gate), and species with high SELECTION_SENSITIVITY /
+  REGULATORY_DEPTH DNA collapse nearby superpositions by observing them.
+  SETUP > WORLD > MATTER > QUANTUM.
 - **Relativity (v8.13)** — space curves, time slows, mass becomes energy
   (build 2 of the L·M·N physics frontier): a mass-warped CURVATURE field
   makes the INFO signal medium lens toward dense regions (conserved), fast

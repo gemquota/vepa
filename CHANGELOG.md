@@ -21,6 +21,18 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.14] - 2026-08-19 → 8.14.0
+
+### Set N — Quantum Macroscale: particles go non-classical (L·M·N trilogy, build 3 — the physics frontier completes)
+- `feat(quantum):` **deterministic superposition** (decision N.1, `src/state/quantumMacro.js`) — a slow, isolated particle (sparse neighbourhood) holds a second position state (hash-offset alternate branch). The first interaction — a neighbour within the collapse radius, a speed burst, or lifetime expiry — collapses the pair: a deterministic hash picks which branch is real (keep the current position or resolve to the alternate one), journaled `quantum:collapse`. No PRNG — saves stay reproducible.
+- `feat(quantum):` **macro entanglement** (decision N.2) — the existing ENTANGLE stride offsets (75–76) get macro meaning when the ENTANGLEMENT law is not using them: pairs of superposed particles within a radius link up (registry + stride projection). Entangled pairs share ENERGY across distance (richer donates to poorer, rate-gated) and drag each other's momentum toward the mean; **measuring one collapses both** (the mirror lives in the collapse path). If the ENTANGLEMENT law takes the stride offset over, the macro pair breaks cleanly — no state clash.
+- `feat(quantum):` **ENERGY-gated wall tunneling** (decision N.3) — a high-ENERGY particle pressed against an IMPASSABLE wall tunnels through with probability TUNNEL RATE × (energy / gate): the pass walks the axis past the wall band to the first free cell (thick walls included) and teleports the particle there at an energy cost. The TUNNELING law stays untouched — this is the macro-probability variant, bounded by ENERGY and capped per pass.
+- `feat(quantum):` **DNA-gated observer effect** (decision N.4) — species with high SELECTION_SENSITIVITY (DNA 53) or REGULATORY_DEPTH (DNA 63) observe: proximity collapses nearby superpositions (observation is itself a measurement), journaled `quantum:observe` and fed into the narrative.
+- `feat(world):` new **MATTER > QUANTUM** world-param subgroup (SETUP > WORLD) — SUPERPOSITION RATE (0–1, 0.15), SUPERPOSITION SPREAD (0–100, 25), COLLAPSE RADIUS (0–200, 30), ENTANGLE RATE (0–1, 0.1), ENERGY SHARE (0–1, 0.02), TUNNEL RATE (0–1, 0.02), TUNNEL ENERGY GATE (5–200, 40), OBSERVER RADIUS (0–200, 40). Rendered automatically by the generic world-panel group derivation.
+- `feat(ui):` collapse/tunnel/observe events (`quantum:pass`) emitted on the bus for the narrative journal.
+- `docs:` the L·M·N trilogy is **complete** — Set L made matter transform, Set M made space and time transform, Set N makes particles non-classical. The trilogy³ lifecycle moves to its second 3×3: O·P·Q ("The World Goes Cosmic", from v8.15.0) — stars/black holes/supernovae, synthetic life + uploaded consciousness, and the multiplex as an interacting multiverse.
+- `test:` +17 (`tests/unit/quantumMacro.test.js`) — cadence gate + force, lazy array growth, dead-particle cleanup, superposition entry gates (sparse/slow, crowded/fast/rate-0 blocked), collapse resolution to a branch (interaction/speed/lifetime), entanglement pair creation + stride projection + energy sharing + law-takeover break + measurement mirror, wall tunneling (band walk, energy gate, no-walls/rate-0 no-ops), observer collapse (high DNA yes / low DNA no), full-pass determinism, world-param defs. Full suite 826 (820 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
+
 ## [4.8.13] - 2026-08-19 → 8.13.0
 
 ### Set M — Relativity: space curves, time slows, mass becomes energy (L·M·N trilogy, build 2)

@@ -41,6 +41,7 @@ import { runGovernance } from './state/governance.js';
 import { runInfrastructure } from './state/infrastructure.js';
 import { createExoticState, stepExoticMatter } from './state/exoticMatter.js';
 import { stepRelativity } from './state/relativity.js';
+import { createQuantumState, stepQuantumMacro } from './state/quantumMacro.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -69,6 +70,7 @@ let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A
 let epochEngine = null; // Set D.1 — eras, snapshots, extinction/recovery
 let memoryBuffers = null; // Set G.1 — persistent species/group memory
 let exoticState = null; // Set L.1 — exotic matter zones + per-particle states
+let quantumState = null; // Set N.1 — macroscale superposition + entanglement
 let agencyEngine = null; // Set H.1 — narrative actor + world milestones
 let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
 let seenMilestones = new Set(); // Set H.3 — once-only world milestones
@@ -195,6 +197,7 @@ async function boot() {
     epochEngine = createEpochEngine(bus);
     memoryBuffers = createMemoryBuffers();
     exoticState = createExoticState();
+    quantumState = createQuantumState();
     agencyEngine = createAgencyEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
@@ -1090,6 +1093,16 @@ function updateIntelligence() {
         });
         if (rel.condensed > 0 || rel.converted > 0) bus.emit('relativity:pass', rel);
     }
+    // Set N — Quantum Macroscale (N.1–N.4): deterministic superposition with
+    // collapse-on-interaction, macro entanglement (reuses stride 75–76),
+    // ENERGY-gated wall tunneling, and DNA-gated observer collapse. Ambient:
+    // runs whenever laws are active, gated on its own cadence.
+    if (quantumState && metrics.lawActiveCount > 0) {
+        const qm = stepQuantumMacro(quantumState, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams, dnaBuffer,
+        });
+        if (qm.collapsed > 0 || qm.tunneled > 0 || qm.observed > 0) bus.emit('quantum:pass', qm);
+    }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
     if (speciationEngine && metrics.lawActiveCount > 0) {
@@ -1195,6 +1208,7 @@ function resetIntelligence() {
     if (epochEngine) resetEpoch(epochEngine);
     if (memoryBuffers) resetMemoryBuffers(memoryBuffers);
     exoticState = createExoticState(particleCount);
+    quantumState = createQuantumState(particleCount);
     if (agencyEngine) resetAgency(agencyEngine);
     speciesGoals = new Map();
     seenMilestones.clear();

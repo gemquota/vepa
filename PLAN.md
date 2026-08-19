@@ -82,6 +82,26 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.14.0 — 2026-08-19)
+
+- **Set N — Quantum Macroscale** (build 3, CLOSING the RRP L·M·N trilogy —
+  the physics frontier is complete): slow, isolated particles enter a
+  deterministic superposition (`src/state/quantumMacro.js`) — a hash-offset
+  alternate position that collapses to one branch on the first interaction
+  (neighbour within radius, speed burst, or lifetime expiry); superposed
+  pairs entangle macro-style through the existing stride 75–76 offsets
+  (sharing ENERGY across distance, momentum drag, measurement collapses
+  both — breaks cleanly if the ENTANGLEMENT law takes the offsets over);
+  high-ENERGY particles tunnel through impassable wall bands (probability ×
+  energy gate, energy cost); and species with high SELECTION_SENSITIVITY /
+  REGULATORY_DEPTH DNA observe, collapsing nearby superpositions. New
+  MATTER > QUANTUM world-param subgroup (8 knobs). No new laws (128/128
+  budget — decision N.1). The L·M·N trilogy is complete — the second 3×3 of
+  the trilogy³ lifecycle moves to O·P·Q ("The World Goes Cosmic", from
+  v8.15.0): stars/black holes/supernovae, synthetic life + uploaded
+  consciousness, and the multiplex as an interacting multiverse. See
+  `CHANGELOG.md` [8.14.0].
+
 ## Milestone note (v8.13.0 — 2026-08-19)
 
 - **Set M — Relativity** (build 2 of the RRP L·M·N trilogy — the physics
