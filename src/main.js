@@ -30,6 +30,7 @@ import { createLineageTracker, trackBirth, trackDeath } from './engines/lineageT
 import { createGoalEngine, setCurrentValue as setGoalValue, update as updateGoal } from './engines/goalEngine.js';
 import { createTimelineEngine, snapshot as timelineSnapshot, getTimeline as getTimelineList, clearTimeline as clearTimelineEngine, scrub as timelineScrub } from './engines/timelineEngine.js';
 import { createGroupRegistry, updateGroups, groupCount, declareGroup } from './state/groupRegistry.js';
+import { PRIME_DEFAULT } from './state/defaultPresets.js';
 import { createMemoryBuffers, speciesMemory, groupMemory, blendMemory, adaptMemory, decayMemory, pruneGroupMemory, resetMemoryBuffers, MEM } from './state/memoryBuffers.js';
 import { createAgencyEngine, updateAgency, detectMilestones, resetAgency } from './engines/agencyEngine.js';
 import { computeSpeciesGoals, applyGoalNudges } from './engines/goalBehavior.js';
@@ -90,9 +91,11 @@ let lastParamSnapshotAt = 0;
 const PARAM_SNAPSHOT_DEBOUNCE = 1200;
 let spawnRate = worldParams.SPAWN_RATE;
 let spawnAccumulator = 0;
-// Begin with all laws disabled — movement and interaction only exist once
-// a law is enabled. Presets (and the user) turn laws on explicitly.
-const DEFAULT_LAWS = [];
+// Begin with the PRIME_DEFAULT starter law set so the dish is alive on boot
+// (GRAV/DRAG/ENTR/WRAP/COLL/LIFE/GLOW/REPRO/PHENOTYPE/GENOTYPE). Clearing all
+// laws — via the law grid or Chaos ✕ — still yields the zero-laws hard freeze
+// the solver preserves: no laws → no movement, no interaction, no state change.
+const DEFAULT_LAWS = PRIME_DEFAULT.laws;
 
 /** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }

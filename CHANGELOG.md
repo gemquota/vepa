@@ -21,6 +21,13 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.12] - 2026-08-19 → 8.11.1
+
+### Fix — the dish is alive on boot
+- `fix(boot):` a fresh load previously booted with **zero laws enabled** (`DEFAULT_LAWS = []` in `src/main.js`) and the solver has a deliberate zero-laws hard freeze (no laws → no movement, no interaction, no state change) — the world sat perfectly still while the UI stayed responsive, reading as broken. `src/main.js` now boots with the **PRIME_DEFAULT starter law set** (`GRAV, DRAG, ENTR, WRAP, COLL, LIFE, GLOW, REPRO, PHENOTYPE, GENOTYPE`), sourced from `PRIME_DEFAULT.laws` as the single source of truth, so motion, interaction and life begin immediately on load.
+- `fix(boot):` the zero-laws blank-canvas mode is preserved by design — clearing all laws (law grid / Chaos ✕) still yields the solver's hard freeze.
+- `test:` full suite re-run — 774/780 green (the 6 failures are the documented pre-existing `lawCategories` ×4 + `batch_08` TIME_DILATION + `batch_30` TELEPORT baseline, untouched); `vepa4 syntax` + `vepa4 build` clean.
+
 ## [4.8.11] - 2026-08-18 → 8.11.0
 
 ### Set K — Infrastructure & Energy: civilizations power the dish (I·J·K trilogy, build 3 — the 3×3 trilogy³ COMPLETE)
