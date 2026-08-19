@@ -82,6 +82,22 @@ npx vite build                                        # clean bundle
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
 
+## Milestone note (v8.13.0 — 2026-08-19)
+
+- **Set M — Relativity** (build 2 of the RRP L·M·N trilogy — the physics
+  frontier): a mass-warped CURVATURE scalar field (`src/physics/fields.js`
+  + `src/state/relativity.js`) buckets particle mass into the grid (SET
+  semantics, bounded); the INFO signal medium lens-toward curvature peaks
+  (gravitational lensing, exactly conserved); fast particles age and starve
+  slower (velocity time dilation on AGE/HUNGER, γ = √(1 − (v/c)²), bounded
+  by TIME DILATION MAX — the gravitational dilation term stays with the
+  TIME_DILATION law, no double-dilution); and E = mc² converts surplus
+  ENERGY ↔ MASS (rate-gated, mass capped below the star-collapse
+  threshold). New MATTER > RELATIVITY world-param subgroup. No new laws
+  (128/128 budget — decision M.1). Arc #2: L·M·N the substrate transforms →
+  O·P·Q the world goes cosmic → R·S·T it completes. See `CHANGELOG.md`
+  [8.13.0].
+
 ## Milestone note (v8.12.0 — 2026-08-19)
 
 - **Set L — Exotic Matter** (build 1, OPENING the RRP L·M·N trilogy — the

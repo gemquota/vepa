@@ -350,7 +350,7 @@ describe('Set L — summaries & determinism', () => {
 
 describe('Set L — world params', () => {
   it('defines the MATTER > EXOTIC subgroup with sane defaults', () => {
-    const defs = WORLD_PARAM_DEFS.filter((d) => d.group === 'MATTER');
+    const defs = WORLD_PARAM_DEFS.filter((d) => d.group === 'MATTER' && d.subgroup === 'EXOTIC');
     expect(defs.length).toBe(6);
     const count = worldParamDef('EXOTIC_COUNT');
     expect(count).not.toBeNull();

@@ -21,6 +21,19 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.13] - 2026-08-19 → 8.13.0
+
+### Set M — Relativity: space curves, time slows, mass becomes energy (L·M·N trilogy, build 2)
+- `feat(relativity):` **mass-warped CURVATURE field** (`src/state/relativity.js`) — a new scalar field (decision M.1): every particle's mass buckets into the field grid, so dense regions curve space around them. Written with SET semantics each pass (deterministic, no PRNG), bounded by MAX_CURVATURE; zero-strength zeroes the field.
+- `feat(relativity):` **gravitational lensing** (decision M.2) — the INFO signal medium bends toward curvature peaks: each pass moves a small fraction of each curved cell's INFO one step toward its steepest-curvature neighbour (targets accumulate in the system scratch, applied after the pass). Conserved exactly — moves, never creates. Communication paths visibly curve around mass.
+- `feat(relativity):` **velocity time dilation** (decision M.3) — time runs slow for fast particles (γ = √(1 − min((v/c)², 1 − max²))): the pass slows their AGE and HUNGER clocks by (1 − γ) × cadence, clamped by TIME DILATION MAX (never below zero). The *gravitational* dilation term is already served by the TIME_DILATION law (v4.6.29, `localDt` from the mass potential) — Set M adds only the velocity term, so there is no double-dilation.
+- `feat(relativity):` **mass–energy equivalence** (decision M.4) — E = mc²: surplus ENERGY (> 80) condenses into MASS (energy is dilute — a small gain at 0.2×), scarce ENERGY (< 20) converts MASS into ENERGY (mass is concentrated — a large gain at 5×). Rate-gated, bounded (mass capped below the star-collapse threshold STAR_MASS 12, energy stays within the solver ceiling).
+- `feat(world):` new **MATTER > RELATIVITY** world-param subgroup (SETUP > WORLD) — CURVATURE STRENGTH (0–5, 1), TIME DILATION MAX (0.25–1, 0.25), LIGHT SPEED C (100–2000, 600), LENSING STRENGTH (0–1, 0.1), MASS-ENERGY RATE (0–1, 0.02). Rendered automatically by the generic world-panel group derivation.
+- `feat(ui):` E=mc² events (`relativity:pass` with condensed/converted counts) emitted on the bus for the narrative journal.
+- `fix(test):` Set L's world-param test now filters the MATTER group by the EXOTIC subgroup (the group grew with Set M's RELATIVITY knobs).
+- `docs:` the L·M·N trilogy is at build 2 of 3 — Set L made matter transform, Set M makes space and time transform; Set N (quantum macroscale, v8.14.0) next.
+- `test:` +11 (`tests/unit/relativity.test.js`) — cadence gate + force, curvature bucketing + SET semantics + cap, lensing direction + exact conservation + no-op cases, dilation factor/clamp/floor, mass–energy condensation + scarcity conversion + rate-0 no-op + bounds, full-pass determinism, world-param defs. Full suite 809 (803 green; the 6 failures are the documented pre-existing law-category/audit baseline, untouched).
+
 ## [4.8.12] - 2026-08-19 → 8.12.0
 
 ### Set L — Exotic Matter: the substrate transforms (L·M·N trilogy, build 1 — the physics frontier opens)

@@ -40,6 +40,7 @@ import { runArtifacts } from './state/artifacts.js';
 import { runGovernance } from './state/governance.js';
 import { runInfrastructure } from './state/infrastructure.js';
 import { createExoticState, stepExoticMatter } from './state/exoticMatter.js';
+import { stepRelativity } from './state/relativity.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -1078,6 +1079,16 @@ function updateIntelligence() {
             tick, worldParams,
         });
         if (exo.annihilated > 0 || exo.converted > 0) bus.emit('exotic:pass', exo);
+    }
+    // Set M — Relativity (M.1–M.4): mass-warped CURVATURE field, gravitational
+    // lensing of the INFO medium toward curvature peaks, velocity time
+    // dilation on AGE/HUNGER, and E=mc² energy↔mass conversion. Ambient:
+    // runs whenever laws are active, gated on its own cadence.
+    if (metrics.lawActiveCount > 0) {
+        const rel = stepRelativity(particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams,
+        });
+        if (rel.condensed > 0 || rel.converted > 0) bus.emit('relativity:pass', rel);
     }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.

@@ -21,7 +21,7 @@
 // wall/well/portal layout) changes. All placement is deterministic — no PRNG.
 // ============================================================================
 
-const SCALARS = ['THERMAL', 'INFO', 'EXOTIC'];
+const SCALARS = ['THERMAL', 'INFO', 'EXOTIC', 'CURVATURE'];
 const VECTORS = ['WIND', 'EM'];
 
 let _system = null;
@@ -69,6 +69,7 @@ export function createFieldSystem(worldSize, dim, params = {}) {
       THERMAL: new Float32Array(cells),
       INFO: new Float32Array(cells),
       EXOTIC: new Float32Array(cells), // Set L.1 — exotic zone kind (1-4) or 0
+      CURVATURE: new Float32Array(cells), // Set M.1 — mass-warped spacetime curvature
     },
     vectors: {
       WIND: new Float32Array(cells * 3),

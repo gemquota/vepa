@@ -5,7 +5,7 @@
 ## Versioning & Commits
 
 - **Product:** **VEPA4**; versions use **`major.minor.build`** (npm-semver-native) —
-  current: **8.12.0** (legacy label `4.8.12`). Retroactive mapping of the v4 line:
+  current: **8.13.0** (legacy label `4.8.13`). Retroactive mapping of the v4 line:
   old `4.M.N` → `M.N.0`; see `CHANGELOG.md` and `AGENTS.md` §10.4.
 - **Commits:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
   — `<type>(<scope>): <description>`, release commits `chore(release): v7.0.0`,
@@ -110,6 +110,12 @@ global command with `rm /data/data/com.termux/files/usr/bin/vepa4`.
   generations. Child species inherit their parent's culture on speciation,
   groups blend their members' memories into a collective, and each species'
   memory adapts to energy, density and extinction epochs.
+- **Relativity (v8.13)** — space curves, time slows, mass becomes energy
+  (build 2 of the L·M·N physics frontier): a mass-warped CURVATURE field
+  makes the INFO signal medium lens toward dense regions (conserved), fast
+  particles age and starve slower (velocity time dilation, bounded), and
+  surplus ENERGY condenses to MASS / scarce ENERGY converts MASS back
+  (E = mc², rate-gated). SETUP > WORLD > MATTER > RELATIVITY.
 - **Exotic Matter (v8.12)** — the substrate transforms (first build of the
   L·M·N physics frontier, opening the second 3×3 trilogy³): SETUP > WORLD >
   MATTER > EXOTIC seeds deterministic exotic zones on the field grid

@@ -153,6 +153,15 @@ export const WORLD_PARAM_DEFS = [
   { key: 'EXOTIC_STRANGE_RATE', label: 'STRANGE RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'EXOTIC' },
   { key: 'EXOTIC_NEGATIVE_STRENGTH', label: 'NEGATIVE STRENGTH', min: 0, max: 5, default: 1, step: 0.1, group: 'MATTER', subgroup: 'EXOTIC' },
   { key: 'EXOTIC_HALF_LIFE', label: 'STATE HALF LIFE', min: 1, max: 100, default: 20, step: 1, group: 'MATTER', subgroup: 'EXOTIC' },
+  // Set M — Relativity (v8.13 M.1–M.4): mass-warped CURVATURE field,
+  // gravitational lensing of the INFO medium, velocity time dilation, and
+  // E=mc² mass–energy conversion. The gravitational dilation term is already
+  // served by the TIME_DILATION law — these knobs tune Set M's ambient terms.
+  { key: 'CURVATURE_STRENGTH', label: 'CURVATURE STRENGTH', min: 0, max: 5, default: 1, step: 0.1, group: 'MATTER', subgroup: 'RELATIVITY' },
+  { key: 'TIME_DILATION_MAX', label: 'TIME DILATION MAX', min: 0.25, max: 1, default: 0.25, step: 0.05, group: 'MATTER', subgroup: 'RELATIVITY' },
+  { key: 'LIGHT_SPEED', label: 'LIGHT SPEED (C)', min: 100, max: 2000, default: 600, step: 50, group: 'MATTER', subgroup: 'RELATIVITY' },
+  { key: 'LENSING_STRENGTH', label: 'LENSING STRENGTH', min: 0, max: 1, default: 0.1, step: 0.05, group: 'MATTER', subgroup: 'RELATIVITY' },
+  { key: 'MASS_ENERGY_RATE', label: 'MASS-ENERGY RATE', min: 0, max: 1, default: 0.02, step: 0.01, group: 'MATTER', subgroup: 'RELATIVITY' },
 
   // ── SOCIETY (v8.9 I.1 · v8.10 J.1 · v8.11 K.1 — the I·J·K trilogy) ──
   // Crafting economy (Set I), governance + relations (Set J) and infrastructure
