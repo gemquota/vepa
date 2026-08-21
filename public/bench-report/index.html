@@ -13,6 +13,7 @@
     --dim: #7d8ea6;
     --accent: #4fd1c5;
     --accent2: #f5a3b5;
+    --accent3: #f7c873;
     --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
@@ -31,28 +32,46 @@
   .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
   .chip b { color: var(--accent); font-weight: 600; }
-  table { border-collapse: collapse; width: 100%; max-width: 900px; background: var(--panel); border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; max-width: 1000px; background: var(--panel); border: 1px solid var(--line); }
   th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
   th { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
   td:first-child, th:first-child { text-align: left; }
   tbody tr:hover { background: rgba(79,209,197,.05); }
-  canvas { display: block; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 900px; }
+  canvas { display: block; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 1000px; }
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
   .card h3 { margin: 0 0 8px; font-size: 12px; color: var(--ink); letter-spacing: .5px; }
   .card canvas { width: 100%; border: 0; }
   .note { color: var(--dim); font-size: 11px; margin-top: 24px; }
   .warn { color: var(--accent2); }
+  .law-cat { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .pill { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .pill-fast { background: rgba(79,209,197,.15); color: var(--accent); }
+  .pill-slow { background: rgba(245,163,181,.15); color: var(--accent2); }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+  .bar-label { width: 100px; text-align: right; font-size: 11px; color: var(--dim); flex-shrink: 0; }
+  .bar-track { flex: 1; height: 14px; background: var(--panel); border-radius: 3px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+  .bar-value { width: 70px; text-align: left; font-size: 11px; color: var(--ink); flex-shrink: 0; }
 </style>
 </head>
 <body>
   <h1>VEPA4 — Solver Benchmark Report</h1>
-  <div class="sub">Median-of-rounds, independently seeded. Lower ms/tick is better. Regenerate with <code>node bench/solver.bench.mjs --report</code>.</div>
+  <div class="sub">Median-of-rounds, independently seeded. Lower ms/tick is better. Regenerate with <code>node bench/solver.bench.mjs --all</code>.</div>
   <div id="meta" class="meta"></div>
 
   <h2>N scaling — default 10-law set</h2>
-  <canvas id="scaling" width="900" height="260"></canvas>
+  <canvas id="scaling" width="1000" height="300"></canvas>
   <table id="scaling-table"></table>
+
+  <h2>Per-law timing breakdown</h2>
+  <div class="sub">Individual law overhead at N=<span id="perlaw-n">—</span> particles. % = fraction of total tick time (ALL_DEFAULT baseline).</div>
+  <div id="perlaw-bars"></div>
+  <table id="perlaw-table"></table>
+
+  <h2>Per-law by category</h2>
+  <div class="grid3" id="category-cards"></div>
 
   <h2>MAX_INTERACTIONS × NEIGHBOR_BUF matrix</h2>
   <table id="matrix"></table>
@@ -85,7 +104,7 @@
   function drawLine(canvas, labels, series, opts = {}) {
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const pad = { l: 56, r: 16, t: 18, b: 34 };
+    const pad = { l: 64, r: 16, t: 18, b: 34 };
     ctx.clearRect(0, 0, W, H);
     const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
     let max = 0;
@@ -115,31 +134,144 @@
       ctx.stroke();
       s.values.forEach((v, i) => {
         ctx.fillStyle = s.color;
-        ctx.beginPath(); ctx.arc(x(i), y(v), 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x(i), y(v), 3, 0, Math.PI * 2); ctx.fill();
       });
     });
   }
 
-  // Scaling chart + table
-  const sc = D.scaling;
-  drawLine(document.getElementById('scaling'),
-    sc.map((r) => r.count.toLocaleString()),
-    [{ values: sc.map((r) => r.msPerTick), color: '#4fd1c5' }]);
-  const st = document.getElementById('scaling-table');
-  st.innerHTML = '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>ms/tick</th><th>ticks/s</th><th>µs/particle</th></tr></thead><tbody>' +
-    sc.map((r) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.ticksPerSec)}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
-    '</tbody>';
+  // Horizontal bar chart for per-law
+  function drawLawBars(container, perLaw, maxTickUs) {
+    // Sort by tickUs descending (excluding meta entries)
+    const sorted = perLaw
+      .filter(r => r.law !== 'ALL_DEFAULT' && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_128' && r.law !== 'ALL')
+      .sort((a, b) => b.tickUs - a.tickUs);
 
-  // Matrix table
-  const mat = D.matrix;
-  const cols = mat[0].cells.map((c) => c.interactions);
-  const mt = document.getElementById('matrix');
-  mt.innerHTML = '<thead><tr><th>NEIGHBOR_BUF \\ MAX_INTERACTIONS</th>' +
-    cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
-    mat.map((row) => `<tr><td>${row.neighbors}</td>` + row.cells.map((c) => `<td>${fmt(c.msPerTick)}</td>`).join('') + '</tr>').join('') +
-    '</tbody>';
+    const catColors = {
+      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
+      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
+      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
+    };
 
-  // Sweeps
+    let html = '';
+    for (const r of sorted) {
+      const cat = D.categories[r.law];
+      const color = cat ? (catColors[cat.category] || '#6b7280') : '#6b7280';
+      const pct = (r.tickUs / maxTickUs * 100).toFixed(1);
+      const label = r.law.replace(/_/g, ' ');
+      html += `<div class="bar-row">
+        <div class="bar-label">${label}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-value">${fmt(r.tickUs, 1)} µs</div>
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+
+  // Category cards
+  function drawCategoryCards(container, perLaw, maxTickUs) {
+    const catColors = {
+      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
+      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
+      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
+    };
+
+    // Group laws by category
+    const cats = {};
+    for (const r of perLaw) {
+      if (r.law === 'ALL_DEFAULT' || r.law === 'ZERO_LAWS' || r.law === 'ALL_128' || r.law === 'ALL') continue;
+      const cat = D.categories[r.law];
+      const catName = cat ? cat.category : 'UNKNOWN';
+      if (!cats[catName]) cats[catName] = [];
+      cats[catName].push(r);
+    }
+
+    let html = '';
+    for (const [catName, laws] of Object.entries(cats).sort((a, b) => {
+      const totalA = laws.reduce((s, l) => s + l.tickUs, 0);
+      const totalB = b[1].reduce((s, l) => s + l.tickUs, 0);
+      return totalB - totalA;
+    })) {
+      const color = catColors[catName] || '#6b7280';
+      const total = laws.reduce((s, l) => s + l.tickUs, 0);
+      const sorted = laws.sort((a, b) => b.tickUs - a.tickUs);
+      html += `<div class="card">
+        <h3><span class="law-cat" style="background:${color}"></span>${catName} <span style="color:${color}">(${fmt(total, 1)} µs)</span></h3>
+        ${sorted.map(r => `<div class="bar-row">
+          <div class="bar-label" style="width:90px;font-size:10px">${r.law.replace(/_/g, ' ')}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(r.tickUs/total*100).toFixed(1)}%;background:${color};opacity:0.7"></div></div>
+          <div class="bar-value" style="font-size:10px">${fmt(r.tickUs, 1)} µs</div>
+        </div>`).join('')}
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+
+  // ── Scaling chart + table ──
+  if (D.scaling) {
+    const sc = D.scaling;
+    drawLine(document.getElementById('scaling'),
+      sc.map((r) => r.count.toLocaleString()),
+      [{ values: sc.map((r) => r.msPerTick), color: '#4fd1c5' }]);
+    const st = document.getElementById('scaling-table');
+    st.innerHTML = '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>ms/tick</th><th>ticks/s</th><th>µs/particle</th></tr></thead><tbody>' +
+      sc.map((r) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.ticksPerSec)}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
+      '</tbody>';
+  }
+
+  // ── Per-law timing ──
+  if (D.perLaw && D.perLaw.length) {
+    document.getElementById('perlaw-n').textContent = D.reportParams.count.toLocaleString();
+    const allDefault = D.perLaw.find(r => r.law === 'ALL_DEFAULT');
+    const maxTickUs = allDefault ? allDefault.tickUs : Math.max(...D.perLaw.map(r => r.tickUs));
+
+    // Bar chart
+    drawLawBars(document.getElementById('perlaw-bars'), D.perLaw, maxTickUs);
+
+    // Table
+    const pt = document.getElementById('perlaw-table');
+    const metaRows = D.perLaw.filter(r => r.law === 'ALL_DEFAULT' || r.law === 'ZERO_LAWS' || r.law === 'ALL_128');
+    const lawRows = D.perLaw
+      .filter(r => r.law !== 'ALL_DEFAULT' && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_128')
+      .sort((a, b) => b.tickUs - a.tickUs);
+
+    const catColors = {
+      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
+      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
+      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
+    };
+
+    pt.innerHTML = '<thead><tr><th>Law</th><th>Category</th><th>µs/tick</th><th>% of ALL</th><th>ETV (µs/pair)</th><th>Category Total</th></tr></thead><tbody>' +
+      metaRows.map(r => `<tr style="font-weight:600;color:var(--accent)"><td>${r.law}</td><td>—</td><td>${fmt(r.tickUs, 1)}</td><td>${r.law === 'ALL_DEFAULT' ? '100%' : '—'}</td><td>—</td><td>—</td></tr>`).join('') +
+      lawRows.map(r => {
+        const cat = D.categories[r.law];
+        const catName = cat ? cat.category : '—';
+        const color = catColors[catName] || '#6b7280';
+        const pct = r.pctOfTotal !== null ? fmt(r.pctOfTotal, 2) + '%' : '—';
+        // ETV: estimated time per interaction (µs per pair)
+        // Approximate: tickUs / (N * avgNeighbors) — at default 10k particles ~500 neighbors
+        const N = D.reportParams.count;
+        const avgNeighbors = Math.min(500, N); // bounded by MAX_INTERACTIONS
+        const etv = r.tickUs > 0 ? fmt(r.tickUs / (N * avgNeighbors * 0.1), 4) : '—';
+        return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td><td style="color:${color}">${catName}</td><td>${fmt(r.tickUs, 1)}</td><td>${pct}</td><td>${etv}</td><td>—</td></tr>`;
+      }).join('') +
+      '</tbody>';
+
+    // Category cards
+    drawCategoryCards(document.getElementById('category-cards'), D.perLaw, maxTickUs);
+  }
+
+  // ── Matrix table ──
+  if (D.matrix) {
+    const mat = D.matrix;
+    const cols = mat[0].cells.map((c) => c.interactions);
+    const mt = document.getElementById('matrix');
+    mt.innerHTML = '<thead><tr><th>NEIGHBOR_BUF \\ MAX_INTERACTIONS</th>' +
+      cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
+      mat.map((row) => `<tr><td>${row.neighbors}</td>` + row.cells.map((c) => `<td>${fmt(c.msPerTick)}</td>`).join('') + '</tr>').join('') +
+      '</tbody>';
+  }
+
+  // ── Sweeps ──
   const sweeps = [
     { key: 'gridDim', title: 'GRID_DIM', color: '#4fd1c5' },
     { key: 'cellCap', title: 'CELL_CAP', color: '#f5a3b5' },
@@ -147,18 +279,21 @@
     { key: 'neighborBuf', title: 'NEIGHBOR_BUF', color: '#9aa7ff' },
   ];
   const wrap = document.getElementById('sweeps');
-  wrap.innerHTML = sweeps.map((s, idx) => `
-    <div class="card">
+  wrap.innerHTML = sweeps.map((s, idx) => {
+    if (!D[s.key]) return '';
+    return `<div class="card">
       <h3>${s.title} sweep</h3>
       <canvas id="sweep-${idx}" width="420" height="180"></canvas>
       <table><thead><tr><th>${s.title}</th><th>ms/tick</th><th>min</th><th>max</th></tr></thead><tbody>
         ${D[s.key].map((r) => `<tr><td>${r.value}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.minMs)}</td><td>${fmt(r.maxMs)}</td></tr>`).join('')}
       </tbody></table>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   sweeps.forEach((s, idx) => {
-    drawLine(document.getElementById('sweep-' + idx),
-      D[s.key].map((r) => r.value),
-      [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }]);
+    const canvas = document.getElementById('sweep-' + idx);
+    if (canvas && D[s.key]) {
+      drawLine(canvas, D[s.key].map((r) => r.value), [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }]);
+    }
   });
 
   document.getElementById('foot').innerHTML =

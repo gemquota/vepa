@@ -202,6 +202,17 @@ export const WORLD_PARAM_DEFS = [
   { key: 'HARVEST_RATE', label: 'HARVEST RATE', min: 0, max: 1, default: 0.1, step: 0.05, group: 'SOCIETY', subgroup: 'ENERGY' },
   { key: 'GRID_FEED', label: 'GRID FEED', min: 0, max: 0.5, default: 0.05, step: 0.01, group: 'SOCIETY', subgroup: 'ENERGY' },
   { key: 'MEGA_INVEST', label: 'MEGA INVEST', min: 5, max: 100, default: 20, step: 5, group: 'SOCIETY', subgroup: 'ENERGY' },
+  // Set P — Synthetic Life (v8.16 P.1–P.3): synthetic organisms born from
+  // advanced HUBs evolve by program-like traits (no species slots consumed);
+  // species reaching an intelligence threshold get uploaded consciousness;
+  // machine groups register in F.1 with their own roles.
+  { key: 'SYNTHETIC_RATE', label: 'SYNTHETIC RATE', min: 0, max: 1, default: 0.3, step: 0.05, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'SYNTHETIC_MAX', label: 'MAX SYNTHETICS', min: 0, max: 100, default: 50, step: 5, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'SYNTHETIC_UPKEEP', label: 'SYNTHETIC UPKEEP', min: 0, max: 5, default: 0.5, step: 0.1, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'UPLOAD_THRESHOLD', label: 'UPLOAD THRESHOLD', min: 0, max: 5, default: 1.2, step: 0.1, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'UPLOAD_RATE', label: 'UPLOAD RATE', min: 0, max: 0.5, default: 0.02, step: 0.01, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'UPLOAD_PERSIST', label: 'UPLOAD PERSIST', min: 30, max: 2000, default: 300, step: 30, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
+  { key: 'VIRTUAL_LAYER_MAX', label: 'VIRTUAL LAYER MAX', min: 0, max: 100, default: 20, step: 5, group: 'SOCIETY', subgroup: 'SYNTHETIC' },
 ];
 
 const DEF_BY_KEY = new Map(WORLD_PARAM_DEFS.map((d) => [d.key, d]));

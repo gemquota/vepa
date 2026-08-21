@@ -21,6 +21,26 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.16] - 2026-08-20 → 8.16.0
+
+### Set P — Synthetic Life: intelligence outgrows DNA (O·P·Q trilogy, build 2)
+- `feat(synthetic):` **synthetic organisms** (decision P.1, `src/state/synthetic.js`) — non-DNA entities born from advanced K mega-structures (HUBs with treasury ≥ 400 and era ≥ 2). Each synthetic has a compact 8-trait program vector (speed, strength, efficiency, perception, coordination, adaptability, resilience, curiosity) derived from one of 8 archetypes (SCOUT, WORKER, GUARD, COURIER, FARMER, CRAFTSMAN, ANALYST, SENTINEL). Synthetics register in the F.1 group registry, are marked on stride offset 98 (SYNTHETIC_FLAGS bitfield) + 99 (SYNTHETIC_TRAIT), are immune to speciation (no species slot consumed), and decay when their upkeep energy runs out. Spawned at the HUB centroid with a teal colour signature.
+- `feat(synthetic):` **uploaded consciousness** (decision P.2) — species reaching an intelligence threshold (REGULATORY_DEPTH × SELECTION_SENSITIVITY × (1 + era × 0.1) ≥ UPLOAD_THRESHOLD) get a digital copy in the uploads registry — a parallel lineage that keeps evolving without the body's death risk. Uploads carry traits derived from the biological source's DNA and persist for UPLOAD_PERSIST ticks without refresh. One upload per pass (bounded, design risk P.3).
+- `feat(synthetic):` **machine groups** (decision P.3) — synthetic organisms are flagged SYN_FLAG_MACHINE on the stride and registered in the F.1 group registry, participating in the existing economy/relations/alliance machinery (Set I–K). Their energy upkeep drains on a cadence, and organisms with zero energy are pruned from the registry.
+- `feat(world):` new **SOCIETY > SYNTHETIC** world-param subgroup — SYNTHETIC RATE (0–1, 0.3), MAX SYNTHETICS (0–100, 50), SYNTHETIC UPKEEP (0–5, 0.5), UPLOAD THRESHOLD (0–5, 1.2), UPLOAD RATE (0–0.5, 0.02), UPLOAD PERSIST (30–2000, 300), VIRTUAL LAYER MAX (0–100, 20). Rendered automatically by the generic world-panel group derivation.
+- `feat(stride):` offsets 98–99 claimed for Set P — SYNTHETIC_FLAGS (98, bitfield: bit 0 = synthetic, bit 1 = uploaded, bit 2 = machine; high nibble = program type) and SYNTHETIC_TRAIT (99, program archetype index). The reserved tail (85–99) is now fully allocated; 100+ remains for future expansion.
+- `feat(ui):` `synthetic:pass` events (spawned / uploaded / decayed / upload-expire) emitted on the bus for the narrative journal.
+- `test:` +21 (`tests/unit/synthetic.test.js`) — cadence gate + force bypass, HUB spawn (treasury/era gates, max cap, rate-0 no-op), organism upkeep/decay, uploaded consciousness (threshold gate, expiry, stride flags), determinism, summary shape, null-guard no-ops, world-param defs (7 params, valid ranges). Full suite 851+ (the 6 + 4 documented pre-existing law-category/audit baseline failures, untouched); `vepa4 syntax` + `vepa4 build` clean.
+- `docs:` the O·P·Q trilogy is at build 2 of 3 — Set O made the cosmos, Set P makes life in it; Set Q (cosmology — multiverse shards, cosmic epochs, dark energy, v8.17.0) next.
+
+### Per-law profiling + main-thread lag fixes
+- `perf(solver):` **persistent content-addressed law caches** — the `active` flag array and `synergy` multiplier cache are now reused across ticks and only recomputed when the four law-state flag words (`low/high/ext/quad`) actually change. The key is the flag content itself, not a mutation counter — a counter collides across distinct `lawState` instances (tests/deserialize) that performed the same number of set/toggle calls. Eliminates 128 `isSet` + 128 synergy lookups per tick.
+- `perf(solver):` **saved neighbour list** — the bond/polymer non-overlap writeback block now reuses the neighbour list + cap gathered by the main pairwise loop instead of issuing a redundant `getNeighbors()` grid query per particle per tick.
+- `perf(main):` **main-thread cadence throttles** (fixes UI lag at high population) — the full O(N) `computeMetrics` particle scan now runs every 8 ticks with a cached snapshot (only the cheap law-popcount gate refreshes per tick), the social/economic block (construction/economy/artifacts/governance/infrastructure) runs every 4 ticks, and the lineage death-transition scan runs every 4 ticks. The physics tick stays at full rate; only the expensive analytics passes are staggered.
+- `perf(solver):` **per-law timing instrumentation** — `enableBenchMode()` / `getLawTimings()` / `getLastTickUs()` record per-law elapsed µs in the solver hot path. Bench mode is off by default; the timing branches are compile-time-false in production and JIT-eliminated.
+- `bench:` `bench/solver.bench.mjs` expanded with per-law and per-category timing breakdowns (µs/tick, % of total, ETV) in addition to the scaling/matrix/sweep curves; data regenerated into `public/bench-report/data.js`.
+- `feat(bench-report):` the benchmark SPA (`/bench-report/`) gains a per-law cost view — bar chart sorted by cost, per-law table with µs/tick + % of total + ETV, and category-summary cards.
+
 ## [4.8.15] - 2026-08-19 → 8.15.1 (hotfix rebuild of 8.15.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
 
 ### Performance overhaul — near-linear scaling to 100,000 particles

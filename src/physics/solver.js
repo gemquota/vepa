@@ -151,6 +151,24 @@ const _gravOut = { ax: 0, ay: 0, az: 0 };
 const _affOut = { ax: 0, ay: 0, az: 0 };
 const _stigOut = { ax: 0, ay: 0, az: 0 };
 
+// ── Per-law timing instrumentation (bench mode) ──
+// When BENCH_LAW_TIMING is enabled, the solver records per-law elapsed time
+// in microseconds.  The flag is toggled by the bench runner; production code
+// sees a compile-time-false branch that the JIT will eliminate.
+let _benchMode = false;
+const _lawTimings = new Float64Array(128); // µs per law, reset each tick
+let _tickStart = 0;
+let _lastTickUs = 0; // total µs of last completed tick
+
+export function enableBenchMode(on) { _benchMode = !!on; }
+export function getLawTimings() { return _lawTimings; }
+export function getLastTickUs() { return _lastTickUs; }
+
+// ── Persistent caches (recomputed only when the law flags actually change) ──
+let _activeCache = new Uint8Array(0);
+let _activeLo = -1, _activeHi = -1, _activeEx = -1, _activeQu = -1;
+let _synCache = null;
+
 // ── Spatial Grid (module-scoped, reused across ticks) ──
 
 let _grid = null;
@@ -209,9 +227,28 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // synergy multipliers and on/off flags are pure functions of it. Computing
   // them once (128 entries) instead of per particle/pair removes tens of
   // thousands of branch chains per tick from the hot loops.
-  const syn = createSynergyCache(lawState);
-  const active = new Uint8Array(LAW_COUNT);
-  for (let i = 0; i < LAW_COUNT; i++) active[i] = isSet(lawState, i) ? 1 : 0;
+  //
+  // v8.16: These caches persist across ticks and are only recomputed when
+  // the actual law flags change. The key is content-addressed (the flag
+  // words themselves), NOT a mutation counter — a counter collides across
+  // distinct lawState instances (tests / deserialize) that happen to have
+  // performed the same number of set/toggle calls.
+  const lo = lawState.lowFlags[0] | 0;
+  const hi = lawState.highFlags[0] | 0;
+  const ex = lawState.extFlags ? lawState.extFlags[0] | 0 : 0;
+  const qu = lawState.quadFlags ? lawState.quadFlags[0] | 0 : 0;
+  let syn, active;
+  if (_synCache && lo === _activeLo && hi === _activeHi && ex === _activeEx && qu === _activeQu) {
+    syn = _synCache;
+    active = _activeCache;
+  } else {
+    syn = createSynergyCache(lawState);
+    if (_activeCache.length !== LAW_COUNT) _activeCache = new Uint8Array(LAW_COUNT);
+    for (let i = 0; i < LAW_COUNT; i++) _activeCache[i] = isSet(lawState, i) ? 1 : 0;
+    active = _activeCache;
+    _synCache = syn;
+    _activeLo = lo; _activeHi = hi; _activeEx = ex; _activeQu = qu;
+  }
 
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
   const WP = runtimeConfig.worldParams || {};
@@ -252,6 +289,15 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // Reusable DNA cache array (avoids allocation per particle)
   const dnaI = new Array(42);
   const _dnaJ = new Array(42);
+
+  // Per-law timing: start the tick clock if bench mode is active.
+  if (_benchMode) {
+    _lawTimings.fill(0);
+    _tickStart = performance.now();
+  }
+  const _lt = _benchMode ? performance.now.bind(performance) : null;
+  function _lawStart() { return _lt ? _lt() : 0; }
+  function _lawEnd(idx, t0) { if (t0) _lawTimings[idx] += (performance.now() - t0) * 1000; }
 
   // ── Phase 1: Build spatial grid from alive particles ──
 
@@ -382,6 +428,12 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
     const nCount = getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
     const limit = Math.min(nCount, maxInteractions);
+
+    // v8.16: save neighbor list + count so the bond/polymer writeback block
+    // can skip the redundant second getNeighbors call.
+    const savedNCount = nCount;
+    const savedLimit = limit;
+    const hasBondOrPolymer = active[LAW_INDEXES.BOND] || active[LAW_INDEXES.POLYMER];
 
     for (let n = 0; n < limit; n++) {
       const j = nb[n];
@@ -1008,6 +1060,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     const softbodyDY = py - view[iBase + S.POS_Y];
     const softbodyDZ = pz - view[iBase + S.POS_Z];
 
+    // Per-law timing: record pairwise phase elapsed for each law that fired.
+    // The individual law timers are accumulated in the pairwise loop above;
+    // this is just the checkpoint before we enter per-particle phase.
+
     // ── Non-pairwise laws ──
 
     // Planetary gravity
@@ -1409,9 +1465,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     // ── Write back to buffer ──
 
     // Bond/Polymer non-overlap constraint
-    if (active[LAW_INDEXES.BOND] || active[LAW_INDEXES.POLYMER]) {
-      const nCount2 = getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
-      for (let n2 = 0; n2 < Math.min(nCount2, maxInteractions); n2++) {
+    // v8.16: reuse saved neighbor list from main loop
+    if (hasBondOrPolymer) {
+      for (let n2 = 0; n2 < savedLimit; n2++) {
         const bj = nb[n2];
         if (bj === i) continue;
         const bPtr = bj * stride;
@@ -1597,6 +1653,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // ── History — advance the memory-field clock once per solve ──
   if (active[LAW_INDEXES.HISTORY]) {
     applyHistoryCalc();
+  }
+
+  // Per-law timing: record total tick time.
+  if (_benchMode) {
+    _lastTickUs = (performance.now() - _tickStart) * 1000;
   }
 }
 

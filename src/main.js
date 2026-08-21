@@ -43,6 +43,7 @@ import { createExoticState, stepExoticMatter } from './state/exoticMatter.js';
 import { stepRelativity } from './state/relativity.js';
 import { createQuantumState, stepQuantumMacro } from './state/quantumMacro.js';
 import { createStellarState, stepStellar } from './state/stellar.js';
+import { createSyntheticState, stepSynthetic } from './state/synthetic.js';
 import { getFields, writeField } from './physics/fields.js';
 import { createMultiplexController } from './multiplex/multiplexUI.js';
 import { copyShardToWorld, summarizeMultiplex } from './multiplex/multiplex.js';
@@ -73,12 +74,22 @@ let memoryBuffers = null; // Set G.1 — persistent species/group memory
 let exoticState = null; // Set L.1 — exotic matter zones + per-particle states
 let quantumState = null; // Set N.1 — macroscale superposition + entanglement
 let stellarState = null; // Set O.1 — stars, black holes, supernovae
+let syntheticState = null; // Set P.1 — synthetic organisms, uploaded consciousness, machine groups
 let agencyEngine = null; // Set H.1 — narrative actor + world milestones
 let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
 let seenMilestones = new Set(); // Set H.3 — once-only world milestones
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
+// Per-frame cost throttles (perf): the physics tick is the hot path, so the
+// expensive O(N) analytics/social passes run on staggered cadences instead of
+// every animation frame. At high populations this keeps the main thread clear
+// for the solver + renderer.
+const METRICS_CADENCE = 8;   // full particle metric scan (computeMetrics)
+const SOCIAL_CADENCE = 4;    // economy/governance/infrastructure/artifacts
+const LINEAGE_CADENCE = 4;   // death-transition scan
+let _cachedMetrics = null;
+let _metricsTick = -1;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let multiplexController = null;
 let worldSize = WORLD_SIZE;
@@ -229,6 +240,7 @@ async function boot() {
     exoticState = createExoticState();
     quantumState = createQuantumState();
     stellarState = createStellarState();
+    syntheticState = createSyntheticState();
     agencyEngine = createAgencyEngine(bus);
     setGoalValue(goalEngine, 'scanInterval', insightEngine.cfg.scanInterval);
     setGoalValue(goalEngine, 'clusterRadius', insightEngine.cfg.clusterRadius);
@@ -1000,6 +1012,23 @@ function computeMetrics() {
     };
 }
 
+/**
+ * Metrics with a cadence cache: the full O(N) particle scan (computeMetrics)
+ * runs every METRICS_CADENCE ticks; in between we reuse the last result and
+ * only refresh the cheap law-popcount gate so per-tick gating stays correct.
+ */
+function getMetrics() {
+    // `tick < _metricsTick` catches a restart (tick resets to 0) so a stale
+    // snapshot can never survive into the new world.
+    if (!_cachedMetrics || _metricsTick < 0 || tick < _metricsTick || tick - _metricsTick >= METRICS_CADENCE) {
+        _cachedMetrics = computeMetrics();
+        _metricsTick = tick;
+    } else {
+        _cachedMetrics.lawActiveCount = getLawCount(lawState);
+    }
+    return _cachedMetrics;
+}
+
 /** Set G.3 — shift each species' learned memory toward current conditions. */
 function adaptCultureFromMetrics(buffers, metrics) {
     const rate = (worldParams.CULTURAL_TRANSMISSION || 0.5) * 0.5;
@@ -1048,8 +1077,10 @@ function updateIntelligenceCore() {
         updateNarrative(narrativeEngine, particleView, particleCount, PARTICLE_STRIDE);
     }
 
-    // Lineage — death transitions (births are tracked in spawnOffspring)
-    if (lineageEngine) {
+    // Lineage — death transitions (births are tracked in spawnOffspring).
+    // Scanned on a cadence: deaths are rare events, and the O(N) pass is
+    // pure per-frame overhead otherwise.
+    if (lineageEngine && tick % LINEAGE_CADENCE === 0) {
         if (prevDead.length < particleCount) {
             const grown = new Uint8Array(particleCount);
             grown.set(prevDead);
@@ -1078,7 +1109,7 @@ function updateIntelligenceCore() {
     // Goal engine — evaluate and self-tune world constraints. v8.1.1: only
     // autotune while laws are active; on a lawless world the adjustments
     // were pure log noise.
-    const metrics = computeMetrics();
+    const metrics = getMetrics();
     if (goalEngine && metrics.lawActiveCount > 0) {
         updateGoal(goalEngine, metrics);
     }
@@ -1090,29 +1121,33 @@ function updateIntelligenceCore() {
             lawActiveCount: metrics.lawActiveCount,
         });
         for (const ev of groupEvents) bus.emit(ev.type, ev);
-        // Construction (F.2) — nests/hives + roads into the field grid.
-        applyConstructions(groupRegistry, getFields(), { tick });
-        // Economy (F.3) — treasury, pairwise trade, market prices.
-        const eco = runEconomy(groupRegistry, particleView, particleCount, getFields(), { tick });
-        if (eco.trades > 0) bus.emit('economy:trade', eco);
-        // Artifacts (Set I.1) — treasury-funded TOOL/WEAPON/BARRIER inventory:
-        // tools pay an income dividend, weapons damp threat memory (H.2 flee),
-        // barriers write impassable wall cells at the territory edge.
-        const art = runArtifacts(groupRegistry, getFields(), { tick, worldParams, memoryBuffers });
-        if (art.crafted > 0 || art.decayed > 0 || art.walls > 0) bus.emit('artifacts:pass', art);
-        // Governance (Set J.1) — per-group policy vector (aggression/openness/
-        // migration) from member memory + treasury; alliances pool treasuries,
-        // conflicts write tension at the border and raise threat memory; policy
-        // drives raids / commerce / dispersal.
-        const gov = runGovernance(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
-        for (const ev of gov.events) bus.emit(ev.type, ev);
-        // Infrastructure (Set K.1) — extract ambient field energy into the
-        // treasury (conserved), allied grids feed member ENERGY, and
-        // era-progressed mega-structures (WALL/BRIDGE/HUB) execute on target.
-        const inf = runInfrastructure(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), {
-            tick, worldParams, era: epochEngine ? epochEngine.era : 0,
-        });
-        for (const ev of inf.events) bus.emit(ev.type, ev);
+        // Social/economic systems run on a cadence — they don't need 60 Hz and
+        // their per-group/member scans are pure overhead on the hot path.
+        if (tick % SOCIAL_CADENCE === 0) {
+            // Construction (F.2) — nests/hives + roads into the field grid.
+            applyConstructions(groupRegistry, getFields(), { tick });
+            // Economy (F.3) — treasury, pairwise trade, market prices.
+            const eco = runEconomy(groupRegistry, particleView, particleCount, getFields(), { tick });
+            if (eco.trades > 0) bus.emit('economy:trade', eco);
+            // Artifacts (Set I.1) — treasury-funded TOOL/WEAPON/BARRIER inventory:
+            // tools pay an income dividend, weapons damp threat memory (H.2 flee),
+            // barriers write impassable wall cells at the territory edge.
+            const art = runArtifacts(groupRegistry, getFields(), { tick, worldParams, memoryBuffers });
+            if (art.crafted > 0 || art.decayed > 0 || art.walls > 0) bus.emit('artifacts:pass', art);
+            // Governance (Set J.1) — per-group policy vector (aggression/openness/
+            // migration) from member memory + treasury; alliances pool treasuries,
+            // conflicts write tension at the border and raise threat memory; policy
+            // drives raids / commerce / dispersal.
+            const gov = runGovernance(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), { tick, worldParams, memoryBuffers });
+            for (const ev of gov.events) bus.emit(ev.type, ev);
+            // Infrastructure (Set K.1) — extract ambient field energy into the
+            // treasury (conserved), allied grids feed member ENERGY, and
+            // era-progressed mega-structures (WALL/BRIDGE/HUB) execute on target.
+            const inf = runInfrastructure(groupRegistry, particleView, PARTICLE_STRIDE, getFields(), {
+                tick, worldParams, era: epochEngine ? epochEngine.era : 0,
+            });
+            for (const ev of inf.events) bus.emit(ev.type, ev);
+        }
     }
     // Set L — Exotic Matter (L.1): EXOTIC field zones tag particles with
     // antimatter/dark/strange/negative states — annihilation bursts conserved
@@ -1154,6 +1189,15 @@ function updateIntelligenceCore() {
             tick, worldParams,
         });
         if (st.formed > 0 || st.blackHoles > 0 || st.supernovae > 0) bus.emit('stellar:pass', st);
+    }
+    // Set P — Synthetic Life (P.1–P.3): synthetic organisms from HUBs, uploaded
+    // consciousness at intelligence threshold, machine groups in the F.1 registry.
+    if (syntheticState && metrics.lawActiveCount > 0) {
+        const syn = stepSynthetic(syntheticState, particleView, particleCount, PARTICLE_STRIDE, getFields(), {
+            tick, worldParams, groupRegistry, era: epochEngine ? epochEngine.era : 0,
+            maxParticles: MAX_PARTICLES,
+        });
+        if (syn.spawned > 0 || syn.uploaded > 0 || syn.decayed > 0) bus.emit('synthetic:pass', syn);
     }
     // Speciation (Set A.1) — DNA-slot taxa split when SPECIATION_THRESHOLD ×
     // field isolation is exceeded; children claim extinct-freed slots.
