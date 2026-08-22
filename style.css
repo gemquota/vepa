@@ -1964,6 +1964,7 @@ body {
     text-shadow: 0 0 6px rgba(180, 74, 255, 0.5);
 }
 .hud-tick { color: var(--text-secondary); }
+.hud-tick-compact { font-variant-caps: all-small-caps; letter-spacing: 0.5px; }
 
 /* ── Law toggles: gentle glow pulse on active ── */
 .law-btn.active.physics,

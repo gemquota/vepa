@@ -35,7 +35,7 @@ function tick(now) {
     frameCount = 0;
     lastFpsTime = now;
     if (el.fps) el.fps.textContent = `${fpsDisplay} FPS`;
-    if (el.tick) el.tick.textContent = `tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} ticks/s · ${fpsDisplay} fps`;
+    if (el.tick) el.tick.textContent = `Tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} TPS · ${fpsDisplay} FPS`;
   }
   rafId = requestAnimationFrame(tick);
 }
@@ -86,7 +86,7 @@ export function createHUD(bus) {
         lastPhysicsTime = now;
       }
       lastTickShown = t;
-      el.tick.textContent = `tick ${t} · ${ticksPerSecond.toFixed(1)} ticks/s · ${fpsDisplay} fps`;
+      el.tick.textContent = `Tick ${t} · ${ticksPerSecond.toFixed(1)} TPS · ${fpsDisplay} FPS`;
     }
   };
 

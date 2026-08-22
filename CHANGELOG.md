@@ -1,5 +1,12 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.20] - 2026-08-22 → 8.16.6
+
+### HUD
+- Tick telemetry labels restyled per user request: `Tick N · X.X TPS · XX FPS`
+  rendered in small caps (`font-variant-caps: all-small-caps`) with slightly wider
+  letter-spacing in the toolbar.
+
 ## [4.8.19] - 2026-08-22 → 8.16.5
 
 ### HUD
