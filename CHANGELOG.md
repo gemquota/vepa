@@ -1,5 +1,20 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.25] - 2026-08-22 → 8.16.11
+
+### Fix — benchmark report accordion navigation + fresh dataset
+- **Dead nav pills fixed**: clicking a top-nav pill now expands the target
+  accordion before scrolling (a collapsed `<details>` previously swallowed the
+  jump, making the buttons look broken). Deep links (`#sec-*`) and hashchange
+  also auto-expand their section.
+- **"Missing content" fixed**: Detailed results now opens by default alongside
+  Overview and Performance (3 of 8 sections open), with a hint line explaining
+  the collapsed sections — the collapsed accordions were being read as absent.
+- **Fresh benchmark data** regenerated against the current solver: dense
+  500-step ladder to 25k (34/12/5/6 points per profile below the 15 fps stop)
+  plus the full 128-law ablation, which now carries native `soloUs`,
+  `withoutUs`, and `pctMarginal` fields instead of SPA-side derivations.
+
 ## [4.8.24] - 2026-08-22 → 8.16.10
 
 ### UX pass — benchmark report mobile usability (`public/bench-report/`)

@@ -187,6 +187,7 @@
   </nav>
   <h1>Benchmark Report</h1>
   <div class="sub" id="headline"></div>
+  <div class="sub dir">Tap the section titles (or the pills above) to expand each analysis — Overview, Performance and Scaling start open.</div>
 
   <details class="section" id="sec-overview" open><summary>Overview</summary>
   <div class="stat-grid" id="overview"></div>
@@ -209,7 +210,7 @@
 
   </details>
 
-  <details class="section" id="sec-scaling"><summary>Detailed results — population scaling</summary>
+  <details class="section" id="sec-scaling" open><summary>Detailed results — population scaling</summary>
   <div class="desktop-only">
     <table class="matrix" id="scaling-table"></table>
     <div class="sub dir" style="margin-top:6px">Scroll horizontally for more scales · best value per row outlined in teal · RTT = cold worker round-trip</div>
@@ -684,6 +685,23 @@
       if (!row) { tipEl.style.display = 'none'; return; }
       show(ev, row);
     });
+  })();
+
+  // Anchor nav: expand the target accordion BEFORE scrolling (a collapsed
+  // <details> otherwise makes the pill look dead). Also handles deep links
+  // like bench-report/#sec-ablation.
+  (function sectionNav() {
+    const openByHash = (hash) => {
+      if (!hash || hash.length < 2) return;
+      let el = null;
+      try { el = document.querySelector(hash); } catch (e) { return; }
+      if (el && el.tagName === 'DETAILS') el.open = true;
+    };
+    document.querySelectorAll('#topnav a').forEach((a) => {
+      a.addEventListener('click', () => openByHash(a.getAttribute('href')));
+    });
+    if (window.addEventListener) window.addEventListener('hashchange', () => openByHash(location.hash));
+    openByHash(typeof location !== 'undefined' ? location.hash : '');
   })();
 
   $('foot').innerHTML =
