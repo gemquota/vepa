@@ -21,6 +21,21 @@
 >   messages are immutable (no history rewrites); this ledger restates releases
 >   under the new schema instead.
 
+## [4.8.17] - 2026-08-22 → 8.16.2
+
+### Perf: deterministic worker execution and exhaustive benchmark report
+- `perf(worker):` the live deterministic solver now runs in a Web Worker over the existing SharedArrayBuffer when cross-origin isolation is available; the main-thread fallback remains intact for incompatible hosts.
+- `fix(worker):` worker ticks are serialized, population/intelligence passes run once per completed tick, and law/DNA/world-parameter edits are synchronized so the UI no longer performs duplicate O(N) work while a tick is in flight.
+- `perf(worker):` fixed worker PRNG seed and completion-based tick bookkeeping preserve repeatable worker runs without changing the renderer or multiplex path.
+- `bench:` exhaustive all-128-law, full-stress population scaling now includes balanced main-thread and worker solver timings, worker response overhead, the 128-law baseline, per-law leave-one-out rows, and restored matrix/knob sweeps.
+- `bench(ui):` benchmark SPA now clearly separates main vs worker curves, default-10 vs all-128 scaling, both worker round-trip columns, and overlapping leave-one-out attribution semantics.
+
+## [4.8.16] - 2026-08-21 → 8.16.1 (hotfix rebuild of 8.16.0 — legacy label reused per the [4.8.1]→8.1.1 convention)
+
+### Perf: the 2.5k lag fix (denser auto-tuned grid + cached phenotypes)
+- `perf(solver):` **AUTO_TUNE density target raised** — the grid now refines to ~0.5 particles/cell at every population (`dim ≈ ∛(N/0.5)`, was `∛(N/1.4)` with a hard 12³ floor). The old formula held all ≤2,500-particle worlds at 12³ — ~39 neighbours/particle in the 27-cell gather — which made the default 15-law tick ~28 ms at 2.5k and pushed every frame over budget on the main thread. Measured with the default 15-law boot set (uniform spread): **2,500: 28.5 → 16.9 ms/tick (−41%)**, 10,000: ~112 → 58 ms, 25,000: ~319 → 157 ms, **100,000: ~1,656 → 884 ms (−47%, now faster than the 10-law-set figure in v8.15.1)**. The 12³ floor remains the minimum, so populations ≤ ~700 keep the classic behaviour. Tradeoff: the finer grid shortens the effective interaction cutoff (the 27-cell gather spans 3 cell-sizes), which subtly shifts emergent behaviour at mid populations — the documented cost of the perf win.
+- `perf(render):` **per-particle phenotype cache** — `computeColor`/`computeRadius`/`computeAlpha` (rgbToHsl + hslToRgb + DNA reads per particle per frame) are now refreshed on a 6-frame cadence and reused in between; their inputs are DNA-constant plus slowly drifting ENERGY/AGE, so the refresh is visually imperceptible. The cache is bound to the view object identity, so multiplex shards (eco mode, own buffers) can never read another shard's colours. Shaves ~1–3 ms/frame at 2.5k and scales with N.
+
 ## [4.8.16] - 2026-08-20 → 8.16.0
 
 ### Set P — Synthetic Life: intelligence outgrows DNA (O·P·Q trilogy, build 2)

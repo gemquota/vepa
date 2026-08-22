@@ -201,7 +201,25 @@ When the `REPRO` law is active, species can propagate through three distinct cha
 
 ---
 
-## 3. Evolutionary Pressure (Chaos Strategy)
+## 3. Keeping a Large Dish Responsive
+
+At larger populations, the deterministic solver uses a serialized Web Worker
+when the host provides cross-origin isolation and SharedArrayBuffer. The worker
+owns the spatial-grid and pairwise physics tick; the main thread continues to
+render and only applies population, intelligence, and HUD work after a tick
+completes. Law, DNA, and world-parameter edits are synchronized before the
+next worker tick. Hosts without SharedArrayBuffer use the safe synchronous
+fallback, so reducing `MAX INTERACTIONS` or `NEIGHBOR BUFFER` in
+SETUP → WORLD → PERFORMANCE may be necessary.
+
+Use `/bench-report/` to compare the default profile with all 128 laws across
+full-stress populations. The per-law table reports standalone time separately
+from “Saved if OFF”; leave-one-out values overlap when laws share neighbor and
+clumping work, so those percentages are not expected to sum to 100%.
+
+---
+
+## 4. Evolutionary Pressure (Chaos Strategy)
 
 The **CHAOS** system is your primary tool for "Forced Evolution."
 
@@ -210,7 +228,7 @@ The **CHAOS** system is your primary tool for "Forced Evolution."
 
 ---
 
-## 3. The Collapse-Rebirth Cycle
+## 5. The Collapse-Rebirth Cycle
 
 Managing a **Singularity** (Black Hole) is an advanced architect's most dangerous task.
 
@@ -219,7 +237,7 @@ Managing a **Singularity** (Black Hole) is an advanced architect's most dangerou
 
 ---
 
-## 4. Troubleshooting the Universe
+## 6. Troubleshooting the Universe
 
 | Symptom | Cause | Solution |
 | :--- | :--- | :--- |

@@ -221,7 +221,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     lawState.highFlags[0] === 0 &&
     (lawState.extFlags ? lawState.extFlags[0] === 0 : true) &&
     (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true)
-  ) return;
+  ) {
+    // Bench mode: the early return skips the tick clock below, so record an
+    // explicit zero — otherwise getLastTickUs() would report the previous
+    // (stale) tick's duration for the zero-laws freeze row.
+    if (_benchMode) _lastTickUs = 0;
+    return;
+  }
 
   // Per-tick law cache — the law state is fixed for the whole tick, so the
   // synergy multipliers and on/off flags are pure functions of it. Computing
@@ -258,16 +264,21 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // rebuilt only when its resolution / cell cap changes. AUTO_TUNE (default
   // on) scales the grid resolution with population density so the 27-cell
   // neighbour gather — and therefore total pairwise work — stays ~flat as N
-  // grows (dim ≈ ∛(N / 1.4), clamped to the slider range). The classic 12³
-  // resolution is the floor, so populations ≤2,500 behave exactly as before;
-  // above that the grid refines with density — ~19³ at 10k, ~26³ at 25k,
-  // ~42³ at 100k — keeping the neighbour gather roughly flat instead of
-  // exploding with density.
+  // grows (dim ≈ ∛(N / 0.5), clamped to the slider range). The density target
+  // is ~0.5 particles/cell, which keeps the 27-cell gather sparse at every
+  // population: ~17³ at 2.5k (the old ∛(N/1.4) formula floored ≤2,500 worlds
+  // at 12³ — ~39 neighbours/particle and a ~28 ms default 15-law tick), ~27³
+  // at 10k, ~37³ at 25k, ~59³ at 100k. Measured sweeps (2.5k / 10k / 25k /
+  // 100k) show every population strictly faster with the finer grid — e.g.
+  // 2.5k: 31.4 ms at 12³ → 12.4 ms at 18³; 100k: 1656 ms at 42³ → ~1170 ms at
+  // 56³ — with diminishing returns past ~0.5/cell, where the per-tick grid
+  // rebuild starts eating the pair savings. The classic 12³ floor remains the
+  // minimum, so tiny populations behave exactly as before.
   const maxInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
   const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
   const autoTune = (WP.AUTO_TUNE ?? 1) !== 0;
   const gridDim = autoTune
-    ? Math.max(12, Math.min(64, Math.round(Math.cbrt(Math.max(1, particleCount) / 1.4))))
+    ? Math.max(12, Math.min(64, Math.round(Math.cbrt(Math.max(1, particleCount) / 0.5))))
     : Math.max(6, Math.min(64, Math.round(WP.GRID_DIM ?? 12)));
   const cellCap = Math.max(1, Math.min(500, Math.round(WP.CELL_CAP ?? 100)));
   const grid = ensureGrid(gridDim, cellCap);
@@ -324,10 +335,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
   const localDt = ensureLocalDt(particleCount);
   const timeDilActive = active[LAW_INDEXES.TIME_DILATION];
-  for (let i = 0; i < particleCount; i++) {
-    const base = i * stride;
-    let nBuf = null, nCount = 0;
-    if (timeDilActive) {
+  if (!timeDilActive) {
+    // TIME_DILATION is normally off. A bulk fill is materially cheaper than
+    // calling the law helper and probing the grid once per particle.
+    localDt.fill(1, 0, particleCount);
+  } else {
+    for (let i = 0; i < particleCount; i++) {
+      const base = i * stride;
+      let nBuf = null, nCount = 0;
       const px = view[base + S.POS_X];
       const py = view[base + S.POS_Y];
       const pz = view[base + S.POS_Z];
@@ -335,11 +350,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         nCount = Math.min(getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap), 24);
         nBuf = nb;
       }
+      localDt[i] = applyTimeDilation(
+        lawState, view, base,
+        syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount, worldSize
+      );
     }
-    localDt[i] = applyTimeDilation(
-      lawState, view, base,
-      syn[LAW_INDEXES.TIME_DILATION], nBuf, nCount, worldSize
-    );
   }
 
   // ── Phase 2b: Astral souls — ghosts persist and fade. Soul particles

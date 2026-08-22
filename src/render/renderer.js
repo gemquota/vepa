@@ -40,6 +40,39 @@ export function asParticleView(buffer) {
     return buffer instanceof Float32Array ? buffer : new Float32Array(buffer);
 }
 
+// ── Phenotype cache ───────────────────────────────────────────────────────────
+// computeColor / computeRadius / computeAlpha run rgbToHsl + hslToRgb + DNA
+// reads per particle per frame. Their inputs are constant per particle (DNA,
+// species colour) except ENERGY/AGE, which drift slowly — so the cached values
+// are refreshed on a cadence (PHENOTYPE_CACHE_FRAMES) instead of every frame.
+// The cache is bound to a specific view object (identity check), so multiplex
+// shards — which pass their own buffers and render in eco mode anyway — never
+// read another shard's colours.
+const PHENOTYPE_CACHE_FRAMES = 6;
+let _phenoFrame = 0;
+let _phenoView = null;
+let _phenoCount = 0;
+let _phenoColor = null;   // Float32Array count * 3 (r,g,b)
+let _phenoRadius = null;  // Float32Array count
+let _phenoAlpha = null;   // Float32Array count
+
+function refreshPhenotypeCache(view, count, stride) {
+    if (!_phenoColor || _phenoColor.length < count * 3) _phenoColor = new Float32Array(count * 3);
+    if (!_phenoRadius || _phenoRadius.length < count) _phenoRadius = new Float32Array(count);
+    if (!_phenoAlpha || _phenoAlpha.length < count) _phenoAlpha = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+        const base = i * stride;
+        if (view[base + STRIDE_INDEXES.DEAD] >= 0.99) continue; // dead slots skipped by the draw loop
+        const speciesId = view[base + STRIDE_INDEXES.SPECIES_ID];
+        const c = computeColor(view, speciesId, i, stride);
+        _phenoColor[i * 3] = c.r;
+        _phenoColor[i * 3 + 1] = c.g;
+        _phenoColor[i * 3 + 2] = c.b;
+        _phenoRadius[i] = computeRadius(view, speciesId, i, stride);
+        _phenoAlpha[i] = computeAlpha(view, speciesId, i, stride);
+    }
+}
+
 /**
  * Create a Canvas2D renderer bound to the given canvas element.
  *
@@ -174,6 +207,20 @@ export function drawParticles(renderer, particleBuffer, particleCount, stride, w
     const uniformScale = Math.min(width, height) / worldSize;
     const eco = opts.eco === true || renderer.eco === true;
 
+    // Phenotype cache: recompute colour/radius/alpha for every particle on a
+    // cadence; reuse them on the frames in between. Skipped entirely in eco
+    // mode (multiplex previews use stored base colours already).
+    const usePhenoCache = !eco;
+    const viewChanged = view !== _phenoView || particleCount !== _phenoCount;
+    if (usePhenoCache && viewChanged) _phenoFrame = 0; // force an immediate refresh
+    const refreshPheno = usePhenoCache && (viewChanged || _phenoFrame % PHENOTYPE_CACHE_FRAMES === 0);
+    if (refreshPheno) {
+        refreshPhenotypeCache(view, particleCount, stride);
+        _phenoView = view;
+        _phenoCount = particleCount;
+    }
+    _phenoFrame++;
+
     for (let i = 0; i < particleCount; i++) {
         const base = i * stride;
 
@@ -207,9 +254,11 @@ export function drawParticles(renderer, particleBuffer, particleCount, stride, w
                 g: view[base + STRIDE_INDEXES.COLOR_G],
                 b: view[base + STRIDE_INDEXES.COLOR_B],
             }
-            : computeColor(view, speciesId, i, stride);
-        const radius = computeRadius(view, speciesId, i, stride);
-        const alpha  = computeAlpha(view, speciesId, i, stride);
+            : usePhenoCache
+                ? { r: _phenoColor[i * 3], g: _phenoColor[i * 3 + 1], b: _phenoColor[i * 3 + 2] }
+                : computeColor(view, speciesId, i, stride);
+        const radius = usePhenoCache ? _phenoRadius[i] : computeRadius(view, speciesId, i, stride);
+        const alpha  = usePhenoCache ? _phenoAlpha[i] : computeAlpha(view, speciesId, i, stride);
 
         // Radius scaled by perspective (closer = bigger, further = smaller).
         // Clamp to a minimum screen size so particles stay visible even when

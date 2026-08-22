@@ -21,6 +21,10 @@ import {
   WORLD_SIZE,
   LAW_COUNT,
 } from '../constants.js';
+import { runtimeConfig } from '../state/runtimeConfig.js';
+
+const hasSAB = typeof SharedArrayBuffer !== 'undefined';
+const isShared = (value) => hasSAB && value instanceof SharedArrayBuffer;
 
 // ── Worker State ──
 
@@ -32,9 +36,9 @@ let worldSize = WORLD_SIZE;
 let lawState = createLawState();
 let dnaBuffer = null;        // SharedArrayBuffer for species DNA
 let dnaView = null;          // Uint16Array view over dnaBuffer
-let dt = 1.0;
+let dt = 1.0; // worker time step
 let tickCount = 0;
-let hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+let hasSharedArrayBuffer = hasSAB;
 
 // ── Fallback State (no SharedArrayBuffer) ──
 
@@ -96,7 +100,7 @@ function handleInit(msg) {
   } = msg;
 
   // Determine if we have SharedArrayBuffer
-  if (sharedBuffer instanceof SharedArrayBuffer) {
+  if (isShared(sharedBuffer)) {
     hasSharedArrayBuffer = true;
     particleBuffer = sharedBuffer;
     particleView = new Float32Array(particleBuffer);
@@ -126,7 +130,7 @@ function handleInit(msg) {
   }
 
   // DNA buffer
-  if (sharedDna instanceof SharedArrayBuffer) {
+  if (isShared(sharedDna)) {
     dnaBuffer = sharedDna;
     dnaView = new Uint16Array(dnaBuffer);
   } else if (sharedDna instanceof ArrayBuffer) {
@@ -135,7 +139,7 @@ function handleInit(msg) {
   } else {
     // Create default empty DNA buffer
     const dnaByteLength = 64 * 64 * Uint16Array.BYTES_PER_ELEMENT;
-    if (typeof SharedArrayBuffer !== 'undefined') {
+    if (hasSAB) {
       dnaBuffer = new SharedArrayBuffer(dnaByteLength);
     } else {
       dnaBuffer = new ArrayBuffer(dnaByteLength);
@@ -162,7 +166,7 @@ function handleConfig(msg) {
 
   // If new buffer provided, swap it in
   if (msg.buffer) {
-    if (msg.buffer instanceof SharedArrayBuffer) {
+    if (isShared(msg.buffer)) {
       particleBuffer = msg.buffer;
       particleView = new Float32Array(particleBuffer);
       hasSharedArrayBuffer = true;
@@ -175,7 +179,7 @@ function handleConfig(msg) {
 
   // If new DNA buffer provided
   if (msg.dnaBuffer) {
-    if (msg.dnaBuffer instanceof SharedArrayBuffer || msg.dnaBuffer instanceof ArrayBuffer) {
+    if (isShared(msg.dnaBuffer) || msg.dnaBuffer instanceof ArrayBuffer) {
       dnaBuffer = msg.dnaBuffer;
       dnaView = new Uint16Array(dnaBuffer);
     }
@@ -193,7 +197,9 @@ function applyConfig(config) {
   if (config.particleCount !== undefined) particleCount = config.particleCount;
   if (config.worldSize !== undefined) worldSize = config.worldSize;
   if (config.dt !== undefined) dt = config.dt;
+  if (config.seed !== undefined && tickCount === 0) _prngState = config.seed | 0;
   if (config.stride !== undefined) stride = config.stride;
+  if (config.worldParams) runtimeConfig.worldParams = config.worldParams;
 
   // Restore law state from serialized form
   if (config.lawState) {
@@ -327,7 +333,7 @@ function handleRestore(msg) {
 // ── PRNG for Worker ──
 
 // SplitMix32-style PRNG (deterministic, fast, no Math.random dependency)
-let _prngState = Date.now() | 0;
+let _prngState = 0x51f15e;
 
 function prng() {
   let z = (_prngState + 0x9e3779b9) | 0;

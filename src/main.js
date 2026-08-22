@@ -2,15 +2,12 @@
  * VEPA v3 — Main Bootstrap
  * SharedArrayBuffer optional — falls back to ArrayBuffer + main-thread tick.
  */
-// === DEBUG OVERLAY ===
-// One collapsible overlay collects every debug message since page start.
-// Tap its header to copy the whole log as JSON; toggle in SETTINGS → DEBUG.
 import { initDebug, logDebug, isDebugVisible, updateLiveStats } from './debug.js';
 import { EventBus } from './core/eventBus.js';
 import { SplitMix32 as PRNG } from './core/prng.js';
 import { WORLD_SIZE, PARTICLE_STRIDE, MAX_PARTICLES, MAX_SPECIES, DEFAULT_PARTICLES_PER_SPECIES, STRIDE_INDEXES, DNA_INDEXES, DNA_RANGES, LAW_INDEXES, LAW_COUNT, LAW_CATEGORIES } from './constants.js';
 import { createParticleBuffer, setX, setY, setVelocity, setMass, setSpeciesId, setEnergy } from './state/particleBuffer.js';
-import { createLawState, set as lawSet, clear as lawClear, getActiveCount as getLawCount } from './state/lawState.js';
+import { createLawState, set as lawSet, clear as lawClear, serialize as serializeLawState, getActiveCount as getLawCount } from './state/lawState.js';
 import { runtimeConfig } from './state/runtimeConfig.js';
 import { createWorldParams, applyWorldParam, spawnCaps } from './state/worldParams.js';
 import { sampleSpawnPosition, buildSpawnCentres, initialPopulationTarget, perSpeciesAllocation } from './spawn/distribution.js';
@@ -19,7 +16,7 @@ import { createRenderer, resize as resizeRenderer, paintBackground } from './ren
 import { syncSprites } from './render/spriteSync.js';
 import { initUI } from './ui/ui.js';
 import { initCamera, resetCamera, setWorldSize } from './ui/camera.js';
-import { solve, resetOffspringRing, drainOffspring } from './physics/solver.js';
+import { solve as solveMain, resetOffspringRing, drainOffspring as drainSolverOffspring } from './physics/solver.js';
 import { createInsightEngine, update as updateInsight } from './engines/insightEngine.js';
 import { createSpeciationEngine, updateSpeciation } from './engines/speciation.js';
 import { createEcoEngine } from './engines/ecoEngine.js';
@@ -63,9 +60,9 @@ logDebug('main module loaded');
 
 const SUBSTEPS = 4;
 const DT = 0.25;
+const WORKER_SEED = 0x51f15e;
 
 let bus, prng, particleBuffer, particleView, lawState, dnaBuffer, renderer;
-// v4 — intelligence engines
 let insightEngine, narrativeEngine, lineageEngine, goalEngine, timelineEngine;
 let groupRegistry = null; // Set F.1 — social groups (declared + detected)
 let speciationEngine = null, ecoEngine = null, worldEventEngine = null; // Set A.1/A.2/A.3
@@ -75,16 +72,23 @@ let exoticState = null; // Set L.1 — exotic matter zones + per-particle states
 let quantumState = null; // Set N.1 — macroscale superposition + entanglement
 let stellarState = null; // Set O.1 — stars, black holes, supernovae
 let syntheticState = null; // Set P.1 — synthetic organisms, uploaded consciousness, machine groups
+// Physics worker bridge. SharedArrayBuffer lets the worker mutate the same
+// particle memory without copying; browsers without cross-origin isolation
+// keep the safe main-thread path instead of paying a per-tick transfer cost.
+let physicsWorker = null;
+let workerReady = false;
+let workerPending = false;
+let workerBusy = false;
+let workerFailed = false;
+let workerTickSentAt = 0;
+let _workerTickInFlight = false;
+let _workerOffspring = [];
 let agencyEngine = null; // Set H.1 — narrative actor + world milestones
 let speciesGoals = new Map(); // Set H.2 — per-species goal nudges
 let seenMilestones = new Set(); // Set H.3 — once-only world milestones
 let prevDead = new Uint8Array(0);
 let timelineRecording = false;
 const TIMELINE_SNAPSHOT_INTERVAL = 150;
-// Per-frame cost throttles (perf): the physics tick is the hot path, so the
-// expensive O(N) analytics/social passes run on staggered cadences instead of
-// every animation frame. At high populations this keeps the main thread clear
-// for the solver + renderer.
 const METRICS_CADENCE = 8;   // full particle metric scan (computeMetrics)
 const SOCIAL_CADENCE = 4;    // economy/governance/infrastructure/artifacts
 const LINEAGE_CADENCE = 4;   // death-transition scan
@@ -93,15 +97,8 @@ let _metricsTick = -1;
 let particleCount = 0, speciesCount = 5, tick = 0, paused = false;
 let multiplexController = null;
 let worldSize = WORLD_SIZE;
-// World parameters — single source of truth (WORLD panel sliders).
-// Mirrored into runtimeConfig.worldParams so the solver reads live values.
 let worldParams = createWorldParams();
 runtimeConfig.worldParams = worldParams;
-// World State Save/Load (v7.4+): persistent save store, in-memory undo ring,
-// and auto-snapshot bookkeeping. The ring is the two-stack undo/redo model;
-// auto-snapshots commit before destructive actions (chaos, restart, reset,
-// preset load, species roster edits, world-param bursts) so every unwanted
-// change is one ⏪ away — and every undo is itself redo-able.
 const saveStore = createWorldSaveStore();
 const undoRing = createUndoRing();
 let undoEnabled = true;
@@ -109,17 +106,8 @@ let lastParamSnapshotAt = 0;
 const PARAM_SNAPSHOT_DEBOUNCE = 1200;
 let spawnRate = worldParams.SPAWN_RATE;
 let spawnAccumulator = 0;
-// Begin with the PRIME_DEFAULT starter law set so the dish is alive on boot
-// (GRAV/DRAG/ENTR/WRAP/COLL/LIFE/GLOW/REPRO/PHENOTYPE/GENOTYPE). Clearing all
-// laws — via the law grid or Chaos ✕ — still yields the zero-laws hard freeze
-// the solver preserves: no laws → no movement, no interaction, no state change.
 const DEFAULT_LAWS = PRIME_DEFAULT.laws;
 
-/**
- * Apply the rich PRIME_DEFAULT substrate onto the live world params at boot.
- * Kept separate from WORLD_PARAM_DEFS defaults so the audit suite's neutral
- * baseline is untouched; only a fresh boot (or Reset → reload) gets this.
- */
 function applyPrimeWorldConfig() {
     const overrides = {
         FIELD_THERMAL: 0.5,   // thermal gradient → extraction + governance
@@ -134,8 +122,153 @@ function applyPrimeWorldConfig() {
     runtimeConfig.worldParams = worldParams;
 }
 
-/** Wrap PRNG as a callable function (solver calls prng() not prng.next()) */
 function rng() { return prng.next(); }
+
+function canUsePhysicsWorker() {
+    return typeof Worker !== 'undefined' && typeof SharedArrayBuffer !== 'undefined'
+        && particleBuffer instanceof SharedArrayBuffer;
+}
+
+function stopPhysicsWorker() {
+    if (physicsWorker) physicsWorker.terminate();
+    physicsWorker = null;
+    workerReady = false;
+    workerPending = false;
+    workerBusy = false;
+    _workerTickInFlight = false;
+    _workerOffspring.length = 0;
+    _cachedMetrics = null;
+    _metricsTick = -1;
+}
+
+function workerConfig() {
+    return {
+        particleCount,
+        worldSize,
+        stride: PARTICLE_STRIDE,
+        dt: DT * runtimeConfig.simSpeed,
+        seed: WORKER_SEED,
+        worldParams: { ...(runtimeConfig.worldParams || {}) },
+        lawState: serializeLawState(lawState),
+    };
+}
+
+function syncPhysicsWorker() {
+    if (!physicsWorker || !workerReady || workerFailed) return;
+    // DNA is a regular Uint16Array (the particle buffer is the large SAB), so
+    // include a fresh structured-clone on edits; otherwise the worker would
+    // keep simulating the boot-time genome forever.
+    physicsWorker.postMessage({
+        type: 'CONFIG',
+        config: workerConfig(),
+        dnaBuffer: dnaBuffer ? dnaBuffer.buffer : undefined,
+    });
+}
+
+function finishPhysicsTick(tickStart, offspring = null) {
+    // Population and intelligence remain on the main thread, but run once per
+    // completed worker tick rather than once per animation frame. This keeps
+    // reproduction, analytics, and HUD state coherent while
+    // the render loop remains free to paint between worker responses.
+    advancePopulation(offspring);
+    updateIntelligence();
+    perfTickMs = emaPerf(perfTickMs, performance.now() - tickStart);
+    updateLiveStats({
+        fps,
+        tick,
+        particles: particleCount,
+        species: speciesCount,
+        laws: getLawCount(lawState),
+        frameMs: perfFrameMs,
+        tickMs: perfTickMs,
+        renderMs: perfRenderMs,
+    });
+    bus.emit('physics:tick', { tick, buffer: particleBuffer, particleCount, speciesCount });
+}
+
+function handleWorkerTick(message) {
+    workerBusy = false;
+    _workerTickInFlight = false;
+    const tickStart = workerTickSentAt || performance.now();
+    const offspring = Array.isArray(message.offspring) ? message.offspring : [];
+    finishPhysicsTick(tickStart, offspring);
+}
+
+function solve(...args) {
+    if (physicsWorker && workerReady && !workerFailed) {
+        // The legacy render-loop bookkeeping still runs after this queue call;
+        // cancel its local tick increment on every in-flight frame while the
+        // worker owns the actual solver completion.
+        tick = Math.max(0, tick - 1);
+        if (!workerBusy) {
+            workerBusy = true;
+            _workerTickInFlight = true;
+            workerTickSentAt = performance.now();
+            physicsWorker.postMessage({
+                type: 'TICK',
+                particleCount: args[1],
+                dt: args[6] || DT,
+            });
+        }
+        return false;
+    }
+    solveMain(...args);
+    return true;
+}
+
+function drainOffspring() {
+    const local = drainSolverOffspring();
+    if (_workerOffspring.length) return local.concat(_workerOffspring.splice(0));
+    return local;
+}
+
+function startPhysicsWorker() {
+    stopPhysicsWorker();
+    workerFailed = false;
+    if (!canUsePhysicsWorker()) return false;
+    try {
+        physicsWorker = new Worker(new URL('./worker/physics.worker.js', import.meta.url), { type: 'module' });
+        workerPending = true;
+        physicsWorker.onmessage = (event) => {
+            const message = event.data || {};
+            if (message.type === 'WORKER_READY') return;
+            if (message.type === 'INIT_COMPLETE') {
+                workerReady = true;
+                workerPending = false;
+                logDebug('physics worker ready (SharedArrayBuffer, deterministic solver)');
+                return;
+            }
+            if (message.type === 'TICK_COMPLETE') {
+                handleWorkerTick(message);
+                return;
+            }
+            if (message.type === 'ERROR') {
+                logDebug('physics worker error: ' + message.error, 'error');
+                workerFailed = true;
+                stopPhysicsWorker();
+                return;
+            }
+        };
+        physicsWorker.onerror = (error) => {
+            logDebug('physics worker unavailable: ' + (error.message || 'unknown error'), 'warn');
+            workerFailed = true;
+            stopPhysicsWorker();
+        };
+        physicsWorker.postMessage({
+            type: 'INIT',
+            buffer: particleBuffer,
+            count: particleCount,
+            dnaBuffer: dnaBuffer.buffer,
+            config: workerConfig(),
+        });
+        return true;
+    } catch (error) {
+        logDebug('physics worker unavailable: ' + (error.message || error), 'warn');
+        stopPhysicsWorker();
+        workerFailed = true;
+        return false;
+    }
+}
 
 async function boot() {
     console.log('[VEPA v3] Booting...');
@@ -156,18 +289,10 @@ async function boot() {
     dnaBuffer = createDNABuffer();
     loadDefaults(dnaBuffer, DNA_RANGES);
 
-    // Apply default laws (GRAV, DRAG, WRAP, COLL)
     for (const name of DEFAULT_LAWS) {
         if (LAW_INDEXES[name] !== undefined) lawSet(lawState, LAW_INDEXES[name]);
     }
 
-    // Rich boot substrate (v8.15): the WORLD-panel defaults stay neutral (the
-    // audit suite pins createWorldParams() as its baseline), but a fresh boot
-    // applies a denser, more emergent medium — thermal + info fields feed the
-    // economy/governance/infrastructure/culture layers, a few gravity wells
-    // seed group + star formation, and clustered spawn centres give speciation
-    // spatial structure. Reset (reload) re-applies; Restart preserves the live
-    // values so the player's tuning is never clobbered.
     applyPrimeWorldConfig();
 
     spawnDefaultPopulation();
@@ -176,12 +301,10 @@ async function boot() {
     renderer = createRenderer(canvas, MAX_PARTICLES);
     resizeRenderer(renderer);
     refreshBackground();
-    // Re-render on window resize
     window.addEventListener('resize', () => {
         if (renderer) resizeRenderer(renderer);
         refreshBackground();
     });
-    // Also observe the canvas for layout changes
     if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => {
             if (renderer) resizeRenderer(renderer);
@@ -190,12 +313,9 @@ async function boot() {
     }
     initCamera(canvas, worldSize);
 
-    // Init UI (includes HUD, all panels, event wiring)
     initUI(bus, lawState, dnaBuffer);
     wireEvents();
 
-    // Chaos Multiplex — long-press the Chaos button opens the guided-evolution
-    // grid; while active, the main sim freezes and shards take over the loop.
     multiplexController = createMultiplexController(bus, () => ({
         view: particleView,
         count: particleCount,
@@ -224,15 +344,13 @@ async function boot() {
         bus.emit('sim:paused', { paused: false });
     });
 
-    // v4 — intelligence engine wiring
-    insightEngine = createInsightEngine(bus, { scanInterval: 90, clusterRadius: 60, minClusterSize: 5 });
+        insightEngine = createInsightEngine(bus, { scanInterval: 90, clusterRadius: 60, minClusterSize: 5 });
     narrativeEngine = createNarrativeEngine(bus);
     lineageEngine = createLineageTracker(bus);
     goalEngine = createGoalEngine(bus);
     timelineEngine = createTimelineEngine(bus, { autoSnapshotInterval: 0, maxSnapshots: 20 });
     groupRegistry = createGroupRegistry();
-    // Set A — Living World engines (speciation A.1 / eco ring A.2 / events A.3)
-    speciationEngine = createSpeciationEngine(bus, { prng: () => prng.next() });
+        speciationEngine = createSpeciationEngine(bus, { prng: () => prng.next() });
     ecoEngine = createEcoEngine(bus);
     worldEventEngine = createWorldEventEngine(bus);
     epochEngine = createEpochEngine(bus);
@@ -251,6 +369,10 @@ async function boot() {
     wireGoalEvents();
     prevDead = new Uint8Array(particleCount);
 
+    // Keep UI work on the main thread, but move the deterministic solver and
+    // its spatial-grid/pairwise hot path off-thread whenever SAB is available.
+    // The worker is intentionally started after all initial writes are done.
+    startPhysicsWorker();
     requestAnimationFrame(renderLoop);
 
     const dt = (performance.now() - t0).toFixed(1);
@@ -282,6 +404,7 @@ const SPECIES_PROFILES = [
 
 /** Append one freshly spawned particle at `pos` with the given species. */
 function spawnSingleParticle(species, pos) {
+    if (_workerTickInFlight) return;
     if (particleCount >= MAX_PARTICLES) return;
     const idx = particleCount;
     const ptr = idx * PARTICLE_STRIDE;
@@ -327,10 +450,8 @@ function spawnSingleParticle(species, pos) {
 function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
     const profiles = SPECIES_PROFILES;
 
-    // Restart preserves the roster the user built; boot/reset restore it.
     if (!keepSpecies) speciesCount = Math.min(profiles.length, MAX_SPECIES);
     let idx = 0;
-    // INITIAL_POP: total initial population distributed across species.
     const caps = spawnCaps(worldParams);
     const totalTarget = initialPopulationTarget(worldParams, caps);
     const perSpecies = perSpeciesAllocation(totalTarget, speciesCount);
@@ -340,8 +461,6 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
         const p = profiles[s] || null;
         if (p && !preserveDNA) setDNAFromProfile(s, p);
 
-        // Per-species 3D grid spanning the full world volume — populations
-        // start interleaved across the dish instead of clumped in depth slabs.
         const gridDim = Math.max(2, Math.ceil(Math.cbrt(perSpecies)));
         const cellSize = (worldSize - 10) / gridDim;
 
@@ -357,24 +476,20 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
             const gx = i % gridDim;
             const gy = Math.floor(i / gridDim) % gridDim;
             const gz = Math.floor(i / (gridDim * gridDim));
-            // Even-grid anchor with per-cell jitter for a natural look
             let px = 5 + gx * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
             let py = 5 + gy * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
             let pz = 5 + gz * cellSize + cellSize * 0.5 + (prng.nextFloat(0, 1) - 0.5) * cellSize * 0.4;
-            // Distribution: shape 0 = perfectly even grid, 1 = fully random
             if (worldParams.SHAPE > 0) {
                 px = px + (prng.nextFloat(0, worldSize) - px) * worldParams.SHAPE;
                 py = py + (prng.nextFloat(0, worldSize) - py) * worldParams.SHAPE;
                 pz = pz + (prng.nextFloat(0, worldSize) - pz) * worldParams.SHAPE;
             }
-            // Centre bias: pull the particle toward a cluster centre
             if (worldParams.SPAWN_CENTRE_BIAS > 0 && centres.length > 0) {
                 const c = centres[Math.floor(prng.nextFloat(0, centres.length))];
                 px = px + (c.x - px) * worldParams.SPAWN_CENTRE_BIAS;
                 py = py + (c.y - py) * worldParams.SPAWN_CENTRE_BIAS;
                 pz = pz + (c.z - pz) * worldParams.SPAWN_CENTRE_BIAS;
             }
-            // GROUND_HEIGHT: keep the initial population inside the ground band.
             if (groundH < 1) pz = Math.min(pz, Math.max(0, worldSize * groundH));
             setX(particleBuffer, idx, PARTICLE_STRIDE, px);
             setY(particleBuffer, idx, PARTICLE_STRIDE, py);
@@ -391,11 +506,6 @@ function spawnDefaultPopulation(preserveDNA = false, keepSpecies = false) {
                 const r = DNA_RANGES[d] || { min: -1, max: 1 };
                 particleView[ptr + STRIDE_INDEXES.DNA_CACHE_START + d] = norm * (r.max - r.min) + r.min;
             }
-            // Initialize visual color from species profile
-            // Colors set below (second block)
-            // removed duplicate color init
-            // removed duplicate color init
-            // removed duplicate color init
             particleView[ptr + STRIDE_INDEXES.DEAD] = 0;
             particleView[ptr + STRIDE_INDEXES.AGE] = 0;
             particleView[ptr + STRIDE_INDEXES.SIGNAL] = 0;
@@ -449,8 +559,8 @@ function refreshBackground() {
 }
 
 /** Spawn offspring produced by REPRO law into the particle buffer. */
-function spawnOffspring() {
-    const list = drainOffspring();
+function spawnOffspring(offspring = null) {
+    const list = offspring || drainOffspring();
     if (!list.length) return;
     for (const off of list) {
         if (particleCount >= MAX_PARTICLES) break;
@@ -487,8 +597,6 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.SOUL] = 0;
         particleView[ptr + STRIDE_INDEXES.ENTANGLE_ID] = -1;
         particleView[ptr + STRIDE_INDEXES.ENTANGLE_PHASE] = 0;
-        // Inherit the parents' intermediate colour when reproduction carried
-        // one; otherwise fall back to the species base colour.
         const sp = SPECIES_PROFILES[off.speciesId] || SPECIES_PROFILES[0];
         const defR = sp ? sp.color[0] : 200;
         const defG = sp ? sp.color[1] : 200;
@@ -499,9 +607,23 @@ function spawnOffspring() {
         particleView[ptr + STRIDE_INDEXES.ALPHA] = 0.8;
         particleView[ptr + STRIDE_INDEXES.RADIUS] = 0.6;
         particleCount++;
-        // v4 — lineage birth tracking
         if (lineageEngine) {
             trackBirth(lineageEngine, off.parentId != null ? off.parentId : -1, particleCount - 1, off.speciesId, 0);
+        }
+    }
+}
+
+function advancePopulation(offspring = null) {
+    spawnOffspring(offspring);
+    const caps = spawnCaps(worldParams);
+    if (spawnRate > 0 && particleCount < caps.softCap) {
+        spawnAccumulator += spawnRate * (DT * runtimeConfig.simSpeed);
+        while (spawnAccumulator >= 1 && particleCount < caps.softCap) {
+            spawnAccumulator -= 1;
+            spawnSingleParticle(
+                Math.floor(prng.nextFloat(0, speciesCount)),
+                sampleSpawnPosition(worldParams, worldSize, prng),
+            );
         }
     }
 }
@@ -524,10 +646,6 @@ function setDNAFromProfile(species, profile) {
         dnaBuffer[species * 64 + paramIdx] = Math.round(normalized * 65535);
     }
 }function wireEvents() {
-    // ── World State Save/Load + Undo ring (v7.4+/v7.5) ──
-    // Registered FIRST so auto-snapshots observe the pre-action world: bus
-    // listeners fire in registration order, and the handlers below mutate
-    // laws/DNA/params/roster only after these capture lines run.
     const currentWorldState = (name = '') => captureWorldState({
         view: particleView,
         count: particleCount,
@@ -550,8 +668,9 @@ function setDNAFromProfile(species, profile) {
         undoRing.commit(currentWorldState());
         emitUndoState();
     };
-    // Restore a captured state onto the live world + resync every consumer.
     const applyWorldRestore = (state) => {
+        const restoreWorker = !!physicsWorker;
+        stopPhysicsWorker();
         const out = restoreWorldState(state, {
             view: particleView,
             dna: dnaBuffer,
@@ -565,21 +684,17 @@ function setDNAFromProfile(species, profile) {
         setWorldSize(out.worldSize);
         resetOffspringRing();
         resetIntelligence();
+        if (restoreWorker) startPhysicsWorker();
         bus.emit('species:sync', { count: speciesCount });
         bus.emit('dna:sync');
         bus.emit('law:sync');
         bus.emit('world:paramsRestored');
         bus.emit('world:restored', { particleCount, speciesCount, worldSize });
     };
-    // Auto-snapshot triggers (user-selected set: chaos, restart/reset, preset
-    // load, species roster, world-param changes).
     bus.on('sim:chaos', () => commitAutoSnapshot());
     bus.on('sim:restart', () => commitAutoSnapshot());
     bus.on('preset:load', () => commitAutoSnapshot());
     bus.on('species:aboutToChange', () => commitAutoSnapshot());
-    // World-param changes: capture the pre-change world once per debounce
-    // window (registered before the apply handler below, so the OLD params
-    // are still live when this fires).
     bus.on('world:paramChanged', () => {
         if (!undoEnabled) return;
         const now = Date.now();
@@ -590,8 +705,6 @@ function setDNAFromProfile(species, profile) {
         undoRing.commit(currentWorldState());
         emitUndoState();
     });
-    // Reset reloads the page, which would wipe the in-memory ring — persist
-    // the pre-reset world as a named save so it survives (user can LOAD or 🗑).
     bus.on('sim:hardReset', () => {
         if (particleCount <= 0) return;
         const d = new Date();
@@ -601,7 +714,6 @@ function setDNAFromProfile(species, profile) {
             if (res && res.ok) logDebug('pre-reset world saved for rollback');
         });
     });
-    // ── World save/load commands (called by the SAVES panel + toolbar) ──
     bus.on('world:save', async ({ name }) => {
         const n = String(name || '').trim();
         if (!n) return;
@@ -668,20 +780,21 @@ function setDNAFromProfile(species, profile) {
     });
     emitUndoState();
 
+    bus.on('law:sync', syncPhysicsWorker);
+    bus.on('law:toggled', syncPhysicsWorker);
+    bus.on('dna:sync', syncPhysicsWorker);
+    bus.on('dna:changed', syncPhysicsWorker);
+    bus.on('world:paramApplied', syncPhysicsWorker);
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', (opts = {}) => {
-        // Restart = fresh population at tick 0 with the CURRENT configuration:
-        // laws, world params and species params (roster + DNA) are untouched.
-        // opts is accepted for compatibility (Chaos randomizes first, then
-        // restarts onto the randomized laws/DNA — both are preserved here).
+        const restartWorker = !!physicsWorker;
+        stopPhysicsWorker();
         prng = new PRNG(Date.now());
-        // Clear buffer by zeroing all data
         particleView.fill(0);
-        // Reset offspring ring
         resetOffspringRing();
-        // Respawn with the current DNA + species roster (no defaulting)
         spawnDefaultPopulation(true, true);
+        if (restartWorker) startPhysicsWorker();
         tick = 0;
         paused = false;
         resetIntelligence();
@@ -692,28 +805,21 @@ function setDNAFromProfile(species, profile) {
         bus.emit('law:sync');
         bus.emit('sim:paused', { paused: false });
     });
-    // Species roster changes from the UI (add/remove species)
     bus.on('species:changed', ({ count }) => {
         speciesCount = Math.max(1, Math.min(count || 1, MAX_SPECIES));
     });
 
     bus.on('sim:togglePause', () => { paused = !paused; bus.emit('sim:paused', { paused }); });
     bus.on('sim:hardReset', () => {
-        // Reset = restore defaults: a fresh boot re-applies the default law
-        // set, world params and species profiles (nothing sim-state persists
-        // to storage, so a reload is the honest way back to defaults).
         console.log('[VEPA v3] Hard reset requested');
         logDebug('hard reset requested', 'warn');
         location.reload();
     });
-    // Readme (Help) button — open the v4 README
     bus.on('help:toggle', () => {
         window.open('https://github.com/gemquota/vepa/blob/new/README.md', '_blank', 'noopener');
     });
 
     bus.on('sim:chaos', () => {
-        // Chaos multiplexing: partition laws into groups with varying activation
-        // Shuffle law indices
         const shuffled = [];
         for (let i = 0; i < LAW_COUNT; i++) shuffled.push(i);
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -725,10 +831,8 @@ function setDNAFromProfile(species, profile) {
         const groupSize = Math.ceil(LAW_COUNT / groups);
         const intensity = 0.3 + Math.random() * 0.7;
 
-        // Clear all laws first
         for (let i = 0; i < LAW_COUNT; i++) lawClear(lawState, i);
 
-        // Apply group-based activation
         for (let g = 0; g < groups; g++) {
             const start = g * groupSize;
             const end = Math.min(start + groupSize, LAW_COUNT);
@@ -742,7 +846,6 @@ function setDNAFromProfile(species, profile) {
             }
         }
 
-        // Randomize some DNA for extra variation
         for (let s = 0; s < speciesCount; s++) {
             for (let p = 0; p < 42; p++) {
                 if (Math.random() > 0.85) {
@@ -762,7 +865,6 @@ function setDNAFromProfile(species, profile) {
     });
 
     bus.on('sim:chaosClear', () => {
-        // Clear all laws
         for (let i = 0; i < LAW_COUNT; i++) {
             lawClear(lawState, i);
         }
@@ -772,7 +874,6 @@ function setDNAFromProfile(species, profile) {
     });
 
     bus.on('sim:chaosSelective', ({ categories }) => {
-        // Build set of law indices to randomize based on category names
         const catMap = { physics: true, biology: true, chemistry: true, thermodynamics: true, metaphysics: true };
         const activeCats = {};
         for (const c of categories) { activeCats[c] = true; }
@@ -792,20 +893,14 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: 'Selective chaos applied.' });
     });
 
-    // Set F.1 — declared groups: a player/preset creates a named group for a
-    // set of species; the registry recruits ungrouped members on contact.
     bus.on('group:declare', ({ name, speciesIds }) => {
         if (!groupRegistry) return;
         const g = declareGroup(groupRegistry, name, speciesIds);
         bus.emit('narrative:system', { text: `Declared group ${g.name}.` });
     });
 
-    // Set A.1 — speciation: the child claims its slot (roster grows to show
-    // it), splits + extinctions hit the narrative journal and ECO feed.
     bus.on('speciation:split', ({ parent, child }) => {
         speciesCount = Math.max(speciesCount, child + 1);
-        // Set G.2 — cultural inheritance: the child species inherits the
-        // parent's learned memory (not its genome) at the transmission rate.
         if (memoryBuffers) {
             blendMemory(speciesMemory(memoryBuffers, child), speciesMemory(memoryBuffers, parent), worldParams.CULTURAL_TRANSMISSION || 0.5);
         }
@@ -816,9 +911,6 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: `S${species} went extinct — its slot is freed.` });
     });
 
-    // Set A.3 — world events: metrics-triggered + physics-confirmed; the
-    // response is reversible — an undo-ring checkpoint first, then world-param
-    // nudges and E-field writes (droughts / fertilization).
     bus.on('worldEvent:triggered', ({ type }) => {
         undoRing.commit(currentWorldState());
         const fs = getFields();
@@ -842,7 +934,6 @@ function setDNAFromProfile(species, profile) {
         bus.emit('world:paramApplied', { key: 'SPAWN_RATE', value: worldParams.SPAWN_RATE });
     });
 
-    // Set D.1 — epoch events: reversible responses + era navigation.
     bus.on('epoch:extinction', () => {
         undoRing.commit(currentWorldState());
         const fs = getFields();
@@ -868,7 +959,6 @@ function setDNAFromProfile(species, profile) {
         bus.emit('narrative:system', { text: `Restored epoch ${era}.` });
     });
 
-    // Set H.1 — agency actions: bounded, reversible, journaled.
     bus.on('agency:action', ({ action }) => {
         undoRing.commit(currentWorldState());
         let text = '';
@@ -912,31 +1002,19 @@ function setDNAFromProfile(species, profile) {
                 break;
             case 'PARTICLE_COUNT':
             case 'MAX_POP':
-                // Caps are read live by spawnCaps() during spawn paths.
-                break;
+                        break;
         }
-        // GLOBAL_G / WIND / DAMPING / VISCOSITY / ENTROPY / HEAT_CAPACITY /
-        // LIGHT_LEVEL / RADIATION_LEVEL / SPECIES_INTERACTION / ENERGY_TRANSFER /
-        // MUTATION_RATE / DECAY_RATE / GROUND_HEIGHT / SHAPE / SPAWN_CENTRES /
-        // SPAWN_CENTRE_RANDOM / SPAWN_CENTRE_BIAS / INITIAL_POP are applied
-        // directly by the solver (runtimeConfig.worldParams) or spawn paths.
-        // Emit event so other systems can react
         bus.emit('world:paramApplied', { key, value });
     });
 
 }
 
 let lastFrameTime = 0, frameCount = 0, fps = 0;
-// Performance telemetry — exponentially-smoothed phase timings fed to the
-// debug overlay (updateLiveStats) so the render loop's cost profile is
-// visible live: f = full frame, t = physics tick, r = render.
 let perfFrameMs = 0, perfTickMs = 0, perfRenderMs = 0;
 const PERF_EMA = 0.15;
 function emaPerf(prev, next) { return prev + (next - prev) * PERF_EMA; }
 
-// ── v4: Intelligence engine orchestration ────────────────────────────────
 
-/** Wire goal-adjustment application + timeline scrub/record bus handlers. */
 function wireGoalEvents() {
     bus.on('goal:adjusted', (adj) => {
         switch (adj.parameter) {
@@ -968,12 +1046,9 @@ function wireGoalEvents() {
     });
 }
 
-/** Collect current simulation metrics for the goal engine + dashboard. */
 function computeMetrics() {
     let alive = 0, energySum = 0;
     const speciesAlive = new Set();
-    // Per-species detail for the eco engine (A.2 metrics ring): population,
-    // energy, mass and position sums — one pass, all fed to the ring.
     const speciesPop = {};
     const speciesEnergy = {};
     const speciesMass = {};
@@ -1012,14 +1087,7 @@ function computeMetrics() {
     };
 }
 
-/**
- * Metrics with a cadence cache: the full O(N) particle scan (computeMetrics)
- * runs every METRICS_CADENCE ticks; in between we reuse the last result and
- * only refresh the cheap law-popcount gate so per-tick gating stays correct.
- */
 function getMetrics() {
-    // `tick < _metricsTick` catches a restart (tick resets to 0) so a stale
-    // snapshot can never survive into the new world.
     if (!_cachedMetrics || _metricsTick < 0 || tick < _metricsTick || tick - _metricsTick >= METRICS_CADENCE) {
         _cachedMetrics = computeMetrics();
         _metricsTick = tick;
@@ -1029,7 +1097,6 @@ function getMetrics() {
     return _cachedMetrics;
 }
 
-/** Set G.3 — shift each species' learned memory toward current conditions. */
 function adaptCultureFromMetrics(buffers, metrics) {
     const rate = (worldParams.CULTURAL_TRANSMISSION || 0.5) * 0.5;
     const threatSignal = epochEngine && epochEngine.extinctionOpen ? 1 : 0;
@@ -1040,16 +1107,19 @@ function adaptCultureFromMetrics(buffers, metrics) {
         const avgEnergy = pop ? energy / pop : 0;
         const mem = speciesMemory(buffers, id);
         adaptMemory(mem, [
-            Math.max(0, Math.min(1, avgEnergy / 100)),      // ACTIVITY ← energy
-            Math.max(-1, Math.min(1, (pop / 200) * 2 - 1)), // COHESION ← density
-            pop > 100 ? -0.5 : 0.5,                         // EXPLORATION ← sparse explores
-            threatSignal,                                   // THREAT ← extinction epoch
+            Math.max(0, Math.min(1, avgEnergy / 100)),
+            Math.max(-1, Math.min(1, (pop / 200) * 2 - 1)),
+            pop > 100 ? -0.5 : 0.5,
+            threatSignal,
         ], rate);
     }
 }
 
 /** Run insight, narrative, lineage, timeline, and goal engines each tick. */
 function updateIntelligence() {
+    // Worker completion owns intelligence; never scan the live buffer once per
+    // paint while the off-thread solver is still running.
+    if (_workerTickInFlight) return;
     // Guard: a single failing intelligence pass must never kill the frame
     // loop (which would blank the canvas while the UI stays responsive).
     try {

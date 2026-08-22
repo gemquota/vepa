@@ -3,7 +3,7 @@
 **Date**: 2026-08-01 | **Status**: Complete | **Spec**: `SPEC.md`
 
 > **Standards (2026-08-10):** product **VEPA4**, versions `major.minor.build`
-> (current `7.0.0`; legacy v4-line mapping old `4.M.N` → `M.N.0`), commits
+> (current `8.16.2`; legacy v4-line mapping old `4.M.N` → `M.N.0`), commits
 > Conventional Commits 1.0.0 — see `AGENTS.md` §10.4.
 
 ## Steps
@@ -54,7 +54,7 @@ npx vite build                                        # clean bundle
   insight defaults.
 - Timeline snapshots are raw buffer copies; with recording on and large
   populations, memory grows (20 snapshots × buffer). REC is off by default.
-- Main-thread physics remains the default; worker mode is future work.
+- Main-thread physics remains the compatibility fallback; deterministic worker mode is active when SharedArrayBuffer is available.
 
 ## Milestone note (v4.6.24 — 2026-08-07)
 
@@ -81,6 +81,18 @@ npx vite build                                        # clean bundle
 - **`vepa4 bench`** headless harness (throughput / per-law / all-law stress / JSON).
 - **Debug perf stats** in the debug overlay (f/t/r ms) and `· MS` in the multiplex
   metrics drawer. See `v4/CHANGELOG.md` [4.6.26].
+
+## Milestone note (v8.16.2 — 2026-08-22)
+
+- **Deterministic worker execution:** the live solver now uses the existing
+  physics worker over SharedArrayBuffer when available, with one serialized
+  request in flight and completion-driven population/intelligence updates.
+  Law, DNA, and world-parameter edits resync before the next tick; the
+  synchronous solver remains the compatibility fallback.
+- **Exhaustive benchmark report:** full-stress scaling compares the default
+  ten-law profile with all 128 laws on both execution paths, including worker
+  response overhead, an all-128 per-law sweep, and restored matrix/knob views.
+  The SPA labels overlapping leave-one-out attribution explicitly.
 
 ## Milestone note (v8.15.1 — 2026-08-19)
 

@@ -1,6 +1,6 @@
 # Feature Specification: VEPA4 — Integrated Intelligence
 
-**Version**: 4.0.0 | **Date**: 2026-08-01 | **Base**: v3 (3.1.0 + WIP)
+**Version**: 8.16.2 | **Date**: 2026-08-22 | **Base**: VEPA4 integrated intelligence
 **Audit input**: `audit/FULL_AUDIT_2026-08-01.md`
 
 ## Problem Statement
@@ -8,7 +8,7 @@
 ## Development Standards (2026-08-10)
 
 - **Product & versioning:** the product is **VEPA4**; versions use
-  **`major.minor.build`** (npm-semver-native, current `7.0.0`). The v4 line is
+  **`major.minor.build`** (npm-semver-native, current `8.16.2`). The v4 line is
   retroactively mapped old `4.M.N` → `M.N.0` (generation `4` moved into the
   product name). Changelog headers carry both labels
   (`## [4.6.28] - date → 6.28.0`); the full rule lives in `AGENTS.md` §10.4.
@@ -40,8 +40,9 @@ intelligence through a live dashboard.
 
 ## Non-Goals
 
-- No worker-mode migration (main-thread physics remains the default; the
-  existing worker fallback is untouched).
+- No additional worker modes beyond the deterministic Web Worker path; the
+  main-thread solver remains the compatibility fallback when SharedArrayBuffer
+  is unavailable.
 - No changes to the v2 legacy tree (`src/`, root `index.html`).
 - No new laws beyond PREDATION; the 51 existing laws keep their behavior.
 
@@ -58,6 +59,16 @@ intelligence through a live dashboard.
 | Timeline | every 150 frames while recording | `timeline:snapshot`, `timeline:restored` | `timeline:record`, `timeline:scrubTo` |
 
 All engines hold no DOM references. The UI subscribes to the same bus.
+
+### Deterministic worker execution
+
+The live solver is dispatched to `src/worker/physics.worker.js` when the
+particle buffer is a `SharedArrayBuffer`. Only one tick is in flight at a time;
+the worker mutates the shared particle view and returns offspring/timing data,
+while population growth, intelligence engines, and HUD updates run once on
+completion. Law, DNA, and world-parameter events send a serialized `CONFIG`
+update before the next tick. Hosts without cross-origin isolation use the
+synchronous main-thread solver fallback.
 
 ### Signal system (laws.js + solver.js)
 
