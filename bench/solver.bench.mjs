@@ -263,6 +263,7 @@ async function workerScalingSweep(counts, lawState) {
     const result = await measureWorker(count, lawState);
     results.push(result);
     process.stderr.write(` ${result.msPerTick.toFixed(1)} ms/tick solver, ${result.roundTripUs.toFixed(0)} µs round-trip\n`);
+    if (result.msPerTick > 1000 / 15) break;
   }
   return results;
 }
@@ -281,6 +282,7 @@ function scalingSweepState(counts, lawState) {
     const r = measure(count, lawState, dnaBuffer);
     results.push(r);
     process.stderr.write(` ${r.msPerTick.toFixed(1)} ms/tick\n`);
+    if (r.msPerTick > 1000 / 15) break;
   }
   return results;
 }
@@ -437,7 +439,9 @@ async function main() {
   let scalingData, scalingAllData, workerScalingData, workerScalingAllData;
   if (!LAWS_ONLY) {
     console.error('─ Scaling sweep (default 10 laws) ─');
-    const counts = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000].filter(c => c <= MAX_PARTICLES);
+    // Start at the requested 1k scale and stop each profile once it falls
+    // below 15 FPS (66.67 ms/tick); larger points add no useful real-time data.
+    const counts = [1000, 2500, 5000, 10000, 25000, 50000, 100000].filter(c => c <= MAX_PARTICLES);
     scalingData = scalingSweep(counts, DEFAULT_LAWS);
     console.error();
 

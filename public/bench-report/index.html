@@ -37,7 +37,19 @@
   th { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
   td:first-child, th:first-child { text-align: left; }
   tbody tr:hover { background: rgba(79,209,197,.05); }
-  canvas { display: block; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 1000px; }
+  canvas { display: block; width: 100%; height: auto; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 1000px; }
+  .chart-wrap { width: 100%; max-width: 1000px; min-width: 0; overflow: hidden; }
+  .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+  table { min-width: 0; table-layout: fixed; overflow-x: auto; display: block; }
+  th, td { overflow-wrap: anywhere; }
+  .bar-value { white-space: nowrap; }
+  @media (max-width: 700px) {
+    body { padding: 14px; font-size: 12px; }
+    .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
+    .bar-label { width: 78px; font-size: 10px; }
+    .bar-value { width: 112px; font-size: 10px; }
+    th, td { padding: 6px 7px; }
+  }
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
   .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
@@ -63,8 +75,8 @@
 
   <h2>N scaling</h2>
   <div class="sub">Solid teal = main-thread default laws · dashed teal = worker default laws · solid pink = main-thread ALL 128 · dashed pink = worker ALL 128. Worker solver time is off-thread; round-trip overhead is reported in the table.</div>
-  <canvas id="scaling" width="1000" height="300"></canvas>
-  <table id="scaling-table"></table>
+  <div class="chart-wrap"><canvas id="scaling" width="1000" height="300"></canvas></div>
+  <div class="table-wrap"><table id="scaling-table"></table></div>
 
   <h2>Per-law timing breakdown — vs ALL 128 laws</h2>
   <div class="sub">At N=<span id="perlaw-n">—</span> particles, relative to the <b>all-128-laws tick</b> (ALL 128 row = 100%). <b>Alone</b> = a full tick with only that law enabled (includes fixed per-tick overhead). <b>Saved if OFF</b> = ALL 128 minus the tick with that law removed — how much of the full-config tick that law's presence accounts for. <span class="warn">Rows do not sum to 100%</span>: laws interact (force/chemistry laws feed the same neighbor-saturation cost), so removing several at once saves less than the sum of individual removals.</div>
@@ -168,7 +180,7 @@
       html += `<div class="bar-row">
         <div class="bar-label">${label}</div>
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
-        <div class="bar-value">${fmt(val, 1)} µs saved (${pct}%)</div>
+        <div class="bar-value">${fmt(val / 1000)} ms saved (${pct}%)</div>
       </div>`;
     }
     container.innerHTML = html;
@@ -204,11 +216,11 @@
       const catPct = maxTickUs > 0 ? (total / maxTickUs * 100) : 0;
       const sorted = laws.sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
       html += `<div class="card">
-        <h3><span class="law-cat" style="background:${color}"></span>${catName} <span style="color:${color}">(${fmt(total, 1)} µs saved · ${fmt(catPct, 1)}%)</span></h3>
+        <h3><span class="law-cat" style="background:${color}"></span>${catName} <span style="color:${color}">(${fmt(total / 1000)} ms saved · ${fmt(catPct, 1)}%)</span></h3>
         ${sorted.map(r => `<div class="bar-row">
           <div class="bar-label" style="width:90px;font-size:10px">${r.law.replace(/_/g, ' ')}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${total > 0 ? (r.marginalUs / total * 100).toFixed(1) : 0}%;background:${color};opacity:0.7"></div></div>
-          <div class="bar-value" style="font-size:10px">${fmt(r.marginalUs ?? 0, 1)} µs</div>
+          <div class="bar-value" style="font-size:10px">${fmt((r.marginalUs ?? 0) / 1000)} ms</div>
         </div>`).join('')}
       </div>`;
     }
@@ -226,8 +238,8 @@
       sc.map((r) => r.count.toLocaleString()),
       series);
     const st = document.getElementById('scaling-table');
-    st.innerHTML =      '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>Main 10</th><th>Worker 10</th><th>Main 128</th><th>Worker 128</th><th>Worker 10 cold RTT</th><th>Worker 128 cold RTT</th><th>µs/particle</th></tr></thead><tbody>' +
-      sc.map((r, i) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)} ms</td><td>${D.workerScaling ? fmt(D.workerScaling[i].msPerTick) + ' ms' : '—'}</td><td>${D.scalingAll ? fmt(D.scalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScaling ? fmt(D.workerScaling[i].roundTripUs, 0) + ' µs' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].roundTripUs, 0) + ' µs' : '—'}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
+    st.innerHTML =      '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>Main 10 (ms/frame)</th><th>Worker 10 (ms/frame)</th><th>Main 128 (ms/frame)</th><th>Worker 128 (ms/frame)</th><th>Worker 10 cold RTT (ms)</th><th>Worker 128 cold RTT (ms)</th><th>ms/particle</th></tr></thead><tbody>' +
+      sc.map((r, i) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)} ms</td><td>${D.workerScaling ? fmt(D.workerScaling[i].msPerTick) + ' ms' : '—'}</td><td>${D.scalingAll ? fmt(D.scalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScaling ? fmt(D.workerScaling[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
       '</tbody>';
   }
 
@@ -253,21 +265,21 @@
       'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
     };
 
-    pt.innerHTML = '<thead><tr><th>Law</th><th>Category</th><th>Alone µs/tick</th><th>Saved if OFF (µs)</th><th>% saved vs ALL 128</th><th>ETV (µs/pair)</th></tr></thead><tbody>' +
-      metaRows.map(r => `<tr style="font-weight:600;color:var(--accent)"><td>${r.law}</td><td>—</td><td>${fmt(r.tickUs, 1)}</td><td>—</td><td>${r.law === 'ALL_128' ? '100%' : '—'}</td><td>—</td></tr>`).join('') +
+    pt.innerHTML = '<thead><tr><th>Law</th><th>Category</th><th>Alone (ms/frame)</th><th>Saved if OFF (ms)</th><th>% saved vs ALL 128</th><th>ETV (ms/pair)</th></tr></thead><tbody>' +
+      metaRows.map(r => `<tr style="font-weight:600;color:var(--accent)"><td>${r.law}</td><td>—</td><td>${fmt(r.tickUs / 1000)}</td><td>—</td><td>${r.law === 'ALL_128' ? '100%' : '—'}</td><td>—</td></tr>`).join('') +
       lawRows.map(r => {
         const cat = D.categories[r.law];
         const catName = cat ? cat.category : '—';
         const color = catColors[catName] || '#6b7280';
         const pct = r.pctOfTotal !== null ? fmt(r.pctOfTotal, 2) + '%' : '—';
-        const marginal = r.marginalUs !== null && r.marginalUs !== undefined ? fmt(r.marginalUs, 1) : '—';
+        const marginal = r.marginalUs !== null && r.marginalUs !== undefined ? fmt(r.marginalUs / 1000) : '—';
         // ETV: estimated time per interaction, derived from the saved cost
-        // (µs per pair, assuming ~N×500 candidate pairs at the interaction cap)
+        // (milliseconds per pair, assuming ~N×500 candidate pairs at the interaction cap)
         const N = D.reportParams.perLawCount || D.reportParams.count;
         const avgNeighbors = Math.min(500, N); // bounded by MAX_INTERACTIONS
         const m = r.marginalUs ?? 0;
-        const etv = m > 0 ? fmt(m / (N * avgNeighbors), 4) : '—';
-        return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td><td style="color:${color}">${catName}</td><td>${fmt(r.tickUs, 1)}</td><td>${marginal}</td><td>${pct}</td><td>${etv}</td></tr>`;
+        const etv = m > 0 ? fmt(m / (N * avgNeighbors * 1000), 4) : '—';
+        return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td><td style="color:${color}">${catName}</td><td>${fmt(r.tickUs / 1000)}</td><td>${marginal}</td><td>${pct}</td><td>${etv}</td></tr>`;
       }).join('') +
       '</tbody>';
 
@@ -299,7 +311,7 @@
     return `<div class="card">
       <h3>${s.title} sweep</h3>
       <canvas id="sweep-${idx}" width="420" height="180"></canvas>
-      <table><thead><tr><th>${s.title}</th><th>ms/tick</th><th>min</th><th>max</th></tr></thead><tbody>
+      <table><thead><tr><th>${s.title}</th><th>ms/frame</th><th>min ms</th><th>max ms</th></tr></thead><tbody>
         ${D[s.key].map((r) => `<tr><td>${r.value}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.minMs)}</td><td>${fmt(r.maxMs)}</td></tr>`).join('')}
       </tbody></table>
     </div>`;
@@ -314,8 +326,8 @@
   document.getElementById('foot').innerHTML =
     `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +
     `baseline ${JSON.stringify(D.baseline)} · default laws [${D.solver.defaultLaws.join(', ')}] · exhaustive profile: ${D.solver.lawCount} laws. ` +
-    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately in the scaling table; steady-state solver time is the worker curve. ` +
-    `<br><b>Alone µs/tick</b> measures a full tick with only that law enabled — it includes the solver's fixed overhead (grid build, neighbour gather, integration). ` +
+    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately in the scaling table. All timings are displayed as milliseconds per frame; FPS equivalent is 1000 ÷ ms/frame. ` +
+    `<br><b>Alone ms/frame</b> measures a full tick with only that law enabled — it includes the solver's fixed overhead (grid build, neighbour gather, integration). ` +
     `<b>Saved if OFF</b> and <b>% saved vs ALL 128</b> use the leave-one-out delta (ALL 128 − tick without the law), measured against the full 128-law config. Because laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so turning off any one of several laws relieves much of the same cost — the rows intentionally do not sum to 100%: removing several at once saves less than the sum of the individual removals.`;
 </script>
 </body>

@@ -1,5 +1,29 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.18] - 2026-08-22 → 8.16.4
+
+### HUD Telemetry
+- **Compact tick section**: the toolbar tick display now shows `tick N · X.X t/s · Y FPS` —
+  live tick count, completed physics ticks per second, and measured render frames per second,
+  sized to fit the existing toolbar space.
+- Tick now updates on every completed physics tick (worker and main-thread paths) instead of
+  appearing frozen while the worker owns simulation cadence.
+
+### Benchmark SPA
+- All timings displayed in `x.xx ms/frame` (no more raw microsecond values like "42000 µs");
+  worker cold round-trip overhead converted to milliseconds, ETV to ms/pair.
+- FPS context added: `FPS = 1000 ÷ ms/frame` noted on the report.
+- Charts are responsive (`width: 100%`) so the scaling graph no longer overflows the page;
+  tables scroll horizontally instead of pushing past the viewport.
+
+### Benchmark Runner
+- Scaling sweep starts at 1,000 particles (1k → 100k) and stops each profile as soon as a
+  scale drops below 15 FPS (>66.67 ms/tick), skipping useless sub-15FPS scales.
+- Regenerated `public/bench-report/data.js` with the new profile set.
+
+### Verification
+- Syntax + Vite build pass; perfKnobs suite 8/8 green.
+
 ## [4.8.17] - 2026-08-22 → 8.16.3
 
 ### Performance

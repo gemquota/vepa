@@ -8,6 +8,9 @@ let fpsDisplay = 0;
 let frameCount = 0;
 let lastFpsTime = 0;
 let rafId = null;
+let physicsTickCount = 0;
+let lastPhysicsTime = 0;
+let ticksPerSecond = 0;
 
 const el = {
   fps: null,
@@ -35,6 +38,7 @@ function tick(now) {
     frameCount = 0;
     lastFpsTime = now;
     if (el.fps) el.fps.textContent = `${fpsDisplay} FPS`;
+    if (el.tick) el.tick.textContent = `tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} t/s · ${fpsDisplay} FPS`;
   }
   rafId = requestAnimationFrame(tick);
 }
@@ -69,7 +73,7 @@ export function createHUD(bus) {
   let lastTickShown = -1;
 
   // Throttle DOM writes: particle/species text only changes when the value
-  // changes; tick counter only updates every 10 ticks (avoids 60 DOM writes/s).
+  // changes. Tick telemetry is compact and refreshed once per second.
   const updateStats = (particleCount, speciesCount, t) => {
     if (particleCount !== undefined && particleCount !== lastParticles && el.particles) {
       lastParticles = particleCount;
@@ -79,9 +83,18 @@ export function createHUD(bus) {
       lastSpecies = speciesCount;
       el.species.textContent = `${speciesCount} species`;
     }
-    if (t !== undefined && t !== lastTickShown && t % 10 === 0 && el.tick) {
+    if (t !== undefined && el.tick) {
+      const now = performance.now();
+      physicsTickCount++;
+      if (!lastPhysicsTime) lastPhysicsTime = now;
+      const elapsed = now - lastPhysicsTime;
+      if (elapsed >= 1000) {
+        ticksPerSecond = physicsTickCount * 1000 / elapsed;
+        physicsTickCount = 0;
+        lastPhysicsTime = now;
+      }
       lastTickShown = t;
-      el.tick.textContent = `tick ${t}`;
+      el.tick.textContent = `tick ${t} · ${ticksPerSecond.toFixed(1)} t/s · ${fpsDisplay} FPS`;
     }
   };
 
