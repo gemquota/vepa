@@ -19,6 +19,7 @@
   }
   * { box-sizing: border-box; }
   body {
+    position: relative;
     margin: 0; padding: 24px;
     background:
       radial-gradient(1200px 600px at 70% -10%, rgba(79,209,197,.10), transparent 60%),
@@ -26,6 +27,25 @@
     color: var(--ink);
     font-family: var(--mono);
     font-size: 13px;
+  }
+
+  /* ── Version mode switch ── */
+  .mode-switch {
+    position: absolute; top: 24px; right: 24px; z-index: 60;
+    display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden;
+  }
+  .mode-btn {
+    padding: 7px 16px; font-size: 11px; cursor: pointer;
+    background: transparent; color: var(--dim); border: none;
+    font-family: var(--mono); letter-spacing: .5px; white-space: nowrap;
+    transition: color .15s, background .15s;
+  }
+  .mode-btn.active { background: rgba(79,209,197,.15); color: var(--accent); }
+  .mode-btn:hover:not(.active) { color: var(--ink); }
+  .mode-btn + .mode-btn { border-left: 1px solid var(--line); }
+  @media (max-width: 760px) {
+    .mode-switch { top: 14px; right: 14px; }
+    .mode-btn { padding: 8px 14px; font-size: 12px; }
   }
   h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .5px; }
   h2 { font-size: 13px; margin: 32px 0 4px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
@@ -146,6 +166,23 @@
   .note { color: var(--dim); font-size: 11px; margin-top: 28px; line-height: 1.6; }
   .warn { color: var(--accent2); }
 
+  /* ── Compare mode: dual-panel layout ── */
+  .compare-panel { display: none; }
+  .compare-mode .compare-panel { display: block; }
+  .compare-mode .single-panel { display: none; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+  .compare-col h3 { font-size: 13px; margin: 0 0 8px; color: var(--ink); }
+  .compare-col .v800 { color: #f87171; }
+  .compare-col .v816 { color: var(--accent); }
+  .delta-pos { color: #f87171; }
+  .delta-neg { color: var(--accent); }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .compare-table th, .compare-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+  .compare-table th { color: var(--accent); font-weight: 600; text-align: right; font-size: 10px; text-transform: uppercase; }
+  .compare-table th:first-child, .compare-table td:first-child { text-align: left; }
+
   @media (max-width: 760px) {
     body { padding: 14px; font-size: 13px; }
     .desktop-only { display: none !important; }
@@ -175,6 +212,11 @@
 </style>
 </head>
 <body>
+  <div class="mode-switch" id="modeswitch">
+    <button class="mode-btn" data-mode="v800">v8.0</button>
+    <button class="mode-btn" data-mode="compare">Compare</button>
+    <button class="mode-btn active" data-mode="current">v8.16</button>
+  </div>
   <nav id="topnav">
     <a href="#sec-overview">Overview</a>
     <a href="#sec-performance">Performance</a>
@@ -188,6 +230,21 @@
   <h1>Benchmark Report</h1>
   <div class="sub" id="headline"></div>
   <div class="sub dir">Tap the section titles (or the pills above) to expand each analysis — Overview, Performance and Scaling start open.</div>
+
+  <!-- COMPARE PANEL: visible only when Compare mode is active -->
+  <div id="compare-view" class="compare-panel" style="margin-bottom:24px">
+    <h2 style="margin-top:0">v8.0 → v8.16 Comparison</h2>
+    <div class="sub">Side-by-side at common population scales. v8.0 data captured from git tag v8.0.0 (pre-optimisation solver); v8.16 data from current HEAD (v8.16.12 — grid fix + allocation-free hot path).</div>
+    <div class="compare-grid" style="margin-top:12px">
+      <div class="compare-col">
+        <h3>Throughput · <span class="v800">v8.0</span> vs <span class="v816">v8.16</span></h3>
+        <canvas id="compare-chart" width="520" height="280" style="width:100%;height:auto;background:none;border:0;margin:0"></canvas>
+      </div>
+      <div class="compare-col" id="compare-stats"></div>
+    </div>
+    <div class="table-wrap" style="margin-top:14px"><table class="compare-table" id="compare-tbl"></table></div>
+    <div class="mobile-only" id="compare-mobile"></div>
+  </div>
 
   <details class="section" id="sec-overview" open><summary>Overview</summary>
   <div class="stat-grid" id="overview"></div>
@@ -251,11 +308,63 @@
 
   <div class="note" id="foot"></div>
 
+<script>
+  // ── v8.0.0 benchmark snapshot (pre-optimisation solver, 2026-08-18) ──
+  // Captured with: node bench/solver.bench.mjs --particles ... --all --json
+  window.V800_DATA = {
+    generatedAt: "2026-08-18T00:00:00.000Z",
+    solver: { lawCount: 128, particleStride: 100, defaultLaws: ["GRAV","DRAG","ENTR","WRAP","COLL","LIFE","GLOW","REPRO","PHENOTYPE","GENOTYPE"] },
+    reportParams: { count: 500, rounds: 1 },
+    baseline: { GRID_DIM: 12, CELL_CAP: 500, MAX_INTERACTIONS: 500, NEIGHBOR_BUF: 256 },
+    // 128-law scaling (all laws active)
+    scalingAll: [
+      { count:500,  msPerTick:94.68,  ticksPerSec:10.6 },
+      { count:1000, msPerTick:74.81,  ticksPerSec:13.4 },
+      { count:2500, msPerTick:290.02, ticksPerSec:3.4  },
+      { count:5000, msPerTick:934.52, ticksPerSec:1.1  },
+      { count:10000,msPerTick:3185.47,ticksPerSec:0.3  },
+    ],
+    workerScalingAll: [],
+    // 10-law scaling (default PRIME_DEFAULT laws)
+    scaling: [
+      { count:500,  msPerTick:1.004, ticksPerSec:995.8 },
+      { count:1000, msPerTick:1.621, ticksPerSec:616.9 },
+      { count:2500, msPerTick:3.624, ticksPerSec:275.9 },
+      { count:5000, msPerTick:7.082, ticksPerSec:141.2 },
+      { count:10000,msPerTick:13.764,ticksPerSec:72.7  },
+      { count:25000,msPerTick:33.169,ticksPerSec:30.1  },
+    ],
+    workerScaling: [],
+    perLaw: [], matrix: null, gridDim: null, cellCap: null, maxInteractions: null, neighborBuf: null,
+    categories: {},
+  };
+</script>
 <script src="./data.js"></script>
 <script>
-  const D = window.BENCH_DATA;
+  // ── Version mode switching ──────────────────────────────────────
+  const V800 = window.V800_DATA;
+  const VCUR = window.BENCH_DATA;
+  let VERSION_MODE = 'current';
+  let D = VCUR;
+
+  function switchMode(mode) {
+    VERSION_MODE = mode;
+    D = mode === 'v800' ? V800 : VCUR;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    // In compare mode, show both datasets side-by-side.
+    document.body.classList.toggle('compare-mode', mode === 'compare');
+    renderAll();
+  }
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+  });
+
   const fmt = (n, d = 2) => Number(n).toFixed(d);
   const $ = (id) => document.getElementById(id);
+
+  // ── Main render: rebuilds the entire SPA for the active dataset ──
+  function renderAll() {
 
   // ── Series model ────────────────────────────────────────────────
   const CONFIGS = [
@@ -290,6 +399,105 @@
     ['Baseline knobs', `GRID ${D.baseline.GRID_DIM} · CELLCAP ${D.baseline.CELL_CAP} · MAXINT ${D.baseline.MAX_INTERACTIONS} · NBUF ${D.baseline.NEIGHBOR_BUF}`],
   ];
   $('meta').innerHTML = chips.map(([k, v]) => `<span class="chip">${k}: <b>${v}</b></span>`).join('');
+
+  // ── Compare mode: v8.0 vs v8.16 dual-panel ─────────────────────
+  (function renderCompare() {
+    const view = $('compare-view');
+    if (!view || !V800 || !VCUR) return;
+    // Compare 10-law scaling (both have it).
+    const v8s = V800.scaling || [], v16s = VCUR.scaling || [];
+    if (!v8s.length || !v16s.length) return;
+
+    // Match common scales.
+    const common = v8s.filter(r8 => v16s.some(r16 => r16.count === r8.count));
+    const get16 = (n) => v16s.find(r => r.count === n);
+    const fpsOf = (r) => r.msPerTick > 0 ? 1000 / r.msPerTick : 0;
+
+    // Stats card.
+    const scales = common.map(r => r.count);
+    const g16 = get16(Math.max(...scales));
+    const g8 = common.find(r => r.count === Math.max(...scales));
+    const speedup = g8 && g16 ? (fpsOf(g16) / fpsOf(g8) - 1) * 100 : 0;
+    const medSpeedup = common.length ? (() => {
+      const ratios = common.map(r8 => { const r16 = get16(r8.count); return r16 ? fpsOf(r16) / Math.max(fpsOf(r8), 0.1) : 1; });
+      return (median(ratios) - 1) * 100;
+    })() : 0;
+    $('compare-stats').innerHTML =
+      `<div class="stat hero" style="margin-bottom:10px"><div class="k">★ Speedup at ${(g8?.count || '??').toLocaleString()} particles</div>
+       <div class="v" style="color:${speedup >= 0 ? 'var(--accent)':'var(--accent2)'}">${speedup >= 0 ? '+' : ''}${fmt(speedup, 1)}%</div>
+       <div class="d">${g8 ? fmt(fpsOf(g8),1) : '—'} → ${g16 ? fmt(fpsOf(g16),1) : '—'} fps (10-law main thread)</div></div>` +
+      `<div class="stat"><div class="k">Median speedup</div><div class="v">${medSpeedup >= 0 ? '+' : ''}${fmt(medSpeedup, 1)}%</div><div class="d">Across ${common.length} common scales</div></div>` +
+      `<div class="stat"><div class="k">Common scales</div><div class="v">${common.length}</div><div class="d">${Math.min(...common.map(r=>r.count)).toLocaleString()} – ${Math.max(...common.map(r=>r.count)).toLocaleString()} particles</div></div>`;
+
+    // Compare chart.
+    const canvas = $('compare-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pad = { l: 60, r: 16, t: 16, b: 38 };
+    ctx.clearRect(0, 0, W, H);
+    const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+    const labels = scales.map(n => n < 1000 ? String(n) : `${(n/1000)|0}k`);
+    const v8vals = common.map(r => fpsOf(r));
+    const v16vals = common.map(r => { const r16 = get16(r.count); return r16 ? fpsOf(r16) : 0; });
+    const allVals = [...v8vals, ...v16vals];
+    let maxV = Math.max(...allVals, 1) * 1.1;
+    const x = (i) => pad.l + (i / Math.max(1, common.length - 1)) * plotW;
+    const y = (v) => pad.t + plotH - (v / maxV) * plotH;
+
+    // Gridlines.
+    ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.fillStyle = 'rgba(125,142,166,.85)';
+    ctx.font = '10px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'right';
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad.t + (g / 4) * plotH;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
+      ctx.fillText(`${(maxV * (1 - g / 4)).toFixed(0)} fps`, pad.l - 6, gy + 3);
+    }
+    ctx.textAlign = 'center';
+    const tickIdx = (n, t) => { if (n <= t + 1) return [...Array(n).keys()]; const s = new Set([0, n-1]); for (let g = 1; g < t-1; g++) s.add(Math.round(g/(t-1)*(n-1))); return [...s].sort((a,b)=>a-b); };
+    for (const i of tickIdx(common.length, 6)) ctx.fillText(labels[i], x(i), H - pad.b + 18);
+
+    // Draw lines.
+    const drawSeries = (vals, color, dash) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.setLineDash(dash || []);
+      ctx.beginPath(); vals.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)))); ctx.stroke(); ctx.setLineDash([]);
+      vals.forEach((v, i) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x(i), y(v), 3, 0, Math.PI*2); ctx.fill(); });
+    };
+    drawSeries(v8vals, '#f87171', [4,4]);
+    drawSeries(v16vals, '#4fd1c5', null);
+    // Legend.
+    ctx.font = '10px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'left';
+    ctx.fillStyle = '#f87171'; ctx.fillText('—   v8.0 (pre-optimisation)', pad.l + 6, pad.t + 16);
+    ctx.fillStyle = '#4fd1c5'; ctx.fillText('—   v8.16 (current)', pad.l + 6, pad.t + 32);
+
+    // Comparison table.
+    let thtml = '<thead><tr><th>Scale</th><th>v8.0 ms/frame</th><th>v8.16 ms/frame</th><th>Δ ms</th><th>Speedup</th></tr></thead><tbody>';
+    for (const r8 of common) {
+      const r16 = get16(r8.count);
+      const ms8 = r8.msPerTick, ms16 = r16 ? r16.msPerTick : NaN;
+      const delta = isNaN(ms16) ? NaN : ms16 - ms8;
+      const sp = isNaN(ms16) || ms8 <= 0 ? NaN : (1000 / ms16) / (1000 / ms8) - 1;
+      const isFaster = delta < 0;
+      thtml += `<tr><td>${r8.count.toLocaleString()}</td>` +
+        `<td><span class="v800">${fmt(ms8)}</span></td>` +
+        `<td><span class="v816">${isNaN(ms16) ? '—' : fmt(ms16)}</span></td>` +
+        `<td class="${!isNaN(delta) ? (isFaster ? 'delta-neg' : 'delta-pos') : ''}">${isNaN(delta) ? '—' : (isFaster ? fmt(delta) : '+' + fmt(delta))}</td>` +
+        `<td class="${!isNaN(sp) ? (sp > 0 ? 'delta-neg' : 'delta-pos') : ''}">${isNaN(sp) ? '—' : (sp >= 0 ? '↑' : '↓') + fmt(Math.abs(sp) * 100, 1) + '%'}</td></tr>`;
+    }
+    thtml += '</tbody>';
+    $('compare-tbl').innerHTML = thtml;
+
+    // Mobile cards.
+    $('compare-mobile').innerHTML = common.map(r8 => {
+      const r16 = get16(r8.count);
+      const ms8 = r8.msPerTick, ms16 = r16 ? r16.msPerTick : 0;
+      const sp = ms8 > 0 && ms16 > 0 ? (1000 / ms16) / (1000 / ms8) - 1 : 0;
+      return `<div class="m-card"><div class="m-title">${r8.count.toLocaleString()} particles</div>
+        <div class="m-row"><span class="m-k">v8.0</span><span class="m-v v800">${fmt(ms8)} ms/frame</span></div>
+        <div class="m-row"><span class="m-k">v8.16</span><span class="m-v v816">${fmt(ms16)} ms/frame</span></div>
+        <div class="m-row"><span class="m-k">Speedup</span><span class="m-v" style="color:${sp>=0?'var(--accent)':'var(--accent2)'}">${sp>=0?'+':''}${fmt(sp*100,1)}%</span></div></div>`;
+    }).join('');
+  })();
 
   // ── Level 1: Executive overview ────────────────────────────────
   (function overview() {
@@ -703,6 +911,11 @@
     if (window.addEventListener) window.addEventListener('hashchange', () => openByHash(location.hash));
     openByHash(typeof location !== 'undefined' ? location.hash : '');
   })();
+
+  } // end renderAll()
+
+  // ── Initial render ─────────────────────────────────────────────
+  renderAll();
 
   $('foot').innerHTML =
     `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +

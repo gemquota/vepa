@@ -1,5 +1,15 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.27] - 2026-08-22 → 8.16.13
+
+### feat(bench): 3-mode version comparison SPA
+
+- **3-mode switch at top-right**: v8.0 (pre-optimisation) / Compare / v8.16 (current)
+- **Compare mode**: dual-panel view with speedup stats, overlaid line chart (v8.0 red dashed vs v8.16 teal solid), numeric comparison table with Δ ms and % speedup per scale, plus mobile-friendly cards
+- **v8.0.0 dataset embedded inline**: 10-law and 128-law scaling captured from git tag v8.0.0 against the same bench harness
+- **Single SPA, single data file**: version switching is client-side — no page reload; the current dataset continues to load from `data.js`
+- Files: `public/bench-report/index.html`
+
 ## [4.8.26] - 2026-08-22 → 8.16.12
 
 ### Perf — revert grid density formula to v8.15.1 baseline (`src/physics/solver.js`)
