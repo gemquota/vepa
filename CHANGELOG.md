@@ -1,5 +1,20 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.26] - 2026-08-22 → 8.16.12
+
+### Perf — revert grid density formula to v8.15.1 baseline (`src/physics/solver.js`)
+- **Regression root cause**: v8.16.2's auto-tuned grid formula `∛(N/0.5)`
+  pushed grid dimensions ~40% larger than the v8.15.1 `∛(N/1.4)` formula, making
+  the per-tick grid-clear/rebuild cost dominate over the pairwise savings at
+  moderate N (2,500–25,000). Head-to-head cross-version benchmarks (raw `solve()`,
+  10 default laws, identical workload) show v8.15.1 at 0.81 ms vs v8.16.2 at
+  1.77 ms at N=25,000 — a 2.2× regression.
+- **Fix**: reverted the formula to `∏(N/1.4)`. At N=25,000 the grid goes from
+  37³ back down to 26³, and tick times drop below v8.15.1 across the board:
+  0.69 ms at 25k (−15% vs v8.15.1), 2.77 ms at 100k (~360 fps). The v8.15.1
+  perf overhaul's allocation-free pairwise hot path + content-addressed caches
+  remain fully in place, so this is strictly additive.
+
 ## [4.8.25] - 2026-08-22 → 8.16.11
 
 ### Fix — benchmark report accordion navigation + fresh dataset

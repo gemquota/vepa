@@ -16,6 +16,8 @@ import { runtimeConfig } from '../state/runtimeConfig.js';
 import { isAlive } from '../state/particleBuffer.js';
 import { isSet } from '../state/lawState.js';
 import { createGrid, clear, insert, getNeighbors } from './spatialGrid.js';
+// v8.17 — Barnes–Hut long-range gravity engine (opt-in via runtimeConfig.gravEngine)
+import { createOctree, buildOctree, octreeGravity } from './octree.js';
 import {
   applyGravity,
   applyCollision,
@@ -148,6 +150,11 @@ function ensureLocalDt(n) {
   return _localDt;
 }
 const _gravOut = { ax: 0, ay: 0, az: 0 };
+// v8.17: Barnes–Hut engine state — module-persistent tree, zero allocation per
+// tick after warm-up. Only used when runtimeConfig.gravEngine === 'bh'.
+let _bhTree = null;
+let _bhTheta = 0.5;
+let _bhActive = false; // per-tick flag set during engine selection
 const _affOut = { ax: 0, ay: 0, az: 0 };
 const _stigOut = { ax: 0, ay: 0, az: 0 };
 
@@ -290,7 +297,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
   const autoTune = (WP.AUTO_TUNE ?? 1) !== 0;
   const gridDim = autoTune
-    ? Math.max(12, Math.min(64, Math.round(Math.cbrt(Math.max(1, particleCount) / 0.5))))
+    ? Math.max(12, Math.min(64, Math.round(Math.cbrt(Math.max(1, particleCount) / 1.4))))
     : Math.max(6, Math.min(64, Math.round(WP.GRID_DIM ?? 12)));
   const cellCap = Math.max(1, Math.min(500, Math.round(WP.CELL_CAP ?? 100)));
   const grid = ensureGrid(gridDim, cellCap);
@@ -411,6 +418,45 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
 
   // ── Phase 3: Pairwise interactions + integration ──
 
+  // v8.17 — gravity engine selection. 'bh' swaps the pairwise GRAV term for
+  // one Barnes–Hut octree query per particle (O(N log N)); the tree is built
+  // once per tick over all alive, positive-mass particles. Far-field
+  // aggregates drop per-pair DNA modifiers (FORCE/TIDAL/HIDDEN_MASS) and the
+  // star-collapse boost — documented approximation; 'exact' stays the default.
+  _bhActive = false;
+  if (
+    active[LAW_INDEXES.GRAV] &&
+    runtimeConfig.gravEngine === 'bh' &&
+    particleCount > 0
+  ) {
+    const theta = Number(runtimeConfig.gravTheta);
+    _bhTheta = Number.isFinite(theta) ? Math.max(0, theta) : 0.5;
+    if (!_bhTree) _bhTree = createOctree(Math.max(1024, particleCount));
+    buildOctree(_bhTree, view, stride, particleCount, worldSize);
+    _bhActive = true;
+  }
+
+  // v8.17 — solo-gravity fast path: when the BH engine is running and GRAV is
+  // the ONLY active law, every force comes from the octree query below, so the
+  // 27-cell neighbour gather and the whole pairwise loop are dead weight.
+  // Popcount over the four flag words detects the single-law case in O(1).
+  let bhSoloGravity = false;
+  if (_bhActive) {
+    let pc = lo - ((lo >> 1) & 0x55555555);
+    pc = (pc & 0x33333333) + ((pc >> 2) & 0x33333333);
+    let bits = (pc + (pc >> 4)) & 0x0f0f0f0f;
+    pc = hi - ((hi >> 1) & 0x55555555);
+    pc = (pc & 0x33333333) + ((pc >> 2) & 0x33333333);
+    bits += (pc + (pc >> 4)) & 0x0f0f0f0f;
+    pc = ex - ((ex >> 1) & 0x55555555);
+    pc = (pc & 0x33333333) + ((pc >> 2) & 0x33333333);
+    bits += (pc + (pc >> 4)) & 0x0f0f0f0f;
+    pc = qu - ((qu >> 1) & 0x55555555);
+    pc = (pc & 0x33333333) + ((pc >> 2) & 0x33333333);
+    bits += (pc + (pc >> 4)) & 0x0f0f0f0f;
+    bhSoloGravity = (((bits * 0x01010101) >> 24) & 0xff) === 1;
+  }
+
   for (let i = 0; i < particleCount; i++) {
     const iBase = i * stride;
 
@@ -451,9 +497,20 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     let ddz = 0;
     let iAbsorbed = false; // consumed by a singularity's event horizon
 
+    // v8.17 — Barnes–Hut gravity ('bh' engine): one O(log N) tree query per
+    // particle replaces the pairwise GRAV term in the loop below.
+    if (_bhActive) {
+      octreeGravity(_bhTree, px, py, pz, effG * syn[LAW_INDEXES.GRAV], _bhTheta, _gravOut, i);
+      ax += _gravOut.ax;
+      ay += _gravOut.ay;
+      az += _gravOut.az;
+    }
+
     // ── Pairwise neighbor loop ──
 
-    const nCount = getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
+    // v8.17: solo-gravity BH skips the neighbour gather entirely — the octree
+    // query above already produced the full gravitational acceleration.
+    const nCount = bhSoloGravity ? 0 : getNeighbors(grid, px, py, pz, worldSize, nb, neighborCap);
     const limit = Math.min(nCount, maxInteractions);
 
     // v8.16: save neighbor list + count so the bond/polymer writeback block
@@ -489,8 +546,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const dist = Math.sqrt(distSq);
 
       // ── Gravity ──
-
-      if (active[LAW_INDEXES.GRAV]) {
+      // 'bh' engine: gravity was already applied above from the octree
+      // far-field query; skip the per-pair exact term to avoid double counting.
+      if (active[LAW_INDEXES.GRAV] && !_bhActive) {
         const gravSynergy = syn[LAW_INDEXES.GRAV];
         const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy, _gravOut);
         if (gravForce) {
