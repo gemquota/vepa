@@ -6,7 +6,7 @@ describe('Performance knobs — WORLD_PARAM_DEFS', () => {
   const perfDefs = WORLD_PARAM_DEFS.filter((d) => d.group === 'PERFORMANCE');
 
   it('exposes a dedicated PERFORMANCE accordion group', () => {
-    expect(perfDefs.length).toBe(5);
+    expect(perfDefs.length).toBe(9);
   });
 
   it('defines the solver knobs with classic defaults', () => {

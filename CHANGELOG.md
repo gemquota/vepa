@@ -1,5 +1,18 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.17] - 2026-08-22 → 8.16.3
+
+### Performance
+- Added deterministic adaptive-quality controls for high-population worlds.
+- Pairwise interaction budgets now scale with population and target FPS while
+  preserving the exact configured cap when adaptive quality is disabled.
+- Added WORLD performance controls for adaptive quality, target FPS, pairwise
+  budget, and expensive-law cadence.
+
+### Verification
+- Updated performance-knob coverage for the expanded PERFORMANCE accordion.
+
+
 > **Versioning & commit standards (adopted 2026-08-10):**
 > - **Product:** **VEPA4** — the generation number lives in the product name
 >   (was the leading `4` of the old `4.M.N` versions).
