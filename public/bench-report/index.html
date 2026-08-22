@@ -8,6 +8,7 @@
   :root {
     --bg: #07090e;
     --panel: #0d1118;
+    --panel2: #111826;
     --line: #1c2432;
     --ink: #cfe0f2;
     --dim: #7d8ea6;
@@ -27,68 +28,151 @@
     font-size: 13px;
   }
   h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .5px; }
-  h2 { font-size: 13px; margin: 28px 0 10px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
-  .sub { color: var(--dim); margin-bottom: 20px; }
+  h2 { font-size: 13px; margin: 32px 0 4px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+  .sub { color: var(--dim); margin-bottom: 14px; line-height: 1.5; }
   .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; white-space: nowrap; }
   .chip b { color: var(--accent); font-weight: 600; }
-  table { border-collapse: collapse; width: 100%; max-width: 1000px; background: var(--panel); border: 1px solid var(--line); }
-  th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
-  th { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
-  td:first-child, th:first-child { text-align: left; }
-  tbody tr:hover { background: rgba(79,209,197,.05); }
-  canvas { display: block; width: 100%; height: auto; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 1000px; }
-  .chart-wrap { width: 100%; max-width: 1000px; min-width: 0; overflow: hidden; }
-  .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
-  table { min-width: 0; table-layout: fixed; overflow-x: auto; display: block; }
-  th, td { overflow-wrap: anywhere; }
-  .bar-value { white-space: nowrap; }
-  @media (max-width: 700px) {
-    body { padding: 14px; font-size: 12px; }
-    .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
-    .bar-label { width: 78px; font-size: 10px; }
-    .bar-value { width: 112px; font-size: 10px; }
-    th, td { padding: 6px 7px; }
+
+  /* ── Overview stat cards ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; max-width: 1000px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .stat .k { color: var(--dim); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .stat .v { font-size: 20px; color: var(--ink); font-weight: 600; line-height: 1.2; }
+  .stat .v small { font-size: 11px; color: var(--dim); font-weight: 400; }
+  .stat .d { font-size: 10px; color: var(--dim); margin-top: 5px; }
+  .stat.hero { border-color: rgba(79,209,197,.45); box-shadow: inset 0 0 24px rgba(79,209,197,.05); }
+  .stat.hero .v { color: var(--accent); }
+
+  /* ── Chart ── */
+  canvas.chart { display: block; width: 100%; height: auto; margin: 10px 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-width: 1000px; }
+  .chart-wrap { position: relative; width: 100%; max-width: 1000px; min-width: 0; }
+  .chart-tip {
+    position: absolute; display: none; pointer-events: none; z-index: 5;
+    background: rgba(13,17,24,.96); border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px 10px; font-size: 11px; line-height: 1.55; min-width: 150px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.5); white-space: nowrap;
   }
-  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
-  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-  .card h3 { margin: 0 0 8px; font-size: 12px; color: var(--ink); letter-spacing: .5px; }
-  .card canvas { width: 100%; border: 0; }
-  .note { color: var(--dim); font-size: 11px; margin-top: 24px; }
-  .warn { color: var(--accent2); }
-  .law-cat { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-  .pill { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
-  .pill-fast { background: rgba(79,209,197,.15); color: var(--accent); }
-  .pill-slow { background: rgba(245,163,181,.15); color: var(--accent2); }
+  .chart-tip .t-label { color: var(--accent); margin-bottom: 3px; font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 6px; font-size: 11px; color: var(--dim); }
+  .legend span::before { content: "— "; font-weight: 700; }
+  .legend .l-solid-teal::before { color: #4fd1c5; } .legend .l-dash-teal::before { content: "- - "; color: #4fd1c5; }
+  .legend .l-solid-pink::before { color: #f5a3b5; } .legend .l-dash-pink::before { content: "- - "; color: #f5a3b5; }
+
+  /* ── Tables (desktop matrix) ── */
+  .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.matrix { border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); min-width: 100%; }
+  table.matrix th, table.matrix td {
+    padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  table.matrix th { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .5px; position: sticky; top: 0; background: var(--panel); z-index: 2; }
+  table.matrix td:first-child, table.matrix th:first-child {
+    text-align: left; white-space: nowrap; min-width: 190px; max-width: 260px;
+    position: sticky; left: 0; background: var(--panel); z-index: 1; font-size: 11.5px; color: var(--ink);
+  }
+  table.matrix th:first-child { z-index: 3; }
+  tbody tr:hover td { background: rgba(79,209,197,.05); }
+  tbody tr:hover td:first-child { background: var(--panel2); }
+  td.best { color: var(--accent); font-weight: 700; box-shadow: inset 0 0 0 1px rgba(79,209,197,.35); }
+  td.worst { color: var(--accent2); }
+  .dir { font-size: 10px; color: var(--dim); letter-spacing: .4px; }
+  .metric-head { margin: 18px 0 6px; font-size: 11.5px; }
+  .metric-head b { color: var(--ink); text-transform: uppercase; letter-spacing: .8px; font-size: 11px; }
+
+  /* ── Mobile metric cards ── */
+  .mobile-only { display: none; }
+  .m-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 10px 0; max-width: 520px; }
+  .m-card .m-title { font-size: 11px; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 2px; }
+  .m-card .m-dir { font-size: 10px; color: var(--dim); margin-bottom: 10px; }
+  .m-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+  .m-row .m-k { width: 64px; color: var(--dim); flex-shrink: 0; }
+  .m-row .m-bar { flex: 1; height: 8px; background: rgba(255,255,255,.04); border-radius: 2px; overflow: hidden; }
+  .m-row .m-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+  .m-row.slow .m-bar i { background: var(--accent2); }
+  .m-row .m-v { width: 128px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .m-row .m-v small { color: var(--dim); }
+  details.m-all summary { cursor: pointer; color: var(--accent); font-size: 11px; padding: 6px 0 0; user-select: none; }
+
+  /* ── Configuration cards ── */
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+  .card h3 { margin: 0 0 8px; font-size: 12px; color: var(--ink); letter-spacing: .5px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: 9px; letter-spacing: 1px; color: var(--accent); border: 1px solid rgba(79,209,197,.45); padding: 2px 7px; border-radius: 4px; }
+  .cfg-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 12px; }
+  .cfg-row .ck { color: var(--dim); }
+  .score-track { height: 10px; background: rgba(255,255,255,.04); border-radius: 3px; overflow: hidden; margin: 10px 0 4px; }
+  .score-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; }
+
+  /* ── Bars ── */
   .bar-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
-  .bar-label { width: 100px; text-align: right; font-size: 11px; color: var(--dim); flex-shrink: 0; }
-  .bar-track { flex: 1; height: 14px; background: var(--panel); border-radius: 3px; overflow: hidden; position: relative; }
-  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
-  .bar-value { width: 70px; text-align: left; font-size: 11px; color: var(--ink); flex-shrink: 0; }
+  .bar-label { width: 110px; text-align: right; font-size: 10.5px; color: var(--dim); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 14px; background: rgba(255,255,255,.03); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .3s ease; }
+  .bar-value { width: 132px; text-align: left; font-size: 10.5px; color: var(--ink); flex-shrink: 0; white-space: nowrap; }
+
+  .law-cat { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .note { color: var(--dim); font-size: 11px; margin-top: 28px; line-height: 1.6; }
+  .warn { color: var(--accent2); }
+
+  @media (max-width: 760px) {
+    body { padding: 14px; font-size: 12px; }
+    .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+    h2 { margin-top: 26px; }
+    .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
+    .bar-label { width: 84px; font-size: 9.5px; }
+    .bar-value { width: 104px; font-size: 9.5px; }
+  }
 </style>
 </head>
 <body>
-  <h1>VEPA4 — Solver Benchmark Report</h1>
-  <div class="sub">Balanced deterministic measurements. Main-thread curves show UI-blocking solver time; worker curves show solver time after moving physics off the UI thread. Regenerate with <code>node bench/solver.bench.mjs --all</code>.</div>
-  <div id="meta" class="meta"></div>
+  <h1>Benchmark Report</h1>
+  <div class="sub" id="headline"></div>
 
-  <h2>N scaling</h2>
-  <div class="sub">Solid teal = main-thread default laws · dashed teal = worker default laws · solid pink = main-thread ALL 128 · dashed pink = worker ALL 128. Vertical axis is FPS (higher is better; 60 fps target line at the top). Profiles stop once a scale drops below 15 fps.</div>
-  <div class="chart-wrap"><canvas id="scaling" width="1000" height="300"></canvas></div>
-  <div class="table-wrap"><table id="scaling-table"></table></div>
+  <h2>Overview</h2>
+  <div class="stat-grid" id="overview"></div>
+  <div id="meta" class="meta" style="margin-top:14px"></div>
 
-  <h2>Per-law timing breakdown — vs ALL 128 laws</h2>
-  <div class="sub">Ablation at N=<span id="perlaw-n">—</span> particles. Each row answers: <i>how much does this law cost, and what does removing it change?</i> <b>Solo Cost</b> = a full tick with only that law enabled. <b>Without Law</b> = the all-128 tick with that law removed. <b>Δ Runtime / Δ %</b> = ALL 128 − Without Law (the law's marginal cost, absolute and proportional). <span class="warn">Δ % rows do not sum to 100%</span>: laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so removing several at once saves less than the sum of individual removals. Bars below show Δ Runtime sorted by marginal cost.</div>
+  <h2>Performance</h2>
+  <div class="legend">
+    <span class="l-solid-teal">Main · 10 laws</span>
+    <span class="l-dash-teal">Worker · 10 laws</span>
+    <span class="l-solid-pink">Main · 128 laws</span>
+    <span class="l-dash-pink">Worker · 128 laws</span>
+  </div>
+  <div class="sub dir">Throughput · frames per second · ↑ higher is better · profiles stop below 15 fps</div>
+  <div class="chart-wrap">
+    <canvas id="scaling" class="chart" width="1000" height="320"></canvas>
+    <div class="chart-tip" id="scaling-tip"></div>
+  </div>
+
+  <h2>Detailed results — population scaling</h2>
+  <div class="desktop-only">
+    <table class="matrix" id="scaling-table"></table>
+    <div class="sub dir" style="margin-top:6px">Scroll horizontally for more scales · best value per row outlined in teal · RTT = cold worker round-trip</div>
+  </div>
+  <div class="mobile-only" id="scaling-mobile"></div>
+
+  <h2>Configurations</h2>
+  <div class="sub">Each configuration compared at a common reference scale. Score = fps relative to the fastest configuration.</div>
+  <div class="grid2" id="config-cards"></div>
+
+  <h2>Per-law ablation — vs ALL 128 laws</h2>
+  <div class="sub">Ablation at N=<span id="perlaw-n">—</span> particles. Each row answers: <i>how much does this law cost, and what does removing it change?</i> <b>Solo Cost</b> = a full tick with only that law enabled. <b>Without Law</b> = the all-128 tick with that law removed. <b>Δ Runtime / Δ %</b> = ALL 128 − Without Law (the law's marginal cost, absolute and proportional). <span class="warn">Δ % rows do not sum to 100%</span>: laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so removing several at once saves less than the sum of individual removals.</div>
   <div id="perlaw-summary" class="meta"></div>
+  <h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 6px">Marginal cost by law ↓ lower is cheaper</h3>
   <div id="perlaw-bars"></div>
-  <div class="table-wrap"><table id="perlaw-table"></table></div>
+  <div class="desktop-only"><table class="matrix" id="perlaw-table"></table></div>
+  <div class="mobile-only" id="perlaw-mobile"></div>
 
   <h2>Per-law by category</h2>
   <div class="grid3" id="category-cards"></div>
 
-  <h2>MAX_INTERACTIONS × NEIGHBOR_BUF matrix</h2>
-  <table id="matrix"></table>
+  <h2>Tuning-knob matrix</h2>
+  <div class="sub dir">Latency · ms/frame · ↓ lower is better · teal = fast, pink = slow</div>
+  <div class="table-wrap"><table class="matrix" id="matrix" style="min-width:420px"></table></div>
 
   <h2>Knob sweeps</h2>
   <div class="grid2" id="sweeps"></div>
@@ -99,215 +183,317 @@
 <script>
   const D = window.BENCH_DATA;
   const fmt = (n, d = 2) => Number(n).toFixed(d);
+  const $ = (id) => document.getElementById(id);
 
-  // Meta chips
-  const meta = document.getElementById('meta');
+  // ── Series model ────────────────────────────────────────────────
+  const CONFIGS = [
+    { key: 'main10',   name: 'Main · 10 laws',  short: 'Main 10',  data: D.scaling,          color: '#4fd1c5', dash: null,     worker: false },
+    { key: 'worker10', name: 'Worker · 10 laws',short: 'Worker 10',data: D.workerScaling,    color: '#4fd1c5', dash: [6, 4],   worker: true },
+    { key: 'main128',  name: 'Main · 128 laws', short: 'Main 128', data: D.scalingAll,       color: '#f5a3b5', dash: null,     worker: false },
+    { key: 'worker128',name: 'Worker · 128 laws',short:'Worker 128',data: D.workerScalingAll,color: '#f5a3b5', dash: [6, 4],   worker: true },
+  ].filter(c => Array.isArray(c.data) && c.data.length);
+  const msOf = (r) => r.msPerTick ?? (r.solverUs != null ? r.solverUs / 1000 : NaN);
+  const fpsOf = (r) => (msOf(r) > 0 ? 1000 / msOf(r) : 0);
+  const median = (arr) => { const a = [...arr].sort((x, y) => x - y); const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+
+  // Reference scale: largest particle count present in EVERY measured config.
+  let refCount = null;
+  if (CONFIGS.length) {
+    refCount = Math.max(...CONFIGS.map(c => Math.min(...c.data.map(r => r.count))));
+    while (!CONFIGS.every(c => c.data.some(r => r.count === refCount)) && refCount > 500) refCount -= 500;
+  }
+  const atScale = (c, n) => c.data.find(r => r.count === n);
+
+  // ── Headline + meta chips ──────────────────────────────────────
+  const totalScales = new Set(CONFIGS.flatMap(c => c.data.map(r => r.count))).size;
+  $('headline').innerHTML =
+    `${totalScales} population scales · ${D.solver.lawCount}-law exhaustive profile · ${CONFIGS.map(c => c.short).join(' · ')}` +
+    ` — regenerate with <code>node bench/solver.bench.mjs --all</code>`;
   const chips = [
     ['Generated', new Date(D.generatedAt).toLocaleString()],
-    ['Particles (report)', D.reportParams.count],
     ['Per-law N', D.reportParams.perLawCount || D.reportParams.count],
     ['Rounds', D.reportParams.rounds],
-    ['Budget', D.reportParams.budget + ' ms'],
     ['Stride', D.solver.particleStride],
-    ['Laws', D.solver.lawCount],
     ['Worker', D.solver.workerMode || 'not recorded'],
-    ['World size', D.solver.worldSize],
     ['Baseline knobs', `GRID ${D.baseline.GRID_DIM} · CELLCAP ${D.baseline.CELL_CAP} · MAXINT ${D.baseline.MAX_INTERACTIONS} · NBUF ${D.baseline.NEIGHBOR_BUF}`],
   ];
-  meta.innerHTML = chips.map(([k, v]) => `<span class="chip">${k}: <b>${v}</b></span>`).join('');
+  $('meta').innerHTML = chips.map(([k, v]) => `<span class="chip">${k}: <b>${v}</b></span>`).join('');
 
-  // Line chart helper. opts.fps plots 1000/ms so higher = better and the
-  // vertical axis reads in frames per second.
+  // ── Level 1: Executive overview ────────────────────────────────
+  (function overview() {
+    const stats = [];
+    // Best configuration at the common reference scale.
+    if (refCount) {
+      const ranked = CONFIGS
+        .map(c => ({ c, r: atScale(c, refCount) }))
+        .filter(x => x.r)
+        .sort((a, b) => msOf(a.r) - msOf(b.r));
+      const best = ranked[0];
+      if (best) stats.push({ hero: true, k: '★ Best configuration', v: best.c.name, d: `${fmt(msOf(best.r))} ms/frame · ${fmt(fpsOf(best.r), 1)} fps @ ${refCount.toLocaleString()} particles` });
+      // Worker improvement over main at the same scale & law set.
+      for (const laws of ['10 laws', '128 laws']) {
+        const main = ranked.find(x => x.c.name.includes('Main') && x.c.name.includes(laws));
+        const wk = ranked.find(x => x.c.name.includes('Worker') && x.c.name.includes(laws));
+        if (main && wk && msOf(main.r) > 0) {
+          const gain = (1 - msOf(wk.r) / msOf(main.r)) * 100;
+          stats.push({ k: `Worker improvement (${laws})`, v: (gain >= 0 ? '+' : '') + fmt(gain, 1) + '%', d: `${fmt(msOf(wk.r))} vs ${fmt(msOf(main.r))} ms/frame` });
+        }
+      }
+    }
+    const main10 = D.scaling || [];
+    if (main10.length) {
+      stats.push({ k: 'Median latency', v: fmt(median(main10.map(msOf))) + '<small> ms</small>', d: 'Main · 10 laws across ' + main10.length + ' scales' });
+      stats.push({ k: 'Peak throughput', v: fmt(Math.max(...main10.map(fpsOf)), 1) + '<small> fps</small>', d: '@ ' + main10.reduce((b, r) => (fpsOf(r) > fpsOf(b) ? r : b)).count.toLocaleString() + ' particles' });
+      const last60 = main10.filter(r => fpsOf(r) >= 60).map(r => r.count);
+      stats.push({ k: 'Max N ≥ 60 fps', v: last60.length ? Math.max(...last60).toLocaleString() : '—<small></small>', d: 'Main · 10 laws · real-time budget' });
+    }
+    // Stability from knob-sweep spreads.
+    const sweepsArr = ['gridDim', 'cellCap', 'maxInteractions', 'neighborBuf'].map(k => D[k]).filter(Boolean);
+    if (sweepsArr.length) {
+      const allPts = sweepsArr.flat();
+      const spread = allPts.reduce((s, r) => s + ((r.maxMs - r.minMs) / r.msPerTick), 0) / allPts.length;
+      stats.push({ k: 'Stability', v: fmt(Math.max(0, (1 - spread)) * 100, 1) + '%', d: '1 − mean relative spread across knob sweeps' });
+    }
+    $('overview').innerHTML = stats.map(s =>
+      `<div class="stat${s.hero ? ' hero' : ''}"><div class="k">${s.k}</div><div class="v">${s.v}</div><div class="d">${s.d}</div></div>`
+    ).join('');
+  })();
+
+  // ── Chart engine: sparse ticks + crosshair tooltip ─────────────
+  function tickIdx(n, target = 6) {
+    if (n <= target + 1) return Array.from({ length: n }, (_, i) => i);
+    const out = new Set([0, n - 1]);
+    for (let g = 1; g < target - 1; g++) out.add(Math.round((g / (target - 1)) * (n - 1)));
+    return [...out].sort((a, b) => a - b);
+  }
   function drawLine(canvas, labels, series, opts = {}) {
-    const fpsAxis = !!opts.fps;
-    const mapV = (v) => (fpsAxis ? (v > 0 ? 1000 / v : 0) : v);
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const pad = { l: 64, r: 16, t: 18, b: 34 };
+    const pad = { l: 56, r: 16, t: 18, b: 34 };
     ctx.clearRect(0, 0, W, H);
     const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
     let max = 0;
-    for (const s of series) for (const v of s.values) max = Math.max(max, mapV(v));
+    for (const s of series) for (const v of s.values) max = Math.max(max, v);
     max = max * 1.08 || 1;
-    const x = (i) => pad.l + (i / Math.max(1, labels.length - 1)) * plotW;
-    const y = (v) => pad.t + plotH - (mapV(v) / max) * plotH;
+    const n = labels.length;
+    const x = (i) => pad.l + (i / Math.max(1, n - 1)) * plotW;
+    const y = (v) => pad.t + plotH - (v / max) * plotH;
 
-    // gridlines
+    // 60 fps target line when plotting throughput.
+    if (opts.fps && max > 66) {
+      ctx.strokeStyle = 'rgba(247,200,115,.35)';
+      ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(pad.l, y(60)); ctx.lineTo(W - pad.r, y(60)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(247,200,115,.7)'; ctx.font = '9px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'left'; ctx.fillText('60 fps target', pad.l + 4, y(60) - 4);
+    }
+    // gridlines + sparse x ticks
     ctx.strokeStyle = 'rgba(255,255,255,.06)';
-    ctx.fillStyle = 'rgba(125,142,166,.8)';
+    ctx.fillStyle = 'rgba(125,142,166,.85)';
     ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
     ctx.textAlign = 'right';
     for (let g = 0; g <= 4; g++) {
       const gy = pad.t + (g / 4) * plotH;
       const val = max - (g / 4) * max;
       ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
-      ctx.fillText(fpsAxis ? `${fmt(val, 0)} fps` : fmt(val, 1), pad.l - 6, gy + 3);
+      ctx.fillText(opts.fps ? `${fmt(val, 0)} fps` : fmt(val, 1), pad.l - 6, gy + 3);
     }
     ctx.textAlign = 'center';
-    labels.forEach((lab, i) => ctx.fillText(lab, x(i), H - pad.b + 16));
+    for (const i of tickIdx(n)) ctx.fillText(labels[i], x(i), H - pad.b + 16);
 
     series.forEach((s) => {
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth = 2;
-      ctx.setLineDash(s.dash || []);
+      ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.setLineDash(s.dash || []);
       ctx.beginPath();
       s.values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
-      ctx.stroke();
-      ctx.setLineDash([]);
-      s.values.forEach((v, i) => {
-        ctx.fillStyle = s.color;
-        ctx.beginPath(); ctx.arc(x(i), y(v), 3, 0, Math.PI * 2); ctx.fill();
-      });
+      ctx.stroke(); ctx.setLineDash([]);
+      s.values.forEach((v, i) => { ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x(i), y(v), 2.5, 0, Math.PI * 2); ctx.fill(); });
     });
+
+    // Tooltip wiring (pointer → nearest scale).
+    const wrapEl = canvas.parentElement;
+    const tip = opts.tipId ? $(opts.tipId) : null;
+    if (!tip) return;
+    canvas.addEventListener('pointermove', (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = (ev.clientX - rect.left) * (W / rect.width);
+      let bi = 0, bd = Infinity;
+      for (let i = 0; i < n; i++) { const dx = Math.abs(x(i) - px); if (dx < bd) { bd = dx; bi = i; } }
+      tip.innerHTML = `<div class="t-label">${labels[bi]} particles</div>` +
+        series.map(s => `<div><span style="color:${s.color}">${s.name}</span>: ${opts.fps ? fmt(s.values[bi], 1) + ' fps' : fmt(s.values[bi]) + ' ms'}</div>`).join('');
+      tip.style.display = 'block';
+      const wr = wrapEl.getBoundingClientRect();
+      let tx = ev.clientX - wr.left + 14, ty = ev.clientY - wr.top - 10;
+      if (tx + tip.offsetWidth > wr.width - 4) tx = ev.clientX - wr.left - tip.offsetWidth - 14;
+      tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+    });
+    canvas.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
   }
 
-  // Horizontal bar chart for per-law — bars show the leave-one-out cost saved
-  // against the full ALL_128 tick, so they stay within 100% while retaining
-  // the honest overlap semantics of interacting laws.
-  function drawLawBars(container, perLaw, maxTickUs) {
-    const sorted = perLaw
-      .filter(r => r.law !== 'ALL_DEFAULT' && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_128' && r.law !== 'ALL')
-      .sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
-
-    const catColors = {
-      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
-      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
-      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
-    };
-
-    let html = '';
-    for (const r of sorted) {
-      const cat = D.categories[r.law];
-      const color = cat ? (catColors[cat.category] || '#6b7280') : '#6b7280';
-      const val = r.marginalUs ?? 0;
-      const pct = (val / maxTickUs * 100).toFixed(1);
-      const label = r.law.replace(/_/g, ' ');
-      html += `<div class="bar-row">
-        <div class="bar-label">${label}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
-        <div class="bar-value">${fmt(val / 1000)} ms saved (${pct}%)</div>
-      </div>`;
-    }
-    container.innerHTML = html;
-  }
-
-  // Category cards — aggregated "saved if OFF" per category, consistent with
-  // the per-law % column (overlapping across categories; see the footnote).
-  function drawCategoryCards(container, perLaw, maxTickUs) {
-    const catColors = {
-      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
-      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
-      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
-    };
-
-    // Group laws by category
-    const cats = {};
-    for (const r of perLaw) {
-      if (r.law === 'ALL_DEFAULT' || r.law === 'ZERO_LAWS' || r.law === 'ALL_128' || r.law === 'ALL') continue;
-      const cat = D.categories[r.law];
-      const catName = cat ? cat.category : 'UNKNOWN';
-      if (!cats[catName]) cats[catName] = [];
-      cats[catName].push(r);
-    }
-
-    let html = '';
-    for (const [catName, laws] of Object.entries(cats).sort((a, b) => {
-      const totalA = a[1].reduce((s, l) => s + (l.marginalUs ?? 0), 0);
-      const totalB = b[1].reduce((s, l) => s + (l.marginalUs ?? 0), 0);
-      return totalB - totalA;
-    })) {
-      const color = catColors[catName] || '#6b7280';
-      const total = laws.reduce((s, l) => s + (l.marginalUs ?? 0), 0);
-      const catPct = maxTickUs > 0 ? (total / maxTickUs * 100) : 0;
-      const sorted = laws.sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
-      html += `<div class="card">
-        <h3><span class="law-cat" style="background:${color}"></span>${catName} <span style="color:${color}">(${fmt(total / 1000)} ms saved · ${fmt(catPct, 1)}%)</span></h3>
-        ${sorted.map(r => `<div class="bar-row">
-          <div class="bar-label" style="width:90px;font-size:10px">${r.law.replace(/_/g, ' ')}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${total > 0 ? (r.marginalUs / total * 100).toFixed(1) : 0}%;background:${color};opacity:0.7"></div></div>
-          <div class="bar-value" style="font-size:10px">${fmt((r.marginalUs ?? 0) / 1000)} ms</div>
-        </div>`).join('')}
-      </div>`;
-    }
-    container.innerHTML = html;
-  }
-
-  // ── Scaling chart + table (default 10 laws vs all 128) ──
+  // Primary chart — FPS axis (higher is better).
   if (D.scaling) {
-    const sc = D.scaling;
-    const series = [{ values: sc.map((r) => r.msPerTick), color: '#4fd1c5' }];
-    if (D.workerScaling) series.push({ values: D.workerScaling.map((r) => r.msPerTick), color: '#4fd1c5', dash: [6, 4] });
-    if (D.scalingAll) series.push({ values: D.scalingAll.map((r) => r.msPerTick), color: '#f5a3b5' });
-    if (D.workerScalingAll) series.push({ values: D.workerScalingAll.map((r) => r.msPerTick), color: '#f5a3b5', dash: [6, 4] });
-    drawLine(document.getElementById('scaling'),
-      sc.map((r) => r.count.toLocaleString()),
-      series, { fps: true });
-    const st = document.getElementById('scaling-table');
-    // Transposed layout: particle counts as columns, metrics as rows.
-    const val = (arr, i, key, xform) => (arr && arr[i] ? (xform ? xform(arr[i][key]) : fmt(arr[i][key])) : '—');
-    const row = (label, cells) => `<tr><td>${label}</td>` + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
-    st.innerHTML =
-      '<thead><tr><th>Metric</th>' + sc.map((r) => `<th>${r.count.toLocaleString()}</th>`).join('') + '</tr></thead><tbody>' +
-      row('Main 10 laws (ms/frame)', sc.map((r) => fmt(r.msPerTick))) +
-      row('Worker 10 laws (ms/frame)', sc.map((_, i) => val(D.workerScaling, i, 'msPerTick'))) +
-      row('Main 128 laws (ms/frame)', sc.map((_, i) => val(D.scalingAll, i, 'msPerTick'))) +
-      row('Worker 128 laws (ms/frame)', sc.map((_, i) => val(D.workerScalingAll, i, 'msPerTick'))) +
-      row('Worker 10 cold RTT (ms)', sc.map((_, i) => val(D.workerScaling, i, 'roundTripUs', (v) => fmt(v / 1000)))) +
-      row('Worker 128 cold RTT (ms)', sc.map((_, i) => val(D.workerScalingAll, i, 'roundTripUs', (v) => fmt(v / 1000)))) +
-      row('FPS equivalent (main 10)', sc.map((r) => (r.msPerTick > 0 ? fmt(1000 / r.msPerTick, 1) : '∞'))) +
-      '</tbody>';
+    drawLine($('scaling'),
+      D.scaling.map(r => r.count.toLocaleString()),
+      CONFIGS.map(c => ({
+        name: c.name,
+        values: c.data.map(r => fpsOf(r)),
+        color: c.color,
+        dash: c.dash,
+      })),
+      { fps: true, tipId: 'scaling-tip' });
   }
 
-  // ── Per-law timing ──
+  // ── Level 3a: Desktop scaling matrix (heat-encoded) ────────────
+  function heatStyle(v, lo, hi, invert) {
+    if (!(hi > lo)) return '';
+    const t = (v - lo) / (hi - lo);            // 0 = best, 1 = worst
+    const q = invert ? t : 1 - t;              // teal intensity toward best
+    return `background:rgba(${q > 0.5 ? '79,209,197' : '245,163,181'},${(Math.abs(q - 0.5) * 0.22 + 0.03).toFixed(3)})`;
+  }
+  (function scalingMatrix() {
+    if (!D.scaling) return;
+    const counts = [...new Set(CONFIGS.flatMap(c => c.data.map(r => r.count)))].sort((a, b) => a - b);
+    const get = (c, n) => atScale(c, n);
+    const st = $('scaling-table');
+    const rowDefs = [
+      { title: 'Main workload · 10 laws', unit: 'ms/frame', dir: false, cfgKey: 'main10' },
+      { title: 'Worker workload · 10 laws', unit: 'ms/frame', dir: false, cfgKey: 'worker10' },
+      { title: 'Main workload · 128 laws', unit: 'ms/frame', dir: false, cfgKey: 'main128' },
+      { title: 'Worker workload · 128 laws', unit: 'ms/frame', dir: false, cfgKey: 'worker128' },
+    ];
+    let html = '<thead><tr><th>Metric ↓ lower is better</th>' +
+      counts.map(n => `<th>${n.toLocaleString()}</th>`).join('') + '</tr></thead><tbody>';
+    for (const rd of rowDefs) {
+      const cfg = CONFIGS.find(c => c.key === rd.cfgKey);
+      if (!cfg) continue;
+      const vals = counts.map(n => { const r = get(cfg, n); return r ? msOf(r) : null; });
+      const nums = vals.filter(v => v != null);
+      const lo = Math.min(...nums), hi = Math.max(...nums);
+      const bestV = lo;
+      html += `<tr><td>${rd.title}<br><span class="dir">${rd.unit} · ↓ lower is better</span></td>` +
+        vals.map(v => v == null ? '<td>—</td>' :
+          `<td class="${v === bestV ? 'best' : ''}" style="${heatStyle(v, lo, hi)}">${fmt(v)}</td>`).join('') + '</tr>';
+    }
+    // Derived rows: worker RTT and fps equivalent.
+    for (const cfg of CONFIGS.filter(c => c.worker)) {
+      const vals = counts.map(n => { const r = get(cfg, n); return r && r.roundTripUs != null ? r.roundTripUs / 1000 : null; });
+      if (vals.every(v => v == null)) continue;
+      const nums = vals.filter(v => v != null);
+      const lo = Math.min(...nums), hi = Math.max(...nums);
+      html += `<tr><td>${cfg.name} cold RTT<br><span class="dir">ms/request · ↓ lower is better</span></td>` +
+        vals.map(v => v == null ? '<td>—</td>' :
+          `<td style="${heatStyle(v, lo, hi)}">${fmt(v)}</td>`).join('') + '</tr>';
+    }
+    const mainCfg = CONFIGS.find(c => c.key === 'main10');
+    const fvals = counts.map(n => { const r = get(mainCfg, n); return r ? fpsOf(r) : null; });
+    const fnums = fvals.filter(v => v != null);
+    html += `<tr><td>Main workload · 10 laws<br><span class="dir">throughput · fps · ↑ higher is better</span></td>` +
+      fvals.map(v => v == null ? '<td>—</td>' :
+        `<td class="${v === Math.max(...fnums) ? 'best' : ''}" style="background:rgba(79,209,197,${(0.05 + 0.25 * (v / Math.max(...fnums))).toFixed(3)})">${fmt(v, 1)}</td>`).join('') + '</tr>';
+    html += '</tbody>';
+    st.innerHTML = html;
+  })();
+
+  // ── Level 3b: Mobile per-metric ranked cards ───────────────────
+  (function scalingMobile() {
+    if (!D.scaling) return;
+    const el = $('scaling-mobile');
+    let html = '';
+    for (const cfg of CONFIGS) {
+      const pts = [...cfg.data].sort((a, b) => msOf(a) - msOf(b));
+      const maxMs = Math.max(...pts.map(msOf));
+      html += `<div class="m-card">
+        <div class="m-title">${cfg.name}</div>
+        <div class="m-dir">latency · ms/frame · ↓ lower is better · sorted fastest first</div>` +
+        pts.slice(0, 6).map(r => {
+          const ms = msOf(r), f = fpsOf(r);
+          return `<div class="m-row${ms === maxMs ? ' slow' : ''}">
+            <span class="m-k">${r.count.toLocaleString()}</span>
+            <span class="m-bar"><i style="width:${(100 - (ms / maxMs) * 92).toFixed(1)}%;opacity:${(0.35 + 0.65 * (1 - ms / maxMs)).toFixed(2)}"></i></span>
+            <span class="m-v">${fmt(ms)} ms <small>· ${fmt(f, 0)} fps</small></span></div>`;
+        }).join('') +
+        `<details class="m-all"><summary>Show all ${pts.length} scales</summary>` +
+        pts.slice(6).map(r => {
+          const ms = msOf(r);
+          return `<div class="m-row${ms === maxMs ? ' slow' : ''}">
+            <span class="m-k">${r.count.toLocaleString()}</span>
+            <span class="m-bar"><i style="width:${(100 - (ms / maxMs) * 92).toFixed(1)}%;opacity:.5"></i></span>
+            <span class="m-v">${fmt(ms)} ms <small>· ${fmt(fpsOf(r), 0)} fps</small></span></div>`;
+        }).join('') + '</details></div>';
+    }
+    el.innerHTML = html;
+  })();
+
+  // ── Configuration cards (both breakpoints) ─────────────────────
+  (function configCards() {
+    if (!refCount) return;
+    const rowsAtRef = CONFIGS.map(c => ({ c, r: atScale(c, refCount) })).filter(x => x.r);
+    const maxFps = Math.max(...rowsAtRef.map(x => fpsOf(x.r)));
+    const bestKey = rowsAtRef.sort((a, b) => msOf(a.r) - msOf(b.r))[0].c.key;
+    $('config-cards').innerHTML = rowsAtRef.map(({ c, r }) => {
+      const ms = msOf(r), f = fpsOf(r);
+      const score = (f / maxFps) * 100;
+      return `<div class="card">
+        <h3>${c.name}${c.key === bestKey ? ' <span class="badge">★ BEST</span>' : ''}</h3>
+        <div class="cfg-row"><span class="ck">Particles</span><span>${refCount.toLocaleString()}</span></div>
+        <div class="cfg-row"><span class="ck">Latency</span><span>${fmt(ms)} ms/frame</span></div>
+        <div class="cfg-row"><span class="ck">Throughput</span><span>${fmt(f, 1)} fps</span></div>` +
+        (c.worker && r.roundTripUs != null ? `<div class="cfg-row"><span class="ck">Cold RTT</span><span>${fmt(r.roundTripUs / 1000)} ms</span></div>` : '') +
+        `<div class="score-track"><div class="score-fill" style="width:${score.toFixed(1)}%"></div></div>
+        <div class="cfg-row"><span class="ck">Score</span><span>${fmt(score, 1)}</span></div>
+      </div>`;
+    }).join('');
+  })();
+
+  // ── Per-law ablation ───────────────────────────────────────────
+  const CAT_COLORS = {
+    'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
+    'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
+    'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
+  };
+  const isAnchorLaw = (l) => l === 'ALL_DEFAULT' || l === 'ZERO_LAWS' || l === 'ALL_128' || l === 'ALL';
+
   if (D.perLaw && D.perLaw.length) {
-    document.getElementById('perlaw-n').textContent = (D.reportParams.perLawCount || D.reportParams.count).toLocaleString();
-    const all128 = D.perLaw.find(r => r.law === 'ALL_128');
-    const maxTickUs = all128 ? all128.tickUs : Math.max(...D.perLaw.map(r => r.tickUs));
-
-    // Bar chart
-    drawLawBars(document.getElementById('perlaw-bars'), D.perLaw, maxTickUs);
-
-    // Header summary — the two anchor configurations, above the ablation rows.
+    const perLawN = D.reportParams.perLawCount || D.reportParams.count;
+    $('perlaw-n').textContent = perLawN.toLocaleString();
     const all128Row = D.perLaw.find(r => r.law === 'ALL_128');
     const zeroRow = D.perLaw.find(r => r.law === 'ZERO_LAWS');
-    const summary = document.getElementById('perlaw-summary');
-    if (summary) {
-      summary.innerHTML =
-        `<span class="chip"><b>ALL 128</b> — ${all128Row ? fmt(all128Row.tickUs / 1000) : '—'} ms/frame</span>` +
-        `<span class="chip"><b>ZERO LAWS</b> — ${zeroRow ? fmt(zeroRow.tickUs / 1000) : '—'} ms/frame</span>`;
-    }
+    const all128Ms = all128Row ? all128Row.tickUs / 1000 : null;
 
-    // Ablation table: LAW | DOMAIN | SOLO COST | WITHOUT LAW | Δ RUNTIME | Δ % | ETV/PAIR.
-    //   Solo Cost   — full tick with ONLY this law enabled
-    //   Without Law — full 128-law tick with this law removed
-    //   Δ Runtime   — ALL_128 − Without Law (the law's marginal cost)
-    //   Δ %         — Δ Runtime / ALL_128 × 100
-    const pt = document.getElementById('perlaw-table');
     const lawRows = D.perLaw
-      .filter(r => r.law !== 'ALL_DEFAULT' && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_128')
+      .filter(r => !isAnchorLaw(r.law))
       .sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
 
-    const catColors = {
-      'PHYSICS': '#ef4444', 'BIOLOGY': '#f97316', 'CHEMISTRY': '#eab308',
-      'THERMODYNAMICS': '#22c55e', 'METAPHYSICS': '#14b8a6', 'ELECTROMAGNETISM': '#3b82f6',
-      'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
-    };
+    // Header summary chips.
+    $('perlaw-summary').innerHTML =
+      `<span class="chip"><b>ALL 128</b> — ${all128Row ? fmt(all128Ms) : '—'} ms/frame</span>` +
+      `<span class="chip"><b>ZERO LAWS</b> — ${zeroRow ? fmt(zeroRow.tickUs / 1000) : '—'} ms/frame</span>`;
 
-    pt.innerHTML = '<thead><tr><th>Law</th><th>Domain</th><th>Solo Cost (ms)</th><th>Without Law (ms)</th><th>Δ Runtime (ms)</th><th>Δ %</th><th>ETV / Pair (ms)</th></tr></thead><tbody>' +
+    // Bars: Δ Runtime sorted by marginal cost.
+    const maxMarg = Math.max(...lawRows.map(r => r.marginalUs ?? 0), 1);
+    $('perlaw-bars').innerHTML = lawRows.slice(0, 20).map(r => {
+      const cat = D.categories[r.law];
+      const catName = cat ? cat.category.toUpperCase() : '—';
+      const color = CAT_COLORS[catName] || '#6b7280';
+      const val = r.marginalUs ?? 0;
+      const pct = (val / maxMarg * 100).toFixed(1);
+      return `<div class="bar-row">
+        <div class="bar-label" title="${r.law.replace(/_/g, ' ')}">${r.law.replace(/_/g, ' ')}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-value">+${fmt(val / 1000)} ms (${fmt(pct, 1)}%)</div></div>`;
+    }).join('') + (lawRows.length > 20 ? `<div class="sub dir">… ${lawRows.length - 20} more laws below ${fmt(lawRows.slice(20)[0]?.marginalUs / 1000 || 0)} ms marginal — see table.</div>` : '');
+
+    // Ablation matrix (desktop): LAW | DOMAIN | SOLO | WITHOUT | Δ | Δ% | ETV/pair.
+    const pt = $('perlaw-table');
+    pt.innerHTML = '<thead><tr><th>Law</th><th>Domain</th><th>Solo Cost</th><th>Without Law</th><th>Δ Runtime</th><th>Δ %</th><th>ETV / Pair</th></tr></thead><tbody>' +
       lawRows.map(r => {
         const cat = D.categories[r.law];
         const catName = cat ? cat.category : '—';
-        const color = catColors[catName] || '#6b7280';
+        const color = CAT_COLORS[(catName || '').toUpperCase()] || '#6b7280';
         const soloMs = (r.soloUs ?? r.tickUs) / 1000;
-        const withoutMs = r.withoutUs != null ? r.withoutUs / 1000 : (all128Row ? (all128Row.tickUs - (r.marginalUs ?? 0)) / 1000 : null);
-        const deltaMs = all128Row ? (all128Row.tickUs / 1000) - withoutMs : null;
-        const pctDelta = r.pctMarginal != null ? r.pctMarginal : (deltaMs != null && all128Row ? (deltaMs / (all128Row.tickUs / 1000)) * 100 : null);
-        // ETV / Pair: estimated time per interaction, derived from the marginal cost
-        // (milliseconds per pair, assuming ~N×500 candidate pairs at the interaction cap)
-        const N = D.reportParams.perLawCount || D.reportParams.count;
-        const avgNeighbors = Math.min(500, N); // bounded by MAX_INTERACTIONS
-        const m = deltaMs ?? 0;
-        const etv = m > 0 ? fmt(m / (N * avgNeighbors), 5) : '—';
+        const withoutMs = r.withoutUs != null ? r.withoutUs / 1000 : (all128Ms != null ? all128Ms - (r.marginalUs ?? 0) / 1000 : null);
+        const deltaMs = withoutMs != null && all128Ms != null ? all128Ms - withoutMs : null;
+        const pctDelta = deltaMs != null ? (deltaMs / all128Ms) * 100 : null;
+        const avgNeighbors = Math.min(500, perLawN);
+        const etv = deltaMs > 0 ? fmt(deltaMs / (perLawN * avgNeighbors), 5) : '—';
         return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td>` +
           `<td style="color:${color}">${catName}</td>` +
           `<td>${fmt(soloMs)}</td>` +
@@ -315,54 +501,85 @@
           `<td>${deltaMs != null ? '+' + fmt(deltaMs) : '—'}</td>` +
           `<td>${pctDelta != null ? '+' + fmt(pctDelta, 2) + '%' : '—'}</td>` +
           `<td>${etv}</td></tr>`;
-      }).join('') +
-      '</tbody>';
+      }).join('') + '</tbody>';
 
-    // Category cards
-    drawCategoryCards(document.getElementById('category-cards'), D.perLaw, maxTickUs);
+    // Mobile per-law cards: top offenders as ranked list.
+    $('perlaw-mobile').innerHTML = `<div class="m-card">
+      <div class="m-title">Marginal cost ranking</div>
+      <div class="m-dir">Δ runtime when removed from ALL 128 · ↓ cheapest is best</div>` +
+      lawRows.slice(0, 12).map(r => {
+        const cat = D.categories[r.law];
+        const catName = cat ? cat.category.toUpperCase() : '—';
+        const color = CAT_COLORS[catName] || '#6b7280';
+        const val = r.marginalUs ?? 0;
+        return `<div class="m-row"><span class="m-k" style="width:120px;font-size:10px;color:${color}">${r.law.replace(/_/g, ' ')}</span>
+          <span class="m-bar"><i style="width:${(val / maxMarg * 100).toFixed(1)}%;background:${color}"></i></span>
+          <span class="m-v">+${fmt(val / 1000)} ms</span></div>`;
+      }).join('') + '</div>';
+
+    // Category cards.
+    const cats = {};
+    for (const r of lawRows) {
+      const cat = D.categories[r.law];
+      const catName = cat ? cat.category.toUpperCase() : 'UNKNOWN';
+      (cats[catName] = cats[catName] || []).push(r);
+    }
+    $('category-cards').innerHTML = Object.entries(cats)
+      .sort((a, b) => b[1].reduce((s, l) => s + (l.marginalUs ?? 0), 0) - a[1].reduce((s, l) => s + (l.marginalUs ?? 0), 0))
+      .map(([catName, laws]) => {
+        const color = CAT_COLORS[catName] || '#6b7280';
+        const total = laws.reduce((s, l) => s + (l.marginalUs ?? 0), 0);
+        const sorted = [...laws].sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
+        return `<div class="card">
+          <h3><span><span class="law-cat" style="background:${color}"></span>${catName.toLowerCase()}</span>
+          <span style="color:${color};font-size:10.5px">Σ ${fmt(total / 1000)} ms</span></h3>` +
+          sorted.map(r => `<div class="bar-row">
+            <div class="bar-label" style="width:90px;font-size:9.5px">${r.law.replace(/_/g, ' ')}</div>
+            <div class="bar-track" style="height:10px"><div class="bar-fill" style="width:${total > 0 ? ((r.marginalUs ?? 0) / total * 100).toFixed(1) : 0}%;background:${color};opacity:.75"></div></div>
+            <div class="bar-value" style="width:70px;font-size:9.5px">${fmt((r.marginalUs ?? 0) / 1000)} ms</div></div>`).join('') +
+          '</div>';
+      }).join('');
   }
 
-  // ── Matrix table ──
+  // ── Tuning-knob matrix (heat-encoded) ──────────────────────────
   if (D.matrix) {
     const mat = D.matrix;
-    const cols = mat[0].cells.map((c) => c.interactions);
-    const mt = document.getElementById('matrix');
-    mt.innerHTML = '<thead><tr><th>NEIGHBOR_BUF \\ MAX_INTERACTIONS</th>' +
-      cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
-      mat.map((row) => `<tr><td>${row.neighbors}</td>` + row.cells.map((c) => `<td>${fmt(c.msPerTick)}</td>`).join('') + '</tr>').join('') +
-      '</tbody>';
+    const cols = mat[0].cells.map(c => c.interactions);
+    const flat = mat.flatMap(row => row.cells.map(c => c.msPerTick));
+    const lo = Math.min(...flat), hi = Math.max(...flat);
+    $('matrix').innerHTML = '<thead><tr><th>NBUF \\ MAXINT ↓ lower is better</th>' +
+      cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' +
+      mat.map(row => `<tr><td>${row.neighbors}</td>` + row.cells.map(c => {
+        const isBest = c.msPerTick === lo;
+        return `<td class="${isBest ? 'best' : ''}" style="${heatStyle(c.msPerTick, lo, hi)}">${fmt(c.msPerTick)}</td>`;
+      }).join('') + '</tr>').join('') + '</tbody>';
   }
 
-  // ── Sweeps ──
-  const sweeps = [
-    { key: 'gridDim', title: 'GRID_DIM', color: '#4fd1c5' },
-    { key: 'cellCap', title: 'CELL_CAP', color: '#f5a3b5' },
-    { key: 'maxInteractions', title: 'MAX_INTERACTIONS', color: '#f7c873' },
-    { key: 'neighborBuf', title: 'NEIGHBOR_BUF', color: '#9aa7ff' },
+  // ── Knob sweeps ────────────────────────────────────────────────
+  const SWEEPS = [
+    { key: 'gridDim', title: 'GRID_DIM sweep', color: '#4fd1c5' },
+    { key: 'cellCap', title: 'CELL_CAP sweep', color: '#f5a3b5' },
+    { key: 'maxInteractions', title: 'MAX_INTERACTIONS sweep', color: '#f7c873' },
+    { key: 'neighborBuf', title: 'NEIGHBOR_BUF sweep', color: '#9aa7ff' },
   ];
-  const wrap = document.getElementById('sweeps');
-  wrap.innerHTML = sweeps.map((s, idx) => {
-    if (!D[s.key]) return '';
-    return `<div class="card">
-      <h3>${s.title} sweep</h3>
-      <canvas id="sweep-${idx}" width="420" height="180"></canvas>
-      <table><thead><tr><th>${s.title}</th><th>ms/frame</th><th>min ms</th><th>max ms</th></tr></thead><tbody>
-        ${D[s.key].map((r) => `<tr><td>${r.value}</td><td>${fmt(r.msPerTick)}</td><td>${fmt(r.minMs)}</td><td>${fmt(r.maxMs)}</td></tr>`).join('')}
-      </tbody></table>
-    </div>`;
-  }).join('');
-  sweeps.forEach((s, idx) => {
-    const canvas = document.getElementById('sweep-' + idx);
-    if (canvas && D[s.key]) {
-      drawLine(canvas, D[s.key].map((r) => r.value), [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }], { fps: true });
+  $('sweeps').innerHTML = SWEEPS.map((s, idx) => D[s.key]
+    ? `<div class="card"><h3>${s.title} <span class="dir">↑ fps is better</span></h3>
+       <canvas id="sweep-${idx}" class="chart" width="480" height="170" style="border:0;background:none;margin:0"></canvas></div>`
+    : '').join('');
+  SWEEPS.forEach((s, idx) => {
+    const cv = $('sweep-' + idx);
+    if (cv && D[s.key]) {
+      drawLine(cv, D[s.key].map(r => String(r.value)),
+        [{ name: s.title.replace(' sweep', ''), values: D[s.key].map(r => r.msPerTick > 0 ? 1000 / r.msPerTick : 0), color: s.color }],
+        { fps: true });
     }
   });
 
-  document.getElementById('foot').innerHTML =
+  $('foot').innerHTML =
     `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +
     `baseline ${JSON.stringify(D.baseline)} · default laws [${D.solver.defaultLaws.join(', ')}] · exhaustive profile: ${D.solver.lawCount} laws.` +
     `<br><b>Solo Cost vs Without Law</b>: Solo Cost measures a full frame with only that law enabled — it includes the solver's fixed overhead (grid build, neighbour gather, integration). Without Law is a leave-one-out measurement against the full 128-law config; Δ Runtime = ALL 128 − Without Law. Because laws interact, Δ % rows intentionally do not sum to 100%.` +
-    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately in the scaling table. All timings are displayed as milliseconds per frame; FPS equivalent is 1000 ÷ ms/frame.`;
+    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately. All timings are milliseconds per frame; throughput is 1000 ÷ ms/frame. Hover or touch the performance chart for exact values at each scale.`;
 </script>
 </body>
 </html>

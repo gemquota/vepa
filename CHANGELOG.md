@@ -1,5 +1,30 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.23] - 2026-08-22 → 8.16.9
+
+### UI redesign — benchmark report information architecture (`public/bench-report/`)
+- Rebuilt the report around three levels: **Overview → Performance → Detail**
+  instead of a raw data dump.
+- New executive overview cards: ★ best configuration, median latency, peak
+  throughput, max N ≥ 60 fps, worker-vs-main improvement, and stability
+  (1 − mean relative spread across knob sweeps).
+- Performance chart now plots throughput (fps, ↑ higher is better) with a 60 fps
+  target line, ~6 sparse X ticks instead of one label per scale, and an
+  interactive crosshair tooltip showing every series at the hovered scale.
+- Desktop scaling matrix: fixed-width sticky metric-label column (fixes the
+  character-per-line label crush), semantic titles with units and directionality
+  ("Main workload · ms/frame · ↓ lower is better"), per-row teal/pink heat
+  encoding, and best-value-per-row emphasis.
+- Mobile (<760 px) swaps the wide matrix for per-metric ranked cards sorted
+  fastest-first with inline bars and a "Show all N scales" expander, plus
+  configuration-centric benchmark cards with score bars and a ★ BEST badge.
+- Per-law ablation table keeps LAW/DOMAIN/SOLO/WITHOUT/Δ/Δ%/ETV columns; adds a
+  top-20 marginal-cost bar ranking, a mobile ranking card, and heat-encoded
+  MAX_INTERACTIONS × NEIGHBOR_BUF matrix.
+- Removed the global `table-layout: fixed` + `overflow-wrap: anywhere` rules
+  that caused the crushed first column; wide tables scroll horizontally with
+  sticky headers/labels instead of collapsing.
+
 ## [4.8.22] - 2026-08-22 → 8.16.8
 
 ### UI fix — duplicate FPS in the toolbar header
