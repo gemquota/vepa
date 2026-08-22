@@ -1,5 +1,25 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.19] - 2026-08-22 → 8.16.5
+
+### HUD
+- Removed the species count from the toolbar header; the freed space goes to a
+  roomier tick display: `tick N · X.X ticks/s · XX fps`.
+
+### Benchmark SPA fixes
+- Fixed a crash that left only the scaling graph rendering: the table builder
+  indexed shorter early-stopped series (`scalingAll`/`workerScalingAll`) out of
+  bounds and killed the script — every section after it (per-law bars, category
+  cards, matrix, knob sweeps) never rendered. All series accesses are now
+  index-guarded; verified all sections render against the shipped dataset.
+- Line-chart vertical axis now reads in **FPS** (higher is better) for the N-scaling
+  chart and the four knob sweeps, per user request.
+
+### Verification
+- Headless DOM-stub run of the full SPA script renders meta, scaling + table,
+  per-law bars/table, category cards, matrix, and all four sweeps with zero errors.
+- Syntax + Vite build pass; perfKnobs suite green.
+
 ## [4.8.18] - 2026-08-22 → 8.16.4
 
 ### HUD Telemetry

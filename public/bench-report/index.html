@@ -74,7 +74,7 @@
   <div id="meta" class="meta"></div>
 
   <h2>N scaling</h2>
-  <div class="sub">Solid teal = main-thread default laws · dashed teal = worker default laws · solid pink = main-thread ALL 128 · dashed pink = worker ALL 128. Worker solver time is off-thread; round-trip overhead is reported in the table.</div>
+  <div class="sub">Solid teal = main-thread default laws · dashed teal = worker default laws · solid pink = main-thread ALL 128 · dashed pink = worker ALL 128. Vertical axis is FPS (higher is better; 60 fps target line at the top). Profiles stop once a scale drops below 15 fps.</div>
   <div class="chart-wrap"><canvas id="scaling" width="1000" height="300"></canvas></div>
   <div class="table-wrap"><table id="scaling-table"></table></div>
 
@@ -115,18 +115,21 @@
   ];
   meta.innerHTML = chips.map(([k, v]) => `<span class="chip">${k}: <b>${v}</b></span>`).join('');
 
-  // Line chart helper
+  // Line chart helper. opts.fps plots 1000/ms so higher = better and the
+  // vertical axis reads in frames per second.
   function drawLine(canvas, labels, series, opts = {}) {
+    const fpsAxis = !!opts.fps;
+    const mapV = (v) => (fpsAxis ? (v > 0 ? 1000 / v : 0) : v);
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     const pad = { l: 64, r: 16, t: 18, b: 34 };
     ctx.clearRect(0, 0, W, H);
     const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
     let max = 0;
-    for (const s of series) for (const v of s.values) max = Math.max(max, v);
+    for (const s of series) for (const v of s.values) max = Math.max(max, mapV(v));
     max = max * 1.08 || 1;
-    const x = (i) => pad.l + (i / (labels.length - 1)) * plotW;
-    const y = (v) => pad.t + plotH - (v / max) * plotH;
+    const x = (i) => pad.l + (i / Math.max(1, labels.length - 1)) * plotW;
+    const y = (v) => pad.t + plotH - (mapV(v) / max) * plotH;
 
     // gridlines
     ctx.strokeStyle = 'rgba(255,255,255,.06)';
@@ -135,8 +138,9 @@
     ctx.textAlign = 'right';
     for (let g = 0; g <= 4; g++) {
       const gy = pad.t + (g / 4) * plotH;
+      const val = max - (g / 4) * max;
       ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
-      ctx.fillText(fmt(max - (g / 4) * max, 1), pad.l - 6, gy + 3);
+      ctx.fillText(fpsAxis ? `${fmt(val, 0)} fps` : fmt(val, 1), pad.l - 6, gy + 3);
     }
     ctx.textAlign = 'center';
     labels.forEach((lab, i) => ctx.fillText(lab, x(i), H - pad.b + 16));
@@ -236,10 +240,10 @@
     if (D.workerScalingAll) series.push({ values: D.workerScalingAll.map((r) => r.msPerTick), color: '#f5a3b5', dash: [6, 4] });
     drawLine(document.getElementById('scaling'),
       sc.map((r) => r.count.toLocaleString()),
-      series);
+      series, { fps: true });
     const st = document.getElementById('scaling-table');
     st.innerHTML =      '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>Main 10 (ms/frame)</th><th>Worker 10 (ms/frame)</th><th>Main 128 (ms/frame)</th><th>Worker 128 (ms/frame)</th><th>Worker 10 cold RTT (ms)</th><th>Worker 128 cold RTT (ms)</th><th>ms/particle</th></tr></thead><tbody>' +
-      sc.map((r, i) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)} ms</td><td>${D.workerScaling ? fmt(D.workerScaling[i].msPerTick) + ' ms' : '—'}</td><td>${D.scalingAll ? fmt(D.scalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScaling ? fmt(D.workerScaling[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${D.workerScalingAll ? fmt(D.workerScalingAll[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
+      sc.map((r, i) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)} ms</td><td>${D.workerScaling && D.workerScaling[i] ? fmt(D.workerScaling[i].msPerTick) + ' ms' : '—'}</td><td>${D.scalingAll && D.scalingAll[i] ? fmt(D.scalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScalingAll && D.workerScalingAll[i] ? fmt(D.workerScalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScaling && D.workerScaling[i] ? fmt(D.workerScaling[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${D.workerScalingAll && D.workerScalingAll[i] ? fmt(D.workerScalingAll[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
       '</tbody>';
   }
 
@@ -319,7 +323,7 @@
   sweeps.forEach((s, idx) => {
     const canvas = document.getElementById('sweep-' + idx);
     if (canvas && D[s.key]) {
-      drawLine(canvas, D[s.key].map((r) => r.value), [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }]);
+      drawLine(canvas, D[s.key].map((r) => r.value), [{ values: D[s.key].map((r) => r.msPerTick), color: s.color }], { fps: true });
     }
   });
 

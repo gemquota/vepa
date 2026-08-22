@@ -1,6 +1,6 @@
 /**
  * VEPA v3 — HUD Overlay
- * Real-time stats display: FPS, particle count, species count, tick number.
+ * Real-time stats display: FPS, particle count, tick telemetry.
  */
 import { PARTICLE_STRIDE, STRIDE_INDEXES } from '../constants.js';
 
@@ -15,19 +15,16 @@ let ticksPerSecond = 0;
 const el = {
   fps: null,
   particles: null,
-  species: null,
   tick: null,
 };
 
 function readEl() {
   el.fps = document.getElementById('hud-fps');
   el.particles = document.getElementById('hud-particles');
-  el.species = document.getElementById('hud-species');
   el.tick = document.getElementById('hud-tick');
-  // Color-coded accents (FPS green, population blue, species purple, tick dim)
+  // Color-coded accents (FPS green, population blue, tick dim)
   if (el.fps) el.fps.classList.add('hud-fps');
   if (el.particles) el.particles.classList.add('hud-particles');
-  if (el.species) el.species.classList.add('hud-species');
   if (el.tick) el.tick.classList.add('hud-tick');
 }
 
@@ -38,7 +35,7 @@ function tick(now) {
     frameCount = 0;
     lastFpsTime = now;
     if (el.fps) el.fps.textContent = `${fpsDisplay} FPS`;
-    if (el.tick) el.tick.textContent = `tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} t/s · ${fpsDisplay} FPS`;
+    if (el.tick) el.tick.textContent = `tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} ticks/s · ${fpsDisplay} fps`;
   }
   rafId = requestAnimationFrame(tick);
 }
@@ -69,19 +66,14 @@ export function createHUD(bus) {
 
   let currentTick = 0;
   let lastParticles = -1;
-  let lastSpecies = -1;
   let lastTickShown = -1;
 
-  // Throttle DOM writes: particle/species text only changes when the value
-  // changes. Tick telemetry is compact and refreshed once per second.
-  const updateStats = (particleCount, speciesCount, t) => {
+  // Throttle DOM writes: particle text only changes when the value changes.
+  // Tick telemetry is compact and refreshed once per second.
+  const updateStats = (particleCount, _speciesCount, t) => {
     if (particleCount !== undefined && particleCount !== lastParticles && el.particles) {
       lastParticles = particleCount;
       el.particles.textContent = `${particleCount} particles`;
-    }
-    if (speciesCount !== undefined && speciesCount !== lastSpecies && el.species) {
-      lastSpecies = speciesCount;
-      el.species.textContent = `${speciesCount} species`;
     }
     if (t !== undefined && el.tick) {
       const now = performance.now();
@@ -94,7 +86,7 @@ export function createHUD(bus) {
         lastPhysicsTime = now;
       }
       lastTickShown = t;
-      el.tick.textContent = `tick ${t} · ${ticksPerSecond.toFixed(1)} t/s · ${fpsDisplay} FPS`;
+      el.tick.textContent = `tick ${t} · ${ticksPerSecond.toFixed(1)} ticks/s · ${fpsDisplay} fps`;
     }
   };
 
