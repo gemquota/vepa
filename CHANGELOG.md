@@ -1,5 +1,13 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.22] - 2026-08-22 → 8.16.8
+
+### UI fix — duplicate FPS in the toolbar header
+- The old standalone `0 FPS` HUD item (added back in v1.0.0's color-coded stats)
+  was still sitting next to the new combined `Tick · TPS · FPS` display, so the
+  header showed the frame rate twice. Removed the `#hud-fps` span, its HUD JS
+  references, and the now-unused `.hud-fps` CSS rule; FPS lives only in the
+  compact tick telemetry.
 ## [4.8.21] - 2026-08-22 → 8.16.7
 
 ### Benchmark runner

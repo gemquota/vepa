@@ -13,17 +13,14 @@ let lastPhysicsTime = 0;
 let ticksPerSecond = 0;
 
 const el = {
-  fps: null,
   particles: null,
   tick: null,
 };
 
 function readEl() {
-  el.fps = document.getElementById('hud-fps');
   el.particles = document.getElementById('hud-particles');
   el.tick = document.getElementById('hud-tick');
-  // Color-coded accents (FPS green, population blue, tick dim)
-  if (el.fps) el.fps.classList.add('hud-fps');
+  // Color-coded accents (population blue, tick dim)
   if (el.particles) el.particles.classList.add('hud-particles');
   if (el.tick) el.tick.classList.add('hud-tick');
 }
@@ -34,7 +31,6 @@ function tick(now) {
     fpsDisplay = frameCount;
     frameCount = 0;
     lastFpsTime = now;
-    if (el.fps) el.fps.textContent = `${fpsDisplay} FPS`;
     if (el.tick) el.tick.textContent = `Tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} TPS · ${fpsDisplay} FPS`;
   }
   rafId = requestAnimationFrame(tick);

@@ -1951,10 +1951,6 @@ body {
 #main-panel .tab-btn:hover { text-shadow: 0 0 6px rgba(255, 255, 255, 0.25); }
 
 /* ── HUD: color-coded live stats ── */
-.hud-fps {
-    color: var(--accent-green);
-    text-shadow: 0 0 6px rgba(74, 255, 138, 0.5);
-}
 .hud-particles {
     color: var(--accent-blue);
     text-shadow: 0 0 6px rgba(74, 158, 255, 0.5);
