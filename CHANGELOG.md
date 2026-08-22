@@ -1,5 +1,34 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.21] - 2026-08-22 → 8.16.7
+
+### Benchmark runner
+- New `--scales <csv>` flag overrides the scaling ladder; regenerated the report
+  with 500-particle steps from 500 → 25,000 (50 requested points, early-stopped
+  at 17,000 when ticks exceeded the 15 fps budget) — a much denser graph.
+- Per-law sweep now records the explicit ablation triple: `soloUs` (tick with
+  only that law), `withoutUs` (128-law tick minus that law), `marginalUs`
+  (ALL_128 − withoutUs), and `pctMarginal`; serializer passes them through and
+  derives fallbacks for older datasets.
+
+### Benchmark SPA — per-law ablation table (user-specified restructure)
+- Replaced the misleading "Saved if OFF / % saved" columns with an explicit
+  causal layout: **Law · Domain · Solo Cost · Without Law · Δ Runtime · Δ % ·
+  ETV / Pair**, sorted by marginal cost. Δ Runtime = ALL 128 − Without Law;
+  Δ % is marginal cost as a fraction of the all-128 tick (the correct savings
+  percentage).
+- Header summary chips show the anchor configurations: `ALL 128 — X ms/frame`
+  and `ZERO LAWS — Y ms/frame`.
+
+### Benchmark SPA — scaling table transposed (user request)
+- First table axes switched: particle counts are now columns and metrics rows
+  (Main/Worker × 10/128 laws, cold RTTs, plus a derived FPS-equivalent row),
+  with horizontal scroll for wide ladders.
+
+### Verification
+- Headless DOM-stub run renders every section against the new 34-point dataset;
+  Vite build clean.
+
 ## [4.8.20] - 2026-08-22 → 8.16.6
 
 ### HUD

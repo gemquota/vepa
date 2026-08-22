@@ -79,9 +79,10 @@
   <div class="table-wrap"><table id="scaling-table"></table></div>
 
   <h2>Per-law timing breakdown — vs ALL 128 laws</h2>
-  <div class="sub">At N=<span id="perlaw-n">—</span> particles, relative to the <b>all-128-laws tick</b> (ALL 128 row = 100%). <b>Alone</b> = a full tick with only that law enabled (includes fixed per-tick overhead). <b>Saved if OFF</b> = ALL 128 minus the tick with that law removed — how much of the full-config tick that law's presence accounts for. <span class="warn">Rows do not sum to 100%</span>: laws interact (force/chemistry laws feed the same neighbor-saturation cost), so removing several at once saves less than the sum of individual removals.</div>
+  <div class="sub">Ablation at N=<span id="perlaw-n">—</span> particles. Each row answers: <i>how much does this law cost, and what does removing it change?</i> <b>Solo Cost</b> = a full tick with only that law enabled. <b>Without Law</b> = the all-128 tick with that law removed. <b>Δ Runtime / Δ %</b> = ALL 128 − Without Law (the law's marginal cost, absolute and proportional). <span class="warn">Δ % rows do not sum to 100%</span>: laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so removing several at once saves less than the sum of individual removals. Bars below show Δ Runtime sorted by marginal cost.</div>
+  <div id="perlaw-summary" class="meta"></div>
   <div id="perlaw-bars"></div>
-  <table id="perlaw-table"></table>
+  <div class="table-wrap"><table id="perlaw-table"></table></div>
 
   <h2>Per-law by category</h2>
   <div class="grid3" id="category-cards"></div>
@@ -242,8 +243,18 @@
       sc.map((r) => r.count.toLocaleString()),
       series, { fps: true });
     const st = document.getElementById('scaling-table');
-    st.innerHTML =      '<thead><tr><th>Particles</th><th>Buffer (MB)</th><th>Main 10 (ms/frame)</th><th>Worker 10 (ms/frame)</th><th>Main 128 (ms/frame)</th><th>Worker 128 (ms/frame)</th><th>Worker 10 cold RTT (ms)</th><th>Worker 128 cold RTT (ms)</th><th>ms/particle</th></tr></thead><tbody>' +
-      sc.map((r, i) => `<tr><td>${r.count.toLocaleString()}</td><td>${fmt(r.bufferMB)}</td><td>${fmt(r.msPerTick)} ms</td><td>${D.workerScaling && D.workerScaling[i] ? fmt(D.workerScaling[i].msPerTick) + ' ms' : '—'}</td><td>${D.scalingAll && D.scalingAll[i] ? fmt(D.scalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScalingAll && D.workerScalingAll[i] ? fmt(D.workerScalingAll[i].msPerTick) + ' ms' : '—'}</td><td>${D.workerScaling && D.workerScaling[i] ? fmt(D.workerScaling[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${D.workerScalingAll && D.workerScalingAll[i] ? fmt(D.workerScalingAll[i].roundTripUs / 1000) + ' ms' : '—'}</td><td>${fmt(r.usPerParticle)}</td></tr>`).join('') +
+    // Transposed layout: particle counts as columns, metrics as rows.
+    const val = (arr, i, key, xform) => (arr && arr[i] ? (xform ? xform(arr[i][key]) : fmt(arr[i][key])) : '—');
+    const row = (label, cells) => `<tr><td>${label}</td>` + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
+    st.innerHTML =
+      '<thead><tr><th>Metric</th>' + sc.map((r) => `<th>${r.count.toLocaleString()}</th>`).join('') + '</tr></thead><tbody>' +
+      row('Main 10 laws (ms/frame)', sc.map((r) => fmt(r.msPerTick))) +
+      row('Worker 10 laws (ms/frame)', sc.map((_, i) => val(D.workerScaling, i, 'msPerTick'))) +
+      row('Main 128 laws (ms/frame)', sc.map((_, i) => val(D.scalingAll, i, 'msPerTick'))) +
+      row('Worker 128 laws (ms/frame)', sc.map((_, i) => val(D.workerScalingAll, i, 'msPerTick'))) +
+      row('Worker 10 cold RTT (ms)', sc.map((_, i) => val(D.workerScaling, i, 'roundTripUs', (v) => fmt(v / 1000)))) +
+      row('Worker 128 cold RTT (ms)', sc.map((_, i) => val(D.workerScalingAll, i, 'roundTripUs', (v) => fmt(v / 1000)))) +
+      row('FPS equivalent (main 10)', sc.map((r) => (r.msPerTick > 0 ? fmt(1000 / r.msPerTick, 1) : '∞'))) +
       '</tbody>';
   }
 
@@ -256,9 +267,22 @@
     // Bar chart
     drawLawBars(document.getElementById('perlaw-bars'), D.perLaw, maxTickUs);
 
-    // Table
+    // Header summary — the two anchor configurations, above the ablation rows.
+    const all128Row = D.perLaw.find(r => r.law === 'ALL_128');
+    const zeroRow = D.perLaw.find(r => r.law === 'ZERO_LAWS');
+    const summary = document.getElementById('perlaw-summary');
+    if (summary) {
+      summary.innerHTML =
+        `<span class="chip"><b>ALL 128</b> — ${all128Row ? fmt(all128Row.tickUs / 1000) : '—'} ms/frame</span>` +
+        `<span class="chip"><b>ZERO LAWS</b> — ${zeroRow ? fmt(zeroRow.tickUs / 1000) : '—'} ms/frame</span>`;
+    }
+
+    // Ablation table: LAW | DOMAIN | SOLO COST | WITHOUT LAW | Δ RUNTIME | Δ % | ETV/PAIR.
+    //   Solo Cost   — full tick with ONLY this law enabled
+    //   Without Law — full 128-law tick with this law removed
+    //   Δ Runtime   — ALL_128 − Without Law (the law's marginal cost)
+    //   Δ %         — Δ Runtime / ALL_128 × 100
     const pt = document.getElementById('perlaw-table');
-    const metaRows = D.perLaw.filter(r => r.law === 'ALL_DEFAULT' || r.law === 'ZERO_LAWS' || r.law === 'ALL_128');
     const lawRows = D.perLaw
       .filter(r => r.law !== 'ALL_DEFAULT' && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_128')
       .sort((a, b) => (b.marginalUs ?? 0) - (a.marginalUs ?? 0));
@@ -269,21 +293,28 @@
       'INFORMATION': '#8b5cf6', 'QUANTUM': '#a855f7',
     };
 
-    pt.innerHTML = '<thead><tr><th>Law</th><th>Category</th><th>Alone (ms/frame)</th><th>Saved if OFF (ms)</th><th>% saved vs ALL 128</th><th>ETV (ms/pair)</th></tr></thead><tbody>' +
-      metaRows.map(r => `<tr style="font-weight:600;color:var(--accent)"><td>${r.law}</td><td>—</td><td>${fmt(r.tickUs / 1000)}</td><td>—</td><td>${r.law === 'ALL_128' ? '100%' : '—'}</td><td>—</td></tr>`).join('') +
+    pt.innerHTML = '<thead><tr><th>Law</th><th>Domain</th><th>Solo Cost (ms)</th><th>Without Law (ms)</th><th>Δ Runtime (ms)</th><th>Δ %</th><th>ETV / Pair (ms)</th></tr></thead><tbody>' +
       lawRows.map(r => {
         const cat = D.categories[r.law];
         const catName = cat ? cat.category : '—';
         const color = catColors[catName] || '#6b7280';
-        const pct = r.pctOfTotal !== null ? fmt(r.pctOfTotal, 2) + '%' : '—';
-        const marginal = r.marginalUs !== null && r.marginalUs !== undefined ? fmt(r.marginalUs / 1000) : '—';
-        // ETV: estimated time per interaction, derived from the saved cost
+        const soloMs = (r.soloUs ?? r.tickUs) / 1000;
+        const withoutMs = r.withoutUs != null ? r.withoutUs / 1000 : (all128Row ? (all128Row.tickUs - (r.marginalUs ?? 0)) / 1000 : null);
+        const deltaMs = all128Row ? (all128Row.tickUs / 1000) - withoutMs : null;
+        const pctDelta = r.pctMarginal != null ? r.pctMarginal : (deltaMs != null && all128Row ? (deltaMs / (all128Row.tickUs / 1000)) * 100 : null);
+        // ETV / Pair: estimated time per interaction, derived from the marginal cost
         // (milliseconds per pair, assuming ~N×500 candidate pairs at the interaction cap)
         const N = D.reportParams.perLawCount || D.reportParams.count;
         const avgNeighbors = Math.min(500, N); // bounded by MAX_INTERACTIONS
-        const m = r.marginalUs ?? 0;
-        const etv = m > 0 ? fmt(m / (N * avgNeighbors * 1000), 4) : '—';
-        return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td><td style="color:${color}">${catName}</td><td>${fmt(r.tickUs / 1000)}</td><td>${marginal}</td><td>${pct}</td><td>${etv}</td></tr>`;
+        const m = deltaMs ?? 0;
+        const etv = m > 0 ? fmt(m / (N * avgNeighbors), 5) : '—';
+        return `<tr><td><span class="law-cat" style="background:${color}"></span>${r.law.replace(/_/g, ' ')}</td>` +
+          `<td style="color:${color}">${catName}</td>` +
+          `<td>${fmt(soloMs)}</td>` +
+          `<td>${withoutMs != null ? fmt(withoutMs) : '—'}</td>` +
+          `<td>${deltaMs != null ? '+' + fmt(deltaMs) : '—'}</td>` +
+          `<td>${pctDelta != null ? '+' + fmt(pctDelta, 2) + '%' : '—'}</td>` +
+          `<td>${etv}</td></tr>`;
       }).join('') +
       '</tbody>';
 
@@ -329,10 +360,9 @@
 
   document.getElementById('foot').innerHTML =
     `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +
-    `baseline ${JSON.stringify(D.baseline)} · default laws [${D.solver.defaultLaws.join(', ')}] · exhaustive profile: ${D.solver.lawCount} laws. ` +
-    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately in the scaling table. All timings are displayed as milliseconds per frame; FPS equivalent is 1000 ÷ ms/frame. ` +
-    `<br><b>Alone ms/frame</b> measures a full tick with only that law enabled — it includes the solver's fixed overhead (grid build, neighbour gather, integration). ` +
-    `<b>Saved if OFF</b> and <b>% saved vs ALL 128</b> use the leave-one-out delta (ALL 128 − tick without the law), measured against the full 128-law config. Because laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so turning off any one of several laws relieves much of the same cost — the rows intentionally do not sum to 100%: removing several at once saves less than the sum of the individual removals.`;
+    `baseline ${JSON.stringify(D.baseline)} · default laws [${D.solver.defaultLaws.join(', ')}] · exhaustive profile: ${D.solver.lawCount} laws.` +
+    `<br><b>Solo Cost vs Without Law</b>: Solo Cost measures a full frame with only that law enabled — it includes the solver's fixed overhead (grid build, neighbour gather, integration). Without Law is a leave-one-out measurement against the full 128-law config; Δ Runtime = ALL 128 − Without Law. Because laws interact, Δ % rows intentionally do not sum to 100%.` +
+    `<br><b>Main vs worker</b>: main values block the UI for the solver duration; worker values keep the UI thread available while reporting solver time, with cold worker-start/request round-trip overhead shown separately in the scaling table. All timings are displayed as milliseconds per frame; FPS equivalent is 1000 ÷ ms/frame.`;
 </script>
 </body>
 </html>

@@ -59,6 +59,15 @@ const BUDGET = num('--budget', 500); // ms per measurement
 // tick (≈214 ms/tick at 5k particles), so it runs at a lower particle count to
 // keep regeneration time sane. Recorded in the report as `perLawCount`.
 const PER_LAW_COUNT = num('--perlaw-count', 2000);
+// Custom scaling ladder: --scales 500,1000,1500,... (overrides the default).
+const SCALES = (() => {
+  const idx = args.indexOf('--scales');
+  if (idx < 0 || !args[idx + 1]) return null;
+  const list = args[idx + 1].split(',').map(Number)
+    .filter((n) => Number.isFinite(n) && n > 0 && n <= MAX_PARTICLES)
+    .sort((a, b) => a - b);
+  return list.length ? list : null;
+})();
 
 // ── Default 10-law set (matches PRIME_DEFAULT) ──
 
@@ -313,11 +322,13 @@ function perLawSweep(count) {
   results.push({ law: 'ALL_128', tickUs: allResult.tickUs, lawUs: allResult.lawUs });
 
   // Per law: (a) alone (full tick, only this law) and (b) leave-one-out
-  // (all 128 minus this law). "Saved if OFF" = ALL_128 − (128 minus this
-  // law): how much of the full-config tick that law's presence accounts for.
-  // Each row stays within [0, 100]; rows overlap (laws interact — removing
-  // several at once saves less than the sum of individual removals), so they
-  // intentionally do not sum to 100%.
+  // (all 128 minus this law). The ablation triple is recorded explicitly:
+  //   soloUs       — full tick with ONLY this law enabled
+  //   withoutUs    — full 128-law tick with this law REMOVED
+  //   marginalUs   — ALL_128 − withoutUs (the law's marginal cost)
+  //   pctMarginal  — marginalUs / ALL_128 × 100
+  // Rows overlap (laws interact — removing several at once saves less than the
+  // sum of individual removals), so they intentionally do not sum to 100%.
   for (let i = 0; i < LAW_COUNT; i++) {
     const name = lawNameOf(i);
 
@@ -330,11 +341,14 @@ function perLawSweep(count) {
     const minus = measureTickUs(count, minusState, dnaBuffer, 2, 1);
 
     const marginalUs = Math.max(0, allResult.tickUs - minus.tickUs);
-    process.stderr.write(`  Law ${name}... alone ${alone.tickUs.toFixed(0)} µs, marginal ${marginalUs.toFixed(1)} µs\n`);
+    process.stderr.write(`  Law ${name}... alone ${alone.tickUs.toFixed(0)} µs, without ${minus.tickUs.toFixed(0)} µs, Δ ${marginalUs.toFixed(1)} µs\n`);
     results.push({
       law: name,
-      tickUs: alone.tickUs,        // full tick with ONLY this law (standalone)
-      marginalUs: +marginalUs.toFixed(2), // µs saved by removing it from the 128-law set
+      tickUs: alone.tickUs,               // legacy alias of soloUs
+      soloUs: +alone.tickUs.toFixed(2),   // full tick with ONLY this law (standalone)
+      withoutUs: +minus.tickUs.toFixed(2),// 128-law tick minus this law
+      marginalUs: +marginalUs.toFixed(2), // ALL_128 − withoutUs
+      pctMarginal: +((marginalUs / allResult.tickUs) * 100).toFixed(2),
       lawUs: alone.lawUs,
     });
   }
@@ -441,7 +455,7 @@ async function main() {
     console.error('─ Scaling sweep (default 10 laws) ─');
     // Start at the requested 1k scale and stop each profile once it falls
     // below 15 FPS (66.67 ms/tick); larger points add no useful real-time data.
-    const counts = [1000, 2500, 5000, 10000, 25000, 50000, 100000].filter(c => c <= MAX_PARTICLES);
+    const counts = SCALES || [1000, 2500, 5000, 10000, 25000, 50000, 100000].filter(c => c <= MAX_PARTICLES);
     scalingData = scalingSweep(counts, DEFAULT_LAWS);
     console.error();
 
@@ -523,18 +537,25 @@ async function main() {
       NEIGHBOR_BUF: 2000,
     },
     categories,
-    perLaw: perLawData.map(r => ({
-      law: r.law,
-      tickUs: r.tickUs,
-      // % of the full 128-law tick attributable to this law — computed from
-      // the leave-one-out marginal cost (ALL_128 − 128-without-law), not the
-      // standalone tick, so it stays within [0, 100] and rows sum to ≤100%.
-      marginalUs: r.marginalUs ?? null,
-      pctOfTotal: r.marginalUs !== undefined && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_DEFAULT' && r.law !== 'ALL_128'
-        ? +(r.marginalUs / (perLawData.find(d => d.law === 'ALL_128')?.tickUs || 1) * 100).toFixed(2)
-        : null,
-      lawUs: r.lawUs,
-    })),
+    perLaw: perLawData.map(r => {
+      const allTick = perLawData.find(d => d.law === 'ALL_128')?.tickUs || 1;
+      return {
+        law: r.law,
+        tickUs: r.tickUs,
+        // Explicit ablation triple (see perLawSweep): solo / without / Δ.
+        soloUs: r.soloUs ?? null,
+        withoutUs: r.withoutUs ?? (r.law !== 'ALL_128' && r.law !== 'ZERO_LAWS' && r.marginalUs != null ? +(allTick - r.marginalUs).toFixed(2) : null),
+        // % of the full 128-law tick attributable to this law — computed from
+        // the leave-one-out marginal cost (ALL_128 − 128-without-law), not the
+        // standalone tick, so it stays within [0, 100] and rows sum to ≤100%.
+        marginalUs: r.marginalUs ?? null,
+        pctMarginal: r.pctMarginal ?? (r.marginalUs != null ? +((r.marginalUs / allTick) * 100).toFixed(2) : null),
+        pctOfTotal: r.marginalUs !== undefined && r.law !== 'ZERO_LAWS' && r.law !== 'ALL_DEFAULT' && r.law !== 'ALL_128'
+          ? +(r.marginalUs / allTick * 100).toFixed(2)
+          : null,
+        lawUs: r.lawUs,
+      };
+    }),
   };
 
   if (scalingData) output.scaling = scalingData;
