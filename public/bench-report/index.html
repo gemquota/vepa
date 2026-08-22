@@ -106,36 +106,95 @@
   .score-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; }
 
   /* ── Bars ── */
-  .bar-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
-  .bar-label { width: 110px; text-align: right; font-size: 10.5px; color: var(--dim); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar-track { flex: 1; height: 14px; background: rgba(255,255,255,.03); border-radius: 3px; overflow: hidden; }
+  html { scroll-behavior: smooth; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; padding: 3px 0; min-height: 26px; }
+  .bar-label { width: 110px; text-align: right; font-size: 11px; color: var(--dim); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 16px; background: rgba(255,255,255,.03); border-radius: 3px; overflow: visible; position: relative; }
   .bar-fill { height: 100%; border-radius: 3px; transition: width .3s ease; }
-  .bar-value { width: 132px; text-align: left; font-size: 10.5px; color: var(--ink); flex-shrink: 0; white-space: nowrap; }
+  .bar-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: rgba(247,200,115,.85); z-index: 2; box-shadow: 0 0 6px rgba(247,200,115,.5); }
+  .bar-value { width: 132px; text-align: left; font-size: 11px; color: var(--ink); flex-shrink: 0; white-space: nowrap; }
+
+  /* ── Sticky anchor nav ── */
+  #topnav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background: rgba(7,9,14,.94); backdrop-filter: blur(5px);
+    padding: 10px 0; margin: -24px 0 20px; border-bottom: 1px solid var(--line);
+  }
+  #topnav a {
+    flex-shrink: 0; color: var(--dim); text-decoration: none; cursor: pointer;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+    padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+    transition: color .15s, border-color .15s;
+  }
+  #topnav a:hover { color: var(--accent); border-color: rgba(79,209,197,.5); }
+
+  /* ── Collapsible sections ── */
+  details.section { margin-top: 28px; }
+  details.section > summary {
+    cursor: pointer; list-style: none; user-select: none;
+    font-size: 13px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px; padding: 4px 0;
+    min-height: 32px;
+  }
+  details.section > summary::-webkit-details-marker { display: none; }
+  details.section > summary::before { content: "▸"; color: var(--dim); transition: transform .15s; font-size: 11px; }
+  details.section[open] > summary::before { transform: rotate(90deg); }
+  details.section[open] > summary { margin-bottom: 12px; border-bottom: 1px solid var(--line); }
 
   .law-cat { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
   .note { color: var(--dim); font-size: 11px; margin-top: 28px; line-height: 1.6; }
   .warn { color: var(--accent2); }
 
   @media (max-width: 760px) {
-    body { padding: 14px; font-size: 12px; }
+    body { padding: 14px; font-size: 13px; }
     .desktop-only { display: none !important; }
     .mobile-only { display: block !important; }
-    h2 { margin-top: 26px; }
+    details.section { margin-top: 22px; }
+    #topnav { margin: -14px 0 16px; padding: 8px 0; }
+    #topnav a { font-size: 12px; padding: 8px 13px; }
+    /* Minimum 12px legibility everywhere */
+    .dir { font-size: 12px !important; }
+    .chip { font-size: 12px; }
+    .chip b { font-size: 12.5px; }
+    .stat .v { font-size: 17px; }
+    .m-row { font-size: 13px; padding: 5px 0; min-height: 30px; }
+    .m-card .m-title { font-size: 12px; }
+    .card h3 { font-size: 12.5px; }
+    .bar-label { width: 104px; font-size: 12px; }
+    .bar-value { width: 122px; font-size: 12px; }
+    .bar-track { height: 20px; }
+    .bar-row { min-height: 34px; padding: 4px 0; gap: 10px; }
+    table.matrix th, table.matrix td { font-size: 12.5px; padding: 8px 10px; }
+    .cfg-row { font-size: 13px; padding: 5px 0; }
+    details.m-all summary { font-size: 12px; padding: 8px 0 0; min-height: 30px; }
+    .legend { font-size: 12px; }
+    .note { font-size: 12px; }
     .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
-    .bar-label { width: 84px; font-size: 9.5px; }
-    .bar-value { width: 104px; font-size: 9.5px; }
   }
 </style>
 </head>
 <body>
+  <nav id="topnav">
+    <a href="#sec-overview">Overview</a>
+    <a href="#sec-performance">Performance</a>
+    <a href="#sec-scaling">Scaling</a>
+    <a href="#sec-configs">Configs</a>
+    <a href="#sec-ablation">Per-law</a>
+    <a href="#sec-categories">Categories</a>
+    <a href="#sec-knobs">Knob matrix</a>
+    <a href="#sec-sweeps">Sweeps</a>
+  </nav>
   <h1>Benchmark Report</h1>
   <div class="sub" id="headline"></div>
 
-  <h2>Overview</h2>
+  <details class="section" id="sec-overview" open><summary>Overview</summary>
   <div class="stat-grid" id="overview"></div>
   <div id="meta" class="meta" style="margin-top:14px"></div>
 
-  <h2>Performance</h2>
+  </details>
+
+  <details class="section" id="sec-performance" open><summary>Performance</summary>
   <div class="legend">
     <span class="l-solid-teal">Main · 10 laws</span>
     <span class="l-dash-teal">Worker · 10 laws</span>
@@ -148,34 +207,46 @@
     <div class="chart-tip" id="scaling-tip"></div>
   </div>
 
-  <h2>Detailed results — population scaling</h2>
+  </details>
+
+  <details class="section" id="sec-scaling"><summary>Detailed results — population scaling</summary>
   <div class="desktop-only">
     <table class="matrix" id="scaling-table"></table>
     <div class="sub dir" style="margin-top:6px">Scroll horizontally for more scales · best value per row outlined in teal · RTT = cold worker round-trip</div>
   </div>
   <div class="mobile-only" id="scaling-mobile"></div>
 
-  <h2>Configurations</h2>
+  </details>
+
+  <details class="section" id="sec-configs"><summary>Configurations</summary>
   <div class="sub">Each configuration compared at a common reference scale. Score = fps relative to the fastest configuration.</div>
   <div class="grid2" id="config-cards"></div>
 
-  <h2>Per-law ablation — vs ALL 128 laws</h2>
+  </details>
+
+  <details class="section" id="sec-ablation"><summary>Per-law ablation — vs ALL 128 laws</summary>
   <div class="sub">Ablation at N=<span id="perlaw-n">—</span> particles. Each row answers: <i>how much does this law cost, and what does removing it change?</i> <b>Solo Cost</b> = a full tick with only that law enabled. <b>Without Law</b> = the all-128 tick with that law removed. <b>Δ Runtime / Δ %</b> = ALL 128 − Without Law (the law's marginal cost, absolute and proportional). <span class="warn">Δ % rows do not sum to 100%</span>: laws interact — with all 128 on, force/chemistry laws clump particles and saturate the pairwise loop, so removing several at once saves less than the sum of individual removals.</div>
   <div id="perlaw-summary" class="meta"></div>
-  <h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 6px">Marginal cost by law ↓ lower is cheaper</h3>
+  <h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 6px">Marginal cost by law · ↓ lower is cheaper · <span style="color:var(--accent3)">┃</span> median marker</h3>
   <div id="perlaw-bars"></div>
   <div class="desktop-only"><table class="matrix" id="perlaw-table"></table></div>
   <div class="mobile-only" id="perlaw-mobile"></div>
 
-  <h2>Per-law by category</h2>
-  <div class="grid3" id="category-cards"></div>
+  </details>
 
-  <h2>Tuning-knob matrix</h2>
+  <details class="section" id="sec-categories"><summary>Per-law by category</summary>
+  <div class="grid3" id="category-cards"></div>
+  </details>
+
+  <details class="section" id="sec-knobs"><summary>Tuning-knob matrix</summary>
   <div class="sub dir">Latency · ms/frame · ↓ lower is better · teal = fast, pink = slow</div>
   <div class="table-wrap"><table class="matrix" id="matrix" style="min-width:420px"></table></div>
 
-  <h2>Knob sweeps</h2>
+  </details>
+
+  <details class="section" id="sec-sweeps"><summary>Knob sweeps</summary>
   <div class="grid2" id="sweeps"></div>
+  </details>
 
   <div class="note" id="foot"></div>
 
@@ -467,19 +538,31 @@
       `<span class="chip"><b>ALL 128</b> — ${all128Row ? fmt(all128Ms) : '—'} ms/frame</span>` +
       `<span class="chip"><b>ZERO LAWS</b> — ${zeroRow ? fmt(zeroRow.tickUs / 1000) : '—'} ms/frame</span>`;
 
-    // Bars: Δ Runtime sorted by marginal cost.
+    // Bars: Δ Runtime sorted by marginal cost. Top 10 inline; the rest behind
+    // a "View all" expander. A gold marker marks the MEDIAN marginal cost so
+    // cheap vs expensive laws is readable at a glance.
     const maxMarg = Math.max(...lawRows.map(r => r.marginalUs ?? 0), 1);
-    $('perlaw-bars').innerHTML = lawRows.slice(0, 20).map(r => {
+    const medMarg = median(lawRows.map(r => r.marginalUs ?? 0));
+    const medPct = (medMarg / maxMarg * 100).toFixed(2);
+    const barRow = (r) => {
       const cat = D.categories[r.law];
       const catName = cat ? cat.category.toUpperCase() : '—';
       const color = CAT_COLORS[catName] || '#6b7280';
       const val = r.marginalUs ?? 0;
       const pct = (val / maxMarg * 100).toFixed(1);
-      return `<div class="bar-row">
-        <div class="bar-label" title="${r.law.replace(/_/g, ' ')}">${r.law.replace(/_/g, ' ')}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      const soloMs = (r.soloUs ?? r.tickUs) / 1000;
+      const withoutMs = r.withoutUs != null ? r.withoutUs / 1000 : (all128Ms != null ? all128Ms - val / 1000 : null);
+      const tip = `<b>${r.law.replace(/_/g, ' ')}</b> · ${cat ? cat.category : '—'}<br>Solo: ${fmt(soloMs)} ms · Without: ${withoutMs != null ? fmt(withoutMs) + ' ms' : '—'}<br><span style="color:${color}">Δ runtime: +${fmt(val / 1000)} ms (${fmt(pct, 1)}%)</span>`;
+      return `<div class="bar-row" data-tip="${tip.replace(/"/g, '&quot;')}">
+        <div class="bar-label">${r.law.replace(/_/g, ' ')}</div>
+        <div class="bar-track"><i class="bar-marker" style="left:${medPct}%"></i><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
         <div class="bar-value">+${fmt(val / 1000)} ms (${fmt(pct, 1)}%)</div></div>`;
-    }).join('') + (lawRows.length > 20 ? `<div class="sub dir">… ${lawRows.length - 20} more laws below ${fmt(lawRows.slice(20)[0]?.marginalUs / 1000 || 0)} ms marginal — see table.</div>` : '');
+    };
+    const TOP_N = 10;
+    $('perlaw-bars').innerHTML = lawRows.slice(0, TOP_N).map(barRow).join('') +
+      (lawRows.length > TOP_N
+        ? `<details class="m-all"><summary>View all ${lawRows.length} laws</summary>${lawRows.slice(TOP_N).map(barRow).join('')}</details>`
+        : '');
 
     // Ablation matrix (desktop): LAW | DOMAIN | SOLO | WITHOUT | Δ | Δ% | ETV/pair.
     const pt = $('perlaw-table');
@@ -574,6 +657,34 @@
         { fps: true });
     }
   });
+
+  // Shared tap/hover tooltip for any element carrying data-tip (bar rows).
+  // Touch-friendly: tap to show, tap elsewhere or move off to hide.
+  (function barTips() {
+    const tipEl = document.createElement('div');
+    tipEl.className = 'chart-tip';
+    document.body.appendChild(tipEl);
+    const show = (ev, row) => {
+      tipEl.innerHTML = row.dataset.tip;
+      tipEl.style.display = 'block';
+      const pad = 12;
+      let x = ev.clientX + pad, y = ev.clientY + pad;
+      const r = tipEl.getBoundingClientRect();
+      if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - pad;
+      if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+      tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+    };
+    document.addEventListener('pointermove', (ev) => {
+      const row = ev.target && ev.target.closest ? ev.target.closest('[data-tip]') : null;
+      if (!row) { tipEl.style.display = 'none'; return; }
+      show(ev, row);
+    });
+    document.addEventListener('pointerdown', (ev) => {
+      const row = ev.target && ev.target.closest ? ev.target.closest('[data-tip]') : null;
+      if (!row) { tipEl.style.display = 'none'; return; }
+      show(ev, row);
+    });
+  })();
 
   $('foot').innerHTML =
     `<span class="warn">Dataset auto-generated by bench/solver.bench.mjs.</span> ` +

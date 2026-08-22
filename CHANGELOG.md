@@ -1,5 +1,22 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.24] - 2026-08-22 → 8.16.10
+
+### UX pass — benchmark report mobile usability (`public/bench-report/`)
+- **Legibility**: minimum 12px type on mobile for every label, chip, table
+  cell, bar value, and legend; bar values/labels raised from 9.5–10.5px.
+- **Navigation**: sticky top anchor nav (Overview · Performance · Scaling ·
+  Configs · Per-law · Categories · Knob matrix · Sweeps) with smooth scrolling.
+- **Collapsible sections**: all eight major sections are now accordions;
+  Overview and Performance open by default so the executive result is first.
+- **Progressive disclosure**: per-law bar ranking shows the top 10 most
+  expensive laws inline with a "View all 128 laws" expander.
+- **Touch targets**: bar rows grew to ~34px tall with 20px tracks on mobile.
+- **Tooltips**: tap/hover tooltip on every per-law bar row (law, domain, solo
+  cost, without-law runtime, Δ) alongside the existing chart crosshair.
+- **Contextual baseline**: a gold median marker is drawn across every bar so
+  cheap vs expensive laws reads at a glance.
+
 ## [4.8.23] - 2026-08-22 → 8.16.9
 
 ### UI redesign — benchmark report information architecture (`public/bench-report/`)
