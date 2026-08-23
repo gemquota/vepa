@@ -1,5 +1,14 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.2] - 2026-08-23 → 9.0.2
+
+### feat(settings): selectable GPU/CPU backend with WebGPU parity harness
+
+- Added `SETTINGS > COMPUTE > PHYSICS BACKEND` with GPU selected by default and explicit CPU mode.
+- Worker configuration now receives backend changes and reports WebGPU capability on initialization and tick completion.
+- Added Chromium WebGPU launch flags and a fixed-fixture hardware parity test comparing GPU gravity/collision output with the CPU implementation.
+- The GPU path currently accelerates gravity/collision only; the remaining 128-law behavior stays on the CPU for semantic parity. Unsupported browsers use the CPU fallback.
+
 ## [4.9.1] - 2026-08-23 → 9.0.1
 
 ### fix(worker): async WebGPU capability probing and browser integration coverage

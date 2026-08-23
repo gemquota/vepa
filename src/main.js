@@ -786,6 +786,7 @@ function setDNAFromProfile(species, profile) {
     bus.on('dna:sync', syncPhysicsWorker);
     bus.on('dna:changed', syncPhysicsWorker);
     bus.on('world:paramApplied', syncPhysicsWorker);
+    bus.on('compute:changed', syncPhysicsWorker);
     bus.on('sim:pause', () => { paused = true; });
     bus.on('sim:resume', () => { paused = false; });
     bus.on('sim:restart', (opts = {}) => {

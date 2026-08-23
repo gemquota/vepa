@@ -6,6 +6,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     serviceWorkers: 'allow',
+    launchOptions: {
+      args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan,UseSkiaRenderer'],
+    },
   },
   webServer: {
     command: 'VERCEL=1 npm run dev -- --host 127.0.0.1 --port 4173',
