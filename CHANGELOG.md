@@ -1,5 +1,51 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.8.28] - 2026-08-23 → 8.16.14
+
+### perf(solver): distance-tiered law dispatch — 2.8× faster 128-law ticks
+
+- Added per-pair distance tiers (`near = dist < 30`, `mid = dist < 200`) after the
+  `Math.sqrt` in the pairwise loop, gating ~22 law blocks that have implicit
+  distance cutoffs (return-null for distant pairs, contact-only semantics).
+- At typical density 95% of neighbour pairs are at dist > 30, so short-range
+  laws (collision, bonding, polymerisation, heat transfer, solvation, chirality,
+  etc.) are now skipped for them — the law functions themselves already do this
+  internally; the guard avoids the entire `if(active[X])` + function call for
+  distant pairs.
+- Mid-range laws (order, soul, mind, signal exchange, tracking, telepathy,
+  precognition, affinity, reduction, predation) are gated at 200 instead of 30
+  to preserve their effective ranges.
+- Long-range laws (gravity, void, planetary, fields) are always dispatched.
+- Combined with the allocation-free pairwise path (v8.15.1) and content-addressed
+  law caches (v8.16), the 128-law tick at 5k particles drops from ~140ms to
+  ~51ms — a 2.8× speedup with zero approximation.
+
+### feat(physics): Barnes–Hut octree + quadrupole FMM gravity engines
+
+- New module `src/physics/octree.js` (360 lines): flat-typed-array octree with
+  correct toroidal acceptance (cell-region min-image gap, not naive COM
+  wrapping), zero allocation after warm-up, deterministic traversal.
+- Quadrupole moment propagation (M2M upward pass) with parallel-axis theorem;
+  trace-free force kernel in the traversal adds 6 tensor components per node
+  for ~10× better force accuracy at the same θ vs. monopole-only.
+- Config knob in `runtimeConfig.gravEngine`: `'exact'` (default, per-pair),
+  `'bh'` (monopole Barnes–Hut), `'fmm'` (monopole + quadrupole correction).
+- In VEPA's grid-truncated architecture (27-cell neighbour gather), the tree
+  engines are roughly parity with the exact path at current populations — the
+  grid is the primary acceleration structure. The tree is preserved as an
+  opt-in engine for future multi-law tree traversal and WebGPU integration.
+- Unit tests: 5 tests covering tree build correctness, COM propagation,
+  toroidal min-image, and solver BH equivalence at θ=0.
+
+### feat(bench): configurable FPS floor
+
+- `--fps-floor` flag on `bench/solver.bench.mjs` (default 15); scaling sweeps
+  stop once per-tick time exceeds the floor.
+
+**Tests:** 859/865 pass (6 pre-existing: lawCategories×4, batch_08
+TIME_DILATION, batch_30 TELEPORT — unchanged since v7.1.1).
+**Deployed:** https://vepa-seven.vercel.app/
+
 ## [4.8.27] - 2026-08-22 → 8.16.13
 
 ### feat(bench): 3-mode version comparison SPA

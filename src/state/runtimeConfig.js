@@ -17,5 +17,11 @@ export const runtimeConfig = {
   birthRate: 1.0,      // REPRO law synergy multiplier (0.01–1.0)
   deathRate: 1.0,      // LIFE law synergy multiplier (0.01–1.0)
   signalScale: 1.0,    // global communication DNA multiplier
+  // v8.17 — gravity engine: 'exact' (default, per-pair DNA-aware), 'bh'
+  // (Barnes–Hut monopole, O(N log N)), or 'fmm' (BH + quadrupole correction,
+  // ~10× more accurate at the same theta). gravTheta is the opening angle
+  // (0 = exact traversal; 0.4–0.7 typical). See src/physics/octree.js.
+  gravEngine: 'exact',
+  gravTheta: 0.5,
   worldParams: createWorldParams(), // WORLD panel sliders (SPACE/PHYSICS/ENVIRONMENT/BIOLOGY)
 };

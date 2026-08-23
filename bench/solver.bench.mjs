@@ -68,6 +68,9 @@ const SCALES = (() => {
     .sort((a, b) => a - b);
   return list.length ? list : null;
 })();
+// FPS floor: each scaling profile stops once it falls below this frame rate
+// (default 15 fps) — larger points add no useful real-time data.
+const FPS_FLOOR = num('--fps-floor', 15);
 
 // ── Default 10-law set (matches PRIME_DEFAULT) ──
 
@@ -272,7 +275,7 @@ async function workerScalingSweep(counts, lawState) {
     const result = await measureWorker(count, lawState);
     results.push(result);
     process.stderr.write(` ${result.msPerTick.toFixed(1)} ms/tick solver, ${result.roundTripUs.toFixed(0)} µs round-trip\n`);
-    if (result.msPerTick > 1000 / 15) break;
+    if (result.msPerTick > 1000 / FPS_FLOOR) break;
   }
   return results;
 }
@@ -291,7 +294,7 @@ function scalingSweepState(counts, lawState) {
     const r = measure(count, lawState, dnaBuffer);
     results.push(r);
     process.stderr.write(` ${r.msPerTick.toFixed(1)} ms/tick\n`);
-    if (r.msPerTick > 1000 / 15) break;
+    if (r.msPerTick > 1000 / FPS_FLOOR) break;
   }
   return results;
 }
@@ -454,7 +457,8 @@ async function main() {
   if (!LAWS_ONLY) {
     console.error('─ Scaling sweep (default 10 laws) ─');
     // Start at the requested 1k scale and stop each profile once it falls
-    // below 15 FPS (66.67 ms/tick); larger points add no useful real-time data.
+    // below the FPS floor (default 15 fps; --fps-floor to override); larger
+    // points add no useful real-time data.
     const counts = SCALES || [1000, 2500, 5000, 10000, 25000, 50000, 100000].filter(c => c <= MAX_PARTICLES);
     scalingData = scalingSweep(counts, DEFAULT_LAWS);
     console.error();

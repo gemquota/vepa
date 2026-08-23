@@ -426,13 +426,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   _bhActive = false;
   if (
     active[LAW_INDEXES.GRAV] &&
-    runtimeConfig.gravEngine === 'bh' &&
+    (runtimeConfig.gravEngine === 'bh' || runtimeConfig.gravEngine === 'fmm') &&
     particleCount > 0
   ) {
     const theta = Number(runtimeConfig.gravTheta);
     _bhTheta = Number.isFinite(theta) ? Math.max(0, theta) : 0.5;
     if (!_bhTree) _bhTree = createOctree(Math.max(1024, particleCount));
     buildOctree(_bhTree, view, stride, particleCount, worldSize);
+    _bhTree.useQuadrupole = runtimeConfig.gravEngine === 'fmm';
     _bhActive = true;
   }
 
@@ -545,6 +546,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       const distSq = dx * dx + dy * dy + dz * dz;
       const dist = Math.sqrt(distSq);
 
+      // ── Distance-tier fidelity (v8.17) ──
+      const near = dist < 30;
+      const mid = dist < 200;
+
       // ── Gravity ──
       // 'bh' engine: gravity was already applied above from the octree
       // far-field query; skip the per-pair exact term to avoid double counting.
@@ -569,15 +574,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Collision + Accretion + Fragmentation ──
-      // COLL and ACCR are independent laws (confirmed batch-02 semantics):
-      //  - COLL: softbody push + elastic bounce on overlap.
-      //  - ACCR: mass fusion on overlap. FUSION_MOMENTUM DNA is the MINIMUM
-      //    relative momentum required to fuse on impact — slower pairs bounce
-      //    instead. FUSION_TIME DNA is how long sub-threshold pairs must stay
-      //    in very close proximity before they fuse anyway (proximity dwell,
-      //    tracked in the free MITOSIS_TIMER / PARTNER_ID stride fields).
-      if (active[LAW_INDEXES.COLL] || active[LAW_INDEXES.ACCR]) {
+      // ── Collision + Accretion (contact laws) ──
+      if (near && (active[LAW_INDEXES.COLL] || active[LAW_INDEXES.ACCR])) {
         const m1 = view[iBase + S.MASS];
         const m2 = view[jBase + S.MASS];
         if (m1 <= 0 || m2 <= 0) continue;
@@ -702,11 +700,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
             }
           }
         }
-      }
-
-      // ── Affinity ──
-
-      if (active[LAW_INDEXES.AFFINITY]) {
+      }      // ── Affinity (mid-range, falls off with distance) ──
+      if (mid && active[LAW_INDEXES.AFFINITY]) {
         const affinityForce = applyAffinity(lawState, view, iBase, jBase, dx, dy, dz, distSq, syn[LAW_INDEXES.AFFINITY], _affOut);
         if (affinityForce) {
           ax += affinityForce.ax;
@@ -715,14 +710,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Chemistry modifier ──
+      // ── Chemistry modifier (near) ──
 
-      if (
+      if (near && (
         active[LAW_INDEXES.CATALYSIS_LAW] ||
         active[LAW_INDEXES.SOLVATION] ||
         active[LAW_INDEXES.ACIDITY] ||
         active[LAW_INDEXES.CRYSTALLIZATION]
-      ) {
+      )) {
         const chemMult = applyChemistry(lawState, view, iBase, jBase, distSq, syn[LAW_INDEXES.CATALYSIS_LAW]);
         if (chemMult !== 1.0) {
           ax *= chemMult;
@@ -731,18 +726,18 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Polymer ──
+      // ── Polymer (contact) ──
 
-      if (active[LAW_INDEXES.POLYMER]) {
+      if (near && active[LAW_INDEXES.POLYMER]) {
         const polySynergy = syn[LAW_INDEXES.POLYMER];
         applyPolymer(lawState, view, iBase, jBase, dx, dy, dz, dist, polySynergy, stride);
       }
 
 
 
-      // ── Bond ──
+      // ── Bond (contact) ──
 
-      if (active[LAW_INDEXES.BOND]) {
+      if (near && active[LAW_INDEXES.BOND]) {
         const bondSynergy = syn[LAW_INDEXES.BOND];
         const bondForce = applyBond(lawState, view, iBase, jBase, stride, dx, dy, dz, dist, bondSynergy, nCount);
         if (bondForce) {
@@ -750,32 +745,29 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           ay += bondForce.ay;
           az += bondForce.az;
         }
-      }
-
-      // ── Reduction ──
-
-      if (active[LAW_INDEXES.REDUCTION]) {
+      }      // ── Reduction (mid-range charge neutralisation) ──
+      if (mid && active[LAW_INDEXES.REDUCTION]) {
         const redSynergy = syn[LAW_INDEXES.REDUCTION];
         applyReduction(iBase, jBase, stride, redSynergy);
       }
 
-      // ── Alloy ──
+      // ── Alloy (contact) ──
 
-      if (active[LAW_INDEXES.ALLOY]) {
+      if (near && active[LAW_INDEXES.ALLOY]) {
         const alloySynergy = syn[LAW_INDEXES.ALLOY];
         applyAlloy(lawState, view, iBase, jBase, stride, dist, alloySynergy);
       }
 
-      // ── Heat Transfer ──
+      // ── Heat Transfer (near) ──
 
-      if (active[LAW_INDEXES.HEAT] || active[LAW_INDEXES.COLD]) {
+      if (near && (active[LAW_INDEXES.HEAT] || active[LAW_INDEXES.COLD])) {
         const heatSynergy = syn[LAW_INDEXES.HEAT];
         applyHeatTransfer(lawState, view, iBase, jBase, dist, localTimeStep, heatSynergy);
       }
 
-      // ── Order ──
+      // ── Order (mid) ──
 
-      if (active[LAW_INDEXES.ORDER]) {
+      if (mid && active[LAW_INDEXES.ORDER]) {
         const orderForce = applyOrder(lawState, view, iBase, jBase, distSq, syn[LAW_INDEXES.ORDER]);
         if (orderForce) {
           ax += orderForce.ax;
@@ -784,16 +776,16 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Soul ──
+      // ── Soul (mid) ──
 
-      if (active[LAW_INDEXES.SOUL_LAW]) {
+      if (mid && active[LAW_INDEXES.SOUL_LAW]) {
         const soulSynergy = syn[LAW_INDEXES.SOUL_LAW];
         applySoul(lawState, view, iBase, jBase, distSq, soulSynergy);
       }
 
-      // ── Mind ──
+      // ── Mind (mid) ──
 
-      if (active[LAW_INDEXES.MIND]) {
+      if (mid && active[LAW_INDEXES.MIND]) {
         const mindSynergy = syn[LAW_INDEXES.MIND];
         const mindEffect = applyMind(lawState, view, iBase, jBase, distSq, mindSynergy);
         if (mindEffect && mindEffect.signalBoost) {
@@ -801,14 +793,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Energy Transfer ──
-      if (active[LAW_INDEXES.ENERGY]) {
+      // ── Energy Transfer (mid) ──
+      if (mid && active[LAW_INDEXES.ENERGY]) {
         const energySynergy = syn[LAW_INDEXES.ENERGY];
         applyEnergyTransfer(lawState, view, iBase, jBase, distSq, energySynergy);
       }
 
-      // ── Solvation ──
-      if (active[LAW_INDEXES.SOLVATION]) {
+      // ── Solvation (near) ──
+      if (near && active[LAW_INDEXES.SOLVATION]) {
         const solvSynergy = syn[LAW_INDEXES.SOLVATION];
         const solvMult = applySolvationEffect(lawState, view, iBase, jBase, distSq, solvSynergy);
         if (solvMult !== 1.0) {
@@ -826,14 +818,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Acidity ──
-      if (active[LAW_INDEXES.ACIDITY]) {
+      // ── Acidity (near) ──
+      if (near && active[LAW_INDEXES.ACIDITY]) {
         const acidSynergy = syn[LAW_INDEXES.ACIDITY];
         applyAcidityEffect(lawState, view, iBase, jBase, localTimeStep, acidSynergy);
       }
 
-      // ── Chirality ──
-      if (active[LAW_INDEXES.CHIRALITY]) {
+      // ── Chirality (near) ──
+      if (near && active[LAW_INDEXES.CHIRALITY]) {
         const chirSynergy = syn[LAW_INDEXES.CHIRALITY];
         const chirForce = applyChirality(lawState, view, iBase, jBase, dx, dy, dz, dist, chirSynergy);
         if (chirForce) {
@@ -843,8 +835,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Crystallization ──
-      if (active[LAW_INDEXES.CRYSTALLIZATION]) {
+      // ── Crystallization (near) ──
+      if (near && active[LAW_INDEXES.CRYSTALLIZATION]) {
         const crysSynergy = syn[LAW_INDEXES.CRYSTALLIZATION];
         const crysForce = applyCrystallization(lawState, view, iBase, jBase, dx, dy, dz, dist, crysSynergy);
         if (crysForce) {
@@ -854,8 +846,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Signal exchange (communication DNA, gated by COMMS law) ──
-      if (active[LAW_INDEXES.COMMS] && ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01)) {
+      // ── Signal exchange (mid) ──
+      if (mid && active[LAW_INDEXES.COMMS] && ((view[iBase + S.SIGNAL] || 0) > 0.01 || (view[jBase + S.SIGNAL] || 0) > 0.01)) {
         readDNAFromCache(view, jBase, _dnaJ);
         const sigForce = applySignalExchange(lawState, view, iBase, jBase, dx, dy, dz, dist, dnaI, _dnaJ, localTimeStep);
         if (sigForce) {
@@ -865,8 +857,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Track ──
-      if (active[LAW_INDEXES.TRACK]) {
+      // ── Track (mid) ──
+      if (mid && active[LAW_INDEXES.TRACK]) {
         const trackSynergy = syn[LAW_INDEXES.TRACK];
         const trackForce = applyTrackingBehavior(lawState, view, iBase, jBase, dx, dy, dz, dist, trackSynergy);
         if (trackForce) {
@@ -876,8 +868,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // ── Predation (mass-difference pursuit + gene absorption) ──
-      if (active[LAW_INDEXES.PREDATION]) {
+      // ── Predation (mid-range pursuit) ──
+      if (mid && active[LAW_INDEXES.PREDATION]) {
         const predForce = applyPredation(iBase, jBase, stride, dx, dy, dz, dist, prng);
         if (predForce) {
           ax += predForce.ax;
@@ -886,14 +878,14 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // Telepathy
-      if (active[LAW_INDEXES.TELEPATHY]) {
+      // Telepathy (mid)
+      if (mid && active[LAW_INDEXES.TELEPATHY]) {
         const telepathySynergy = syn[LAW_INDEXES.TELEPATHY];
         applyTelepathy(lawState, view, iBase, jBase, distSq, telepathySynergy, localTimeStep);
       }
 
-      // Clairvoyance
-      if (active[LAW_INDEXES.CLAIRVOYANCE]) {
+      // Clairvoyance (near)
+      if (near && active[LAW_INDEXES.CLAIRVOYANCE]) {
         const clairvoyanceSynergy = syn[LAW_INDEXES.CLAIRVOYANCE];
         const clairForce = applyClairvoyance(lawState, view, iBase, jBase, dx, dy, dz, dist, clairvoyanceSynergy, localTimeStep);
         if (clairForce) {
@@ -903,8 +895,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         }
       }
 
-      // Precognition
-      if (active[LAW_INDEXES.PRECOGNITION]) {
+      // Precognition (mid)
+      if (mid && active[LAW_INDEXES.PRECOGNITION]) {
         const precogSynergy = syn[LAW_INDEXES.PRECOGNITION];
         const precogForce = applyPrecognition(lawState, view, iBase, jBase, dx, dy, dz, dist, precogSynergy, localTimeStep);
         if (precogForce) {
