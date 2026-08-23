@@ -1,6 +1,6 @@
 {
   "name": "vepa-v4",
-  "version": "9.0.0",
+  "version": "9.0.1",
   "description": "VEPA4 — Vector Emergent Physics Automata (Integrated Intelligence release)",
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:worker": "playwright test tests/e2e/physics-worker.spec.js",
     "syntax-check": "find src -name '*.js' -exec node --check {} +"
   },
   "dependencies": {

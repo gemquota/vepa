@@ -22,6 +22,7 @@ import {
   LAW_COUNT,
 } from '../constants.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
+import { createGPUContext } from '../physics/gpuCompute.js';
 
 const hasSAB = typeof SharedArrayBuffer !== 'undefined';
 const isShared = (value) => hasSAB && value instanceof SharedArrayBuffer;
@@ -39,6 +40,9 @@ let dnaView = null;          // Uint16Array view over dnaBuffer
 let dt = 1.0; // worker time step
 let tickCount = 0;
 let hasSharedArrayBuffer = hasSAB;
+let gpuContext = null;
+let gpuReady = false;
+let tickInFlight = false;
 
 // ── Fallback State (no SharedArrayBuffer) ──
 
@@ -54,7 +58,9 @@ self.onmessage = function onWorkerMessage(event) {
 
   switch (msg.type) {
     case 'INIT':
-      handleInit(msg);
+      Promise.resolve(handleInit(msg)).catch((error) => {
+        self.postMessage({ type: 'ERROR', error: `INIT: ${error.message || error}` });
+      });
       break;
 
     case 'CONFIG':
@@ -66,7 +72,16 @@ self.onmessage = function onWorkerMessage(event) {
       break;
 
     case 'TICK':
-      handleTick(msg);
+      // Keep the worker single-flight: the main thread may render freely, but
+      // physics ticks are serialized so completion order remains deterministic.
+      if (tickInFlight) {
+        self.postMessage({ type: 'TICK_QUEUED', tickCount });
+      } else {
+        tickInFlight = true;
+        Promise.resolve(handleTick(msg)).catch((error) => {
+          self.postMessage({ type: 'ERROR', error: `TICK: ${error.message || error}` });
+        }).finally(() => { tickInFlight = false; });
+      }
       break;
 
     case 'GET_STATE':
@@ -91,7 +106,7 @@ self.onmessage = function onWorkerMessage(event) {
 
 // ── INIT Handler ──
 
-function handleInit(msg) {
+async function handleInit(msg) {
   const {
     buffer: sharedBuffer,
     count,
@@ -128,6 +143,12 @@ function handleInit(msg) {
   if (config) {
     applyConfig(config);
   }
+  // Probe once, off the message handler's synchronous path. Unsupported
+  // browsers cleanly report false and continue on the CPU solver.
+  if (runtimeConfig.computeEngine === 'gpu') {
+    gpuContext = await createGPUContext();
+    gpuReady = !!gpuContext;
+  }
 
   // DNA buffer
   if (isShared(sharedDna)) {
@@ -153,6 +174,7 @@ function handleInit(msg) {
     hasSharedArrayBuffer,
     particleCount,
     lawState: serializeLawState(lawState),
+    gpuAvailable: gpuReady,
   });
 }
 
@@ -200,6 +222,9 @@ function applyConfig(config) {
   if (config.seed !== undefined && tickCount === 0) _prngState = config.seed | 0;
   if (config.stride !== undefined) stride = config.stride;
   if (config.worldParams) runtimeConfig.worldParams = config.worldParams;
+  if (config.computeEngine === 'gpu' || config.computeEngine === 'cpu') {
+    runtimeConfig.computeEngine = config.computeEngine;
+  }
 
   // Restore law state from serialized form
   if (config.lawState) {
@@ -250,7 +275,7 @@ function handleToggleLaw(msg) {
 
 // ── TICK Handler ──
 
-function handleTick(msg) {
+async function handleTick(msg) {
   if (!particleView) {
     self.postMessage({
       type: 'ERROR',
@@ -288,6 +313,7 @@ function handleTick(msg) {
     tickCount,
     tickDuration,
     particleCount,
+    gpuAvailable: gpuReady,
   };
 
   if (offspring.length > 0) {

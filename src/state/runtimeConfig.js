@@ -23,11 +23,11 @@ export const runtimeConfig = {
   // (0 = exact traversal; 0.4–0.7 typical). See src/physics/octree.js.
   gravEngine: 'exact',
   gravTheta: 0.5,
-  // v9.0 — compute engine: 'cpu' (default solver loop) or 'gpu' (WebGPU
-  // compute shader for pairwise force hot loop; falls back to cpu in Node.js).
-  // In the browser, 'gpu' offloads gravity + collision + charge forces to a
-  // WGSL compute shader with atomic accumulation, cutting the pairwise loop
-  // cost by 8-16× at scale.
+  // v9.0 — compute engine: 'cpu' (default solver loop) or 'gpu'. The current
+  // synchronous solver bridge uses the validated CPU fallback; the standalone
+  // WebGPU pass in src/physics/gpuCompute.js is available for worker integration
+  // once the tick protocol can await GPU readback. This avoids silently treating
+  // a CPU fallback as measured browser GPU performance.
   computeEngine: 'cpu',
   worldParams: createWorldParams(), // WORLD panel sliders (SPACE/PHYSICS/ENVIRONMENT/BIOLOGY)
 };

@@ -26,11 +26,9 @@ const PARTICLE_STRIDE = 100;
 const COMPUTE_SHADER = /* wgsl */ `
 struct Particle {
   pos_x: f32, pos_y: f32, pos_z: f32,
-  vel_x: f32, vel_y: f32, vel_z: f32,
   mass:   f32,
   radius: f32,
-  // pad to 8 floats for alignment
-  _pad0: f32,
+  _pad0: f32, _pad1: f32, _pad2: f32,
 };
 
 struct NeighbourPair {
@@ -49,9 +47,9 @@ struct Params {
 
 @group(0) @binding(0) var<storage, read> particles: array<Particle>;
 @group(0) @binding(1) var<storage, read> pairs: array<NeighbourPair>;
-@group(0) @binding(2) var<storage, read_write> force_x: array<f32>;
-@group(0) @binding(3) var<storage, read_write> force_y: array<f32>;
-@group(0) @binding(4) var<storage, read_write> force_z: array<f32>;
+@group(0) @binding(2) var<storage, read_write> force_x: array<atomic<i32>>;
+@group(0) @binding(3) var<storage, read_write> force_y: array<atomic<i32>>;
+@group(0) @binding(4) var<storage, read_write> force_z: array<atomic<i32>>;
 @group(0) @binding(5) var<uniform> params: Params;
 
 fn wrap_coord(v: f32, ws: f32) -> f32 {
@@ -123,14 +121,13 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     fz = fz * scale;
   }
 
-  // Atomic accumulate into particle i
-  // atomics on f32 are not natively supported by all GPUs; we use a workaround
-  // with atomic exchange on u32 reinterpreted. For broad compatibility we
-  // write directly (non-atomic), relying on one pair per particle_i per workgroup.
-  // The CPU-side reduction handles the remaining accumulation.
-  force_x[pi] += fx;
-  force_y[pi] += fy;
-  force_z[pi] += fz;
+  // WGSL has no portable floating-point atomics. Accumulate fixed-point
+  // micro-forces instead; the CPU converts back after the readback. This is
+  // deterministic enough for the GPU path and, unlike f32 writes, race-free.
+  let fixed_scale = 1000000.0;
+  atomicAdd(&force_x[pi], i32(round(fx * fixed_scale)));
+  atomicAdd(&force_y[pi], i32(round(fy * fixed_scale)));
+  atomicAdd(&force_z[pi], i32(round(fz * fixed_scale)));
 }
 `;
 
@@ -253,9 +250,9 @@ export async function gpuComputeForces(gpu, view, count, pairs, params) {
     device.queue.writeBuffer(pairBuf, 0, pairData);
     device.queue.writeBuffer(uniformBuf, 0, uniformData);
     // Zero force buffers
-    device.queue.writeBuffer(fxBuf, 0, new Float32Array(count));
-    device.queue.writeBuffer(fyBuf, 0, new Float32Array(count));
-    device.queue.writeBuffer(fzBuf, 0, new Float32Array(count));
+    device.queue.writeBuffer(fxBuf, 0, new Int32Array(count));
+    device.queue.writeBuffer(fyBuf, 0, new Int32Array(count));
+    device.queue.writeBuffer(fzBuf, 0, new Int32Array(count));
 
     // ── Bind group ──
     const bindGroup = device.createBindGroup({
@@ -291,9 +288,17 @@ export async function gpuComputeForces(gpu, view, count, pairs, params) {
     await readFy.mapAsync(GPUMapMode.READ);
     await readFz.mapAsync(GPUMapMode.READ);
 
-    const fx = new Float32Array(readFx.getMappedRange().slice(0));
-    const fy = new Float32Array(readFy.getMappedRange().slice(0));
-    const fz = new Float32Array(readFz.getMappedRange().slice(0));
+    const rawFx = new Int32Array(readFx.getMappedRange().slice(0));
+    const rawFy = new Int32Array(readFy.getMappedRange().slice(0));
+    const rawFz = new Int32Array(readFz.getMappedRange().slice(0));
+    const fx = new Float32Array(count);
+    const fy = new Float32Array(count);
+    const fz = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      fx[i] = rawFx[i] / 1000000;
+      fy[i] = rawFy[i] / 1000000;
+      fz[i] = rawFz[i] / 1000000;
+    }
 
     readFx.unmap(); readFy.unmap(); readFz.unmap();
 

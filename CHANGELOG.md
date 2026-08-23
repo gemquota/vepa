@@ -1,5 +1,14 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.1] - 2026-08-23 → 9.0.1
+
+### fix(worker): async WebGPU capability probing and browser integration coverage
+
+- Serialized worker tick dispatch with explicit single-flight protection so queued render frames cannot overlap physics completion.
+- Propagated `computeEngine` through worker initialization/configuration and report `gpuAvailable` on worker completion messages.
+- Added Playwright browser smoke coverage for app boot, asynchronous worker progress, and safe WebGPU-unavailable fallback.
+- Added `test:e2e:worker` and kept CPU compute as the default until browser GPU parity is validated.
+
 ## [4.9.0] - 2026-08-23 → 9.0.0
 
 ### feat(physics): Full FMM + WebGPU Compute — v9.0.0 acceleration release

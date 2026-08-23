@@ -18,6 +18,7 @@ import { isSet } from '../state/lawState.js';
 import { createGrid, clear, insert, getNeighbors } from './spatialGrid.js';
 // v8.17 — Barnes–Hut long-range gravity engine (opt-in via runtimeConfig.gravEngine)
 import { createOctree, buildOctree, octreeGravity } from './octree.js';
+import { fmmGravity } from './fmm.js';
 import { gpuComputeForcesSync } from './gpuCompute.js';
 import {
   applyGravity,
@@ -156,6 +157,17 @@ const _gravOut = { ax: 0, ay: 0, az: 0 };
 let _bhTree = null;
 let _bhTheta = 0.5;
 let _bhActive = false; // per-tick flag set during engine selection
+let _fmmFx = new Float64Array(0);
+let _fmmFy = new Float64Array(0);
+let _fmmFz = new Float64Array(0);
+function ensureFmmOutputs(n) {
+  if (_fmmFx.length < n) {
+    _fmmFx = new Float64Array(n);
+    _fmmFy = new Float64Array(n);
+    _fmmFz = new Float64Array(n);
+  }
+  return [_fmmFx, _fmmFy, _fmmFz];
+}
 const _affOut = { ax: 0, ay: 0, az: 0 };
 const _stigOut = { ax: 0, ay: 0, az: 0 };
 
@@ -425,9 +437,18 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // aggregates drop per-pair DNA modifiers (FORCE/TIDAL/HIDDEN_MASS) and the
   // star-collapse boost — documented approximation; 'exact' stays the default.
   _bhActive = false;
+  let _fmmActive = false;
+  if (active[LAW_INDEXES.GRAV] && runtimeConfig.gravEngine === 'fmm' && particleCount > 0) {
+    const [fx, fy, fz] = ensureFmmOutputs(particleCount);
+    fx.fill(0, 0, particleCount);
+    fy.fill(0, 0, particleCount);
+    fz.fill(0, 0, particleCount);
+    fmmGravity(view, stride, particleCount, worldSize, effG * syn[LAW_INDEXES.GRAV], fx, fy, fz);
+    _fmmActive = true;
+  }
   if (
     active[LAW_INDEXES.GRAV] &&
-    (runtimeConfig.gravEngine === 'bh' || runtimeConfig.gravEngine === 'fmm') &&
+    runtimeConfig.gravEngine === 'bh' &&
     particleCount > 0
   ) {
     const theta = Number(runtimeConfig.gravTheta);
@@ -535,6 +556,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       ax += _gravOut.ax;
       ay += _gravOut.ay;
       az += _gravOut.az;
+    } else if (_fmmActive) {
+      ax += _fmmFx[i];
+      ay += _fmmFy[i];
+      az += _fmmFz[i];
     }
 
     // v9.0 — GPU-computed gravity + collision forces
@@ -590,7 +615,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // ── Gravity ──
       // 'bh' engine: gravity was already applied above from the octree
       // far-field query; skip the per-pair exact term to avoid double counting.
-      if (active[LAW_INDEXES.GRAV] && !_bhActive && !_useGPU) {
+      if (active[LAW_INDEXES.GRAV] && !_bhActive && !_fmmActive && !_useGPU) {
         const gravSynergy = syn[LAW_INDEXES.GRAV];
         const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy, _gravOut);
         if (gravForce) {

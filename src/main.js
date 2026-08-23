@@ -149,6 +149,7 @@ function workerConfig() {
         dt: DT * runtimeConfig.simSpeed,
         seed: WORKER_SEED,
         worldParams: { ...(runtimeConfig.worldParams || {}) },
+        computeEngine: runtimeConfig.computeEngine,
         lawState: serializeLawState(lawState),
     };
 }
