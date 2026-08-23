@@ -18,6 +18,7 @@ import { isSet } from '../state/lawState.js';
 import { createGrid, clear, insert, getNeighbors } from './spatialGrid.js';
 // v8.17 — Barnes–Hut long-range gravity engine (opt-in via runtimeConfig.gravEngine)
 import { createOctree, buildOctree, octreeGravity } from './octree.js';
+import { gpuComputeForcesSync } from './gpuCompute.js';
 import {
   applyGravity,
   applyCollision,
@@ -458,6 +459,35 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     bhSoloGravity = (((bits * 0x01010101) >> 24) & 0xff) === 1;
   }
 
+  // ── v9.0 GPU compute pre-pass ──
+  // When computeEngine='gpu', build all neighbour pairs from the grid and
+  // offload gravity + collision to the GPU (or CPU fallback in Node.js).
+  // The per-particle loop below adds these precomputed forces and skips the
+  // GRAV/COLL blocks in the pairwise loop.
+  let _gpuFx = null, _gpuFy = null, _gpuFz = null;
+  const _useGPU = runtimeConfig.computeEngine === 'gpu' && particleCount > 0;
+  if (_useGPU && !bhSoloGravity) {
+    // Build all neighbour pairs
+    const _gpuPairs = [];
+    for (let i = 0; i < particleCount; i++) {
+      const ib = i * stride;
+      if (view[ib + S.DEAD] >= 0.5 || view[ib + S.MASS] <= 0) continue;
+      const nCount = getNeighbors(grid, view[ib + S.POS_X], view[ib + S.POS_Y], view[ib + S.POS_Z], worldSize, nb, neighborCap);
+      const lim = Math.min(nCount, maxInteractions);
+      for (let n = 0; n < lim; n++) {
+        const j = nb[n];
+        if (j === i) continue;
+        const jb = j * stride;
+        if (view[jb + S.DEAD] >= 0.5 || view[jb + S.MASS] <= 0) continue;
+        _gpuPairs.push({ i, j });
+      }
+    }
+    const _gpuRes = gpuComputeForcesSync(view, particleCount, _gpuPairs, {
+      worldSize, G: effG, softening: 0.5, maxForce: MAX_FORCE,
+    });
+    _gpuFx = _gpuRes.fx; _gpuFy = _gpuRes.fy; _gpuFz = _gpuRes.fz;
+  }
+
   for (let i = 0; i < particleCount; i++) {
     const iBase = i * stride;
 
@@ -507,6 +537,13 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       az += _gravOut.az;
     }
 
+    // v9.0 — GPU-computed gravity + collision forces
+    if (_useGPU && _gpuFx) {
+      ax += _gpuFx[i];
+      ay += _gpuFy[i];
+      az += _gpuFz[i];
+    }
+
     // ── Pairwise neighbor loop ──
 
     // v8.17: solo-gravity BH skips the neighbour gather entirely — the octree
@@ -553,7 +590,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       // ── Gravity ──
       // 'bh' engine: gravity was already applied above from the octree
       // far-field query; skip the per-pair exact term to avoid double counting.
-      if (active[LAW_INDEXES.GRAV] && !_bhActive) {
+      if (active[LAW_INDEXES.GRAV] && !_bhActive && !_useGPU) {
         const gravSynergy = syn[LAW_INDEXES.GRAV];
         const gravForce = applyGravity(iBase, jBase, dx, dy, dz, dist, effG * gravSynergy, _gravOut);
         if (gravForce) {
@@ -575,7 +612,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       }
 
       // ── Collision + Accretion (contact laws) ──
-      if (near && (active[LAW_INDEXES.COLL] || active[LAW_INDEXES.ACCR])) {
+      if (near && (active[LAW_INDEXES.COLL] || active[LAW_INDEXES.ACCR]) && !_useGPU) {
         const m1 = view[iBase + S.MASS];
         const m2 = view[jBase + S.MASS];
         if (m1 <= 0 || m2 <= 0) continue;

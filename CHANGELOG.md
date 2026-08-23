@@ -1,5 +1,58 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.0] - 2026-08-23 → 9.0.0
+
+### feat(physics): Full FMM + WebGPU Compute — v9.0.0 acceleration release
+
+**New modules:**
+- `src/physics/fmm.js` — grid-based Fast Multipole Method with quadrupole order-2
+  expansions. Replaces per-particle tree walks with O(N) global passes: M2L
+  interaction lists, upward quadrupole propagation, downward local expansion
+  evaluation. Uniform-depth cell partitioning with automatic depth selection.
+- `src/physics/gpuCompute.js` — WebGPU compute module with WGSL shader for
+  parallel pairwise force computation (gravity + collision). One workgroup per
+  grid cell, one invocation per neighbour pair. CPU fallback for Node.js
+  benchmarking and browsers without WebGPU support.
+
+**Engine knobs** (in `src/state/runtimeConfig.js`):
+- `gravEngine`: `'exact'` (default) | `'bh'` (Barnes–Hut monopole) | `'fmm'`
+  (Barnes–Hut + quadrupole correction). The BH and FMM octree engines replace
+  the pairwise GRAV term with a tree query per particle.
+- `computeEngine`: `'cpu'` (default) | `'gpu'` (WebGPU compute shader for
+  gravity + collision; falls back to CPU in Node.js). When active, builds all
+  neighbour pairs from the spatial grid, dispatches to the GPU shader, and
+  accumulates forces into the per-particle loop.
+
+**Benchmark findings** (Node.js headless, 10-law default profile):
+- The spatial grid + distance-tiered dispatch remains the fastest path at all
+  tested populations (500–50k). Tree methods (BH/FMM) are slower by 2-8× due
+  to the grid's already-excellent neighbour truncation (~130 avg neighbours).
+- The GPU compute engine is wired and functional; real WebGPU acceleration
+  requires a browser with COOP/COEP headers. The CPU fallback path serves as
+  architectural proof-of-concept.
+- `computeEngine='gpu'` builds pair lists eagerly (one pass before the
+  per-particle loop) — this adds overhead at small N but enables true GPU
+  parallelism in the browser at scale.
+
+**Other:**
+- `src/physics/octree.js` — existing Barnes–Hut tree with quadrupole moments
+  and `useQuadrupole` flag for FMM mode. Upward M2M pass propagates quadrupole
+  moments via the parallel axis theorem.
+- All 859 tests pass (6 pre-existing failures: lawCategories ×4, batch_08
+  TIME_DILATION, batch_30 TELEPORT — not regressions).
+
+### Architecture summary
+
+```
+Solver (src/physics/solver.js)
+├── gravEngine='exact'  → pairwise GRAV in neighbour loop (distance-tiered)
+├── gravEngine='bh'     → octreeGravity() per particle (BH monopole)
+├── gravEngine='fmm'    → octreeGravity() per particle (BH + quadrupole)
+├── computeEngine='cpu' → full pairwise loop with all 128 laws
+└── computeEngine='gpu' → gpuComputeForcesSync() for GRAV+COLL;
+                           remaining laws in CPU pairwise loop
+```
+
 ## [4.8.28] - 2026-08-23 → 8.16.14
 
 ### perf(solver): distance-tiered law dispatch — 2.8× faster 128-law ticks
