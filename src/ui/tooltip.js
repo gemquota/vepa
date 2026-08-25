@@ -3,7 +3,7 @@
  * Full-width info bar above the law grid showing the last-tapped law's
  * icon, name, category, HELP_DB description, and an on/off toggle.
  */
-import { LAW_INDEXES, LAW_HELP_DB, LAW_TO_CATEGORY, LAW_HUE_BY_INDEX } from '../constants.js';
+import { LAW_INDEXES, LAW_HELP_DB, LAW_TO_CATEGORY, LAW_HUE_BY_INDEX, LAW_SAT_BY_INDEX } from '../constants.js';
 import { isSet, toggle as toggleLaw } from '../state/lawState.js';
 import { LAW_HELP_PATCHES } from '../state/lawHelpPatches.js';
 
@@ -23,7 +23,7 @@ for (const [name, idx] of Object.entries(LAW_INDEXES)) {
 
 // Law icon symbols
 const LAW_ICONS = {
-  GRAV: '⬡', DRAG: '≋', ENTR: '~', WRAP: '◯', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
+  GRAV: '⬡', DRAG: '≋', ENTR: '~', BUOYANCY: '⌾', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
   VOID: '∅', BOND: '⛓',
   LIFE: '✦', GLOW: '☀', AFFINITY: '⇌', REPRO: '⚤', TRACK: '⌖', SENESCENCE: '☠',
   ENERGY: '⚡', RADIATION: '☢', GENOTYPE: '🧬', PHENOTYPE: '◈',
@@ -97,7 +97,7 @@ function showLawInfo(idx) {
 
   infoEl.innerHTML = `
     <div class="info-row">
-      <div class="info-icon" style="color:hsl(${hue} 90% 68%);--law-h:${hue}">${icon}</div>
+      <div class="info-icon" style="color:hsl(${hue} ${LAW_SAT_BY_INDEX[idx] ?? 90}% 68%);--law-h:${hue};--law-s:${LAW_SAT_BY_INDEX[idx] ?? 90}%">${icon}</div>
       <div class="info-body">
         <div class="info-header">
           <span class="info-title">${name}</span>

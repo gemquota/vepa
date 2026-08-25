@@ -18,9 +18,7 @@ const CATEGORY_COLORS = {
 };
 
 // Laws that have multi-state behavior and their max states
-const MULTI_STATE = {
-  [LAW_INDEXES.WRAP]: 4,
-};
+const MULTI_STATE = {}; // WRAP (the only multi-state law) retired — now the TOROIDAL EDGES world param
 
 // Build reverse lookup: law index → display name
 const LAW_NAME_BY_INDEX = {};

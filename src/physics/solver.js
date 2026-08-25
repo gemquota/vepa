@@ -46,6 +46,7 @@ import {
   applySoulDecay,
   applyMind,
   applyVoid,
+  applyBuoyancy,
   applyBond,
   applyReduction,
   applyTelepathy,
@@ -114,7 +115,7 @@ import {
   setBuffer,
 } from './laws.js';
 import { createSynergyCache } from './synergy.js';
-import { applyAlloy, isBondedPair, mergeParticles } from './mergePhysics.js';
+import { applyAlloy, adjoinParticles, isBondedPair, mergeParticles } from './mergePhysics.js';
 import { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation } from './lawgroups/physicsLaws.js';
 import { applyAdiabatic, applyCompression, applyExpansion, applyEquilibrium, applyLatentHeat, applyRunaway } from './lawgroups/thermoLaws.js';
 import { applySymbiosis, applyParasite, applyHibernation, applyImmunity } from './lawgroups/biologyLaws.js';
@@ -678,6 +679,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           // of continuous close proximity required for sub-threshold pairs
           // to fuse anyway.
           let fusing = false;
+          let adjoined = false;
           if (accrOn) {
             const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] ?? 1.0;
             const fusionTime = dnaI[DNA_INDEXES.FUSION_TIME] ?? 2;
@@ -697,12 +699,23 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
               view[iBase + S.PARTNER_ID] = -1;
             }
             view[iBase + S.MITOSIS_TIMER] = dwell;
+
+            // ── ACCR composite adjoining (v9.1.0) ──
+            // Half the fusion dwell CEMENTS the pair into an adjoined
+            // structure: both grains keep their identity and are linked via
+            // the shared bond slots, so rubble piles / dust aggregates grow
+            // alongside fully merged bodies. High-momentum impacts still
+            // merge; low-energy dwellers build structures instead.
+            if (!fusing && dwell >= fusionTime * 0.5) {
+              adjoinParticles(view, iBase, jBase, stride);
+            }
+            adjoined = isBondedPair(view, iBase, jBase, stride);
           }
 
           // ── COLL: softbody push + elastic bounce ──
           // Massive bodies squish instead of rigidly bouncing; fusing pairs
           // coalesce instead of bouncing apart.
-          if (collOn && !fusing) {
+          if (collOn && !fusing && !adjoined) {
             const isStarI = m1 > runtimeConfig.starMass;
             const isStarJ = m2 > runtimeConfig.starMass;
             const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
@@ -725,16 +738,31 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
                 view[jBase + S.WAVE_MEASURED] = 1;
               }
             }
-          } else if (accrOn && !collOn && relVelN > 0) {
+          } else if (accrOn && !collOn && relVelN > 0 && !adjoined) {
             // Sub-threshold ACCR-only contact: the pair "bounces" — a gentle
             // elastic separation so matter does not silently pass through
-            // while the dwell timer decides whether they fuse.
+            // while the dwell timer decides whether they fuse or adjoin.
             const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
             const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
             const bounceForce = impulse * m2;
             ax += bounceForce * nx;
             ay += bounceForce * ny;
             az += bounceForce * nz;
+          }
+
+          // ── Adjoined composite response (v9.1.0) ──
+          // No restitution: a perfectly inelastic normal impulse plus a
+          // cohesion spring toward touching rest length settle the seam, so
+          // structures hold together without jitter.
+          if (adjoined) {
+            const dampImpulse = -relVelN / (m1 + m2);
+            ax += dampImpulse * m2 * nx;
+            ay += dampImpulse * m2 * ny;
+            az += dampImpulse * m2 * nz;
+            const spring = (dist - (r1 + r2)) * 0.05;
+            ax += nx * spring;
+            ay += ny * spring;
+            az += nz * spring;
           }
 
           // ── ACCR: true accretion — the pair becomes ONE body (v8.0.0) ──
@@ -1223,6 +1251,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       az += voidForce.az;
     }
 
+    // Buoyancy (thermal lift — replaced WRAP at bit 3)
+    const buoyForce = applyBuoyancy(lawState, view, iBase);
+    if (buoyForce) az += buoyForce.az;
+
     // Dimensionality
     vz += applyDimensionality(lawState, view, iBase, prng, localTimeStep,
       syn[LAW_INDEXES.DIMENSIONALITY]);
@@ -1539,8 +1571,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // ── Toroidal wrapping ──
+    // TOROIDAL EDGES world param (the WRAP law was retired into WORLD →
+    // SIMULATION RULES): 1 = wrap around edges, 0 = soft walls (WALL REFLECT).
 
-    if (active[LAW_INDEXES.WRAP]) {
+    if (!Number.isFinite(WP.TOROIDAL) || WP.TOROIDAL !== 0) {
       px = ((px % worldSize) + worldSize) % worldSize;
       py = ((py % worldSize) + worldSize) % worldSize;
       pz = ((pz % worldSize) + worldSize) % worldSize;

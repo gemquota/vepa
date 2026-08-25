@@ -1,5 +1,23 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.3] - 2026-08-25 → 9.1.0
+
+### feat(law-recategorization): WRAP → BUOYANCY, slate Mechanics category, composite adjoined structures
+
+- **WRAP retired** (bit 3): toroidal wrapping is now the TOROIDAL EDGES world parameter; bit 3 reissued as **BUOYANCY** — thermal lift along −z (hot rises, cool sinks) coupled through HEAT_OUTPUT DNA.
+- **New Mechanics category** (slate grey, visually separated from the 8-point rainbow): TIDE, ELASTICITY, TURBULENCE, CENTRIPETAL, ROTATION moved out of Physics; Physics keeps GRAV, DRAG, ENTR, COLL, ACCR, PLANETARY, VOID, BOND, SINGULARITY, FUSION-era set plus BUOYANCY (11 laws).
+- **Composite adjoined structures (ACCR)**: alongside mass accretion, sustained gentle contact now CEMENTS pairs into composite structures — both grains keep their identity and are linked bilaterally via the shared bond slots (`adjoinParticles` in mergePhysics.js). Adjoining triggers at HALF the FUSION_TIME dwell; adjoined grains never mass-merge, and the seam uses an inelastic contact response (zero restitution + cohesion spring at touching rest length). High-momentum impacts still merge into ONE body as before.
+- ACCR LAW_HELP_DB entry updated to document both growth modes; HUD tick triple display reformatted; law grid/tooltip/law panel updated for the 9-category layout with slate hue handling.
+
+### Files
+
+- `src/constants.js` — LAW_CATEGORIES mechanics band, BUOYANCY index/help, ACCR help tiers
+- `src/physics/laws.js` — applyBuoyancy
+- `src/physics/solver.js` — adjoining dispatch + adjoined contact response in the contact block
+- `src/physics/mergePhysics.js` — adjoinParticles + ADJOIN taxonomy docs
+- `src/ui/{lawPanel,tooltip,hud,worldPanel}.js`, `style.css` — slate Mechanics category + HUD reformat
+- `src/state/{defaultPresets,worldParams}.js` — TOROIDAL EDGES param replacing WRAP behavior
+
 ## [4.9.2] - 2026-08-23 → 9.0.2
 
 ### feat(settings): selectable GPU/CPU backend with WebGPU parity harness

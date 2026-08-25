@@ -12,6 +12,11 @@ let physicsTickCount = 0;
 let lastPhysicsTime = 0;
 let ticksPerSecond = 0;
 
+// Tick triple formatter: TICK n | x.x TPS | xx FPS
+// Grouped tick digits keep large counters readable at a glance.
+const fmtTickTriple = (t, tps, fps) =>
+  `TICK ${(t < 0 ? 0 : t).toLocaleString('en-US')} │ ${tps.toFixed(1)} TPS │ ${Math.round(fps)} FPS`;
+
 const el = {
   particles: null,
   tick: null,
@@ -31,7 +36,7 @@ function tick(now) {
     fpsDisplay = frameCount;
     frameCount = 0;
     lastFpsTime = now;
-    if (el.tick) el.tick.textContent = `Tick ${lastTickShown < 0 ? 0 : lastTickShown} · ${ticksPerSecond.toFixed(1)} TPS · ${fpsDisplay} FPS`;
+    if (el.tick) el.tick.textContent = fmtTickTriple(lastTickShown, ticksPerSecond, fpsDisplay);
   }
   rafId = requestAnimationFrame(tick);
 }
@@ -82,7 +87,7 @@ export function createHUD(bus) {
         lastPhysicsTime = now;
       }
       lastTickShown = t;
-      el.tick.textContent = `Tick ${t} · ${ticksPerSecond.toFixed(1)} TPS · ${fpsDisplay} FPS`;
+      el.tick.textContent = fmtTickTriple(t, ticksPerSecond, fpsDisplay);
     }
   };
 

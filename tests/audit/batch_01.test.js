@@ -52,7 +52,7 @@ function makeWorld(count, setup) {
   return { view, dna };
 }
 
-describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
+describe('Batch 01 — GRAV / DRAG / ENTR / BUOYANCY (indices 0-3)', () => {
   it('GRAV: particles accelerate toward each other and separation decreases', () => {
     const { view, dna } = makeWorld(2, (v, dna, b, i) => {
       v[b + S.POS_X] = i === 0 ? 995 : 1005;
@@ -90,7 +90,8 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
       v[b + S.POS_X] = i === 0 ? 995 : 1005;
     });
     const laws = createLawState();
-    set(laws, LAW_INDEXES.WRAP);
+    // GLOW with zero SIGNAL keeps the sim running without adding any force.
+    set(laws, LAW_INDEXES.GLOW);
     for (let t = 0; t < 20; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(view[S.VEL_X]).toBe(0);
     expect(view[PARTICLE_STRIDE + S.VEL_X]).toBe(0);
@@ -103,7 +104,6 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     });
     const laws = createLawState();
     set(laws, LAW_INDEXES.DRAG);
-    set(laws, LAW_INDEXES.WRAP);
     const v0 = view[S.VEL_X];
     for (let t = 0; t < 60; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(Math.abs(view[S.VEL_X])).toBeLessThan(Math.abs(v0));
@@ -115,7 +115,6 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
       v[b + S.VEL_X] = 5;
     });
     const laws = createLawState();
-    set(laws, LAW_INDEXES.WRAP);
     for (let t = 0; t < 60; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(view[S.VEL_X]).toBeCloseTo(5, 5);
   });
@@ -126,7 +125,6 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     });
     const laws = createLawState();
     set(laws, LAW_INDEXES.ENTR);
-    set(laws, LAW_INDEXES.WRAP);
     const prng = lcg(12345);
     for (let t = 0; t < 80; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, prng);
     const speed = Math.hypot(view[S.VEL_X], view[S.VEL_Y], view[S.VEL_Z]);
@@ -138,26 +136,49 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
       v[b + S.DNA_CACHE_START + 3] = 5;
     });
     const laws = createLawState();
-    set(laws, LAW_INDEXES.WRAP);
     const prng = lcg(12345);
     for (let t = 0; t < 80; t++) solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, prng);
     expect(view[S.VEL_X]).toBe(0);
     expect(view[S.VEL_Y]).toBe(0);
   });
 
-  it('WRAP: particles crossing the edge reappear on the opposite side', () => {
+  it('BUOYANCY: hot particles rise (−z), cold particles sink (+z)', () => {
+    const { view, dna } = makeWorld(2, (v, dna, b, i) => {
+      v[b + S.TEMPERATURE] = i === 0 ? 1 : 0;
+      v[b + S.DNA_CACHE_START + 39] = 0.5; // HEAT_OUTPUT
+    });
+    const laws = createLawState();
+    set(laws, LAW_INDEXES.BUOYANCY);
+    solve(view, 2, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    expect(view[S.VEL_Z]).toBeLessThan(0);                        // hot → rises
+    expect(view[PARTICLE_STRIDE + S.VEL_Z]).toBeGreaterThan(0);   // cold → sinks
+  });
+
+  it('BUOYANCY gate: without it, temperature alone produces no vertical force', () => {
+    const { view, dna } = makeWorld(1, (v) => {
+      v[S.TEMPERATURE] = 1;
+    });
+    const laws = createLawState();
+    // GLOW with zero SIGNAL keeps the sim running without adding any force.
+    set(laws, LAW_INDEXES.GLOW);
+    solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    expect(view[S.VEL_Z]).toBe(0);
+  });
+
+  it('TOROIDAL EDGES on (default): particles crossing the edge reappear on the opposite side', () => {
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.POS_X] = WORLD - 5;
       v[b + S.VEL_X] = 10;
     });
+    // GLOW with zero SIGNAL keeps the sim running without adding any force.
     const laws = createLawState();
-    set(laws, LAW_INDEXES.WRAP);
+    set(laws, LAW_INDEXES.GLOW);
     for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
     expect(view[S.POS_X]).toBeGreaterThan(0);
     expect(view[S.POS_X]).toBeLessThan(10);
   });
 
-  it('WRAP gate: without WRAP, edges clamp and reflect at the WALL_REFLECT default', () => {
+  it('TOROIDAL EDGES off: soft walls clamp and reflect at the WALL_REFLECT default', () => {
     const { view, dna } = makeWorld(1, (v, dna, b) => {
       v[b + S.POS_X] = WORLD - 5;
       v[b + S.VEL_X] = 10;
@@ -165,12 +186,15 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
     const laws = createLawState();
     // GLOW with zero SIGNAL keeps the sim running without adding any force.
     set(laws, LAW_INDEXES.GLOW);
+    const prev = runtimeConfig.worldParams;
+    runtimeConfig.worldParams = { ...prev, TOROIDAL: 0 };
     for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
+    runtimeConfig.worldParams = prev;
     expect(view[S.POS_X]).toBeLessThan(WORLD);        // clamped inside the world
     expect(view[S.VEL_X]).toBeCloseTo(-10, 5);        // full 100% reflect (default)
   });
 
-  it('WRAP: WALL_REFLECT slider — 0 absorbs, 1 reflects, 2 doubles the bounce', () => {
+  it('WALL_REFLECT slider (with TOROIDAL off) — 0 absorbs, 1 reflects, 2 doubles the bounce', () => {
     const run = (wallReflect) => {
       const { view, dna } = makeWorld(1, (v, dna, b) => {
         v[b + S.POS_X] = WORLD - 5;
@@ -180,7 +204,7 @@ describe('Batch 01 — GRAV / DRAG / ENTR / WRAP (indices 0-3)', () => {
       // GLOW with zero SIGNAL keeps the sim running without adding any force.
       set(laws, LAW_INDEXES.GLOW);
       const prev = runtimeConfig.worldParams;
-      runtimeConfig.worldParams = { ...prev, WALL_REFLECT: wallReflect };
+      runtimeConfig.worldParams = { ...prev, TOROIDAL: 0, WALL_REFLECT: wallReflect };
       for (let t = 0; t < 3; t++) solve(view, 1, PARTICLE_STRIDE, laws, dna, WORLD, DT, rng);
       runtimeConfig.worldParams = prev;
       return { x: view[S.POS_X], vx: view[S.VEL_X] };

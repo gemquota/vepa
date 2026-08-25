@@ -53,12 +53,13 @@ function makeWorld(polarity) {
 }
 
 describe('New law categories', () => {
-  it('has 8 categories; all 128 laws mapped except WRAP (boundary condition)', () => {
+  it('has 9 categories; all 128 laws mapped (mechanics is the off-rainbow slate set)', () => {
     const names = Object.keys(LAW_CATEGORIES);
-    expect(names).toHaveLength(8);
-    expect(LAW_CATEGORIES.physics.laws).toHaveLength(15); // WRAP is a solver boundary condition
+    expect(names).toHaveLength(9);
+    expect(LAW_CATEGORIES.physics.laws).toHaveLength(11); // WRAP retired → BUOYANCY at bit 3
+    expect(LAW_CATEGORIES.mechanics.laws).toHaveLength(5); // TIDE/ELASTICITY/TURBULENCE/CENTRIPETAL/ROTATION
     for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
-      if (catName === 'physics') continue;
+      if (catName === 'physics' || catName === 'mechanics') continue;
       expect(cat.laws.length, `category ${catName}`).toBe(16);
     }
     expect(LAW_CATEGORIES.electromagnetism.laws.length).toBe(16);
@@ -66,23 +67,18 @@ describe('New law categories', () => {
     expect(LAW_CATEGORIES.quantum.laws.length).toBe(16);
     expect(LAW_COUNT).toBe(128);
     const mapped = Object.values(LAW_CATEGORIES).reduce((n, c) => n + c.laws.length, 0);
-    expect(mapped).toBe(127);
+    expect(mapped).toBe(128);
     for (let i = 0; i < LAW_COUNT; i++) {
-      if (i === LAW_INDEXES.WRAP) continue;
       expect(LAW_TO_CATEGORY[i], `law ${i}`).toBeDefined();
       expect(LAW_COLOR_BY_INDEX[i], `law ${i}`).toBeDefined();
     }
-    expect(LAW_TO_CATEGORY[LAW_INDEXES.WRAP]).toBeUndefined();
   });
 
-  it('every law except WRAP maps to exactly one category with a colour', () => {
+  it('every law maps to exactly one category with a colour', () => {
     for (let i = 0; i < LAW_COUNT; i++) {
-      if (i === LAW_INDEXES.WRAP) continue;
       expect(LAW_TO_CATEGORY[i], `law ${i}`).toBeDefined();
       expect(LAW_COLOR_BY_INDEX[i], `law ${i}`).toBeDefined();
     }
-    expect(LAW_TO_CATEGORY[LAW_INDEXES.WRAP]).toBeUndefined();
-    expect(LAW_COLOR_BY_INDEX[LAW_INDEXES.WRAP]).toBeUndefined();
     expect(LAW_COUNT).toBe(Math.max(...Object.values(LAW_INDEXES)) + 1);
   });
 
@@ -96,12 +92,6 @@ describe('New law categories', () => {
         expect(LAW_HELP_DB[name].system).toBeTruthy();
       }
     }
-    // WRAP lives outside the category maps but is still a documented law.
-    const wrapName = NAME_BY_IDX[LAW_INDEXES.WRAP];
-    expect(LAW_HELP_DB[wrapName], wrapName).toBeDefined();
-    expect(LAW_HELP_DB[wrapName].hint).toBeTruthy();
-    expect(LAW_HELP_DB[wrapName].explanation).toBeTruthy();
-    expect(LAW_HELP_DB[wrapName].system).toBeTruthy();
   });
 
   it('CHARGE_LAW is gated: no movement without it, Coulomb drift with it', () => {

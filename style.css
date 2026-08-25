@@ -206,10 +206,10 @@ body {
 }
 .law-btn.active {
   font-weight: 700;
-  background: hsl(var(--law-h, 210) 70% 24% / 0.8);
-  color: hsl(var(--law-h, 210) 95% 74%);
-  border-color: hsl(var(--law-h, 210) 85% 58%);
-  box-shadow: 0 0 8px hsl(var(--law-h, 210) 85% 60% / 0.35);
+  background: hsl(var(--law-h, 210) var(--law-s, 70%) 24% / 0.8);
+  color: hsl(var(--law-h, 210) var(--law-s, 95%) 74%);
+  border-color: hsl(var(--law-h, 210) var(--law-s, 85%) 58%);
+  box-shadow: 0 0 8px hsl(var(--law-h, 210) var(--law-s, 85%) 60% / 0.35);
 }
 
 /* DNA Slider */
@@ -835,8 +835,8 @@ body {
     color: var(--text-dim);
 }
 /* Category colour visible even when the law is off (bright when active) */
-.law-icon-grid .sq-toggle { color: hsl(var(--law-h, 210) 80% 72% / 0.55); border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
-.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.25); color: hsl(var(--law-h, 210) 95% 85%); }
+.law-icon-grid .sq-toggle { color: hsl(var(--law-h, 210) var(--law-s, 80%) 72% / 0.55); border-color: hsl(var(--law-h, 210) var(--law-s, 65%) 50% / 0.30); background: hsl(var(--law-h, 210) var(--law-s, 70%) 50% / 0.05); }
+.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) var(--law-s, 95%) 62%); background: hsl(var(--law-h, 210) var(--law-s, 85%) 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) var(--law-s, 85%) 60% / 0.25); color: hsl(var(--law-h, 210) var(--law-s, 95%) 85%); }
 
 /* ── World Sliders ── */
 .world-sliders {
@@ -1614,10 +1614,10 @@ body {
   letter-spacing: 0.5px;
 }
 /* Category-coloured icons in list mode (dim when inactive, bright when active) */
-#law-grid.word-mode .law-btn .tog-icon { color: hsl(var(--law-h, 210) 80% 74%); }
+#law-grid.word-mode .law-btn .tog-icon { color: hsl(var(--law-h, 210) var(--law-s, 80%) 74%); }
 /* Active list-mode laws get the full spectrum accent (matches icon mode) */
-#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.2); color: hsl(var(--law-h, 210) 95% 85%); }
-#law-grid.word-mode .law-btn { border-color: hsl(var(--law-h, 210) 65% 50% / 0.28); }
+#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) var(--law-s, 95%) 62%); background: hsl(var(--law-h, 210) var(--law-s, 85%) 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) var(--law-s, 85%) 60% / 0.2); color: hsl(var(--law-h, 210) var(--law-s, 95%) 85%); }
+#law-grid.word-mode .law-btn { border-color: hsl(var(--law-h, 210) var(--law-s, 65%) 50% / 0.28); }
 @media (max-width: 480px) {
   #law-grid.word-mode { grid-template-columns: repeat(3, 1fr); }
 }
@@ -2529,10 +2529,10 @@ body {
 #law-grid.hidden { display: none; }
 
 /* ── Dull spectrum tint when a law is OFF (icon mode) ── */
-.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); color: hsl(var(--law-h, 210) 80% 74% / 0.55); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
+.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) var(--law-s, 65%) 50% / 0.30); color: hsl(var(--law-h, 210) var(--law-s, 80%) 74% / 0.55); background: hsl(var(--law-h, 210) var(--law-s, 70%) 50% / 0.05); }
 
 /* ── Dull spectrum tint when a law is OFF (list mode) ── */
-#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) 80% 74% / 0.60); }
+#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) var(--law-s, 80%) 74% / 0.60); }
 /* Active list-mode icons inherit the bright button colour */
 #law-grid.word-mode .law-btn.active .tog-icon { color: inherit; }
 
@@ -2638,7 +2638,7 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.03);
 }
-.law-set-mini-icon { color: hsl(var(--law-h, 210) 90% 80% / 0.95); border-color: hsl(var(--law-h, 210) 70% 55% / 0.5); }
+.law-set-mini-icon { color: hsl(var(--law-h, 210) var(--law-s, 90%) 80% / 0.95); border-color: hsl(var(--law-h, 210) var(--law-s, 70%) 55% / 0.5); }
 .law-set-row-name {
   font-family: var(--font-mono);
   font-size: 8px;
@@ -2686,11 +2686,11 @@ body {
 }
 
 /* ── EM-spectrum law rainbow — all 8 categories, hue-driven ── */
-.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) 65% 50% / 0.30); color: hsl(var(--law-h, 210) 80% 74% / 0.55); background: hsl(var(--law-h, 210) 70% 50% / 0.05); }
-.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.25); color: hsl(var(--law-h, 210) 95% 85%); }
-#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) 80% 74% / 0.60); }
-#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) 95% 62%); background: hsl(var(--law-h, 210) 85% 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) 85% 60% / 0.2); color: hsl(var(--law-h, 210) 95% 85%); }
-.law-set-mini-icon { color: hsl(var(--law-h, 210) 90% 80% / 0.95); border-color: hsl(var(--law-h, 210) 70% 55% / 0.5); }
+.law-icon-grid .sq-toggle { border-color: hsl(var(--law-h, 210) var(--law-s, 65%) 50% / 0.30); color: hsl(var(--law-h, 210) var(--law-s, 80%) 74% / 0.55); background: hsl(var(--law-h, 210) var(--law-s, 70%) 50% / 0.05); }
+.law-icon-grid .sq-toggle.active { border-color: hsl(var(--law-h, 210) var(--law-s, 95%) 62%); background: hsl(var(--law-h, 210) var(--law-s, 85%) 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) var(--law-s, 85%) 60% / 0.25); color: hsl(var(--law-h, 210) var(--law-s, 95%) 85%); }
+#law-grid.word-mode .law-btn { color: hsl(var(--law-h, 210) var(--law-s, 80%) 74% / 0.60); }
+#law-grid.word-mode .law-btn.active { border-color: hsl(var(--law-h, 210) var(--law-s, 95%) 62%); background: hsl(var(--law-h, 210) var(--law-s, 85%) 55% / 0.15); box-shadow: 0 0 6px hsl(var(--law-h, 210) var(--law-s, 85%) 60% / 0.2); color: hsl(var(--law-h, 210) var(--law-s, 95%) 85%); }
+.law-set-mini-icon { color: hsl(var(--law-h, 210) var(--law-s, 90%) 80% / 0.95); border-color: hsl(var(--law-h, 210) var(--law-s, 70%) 55% / 0.5); }
 
 /* ── Multiplex long-press tooltips (v4.6.28) ── */
 #mpx-tooltip {

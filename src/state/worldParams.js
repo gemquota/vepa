@@ -27,6 +27,7 @@ export const WORLD_PARAM_DEFS = [
   { key: 'VISCOSITY', label: 'GLOBAL VISCOSITY', min: 0.5, max: 1, default: 1, step: 0.01, group: 'PHYSICS', subgroup: 'MOTION' },
   { key: 'ENTROPY', label: 'ENTROPY', min: 0, max: 2, default: 1, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' },
   { key: 'WALL_REFLECT', label: 'WALL REFLECT', min: 0, max: 2, default: 1, step: 0.05, group: 'PHYSICS', subgroup: 'MOTION' }, // 0 = 100% absorption, 1 = 100% reflect, 2 = 200% reflect
+  { key: 'TOROIDAL', label: 'TOROIDAL EDGES', min: 0, max: 1, default: 1, step: 1, group: 'PHYSICS', subgroup: 'MOTION' }, // 1 = wrap around edges (was the WRAP law), 0 = soft walls governed by WALL REFLECT
   { key: 'RESONANCE_Q', label: 'RESONANCE Q', min: 1, max: 20, default: 10, step: 1, group: 'PHYSICS', subgroup: 'SIGNAL' }, // resonance bandwidth = 1/Q (law-RRP RESONANCE gate)
   // ── ENVIRONMENT ──
   { key: 'HEAT_CAPACITY', label: 'HEAT CAPACITY', min: 0.1, max: 10, default: 1, step: 0.5, group: 'ENVIRONMENT', subgroup: 'THERMAL' },
