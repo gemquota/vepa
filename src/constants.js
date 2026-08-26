@@ -500,15 +500,15 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.BOND,
       LAW_INDEXES.SINGULARITY,
       LAW_INDEXES.FRICTION,
+      LAW_INDEXES.TIDE,
     ],
   },
 
-  // Mechanics (Slate) — rotational/structural force laws, kept visually
-  // separate from the eight rainbow categories.
+  // Mechanics (Slate) — rotational and structural response. TIDE remains in
+  // Physics because its implementation is explicitly gravity-gradient based.
   mechanics: {
     color: 'SLATE',
     laws: [
-      LAW_INDEXES.TIDE,
       LAW_INDEXES.ELASTICITY,
       LAW_INDEXES.TURBULENCE,
       LAW_INDEXES.CENTRIPETAL,

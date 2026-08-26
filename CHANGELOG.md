@@ -1,5 +1,21 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.4] - 2026-08-26 → 9.1.1
+
+### fix(categories): restore gravity classification and complete Mechanics UI wiring
+
+- Move TIDE back to Physics because its implementation is gravity-gradient based.
+- Keep Mechanics as the slate-grey separated category and expose it in the law panel and setup filters.
+- Preserve the exact 128-bit law contract without adding inert placeholder laws.
+- Keep ANTIMATTER and HYPERPLANE unchanged in Quantum; both remain implemented and dispatched.
+- Prevent the synchronous solver from silently bypassing complete law semantics through the GPU pre-pass.
+
+### Files
+
+- `src/constants.js`, `src/ui/lawPanel.js`, `index.html` — category mapping and Mechanics UI.
+- `src/physics/solver.js` — exact CPU law dispatch remains authoritative.
+- `tests/unit/lawCategories.test.js` — updated Physics/Mechanics assertions.
+
 ## [4.9.3] - 2026-08-25 → 9.1.0
 
 ### feat(law-recategorization): WRAP → BUOYANCY, slate Mechanics category, composite adjoined structures

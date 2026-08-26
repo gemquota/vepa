@@ -56,8 +56,8 @@ describe('New law categories', () => {
   it('has 9 categories; all 128 laws mapped (mechanics is the off-rainbow slate set)', () => {
     const names = Object.keys(LAW_CATEGORIES);
     expect(names).toHaveLength(9);
-    expect(LAW_CATEGORIES.physics.laws).toHaveLength(11); // WRAP retired → BUOYANCY at bit 3
-    expect(LAW_CATEGORIES.mechanics.laws).toHaveLength(5); // TIDE/ELASTICITY/TURBULENCE/CENTRIPETAL/ROTATION
+    expect(LAW_CATEGORIES.physics.laws).toHaveLength(12); // TIDE remains with gravity-related physics
+    expect(LAW_CATEGORIES.mechanics.laws).toHaveLength(4); // ELASTICITY/TURBULENCE/CENTRIPETAL/ROTATION
     for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
       if (catName === 'physics' || catName === 'mechanics') continue;
       expect(cat.laws.length, `category ${catName}`).toBe(16);

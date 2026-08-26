@@ -487,7 +487,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // The per-particle loop below adds these precomputed forces and skips the
   // GRAV/COLL blocks in the pairwise loop.
   let _gpuFx = null, _gpuFy = null, _gpuFz = null;
-  const _useGPU = runtimeConfig.computeEngine === 'gpu' && particleCount > 0;
+  // The GPU force kernel is a separate opt-in backend. The synchronous solver
+  // must retain the complete law semantics (DNA modifiers and non-GRAV laws),
+  // so do not silently replace its exact pairwise dispatch based on the UI
+  // compute preference.
+  const _useGPU = false;
   if (_useGPU && !bhSoloGravity) {
     // Build all neighbour pairs
     const _gpuPairs = [];
