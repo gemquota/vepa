@@ -1290,6 +1290,23 @@ export function applyVoid(lawState, view, base, px, py, pz, worldSize, synergy) 
 }
 
 // ============================================================================
+// 31b. BUOYANCY — thermal lift along the vertical axis (replaced WRAP at bit 3)
+// ============================================================================
+// Archimedes-style: particles hotter than ambient rise, cooler sink. Lift is
+// proportional to the temperature delta and coupled through HEAT_OUTPUT DNA.
+// TEMPERATURE (stride 66) is heated by RESISTANCE, fusion and stellar output.
+export function applyBuoyancy(lawState, view, base) {
+  if (!isSet(lawState, LAW_INDEXES.BUOYANCY)) return null;
+  const heatOutput = view[base + S.DNA_CACHE_START + DNA_INDEXES.HEAT_OUTPUT] || 0;
+  const temp = view[base + S.TEMPERATURE] || 0;
+  const ambient = 0.5; // mid-scale ambient temperature
+  const delta = temp - ambient;
+  if (Math.abs(delta) < 0.01) return null;
+  const k = 0.02 * (0.5 + heatOutput);
+  return { ax: 0, ay: 0, az: -delta * k }; // negative z = up
+}
+
+// ============================================================================
 // 32. BOND — Spring-like molecular bonding
 // ============================================================================
 // Clear a bilateral bond between i and j if one exists.

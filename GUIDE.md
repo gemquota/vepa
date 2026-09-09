@@ -6,6 +6,9 @@
 
 This guide is not a manual for sliders; it is a strategic framework for **Universal Design**. In VEPA, the species are your clay, and the DNA rules are your tools.
 
+### Technical specification tree
+For implementation-level inspection, use the generated [`docs/spec/`](./docs/spec/README.md) tree. It separates UI appearance/function, simulation and similar concepts, state/persistence, law records, source modules, testing, operations, and traceability. Run `npm run spec:generate` after source changes and `npm run spec:check` to detect drift.
+
 ---
 
 ## 1. The Trinity of Structure

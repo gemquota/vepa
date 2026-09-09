@@ -1,14 +1,14 @@
 /**
- * 128-law bitmask system using four Uint32Arrays.
+ * 136-law bitmask system using five Uint32Arrays.
  * Laws 0-31 → lowFlags, Laws 32-63 → highFlags, Laws 64-95 → extFlags,
- * Laws 96-127 → quadFlags.
+ * Laws 96-127 → quadFlags, Laws 128-135 → pentaFlags.
  */
 
 import { LAW_DEPENDENCIES } from '../constants.js';
 
 /**
  * Create a fresh law state with all laws off.
- * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array }}
+ * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array, pentaFlags: Uint32Array }}
  */
 export function createLawState() {
     return {
@@ -16,21 +16,25 @@ export function createLawState() {
         highFlags: new Uint32Array(1),
         extFlags: new Uint32Array(1),
         quadFlags: new Uint32Array(1),
+        pentaFlags: new Uint32Array(1),
     };
 }
 
 /**
- * Toggle a law on/off by index (0-127).
+ * Toggle a law on/off by index (0-135).
  */
 export function toggle(state, lawIndex) {
+    assertLawIndex(lawIndex);
     if (lawIndex < 32) {
         state.lowFlags[0] ^= (1 << lawIndex);
     } else if (lawIndex < 64) {
         state.highFlags[0] ^= (1 << (lawIndex - 32));
     } else if (lawIndex < 96) {
         state.extFlags[0] ^= (1 << (lawIndex - 64));
-    } else {
+    } else if (lawIndex < 128) {
         state.quadFlags[0] ^= (1 << (lawIndex - 96));
+    } else {
+        state.pentaFlags[0] ^= (1 << (lawIndex - 128));
     }
 }
 
@@ -38,14 +42,17 @@ export function toggle(state, lawIndex) {
  * Turn a law on (no-op if already on).
  */
 export function set(state, lawIndex) {
+    assertLawIndex(lawIndex);
     if (lawIndex < 32) {
         state.lowFlags[0] |= (1 << lawIndex);
     } else if (lawIndex < 64) {
         state.highFlags[0] |= (1 << (lawIndex - 32));
     } else if (lawIndex < 96) {
         state.extFlags[0] |= (1 << (lawIndex - 64));
-    } else {
+    } else if (lawIndex < 128) {
         state.quadFlags[0] |= (1 << (lawIndex - 96));
+    } else {
+        state.pentaFlags[0] |= (1 << (lawIndex - 128));
     }
 }
 
@@ -53,14 +60,17 @@ export function set(state, lawIndex) {
  * Turn a law off (no-op if already off).
  */
 export function clear(state, lawIndex) {
+    assertLawIndex(lawIndex);
     if (lawIndex < 32) {
         state.lowFlags[0] &= ~(1 << lawIndex);
     } else if (lawIndex < 64) {
         state.highFlags[0] &= ~(1 << (lawIndex - 32));
     } else if (lawIndex < 96) {
         state.extFlags[0] &= ~(1 << (lawIndex - 64));
-    } else {
+    } else if (lawIndex < 128) {
         state.quadFlags[0] &= ~(1 << (lawIndex - 96));
+    } else {
+        state.pentaFlags[0] &= ~(1 << (lawIndex - 128));
     }
 }
 
@@ -69,14 +79,17 @@ export function clear(state, lawIndex) {
  * @returns {boolean}
  */
 export function isSet(state, lawIndex) {
+    assertLawIndex(lawIndex);
     if (lawIndex < 32) {
         return (state.lowFlags[0] & (1 << lawIndex)) !== 0;
     } else if (lawIndex < 64) {
         return (state.highFlags[0] & (1 << (lawIndex - 32))) !== 0;
     } else if (lawIndex < 96) {
         return (state.extFlags[0] & (1 << (lawIndex - 64))) !== 0;
-    } else {
+    } else if (lawIndex < 128) {
         return (state.quadFlags[0] & (1 << (lawIndex - 96))) !== 0;
+    } else {
+        return (state.pentaFlags[0] & (1 << (lawIndex - 128))) !== 0;
     }
 }
 
@@ -85,15 +98,15 @@ export function isSet(state, lawIndex) {
  * @returns {number}
  */
 export function getActiveCount(state) {
-    return popcount(state.lowFlags[0]) + popcount(state.highFlags[0]) + popcount(state.extFlags[0]) + popcount(state.quadFlags[0]);
+    return popcount(state.lowFlags[0]) + popcount(state.highFlags[0]) + popcount(state.extFlags[0]) + popcount(state.quadFlags[0]) + popcount(state.pentaFlags[0]);
 }
 
 /**
- * Return a 128-element boolean array representing all law states.
+ * Return a 136-element boolean array representing all law states.
  * @returns {boolean[]}
  */
 export function getStateVector(state) {
-    const vector = new Array(128);
+    const vector = new Array(136);
     for (let i = 0; i < 32; i++) {
         vector[i] = (state.lowFlags[0] & (1 << i)) !== 0;
     }
@@ -106,29 +119,33 @@ export function getStateVector(state) {
     for (let i = 0; i < 32; i++) {
         vector[96 + i] = (state.quadFlags[0] & (1 << i)) !== 0;
     }
+    for (let i = 0; i < 8; i++) {
+        vector[128 + i] = (state.pentaFlags[0] & (1 << i)) !== 0;
+    }
     return vector;
 }
 
 /**
  * Create a law state from a boolean array.
- * @param {boolean[]} vector - Array of at least 128 booleans
- * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array }}
+ * @param {boolean[]} vector - Array of at least 136 booleans
+ * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array, pentaFlags: Uint32Array }}
  */
 export function fromVector(vector) {
     const state = createLawState();
-    for (let i = 0; i < 128 && i < vector.length; i++) {
+    for (let i = 0; i < 136 && i < vector.length; i++) {
         if (!vector[i]) continue;
         if (i < 32) state.lowFlags[0] |= (1 << i);
         else if (i < 64) state.highFlags[0] |= (1 << (i - 32));
         else if (i < 96) state.extFlags[0] |= (1 << (i - 64));
-        else state.quadFlags[0] |= (1 << (i - 96));
+        else if (i < 128) state.quadFlags[0] |= (1 << (i - 96));
+        else state.pentaFlags[0] |= (1 << (i - 128));
     }
     return state;
 }
 
 /**
  * Serialize to a plain object for persistence (JSON-safe).
- * @returns {{ low: number, high: number, ext: number, quad: number }}
+ * @returns {{ low: number, high: number, ext: number, quad: number, penta: number }}
  */
 export function serialize(state) {
     return {
@@ -136,14 +153,15 @@ export function serialize(state) {
         high: state.highFlags[0],
         ext: state.extFlags[0],
         quad: state.quadFlags[0],
+        penta: state.pentaFlags[0],
     };
 }
 
 /**
  * Restore law state from a serialized form.
- * Accepts legacy { low, high, ext } objects — quad defaults to 0.
- * @param {{ low: number, high: number, ext?: number, quad?: number }} data
- * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array }}
+ * Accepts legacy { low, high, ext } objects; quad and penta default to 0.
+ * @param {{ low: number, high: number, ext?: number, quad?: number, penta?: number }} data
+ * @returns {{ lowFlags: Uint32Array, highFlags: Uint32Array, extFlags: Uint32Array, quadFlags: Uint32Array, pentaFlags: Uint32Array }}
  */
 export function deserialize(data) {
     const state = createLawState();
@@ -151,10 +169,17 @@ export function deserialize(data) {
     state.highFlags[0] = data.high || 0;
     state.extFlags[0] = data.ext || 0;
     state.quadFlags[0] = data.quad || 0;
+    state.pentaFlags[0] = data.penta || 0;
     return state;
 }
 
 // ── Internal helpers ──
+
+function assertLawIndex(lawIndex) {
+    if (!Number.isInteger(lawIndex) || lawIndex < 0 || lawIndex >= 136) {
+        throw new RangeError(`Law index must be an integer in [0, 135], got ${lawIndex}`);
+    }
+}
 
 function popcount(x) {
     x = x - ((x >>> 1) & 0x55555555);

@@ -46,6 +46,7 @@ import {
   applySoulDecay,
   applyMind,
   applyVoid,
+  applyBuoyancy,
   applyBond,
   applyReduction,
   applyTelepathy,
@@ -114,8 +115,9 @@ import {
   setBuffer,
 } from './laws.js';
 import { createSynergyCache } from './synergy.js';
-import { applyAlloy, isBondedPair, mergeParticles } from './mergePhysics.js';
-import { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation } from './lawgroups/physicsLaws.js';
+import { applyAlloy, adjoinParticles, isBondedPair, mergeParticles } from './mergePhysics.js';
+import { applyTide, applyFriction, applyHorizon, applyRadiationPressure, applyMassInertia, applyField } from './lawgroups/physicsLaws.js';
+import { applyContact, applyMomentum, applyInertia, applyTorque, applyConstraint, applyFragmentation, applyTopology, applyAdhesion } from './lawgroups/mechanicsLaws.js';
 import { applyAdiabatic, applyCompression, applyExpansion, applyEquilibrium, applyLatentHeat, applyRunaway } from './lawgroups/thermoLaws.js';
 import { applySymbiosis, applyParasite, applyHibernation, applyImmunity } from './lawgroups/biologyLaws.js';
 import { applyElectrolysis, applyPhotolysis, applyPrecipitation, applyNeutralization, applyStoichiometry, applyAutocatalysis } from './lawgroups/chemistryLaws.js';
@@ -176,7 +178,7 @@ const _stigOut = { ax: 0, ay: 0, az: 0 };
 // in microseconds.  The flag is toggled by the bench runner; production code
 // sees a compile-time-false branch that the JIT will eliminate.
 let _benchMode = false;
-const _lawTimings = new Float64Array(128); // µs per law, reset each tick
+const _lawTimings = new Float64Array(LAW_COUNT); // µs per law, reset each tick
 let _tickStart = 0;
 let _lastTickUs = 0; // total µs of last completed tick
 
@@ -186,7 +188,7 @@ export function getLastTickUs() { return _lastTickUs; }
 
 // ── Persistent caches (recomputed only when the law flags actually change) ──
 let _activeCache = new Uint8Array(0);
-let _activeLo = -1, _activeHi = -1, _activeEx = -1, _activeQu = -1;
+let _activeLo = -1, _activeHi = -1, _activeEx = -1, _activeQu = -1, _activePe = -1;
 let _synCache = null;
 
 // ── Spatial Grid (module-scoped, reused across ticks) ──
@@ -240,7 +242,8 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     lawState.lowFlags[0] === 0 &&
     lawState.highFlags[0] === 0 &&
     (lawState.extFlags ? lawState.extFlags[0] === 0 : true) &&
-    (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true)
+    (lawState.quadFlags ? lawState.quadFlags[0] === 0 : true) &&
+    (lawState.pentaFlags ? lawState.pentaFlags[0] === 0 : true)
   ) {
     // Bench mode: the early return skips the tick clock below, so record an
     // explicit zero — otherwise getLastTickUs() would report the previous
@@ -263,8 +266,9 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   const hi = lawState.highFlags[0] | 0;
   const ex = lawState.extFlags ? lawState.extFlags[0] | 0 : 0;
   const qu = lawState.quadFlags ? lawState.quadFlags[0] | 0 : 0;
+  const pe = lawState.pentaFlags ? lawState.pentaFlags[0] | 0 : 0;
   let syn, active;
-  if (_synCache && lo === _activeLo && hi === _activeHi && ex === _activeEx && qu === _activeQu) {
+  if (_synCache && lo === _activeLo && hi === _activeHi && ex === _activeEx && qu === _activeQu && pe === _activePe) {
     syn = _synCache;
     active = _activeCache;
   } else {
@@ -273,7 +277,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     for (let i = 0; i < LAW_COUNT; i++) _activeCache[i] = isSet(lawState, i) ? 1 : 0;
     active = _activeCache;
     _synCache = syn;
-    _activeLo = lo; _activeHi = hi; _activeEx = ex; _activeQu = qu;
+    _activeLo = lo; _activeHi = hi; _activeEx = ex; _activeQu = qu; _activePe = pe;
   }
 
   // World parameters (WORLD panel sliders) — read live from runtimeConfig.
@@ -286,14 +290,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // neighbour gather — and therefore total pairwise work — stays ~flat as N
   // grows (dim ≈ ∛(N / 0.5), clamped to the slider range). The density target
   // is ~0.5 particles/cell, which keeps the 27-cell gather sparse at every
-  // population: ~17³ at 2.5k (the old ∛(N/1.4) formula floored ≤2,500 worlds
-  // at 12³ — ~39 neighbours/particle and a ~28 ms default 15-law tick), ~27³
-  // at 10k, ~37³ at 25k, ~59³ at 100k. Measured sweeps (2.5k / 10k / 25k /
-  // 100k) show every population strictly faster with the finer grid — e.g.
-  // 2.5k: 31.4 ms at 12³ → 12.4 ms at 18³; 100k: 1656 ms at 42³ → ~1170 ms at
-  // 56³ — with diminishing returns past ~0.5/cell, where the per-tick grid
-  // rebuild starts eating the pair savings. The classic 12³ floor remains the
-  // minimum, so tiny populations behave exactly as before.
+  // population: ~17³ at 2.5k, ~27³ at 10k, ~37³ at 25k, ~59³ at 100k. The
+  // finer grid reduces pairwise work at larger populations, with diminishing
+  // returns once grid rebuild cost dominates. The classic 12³ floor remains
+  // the minimum, so tiny populations stay bounded.
   const configuredInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
   // Adaptive quality bounds the pairwise work per particle for large worlds.
   // It is deterministic for a given population/config and only reduces the
@@ -486,7 +486,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // The per-particle loop below adds these precomputed forces and skips the
   // GRAV/COLL blocks in the pairwise loop.
   let _gpuFx = null, _gpuFy = null, _gpuFz = null;
-  const _useGPU = runtimeConfig.computeEngine === 'gpu' && particleCount > 0;
+  // The GPU force kernel is a separate opt-in backend. The synchronous solver
+  // must retain the complete law semantics (DNA modifiers and non-GRAV laws),
+  // so do not silently replace its exact pairwise dispatch based on the UI
+  // compute preference.
+  const _useGPU = false;
   if (_useGPU && !bhSoloGravity) {
     // Build all neighbour pairs
     const _gpuPairs = [];
@@ -678,6 +682,7 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
           // of continuous close proximity required for sub-threshold pairs
           // to fuse anyway.
           let fusing = false;
+          let adjoined = false;
           if (accrOn) {
             const fusionMom = dnaI[DNA_INDEXES.FUSION_MOMENTUM] ?? 1.0;
             const fusionTime = dnaI[DNA_INDEXES.FUSION_TIME] ?? 2;
@@ -697,12 +702,23 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
               view[iBase + S.PARTNER_ID] = -1;
             }
             view[iBase + S.MITOSIS_TIMER] = dwell;
+
+            // ── ACCR composite adjoining (v9.1.0) ──
+            // Half the fusion dwell CEMENTS the pair into an adjoined
+            // structure: both grains keep their identity and are linked via
+            // the shared bond slots, so rubble piles / dust aggregates grow
+            // alongside fully merged bodies. High-momentum impacts still
+            // merge; low-energy dwellers build structures instead.
+            if (!fusing && dwell >= fusionTime * 0.5) {
+              adjoinParticles(view, iBase, jBase, stride);
+            }
+            adjoined = isBondedPair(view, iBase, jBase, stride);
           }
 
           // ── COLL: softbody push + elastic bounce ──
           // Massive bodies squish instead of rigidly bouncing; fusing pairs
           // coalesce instead of bouncing apart.
-          if (collOn && !fusing) {
+          if (collOn && !fusing && !adjoined) {
             const isStarI = m1 > runtimeConfig.starMass;
             const isStarJ = m2 > runtimeConfig.starMass;
             const push = overlap * (isStarI || isStarJ ? 0.2 : 0.5);
@@ -725,16 +741,31 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
                 view[jBase + S.WAVE_MEASURED] = 1;
               }
             }
-          } else if (accrOn && !collOn && relVelN > 0) {
+          } else if (accrOn && !collOn && relVelN > 0 && !adjoined) {
             // Sub-threshold ACCR-only contact: the pair "bounces" — a gentle
             // elastic separation so matter does not silently pass through
-            // while the dwell timer decides whether they fuse.
+            // while the dwell timer decides whether they fuse or adjoin.
             const elasticity = dnaI[DNA_INDEXES.ELASTICITY] || 0.5;
             const impulse = -(1 + elasticity) * relVelN / (m1 + m2);
             const bounceForce = impulse * m2;
             ax += bounceForce * nx;
             ay += bounceForce * ny;
             az += bounceForce * nz;
+          }
+
+          // ── Adjoined composite response (v9.1.0) ──
+          // No restitution: a perfectly inelastic normal impulse plus a
+          // cohesion spring toward touching rest length settle the seam, so
+          // structures hold together without jitter.
+          if (adjoined) {
+            const dampImpulse = -relVelN / (m1 + m2);
+            ax += dampImpulse * m2 * nx;
+            ay += dampImpulse * m2 * ny;
+            az += dampImpulse * m2 * nz;
+            const spring = (dist - (r1 + r2)) * 0.05;
+            ax += nx * spring;
+            ay += ny * spring;
+            az += nz * spring;
           }
 
           // ── ACCR: true accretion — the pair becomes ONE body (v8.0.0) ──
@@ -1099,9 +1130,47 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
         const tideForce = applyTide(view, iBase, jBase, dx, dy, dz, dist, 0.3);
         if (tideForce) { ax += tideForce.ax; ay += tideForce.ay; az += tideForce.az; }
       }
-      if (active[LAW_INDEXES.ELASTICITY]) {
-        const elasForce = applyElasticity(view, iBase, jBase, dx, dy, dz, dist, 1.0);
-        if (elasForce) { ax += elasForce.ax; ay += elasForce.ay; az += elasForce.az; }
+      if (active[LAW_INDEXES.HORIZON]) {
+        const f = applyHorizon(view, iBase, jBase, dx, dy, dz, dist, 0.08 * syn[LAW_INDEXES.HORIZON]);
+        if (f) { ax += f.ax; ay += f.ay; az += f.az; }
+      }
+      if (active[LAW_INDEXES.RADIATION_PRESSURE]) {
+        const f = applyRadiationPressure(view, iBase, jBase, dx, dy, dz, dist, 0.12 * syn[LAW_INDEXES.RADIATION_PRESSURE]);
+        if (f) { ax += f.ax; ay += f.ay; az += f.az; }
+      }
+      if (active[LAW_INDEXES.FIELD]) {
+        const f = applyField(view, iBase, halfWorld, halfWorld, halfWorld, 0.02 * syn[LAW_INDEXES.FIELD]);
+        ax += f.ax; ay += f.ay; az += f.az;
+      }
+
+      // Slate Mechanics
+      if (active[LAW_INDEXES.CONTACT]) {
+        const f = applyContact(view, iBase, jBase, dx, dy, dz, dist, 1.0);
+        if (f) { ax += f.ax; ay += f.ay; az += f.az; }
+      }
+      if (active[LAW_INDEXES.MOMENTUM]) {
+        const f = applyMomentum(view, iBase, jBase, 0.04);
+        ax += f.ax; ay += f.ay; az += f.az;
+      }
+      if (active[LAW_INDEXES.TORQUE]) {
+        const f = applyTorque(view, iBase, jBase, dx, dy, dz, 0.01);
+        ax += f.ax; ay += f.ay; az += f.az;
+      }
+      if (active[LAW_INDEXES.CONSTRAINT]) {
+        const f = applyConstraint(view, iBase, jBase, dx, dy, dz, dist, 0.03);
+        ax += f.ax; ay += f.ay; az += f.az;
+      }
+      if (active[LAW_INDEXES.FRAGMENTATION]) {
+        const f = applyFragmentation(view, iBase, jBase, dx, dy, dz, dist, 0.02);
+        if (f) { ax += f.ax; ay += f.ay; az += f.az; }
+      }
+      if (active[LAW_INDEXES.TOPOLOGY]) {
+        const f = applyTopology(view, iBase, jBase, dx, dy, dz, dist, 0.01);
+        ax += f.ax; ay += f.ay; az += f.az;
+      }
+      if (active[LAW_INDEXES.ADHESION]) {
+        const f = applyAdhesion(view, iBase, jBase, dx, dy, dz, dist, 0.015);
+        if (f) { ax += f.ax; ay += f.ay; az += f.az; }
       }
 
       // Biology
@@ -1222,6 +1291,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
       ay += voidForce.ay;
       az += voidForce.az;
     }
+
+    // Buoyancy (thermal lift — replaced WRAP at bit 3)
+    const buoyForce = applyBuoyancy(lawState, view, iBase);
+    if (buoyForce) az += buoyForce.az;
 
     // Dimensionality
     vz += applyDimensionality(lawState, view, iBase, prng, localTimeStep,
@@ -1539,8 +1612,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
     }
 
     // ── Toroidal wrapping ──
+    // TOROIDAL EDGES world param (the WRAP law was retired into WORLD →
+    // SIMULATION RULES): 1 = wrap around edges, 0 = soft walls (WALL REFLECT).
 
-    if (active[LAW_INDEXES.WRAP]) {
+    if (!Number.isFinite(WP.TOROIDAL) || WP.TOROIDAL !== 0) {
       px = ((px % worldSize) + worldSize) % worldSize;
       py = ((py % worldSize) + worldSize) % worldSize;
       pz = ((pz % worldSize) + worldSize) % worldSize;

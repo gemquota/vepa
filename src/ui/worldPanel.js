@@ -3,7 +3,7 @@
  * Category filter tabs + law grid (icon ⇄ settings-style word mode) +
  * world parameter sliders grouped into accordion sections.
  */
-import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT, LAW_SPECTRUM, LAW_HUE_BY_INDEX } from '../constants.js';
+import { LAW_INDEXES, LAW_CATEGORIES, LAW_COUNT, LAW_SPECTRUM, LAW_HUE_BY_INDEX, LAW_SAT_BY_INDEX } from '../constants.js';
 import { isSet, set as setLaw, clear as clearLaw, toggle as toggleLaw } from '../state/lawState.js';
 import { WORLD_PARAM_DEFS } from '../state/worldParams.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
@@ -11,7 +11,7 @@ import { createSliderRow } from './sliderControl.js';
 
 // Law icon symbols (matching v2 aesthetic)
 const LAW_ICONS = {
-  GRAV: '⬡', DRAG: '≋', ENTR: '~', WRAP: '◯', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
+  GRAV: '⬡', DRAG: '≋', ENTR: '~', BUOYANCY: '⌾', COLL: '⊕', ACCR: '⊞', PLANETARY: '♁',
   VOID: '∅', BOND: '⛓',
   LIFE: '✦', GLOW: '☀', AFFINITY: '⇌', REPRO: '⚤', TRACK: '⌖', SENESCENCE: '☠', PREDATION: '⚔',
   ENERGY: '⚡', RADIATION: '☢', GENOTYPE: '🧬', PHENOTYPE: '◈',
@@ -65,7 +65,7 @@ let iconSize = 'big';   // 'big' | 'compact' — icon tile size (v8.1 toggle)
 // ── Law set presets (theorycrafted) ─────────────────────────────
 // Each preset lists law names; indices resolve via LAW_INDEXES at load.
 export const LAW_SET_PRESETS = [
-  { name: 'PRIME DIRECTIVE', laws: ['GRAV', 'DRAG', 'WRAP', 'COLL'] },
+  { name: 'PRIME DIRECTIVE', laws: ['GRAV', 'DRAG', 'COLL', 'BOND'] },
   { name: 'ORIGIN SOUP', laws: ['LIFE', 'REPRO', 'ENERGY', 'AFFINITY'] },
   { name: 'NEUTRON STAR', laws: ['GRAV', 'ACCR', 'PLANETARY', 'HEAT', 'COLD'] },
   { name: 'PREDATOR PREY', laws: ['TRACK', 'PREDATION', 'AFFINITY', 'REPRO'] },
@@ -226,9 +226,10 @@ function renderLawGrid(grid, lawStateObj, bus) {
   // One row per law category (physics / biology / chemistry / thermo / meta)
   for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
     const band = LAW_SPECTRUM[cat.color] || LAW_SPECTRUM.BLUE;
-    const centerHue = Math.round(band.center * 3.6);
+    const centerHue = band.grey ? band.hue : Math.round(band.center * 3.6);
+    const catSat = band.grey ? band.sat : null;
     html += `<div class="law-cat-row" data-cat-row="${catName}">`;
-    html += `<div class="law-cat-label" style="color:hsl(${centerHue} 85% 65%);--law-h:${centerHue}">${catName}</div>`;
+    html += `<div class="law-cat-label" style="color:hsl(${centerHue} ${catSat ?? 85}% 65%);--law-h:${centerHue};--law-s:${catSat ?? 85}%">${catName}</div>`;
     for (const idx of cat.laws) {
       const name = LAW_NAME_BY_IDX[idx] || `LAW_${idx}`;
       const icon = LAW_ICONS[name] || '?';
@@ -238,11 +239,11 @@ function renderLawGrid(grid, lawStateObj, bus) {
       const selectedClass = idx === selectedLawIdx ? ' selected' : '';
       if (isWordMode) {
         html += `<button class="law-btn ${catClass}${active ? ' active' : ''}${selectedClass}" `
-              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">`
+              + `style="--law-h:${hue};--law-s:${LAW_SAT_BY_INDEX[idx] ?? 85}" data-law="${idx}" title="${name}">`
               + `<span class="tog-icon">${icon}</span><span class="tog-name">${name}</span></button>`;
       } else {
         html += `<button class="sq-toggle ${catClass}${active ? ' active' : ''}${selectedClass}" `
-              + `style="--law-h:${hue}" data-law="${idx}" title="${name}">`
+              + `style="--law-h:${hue};--law-s:${LAW_SAT_BY_INDEX[idx] ?? 85}" data-law="${idx}" title="${name}">`
               + `<span class="tog-icon">${icon}</span><span class="tog-name">${name}</span></button>`;
       }
     }
@@ -369,6 +370,7 @@ function setupLawSets(grid, bus, lawStateObj) {
         const s = document.createElement('span');
         s.className = 'law-set-mini-icon cat-' + cat;
         s.style.setProperty('--law-h', LAW_HUE_BY_INDEX[idx] !== undefined ? LAW_HUE_BY_INDEX[idx] : 210);
+        s.style.setProperty('--law-s', (LAW_SAT_BY_INDEX[idx] || 80) + '%');
         s.textContent = icon;
         miniRow.appendChild(s);
       }

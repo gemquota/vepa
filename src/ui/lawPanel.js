@@ -15,12 +15,11 @@ const CATEGORY_COLORS = {
   TEAL:   { active: 'var(--accent-teal)',   glow: 'none', label: 'Electromagnetism' },
   YELLOW: { active: 'var(--accent-yellow)', glow: 'none', label: 'Information' },
   VIOLET: { active: 'var(--accent-violet)', glow: 'none', label: 'Quantum' },
+  SLATE:  { active: '#78818c',               glow: 'none', label: 'Mechanics' },
 };
 
 // Laws that have multi-state behavior and their max states
-const MULTI_STATE = {
-  [LAW_INDEXES.WRAP]: 4,
-};
+const MULTI_STATE = {}; // WRAP (the only multi-state law) retired — now the TOROIDAL EDGES world param
 
 // Build reverse lookup: law index → display name
 const LAW_NAME_BY_INDEX = {};
@@ -95,6 +94,7 @@ export function createLawPanel(bus, lawStateObj) {
     { key: 'electromagnetism', cat: LAW_CATEGORIES.electromagnetism },
     { key: 'information',   cat: LAW_CATEGORIES.information },
     { key: 'quantum',       cat: LAW_CATEGORIES.quantum },
+    { key: 'mechanics',      cat: LAW_CATEGORIES.mechanics },
   ];
 
   let html = '';

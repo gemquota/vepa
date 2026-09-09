@@ -1,14 +1,18 @@
 # Feature Specification: VEPA4 — Integrated Intelligence
 
-**Version**: 8.16.2 | **Date**: 2026-08-22 | **Base**: VEPA4 integrated intelligence
+**Version**: 9.1.2 | **Date**: 2026-08-26 | **Base**: VEPA4 integrated intelligence
 **Audit input**: `audit/FULL_AUDIT_2026-08-01.md`
 
 ## Problem Statement
 
+## Technical Specification Procedure
+
+The repository includes a deterministic, dependency-free specification generator at `scripts/generate-spec.mjs`. It imports live runtime contracts and scans active source, tests, audits, configuration, and documentation to emit the hierarchical `docs/spec/` tree. The generated branches separate architecture, UI, simulation, state, laws, source inventory, testing, operations, traceability, and review findings. `npm run spec:generate` regenerates the tree; `npm run spec:check` performs a byte-for-byte drift check without modifying files.
+
 ## Development Standards (2026-08-10)
 
 - **Product & versioning:** the product is **VEPA4**; versions use
-  **`major.minor.build`** (npm-semver-native, current `8.16.2`). The v4 line is
+  **`major.minor.build`** (npm-semver-native, current `9.1.2`). The v4 line is
   retroactively mapped old `4.M.N` → `M.N.0` (generation `4` moved into the
   product name). Changelog headers carry both labels
   (`## [4.6.28] - date → 6.28.0`); the full rule lives in `AGENTS.md` §10.4.
@@ -44,7 +48,8 @@ intelligence through a live dashboard.
   main-thread solver remains the compatibility fallback when SharedArrayBuffer
   is unavailable.
 - No changes to the v2 legacy tree (`src/`, root `index.html`).
-- No new laws beyond PREDATION; the 51 existing laws keep their behavior.
+- No new laws beyond the current mapped law contract; law additions require
+  explicit category, state, help, dispatch, audit, and test updates.
 
 ## Architecture
 

@@ -60,7 +60,7 @@ export const PRIME_DEFAULT = {
         },
     ],
     laws: [
-        'GRAV', 'DRAG', 'ENTR', 'WRAP', 'COLL',
+        'GRAV', 'DRAG', 'ENTR', 'BUOYANCY', 'COLL',
         'LIFE', 'GLOW', 'REPRO', 'PHENOTYPE', 'GENOTYPE',
         // Richer emergent substrate (v8.15): communication + hebbian learning
         // + cultural transmission + species affinity drive the group/culture/

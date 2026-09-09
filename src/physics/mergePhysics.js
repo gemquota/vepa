@@ -14,6 +14,12 @@
  *                             attached orbs held by a spring at an equilibrium
  *                             distance. Bonded pairs NEVER merge — a bond is
  *                             not accretion.
+ *   ADJOIN (two grains)      — ACCR composite structures (v9.1.0). Sustained
+ *                             gentle contact cements both grains into a
+ *                             rigid-ish rubble pile / dust aggregate: separate
+ *                             identities, structurally linked across the
+ *                             shared bond slots, held by an inelastic contact
+ *                             response. Adjoined pairs never mass-merge.
  *   LINK   (two orbs)        — ENTANGLEMENT / SYMBIOSIS / PARASITE. Separate
  *                             particles sharing phase or energy flows.
  *
@@ -37,9 +43,9 @@ const BOND_SLOTS = [
 ];
 
 /**
- * True if the two particles are bonded to each other (BOND / POLYMER).
- * Bonds register bilaterally in BOND_PARTNER_1..6, so one side's slots are
- * sufficient, but both are checked for symmetry.
+ * True if the two particles are bonded to each other (BOND / POLYMER /
+ * ACCR-adjoined). Bonds register bilaterally in BOND_PARTNER_1..6, so one
+ * side's slots are sufficient, but both are checked for symmetry.
  */
 export function isBondedPair(view, iBase, jBase, stride) {
   // A bond is only meaningful once BOND_COUNT is nonzero — zero-initialised
@@ -70,6 +76,45 @@ function breakBondPair(view, iBase, jBase, stride) {
     if (view[jBase + slot] === iIdx) {
       view[jBase + slot] = -1;
       view[jBase + S.BOND_COUNT] = Math.max(0, view[jBase + S.BOND_COUNT] - 1);
+      break;
+    }
+  }
+}
+
+/**
+ * Cement two contacting grains into a composite structure (ACCR adjoining).
+ *
+ * Both particles keep their full identity — position, velocity, mass, DNA,
+ * colour. The pair is registered bilaterally across free bond slots exactly
+ * like BOND / POLYMER links, so all existing bond bookkeeping treats the seam
+ * as a first-class structural bond: isBondedPair excludes the pair from
+ * further mass accretion, death drops the seam, and third-party partners can
+ * still rebond around it. No-op when either side has exhausted its six slots
+ * or the pair is already linked.
+ */
+export function adjoinParticles(view, iBase, jBase, stride) {
+  const iIdx = iBase / stride;
+  const jIdx = jBase / stride;
+  // A match only means "already linked" when some bond exists —
+  // zero-initialised partner slots equal particle index 0 and must not
+  // look like an existing seam (same guard as isBondedPair).
+  if ((view[iBase + S.BOND_COUNT] || 0) >= 1 || (view[jBase + S.BOND_COUNT] || 0) >= 1) {
+    for (const slot of BOND_SLOTS) {
+      if (view[iBase + slot] === jIdx || view[jBase + slot] === iIdx) return; // already linked
+    }
+  }
+  if ((view[iBase + S.BOND_COUNT] || 0) >= 6 || (view[jBase + S.BOND_COUNT] || 0) >= 6) return;
+  for (const slot of BOND_SLOTS) {
+    if (view[iBase + slot] < 0) {
+      view[iBase + slot] = jIdx;
+      view[iBase + S.BOND_COUNT] = (view[iBase + S.BOND_COUNT] || 0) + 1;
+      break;
+    }
+  }
+  for (const slot of BOND_SLOTS) {
+    if (view[jBase + slot] < 0) {
+      view[jBase + slot] = iIdx;
+      view[jBase + S.BOND_COUNT] = (view[jBase + S.BOND_COUNT] || 0) + 1;
       break;
     }
   }

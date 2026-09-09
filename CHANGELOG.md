@@ -1,5 +1,54 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.5] - 2026-08-26 → 9.1.2
+
+### docs(spec): add deterministic hierarchical technical-spec generation
+
+- Add a dependency-free Node procedure that extracts live runtime contracts, module structure, UI and simulation surfaces, law metadata, verification evidence, and duplicate-concept review data.
+- Generate the complete navigable specification tree under `docs/spec/`, including one record per mapped law and a JSON manifest.
+- Add byte-for-byte `spec:check` drift detection so generated documentation can be verified in CI.
+- Synchronize the active version markers to `9.1.2`; no deployment or release tag is created by this documentation task.
+
+### Files
+
+- `scripts/generate-spec.mjs`, `package.json`, `package-lock.json`, `VERSION` — procedure, commands, and aligned manifests.
+- `docs/spec/` — generated hierarchical specification artifacts.
+- `README.md`, `SPEC.md`, `PLAN.md`, `GUIDE.md` — procedure and documentation references.
+
+## [4.9.4] - 2026-08-26 → 9.1.1
+
+### fix(categories): restore gravity classification and complete Mechanics UI wiring
+
+- Move TIDE back to Physics because its implementation is gravity-gradient based.
+- Keep Mechanics as the slate-grey separated category and expose it in the law panel and setup filters.
+- Preserve the exact 128-bit law contract without adding inert placeholder laws.
+- Keep ANTIMATTER and HYPERPLANE unchanged in Quantum; both remain implemented and dispatched.
+- Prevent the synchronous solver from silently bypassing complete law semantics through the GPU pre-pass.
+
+### Files
+
+- `src/constants.js`, `src/ui/lawPanel.js`, `index.html` — category mapping and Mechanics UI.
+- `src/physics/solver.js` — exact CPU law dispatch remains authoritative.
+- `tests/unit/lawCategories.test.js` — updated Physics/Mechanics assertions.
+
+## [4.9.3] - 2026-08-25 → 9.1.0
+
+### feat(law-recategorization): WRAP → BUOYANCY, slate Mechanics category, composite adjoined structures
+
+- **WRAP retired** (bit 3): toroidal wrapping is now the TOROIDAL EDGES world parameter; bit 3 reissued as **BUOYANCY** — thermal lift along −z (hot rises, cool sinks) coupled through HEAT_OUTPUT DNA.
+- **New Mechanics category** (slate grey, visually separated from the 8-point rainbow): TIDE, ELASTICITY, TURBULENCE, CENTRIPETAL, ROTATION moved out of Physics; Physics keeps GRAV, DRAG, ENTR, COLL, ACCR, PLANETARY, VOID, BOND, SINGULARITY, FUSION-era set plus BUOYANCY (11 laws).
+- **Composite adjoined structures (ACCR)**: alongside mass accretion, sustained gentle contact now CEMENTS pairs into composite structures — both grains keep their identity and are linked bilaterally via the shared bond slots (`adjoinParticles` in mergePhysics.js). Adjoining triggers at HALF the FUSION_TIME dwell; adjoined grains never mass-merge, and the seam uses an inelastic contact response (zero restitution + cohesion spring at touching rest length). High-momentum impacts still merge into ONE body as before.
+- ACCR LAW_HELP_DB entry updated to document both growth modes; HUD tick triple display reformatted; law grid/tooltip/law panel updated for the 9-category layout with slate hue handling.
+
+### Files
+
+- `src/constants.js` — LAW_CATEGORIES mechanics band, BUOYANCY index/help, ACCR help tiers
+- `src/physics/laws.js` — applyBuoyancy
+- `src/physics/solver.js` — adjoining dispatch + adjoined contact response in the contact block
+- `src/physics/mergePhysics.js` — adjoinParticles + ADJOIN taxonomy docs
+- `src/ui/{lawPanel,tooltip,hud,worldPanel}.js`, `style.css` — slate Mechanics category + HUD reformat
+- `src/state/{defaultPresets,worldParams}.js` — TOROIDAL EDGES param replacing WRAP behavior
+
 ## [4.9.2] - 2026-08-23 → 9.0.2
 
 ### feat(settings): selectable GPU/CPU backend with WebGPU parity harness

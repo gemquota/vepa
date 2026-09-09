@@ -26,6 +26,11 @@ export function createGrid(dim = GRID_DIM, cellCap = DEFAULT_CELL_CAP) {
   return {
     cells,
     counts: new Int32Array(totalCells),
+    // Only cells receiving particles need clearing. At high AUTO_TUNE grid
+    // dimensions most cells are empty, so tracking the active set avoids a
+    // full dim³ scan on every solver tick.
+    touched: new Int32Array(totalCells),
+    touchedCount: 0,
     cellSize,
     dim,
     cellCap,
@@ -36,10 +41,12 @@ export function createGrid(dim = GRID_DIM, cellCap = DEFAULT_CELL_CAP) {
  * Clear all cells back to empty.
  */
 export function clear(grid) {
-  for (let i = 0; i < grid.cells.length; i++) {
-    grid.cells[i].length = 0;
-    grid.counts[i] = 0;
+  for (let i = 0; i < grid.touchedCount; i++) {
+    const cellIndex = grid.touched[i];
+    grid.cells[cellIndex].length = 0;
+    grid.counts[cellIndex] = 0;
   }
+  grid.touchedCount = 0;
 }
 
 /**
@@ -75,6 +82,7 @@ export function insert(grid, index, px, py, pz, worldSize) {
   const ci = cellIndex(cx, cy, cz, grid.dim);
   const cell = grid.cells[ci];
   if (!cell) return;
+  if (cell.length === 0) grid.touched[grid.touchedCount++] = ci;
   if (cell.length < grid.cellCap) {
     cell.push(index);
     grid.counts[ci]++;

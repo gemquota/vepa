@@ -1,3 +1,7 @@
+import { MECHANICS_HELP, MECHANICS_PARAMETERS } from './physics/lawgroups/mechanicsHelp.js';
+
+export { MECHANICS_HELP, MECHANICS_PARAMETERS };
+
 // ============================================================================
 // VEPA v3 — Core Constants
 // Single Source of Truth for stride layout, DNA parameters, law indexes,
@@ -318,7 +322,7 @@ export const LAW_INDEXES = {
   GRAV:           0,
   DRAG:           1,
   ENTR:           2,
-  WRAP:           3,
+  BUOYANCY:       3,
   COLL:           4,
   ACCR:           5,
   PLANETARY:      6,
@@ -385,8 +389,8 @@ export const LAW_INDEXES = {
 
   // Electromagnetism (Cyan) — indices 53-65
   CHARGE_LAW:    53,
-  FIELD:         54,
-  CURRENT:       55,
+  ELECTRIC_FIELD: 54,
+  CURRENT:        55,
   RESISTANCE:    56,
   CAPACITANCE:   57,
   INDUCTANCE:    58,
@@ -418,13 +422,13 @@ export const LAW_INDEXES = {
   ENTANGLEMENT:  80,
   HISTORY:       81,
 
-  // 8x16 expansion — Physics (indices 82-87)
-  TIDE:          82,
-  FRICTION:      83,
-  ELASTICITY:    84,
-  TURBULENCE:    85,
-  CENTRIPETAL:   86,
-  ROTATION:      87,
+  // Physics additions (indices 82-87)
+  TIDE:              82,
+  FRICTION:          83,
+  HORIZON:           84,
+  RADIATION_PRESSURE: 85,
+  MASS_INERTIA:      86,
+  FIELD:             87,
 
   // Biology (indices 88-91)
   SYMBIOSIS:     88,
@@ -479,9 +483,19 @@ export const LAW_INDEXES = {
   WAVEFUNCTION:  125,
   HYPERPLANE:    126,
   ANTIMATTER:    127,
+
+  // Mechanics expansion (indices 128-135; 136 total law slots)
+  CONTACT:       128,
+  MOMENTUM:      129,
+  INERTIA:       130,
+  TORQUE:        131,
+  CONSTRAINT:    132,
+  FRAGMENTATION: 133,
+  TOPOLOGY:      134,
+  ADHESION:      135,
 };
 
-export const LAW_COUNT = 128;
+export const LAW_COUNT = 136;
 
 // --- Law Category Mapping ---
 
@@ -492,19 +506,36 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.GRAV,
       LAW_INDEXES.DRAG,
       LAW_INDEXES.ENTR,
-      LAW_INDEXES.WRAP,
+      LAW_INDEXES.BUOYANCY,
       LAW_INDEXES.COLL,
       LAW_INDEXES.ACCR,
       LAW_INDEXES.PLANETARY,
       LAW_INDEXES.VOID,
       LAW_INDEXES.BOND,
       LAW_INDEXES.SINGULARITY,
-      LAW_INDEXES.TIDE,
       LAW_INDEXES.FRICTION,
-      LAW_INDEXES.ELASTICITY,
-      LAW_INDEXES.TURBULENCE,
-      LAW_INDEXES.CENTRIPETAL,
-      LAW_INDEXES.ROTATION,
+      LAW_INDEXES.TIDE,
+      LAW_INDEXES.HORIZON,
+      LAW_INDEXES.RADIATION_PRESSURE,
+      LAW_INDEXES.MASS_INERTIA,
+      LAW_INDEXES.FIELD,
+
+    ],
+  },
+
+  // Mechanics (Slate) — rotational and structural response. TIDE remains in
+  // Physics because its implementation is explicitly gravity-gradient based.
+  mechanics: {
+    color: 'SLATE',
+    laws: [
+      LAW_INDEXES.CONTACT,
+      LAW_INDEXES.MOMENTUM,
+      LAW_INDEXES.INERTIA,
+      LAW_INDEXES.TORQUE,
+      LAW_INDEXES.CONSTRAINT,
+      LAW_INDEXES.FRAGMENTATION,
+      LAW_INDEXES.TOPOLOGY,
+      LAW_INDEXES.ADHESION,
     ],
   },
   biology: {
@@ -595,7 +626,7 @@ export const LAW_CATEGORIES = {
     color: 'BLUE',
     laws: [
       LAW_INDEXES.CHARGE_LAW,
-      LAW_INDEXES.FIELD,
+      LAW_INDEXES.ELECTRIC_FIELD,
       LAW_INDEXES.CURRENT,
       LAW_INDEXES.RESISTANCE,
       LAW_INDEXES.CAPACITANCE,
@@ -656,14 +687,15 @@ export const LAW_CATEGORIES = {
   },
 };
 
+
 // --- Law sub-groups (UI splitting — breaks the 128-law wall into themes) ---
 // Each category lists labelled sub-groups; every law appears in exactly one.
 // The LAWS tab renders these as sub-headers inside each collapsible category.
 
 export const LAW_SUBGROUPS = {
   physics: [
-    { label: 'ATTRACTION', laws: [LAW_INDEXES.GRAV, LAW_INDEXES.PLANETARY, LAW_INDEXES.ACCR, LAW_INDEXES.VOID, LAW_INDEXES.TIDE, LAW_INDEXES.SINGULARITY, LAW_INDEXES.CENTRIPETAL] },
-    { label: 'MOTION & COLLISION', laws: [LAW_INDEXES.DRAG, LAW_INDEXES.ENTR, LAW_INDEXES.COLL, LAW_INDEXES.FRICTION, LAW_INDEXES.ELASTICITY, LAW_INDEXES.TURBULENCE, LAW_INDEXES.ROTATION] },
+    { label: 'ATTRACTION', laws: [LAW_INDEXES.GRAV, LAW_INDEXES.PLANETARY, LAW_INDEXES.ACCR, LAW_INDEXES.VOID, LAW_INDEXES.TIDE, LAW_INDEXES.SINGULARITY, LAW_INDEXES.HORIZON, LAW_INDEXES.MASS_INERTIA] },
+    { label: 'MOTION & COLLISION', laws: [LAW_INDEXES.DRAG, LAW_INDEXES.ENTR, LAW_INDEXES.COLL, LAW_INDEXES.FRICTION, LAW_INDEXES.RADIATION_PRESSURE, LAW_INDEXES.FIELD] },
     { label: 'BONDING', laws: [LAW_INDEXES.BOND] },
   ],
   biology: [
@@ -689,7 +721,7 @@ export const LAW_SUBGROUPS = {
     { label: 'SOUL', laws: [LAW_INDEXES.SOUL_LAW, LAW_INDEXES.ASTRAL, LAW_INDEXES.SYNCHRONICITY, LAW_INDEXES.ENTANGLEMENT] },
   ],
   electromagnetism: [
-    { label: 'STATIC FIELDS', laws: [LAW_INDEXES.CHARGE_LAW, LAW_INDEXES.FIELD, LAW_INDEXES.CAPACITANCE, LAW_INDEXES.FLUX, LAW_INDEXES.SHIELDING] },
+    { label: 'STATIC FIELDS', laws: [LAW_INDEXES.CHARGE_LAW,      LAW_INDEXES.ELECTRIC_FIELD, LAW_INDEXES.CAPACITANCE, LAW_INDEXES.FLUX, LAW_INDEXES.SHIELDING] },
     { label: 'CONDUCTION', laws: [LAW_INDEXES.CURRENT, LAW_INDEXES.RESISTANCE, LAW_INDEXES.SUPERCONDUCTIVITY, LAW_INDEXES.INDUCTANCE] },
     { label: 'MAGNETIC & WAVES', laws: [LAW_INDEXES.MAGNETISM, LAW_INDEXES.RESONANCE, LAW_INDEXES.ANTENNA, LAW_INDEXES.POLARIZATION] },
     { label: 'IONIZATION', laws: [LAW_INDEXES.IONIZATION, LAW_INDEXES.DISCHARGE, LAW_INDEXES.PLASMA] },
@@ -734,11 +766,19 @@ export const LAW_DEPENDENCIES = {
 
 // --- Linked Law Parameter Map (128 Laws × 2-5 Parameters) ---
 export const LAW_PARAMETERS = {
+  [LAW_INDEXES.CONTACT]:       ['RADIUS (Stride 56)', 'MASS (Stride 6)', 'STIFFNESS (DNA 8)'],
+  [LAW_INDEXES.MOMENTUM]:      ['MASS (Stride 6)', 'VEL_X/Y/Z (Stride 3-5)', 'MOMENTUM_GAIN (World)'],
+  [LAW_INDEXES.INERTIA]:       ['MASS (Stride 6)', 'INERTIA (DNA 26)', 'FORCE (DNA 0)'],
+  [LAW_INDEXES.TORQUE]:        ['TORQUE (DNA 2)', 'VEL_X/Y/Z (Stride 3-5)', 'POS_X/Y/Z (Stride 0-2)'],
+  [LAW_INDEXES.CONSTRAINT]:    ['RADIUS (Stride 56)', 'BOND_COUNT (Stride 58)', 'CONSTRAINT_STRENGTH (World)'],
+  [LAW_INDEXES.FRAGMENTATION]: ['VEL_X/Y/Z (Stride 3-5)', 'ARMOR (Stride 63)', 'MASS (Stride 6)'],
+  [LAW_INDEXES.TOPOLOGY]:      ['BOND_COUNT (Stride 58)', 'BOND_PARTNER_1-6 (Stride 59-84)', 'TOPOLOGY_GAIN (World)'],
+  [LAW_INDEXES.ADHESION]:      ['RADIUS (Stride 56)', 'BOND_COUNT (Stride 58)', 'ADHESION_RANGE (World)'],
   // Physics (Indices 0-6, 38-39, 79, 82-87)
   [LAW_INDEXES.GRAV]:           ['FORCE (DNA 0)', 'GLOBAL_G (World)', 'MASS (Stride 6)', 'RADIUS (Stride 56)'],
   [LAW_INDEXES.DRAG]:           ['VISCOSITY (DNA 1)', 'DAMPING (World)', 'FRICTION_COEFF (World)', 'MAX_VELOCITY (DNA 28)'],
   [LAW_INDEXES.ENTR]:           ['JITTER (DNA 3)', 'ENTROPY (World)', 'TEMPERATURE (Stride 66)', 'HEAT_CAPACITY (World)'],
-  [LAW_INDEXES.WRAP]:           ['WORLD_SIZE (World)', 'WALL_REFLECT (World)', 'POS_X/Y/Z (Stride 0-2)', 'VEL_X/Y/Z (Stride 3-5)'],
+  [LAW_INDEXES.BUOYANCY]:       ['TEMPERATURE (Stride 66)', 'HEAT_OUTPUT (DNA 39)', 'VEL_X/Y/Z (Stride 3-5)', 'MASS (Stride 6)'],
   [LAW_INDEXES.COLL]:           ['STIFFNESS (DNA 8)', 'ELASTICITY (DNA 30)', 'ELASTIC_RESTITUTION (World)', 'MASS (Stride 6)'],
   [LAW_INDEXES.ACCR]:           ['FUSION (DNA 9)', 'ACCRETION_RADIUS (World)', 'FUSION_TIME (DNA 17)', 'MASS (Stride 6)'],
   [LAW_INDEXES.PLANETARY]:      ['FORCE (DNA 0)', 'GLOBAL_G (World)', 'HIDDEN_MASS (DNA 7)', 'INERTIA (DNA 26)'],
@@ -825,8 +865,7 @@ export const LAW_PARAMETERS = {
   [LAW_INDEXES.SYNCHRONICITY]: ['SYNCHRONICITY_RATE (World)', 'TUNING_CH1-CH4 (DNA 22-25)', 'RESONANCE_Q (World)', 'PHASE_1 (Stride 68)'],
 
   // Electromagnetism (Indices 53-65, 107-109)
-  [LAW_INDEXES.CHARGE_LAW]:    ['POLARITY (DNA 4)', 'COULOMB_CONSTANT (World)', 'CONDUCTIVITY (DNA 32)', 'CHARGE (Stride 67)'],
-  [LAW_INDEXES.FIELD]:         ['POLARITY (DNA 4)', 'MAGNETIC_FLUX_SCALE (World)', 'MAGNETIC_MOMENT (DNA 33)', 'CHARGE (Stride 67)'],
+  [LAW_INDEXES.CHARGE_LAW]:    ['POLARITY (DNA 4)', 'COULOMB_CONSTANT (World)', 'CONDUCTIVITY (DNA 32)', 'CHARGE (Stride 67)'],[LAW_INDEXES.ELECTRIC_FIELD]: ['POLARITY (DNA 4)', 'MAGNETIC_FLUX_SCALE (World)', 'MAGNETIC_MOMENT (DNA 33)', 'CHARGE (Stride 67)'],
   [LAW_INDEXES.CURRENT]:       ['CONDUCTIVITY (DNA 32)', 'COULOMB_CONSTANT (World)', 'VEL_X/Y/Z (Stride 3-5)', 'CHARGE (Stride 67)'],
   [LAW_INDEXES.RESISTANCE]:    ['CONDUCTIVITY (DNA 32)', 'HEAT_OUTPUT (DNA 39)', 'TEMPERATURE (Stride 66)', 'HEAT_CAPACITY (World)'],
   [LAW_INDEXES.CAPACITANCE]:   ['POLARITY (DNA 4)', 'BASE_RADIUS (DNA 29)', 'STORED_ENERGY (Stride 78)', 'ELECTRIC_ENERGY (Stride 77)'],
@@ -903,6 +942,7 @@ for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
 // (center ± 2). RED wraps through 100/0, so its band runs start=98 to end=102.
 
 export const LAW_SPECTRUM = {
+  SLATE:  { grey: true, hue: 210, sat: 7 }, // Mechanics — off-rainbow slate grey
   RED:    { start: 98,   end: 102, center: 0 },
   ORANGE: { start: 10.5, end: 14.5, center: 12.5 },
   YELLOW: { start: 23,   end: 27,   center: 25 },
@@ -916,12 +956,23 @@ export const LAW_SPECTRUM = {
 // --- Per-law hue: each of the 16 laws in a category is spread across its band ---
 
 export const LAW_HUE_BY_INDEX = {};
+// Saturation per law index — rainbow laws leave it null (UI default); slate-grey
+// laws override low so they render desaturated even where only --law-h existed.
+export const LAW_SAT_BY_INDEX = {};
 for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
   const band = LAW_SPECTRUM[cat.color];
+  if (band.grey) {
+    cat.laws.forEach((idx) => {
+      LAW_HUE_BY_INDEX[idx] = band.hue;
+      LAW_SAT_BY_INDEX[idx] = band.sat;
+    });
+    continue;
+  }
   const step = (band.end - band.start) / (cat.laws.length - 1);
   cat.laws.forEach((idx, k) => {
     const pos = (band.start + k * step) % 100; // RED wraps through 100/0
     LAW_HUE_BY_INDEX[idx] = Math.round(((pos / 100) * 360) * 10) / 10;
+    LAW_SAT_BY_INDEX[idx] = null;
   });
 }
 
@@ -1095,10 +1146,10 @@ export const LAW_HELP_DB = {
     explanation: "Particles receive random force kicks proportional to JITTER DNA, preventing static equilibrium.",
     system: "Acts as thermal noise floor. In low-viscosity regimes it drives chaos; in high-viscosity it enables slow annealing.",
   },
-  WRAP: {
-    hint: "Toroidal world wrapping (particles wrap around edges).",
-    explanation: "Simulation rule (v4.6.29): not a universe law — a boundary condition for the sim itself. When enabled, particles leaving one edge reappear on the opposite edge; when disabled, soft walls reflect them. Lives in WORLD → SIMULATION RULES alongside WALL REFLECT.",
-    system: "On = toroidal wrap, off = soft walls whose velocity effect is set by the WALL REFLECT slider (0 = absorb, 1 = reflect, 2 = double bounce). Still bit 3 in the law state so saves and presets stay compatible.",
+  BUOYANCY: {
+    hint: "Thermal buoyancy: hot particles rise, cool particles sink.",
+    explanation: "Replaces WRAP: Archimedes-style lift along the vertical axis. Particles hotter than ambient get an upward force scaled by the temperature difference; cooler particles sink. Convection cells emerge with heat sources and RESISTANCE friction heating.",
+    system: "lift = (TEMPERATURE - ambient) x HEAT_OUTPUT DNA x k applied on -z (up). TEMPERATURE is stride 66 (heated by RESISTANCE/fusion); HEAT_OUTPUT DNA scales the coupling. x1.25 with PLANETARY for convection stacks.",
   },
   COLL: {
     hint: "Physical collisions with momentum exchange.",
@@ -1106,14 +1157,14 @@ export const LAW_HELP_DB = {
     system: "Impulse-based collision response with mass-weighted velocity exchange. ELASTICITY controls bounciness. Pairs that are fusing under ACCR coalesce instead of bouncing.",
   },
   ACCR: {
-    hint: "Mass accretion on collision.",
-    explanation: "FUSION_MOMENTUM DNA is the MINIMUM relative momentum required to fuse on impact — faster pairs merge, slower pairs bounce. FUSION_TIME DNA is how long slower pairs must stay in very close proximity before they fuse anyway. FUSION DNA scales the mass-transfer efficiency.",
-    system: "Hierarchical mass growth. Proximity dwell is tracked per contact pair; leaving contact resets the clock. Stars (> starMass) pull overlapping matter in and dissolve it. High fusion leads to proto-celestial body formation.",
+    hint: "Mass accretion + composite structure growth on collision.",
+    explanation: "FUSION_MOMENTUM DNA is the MINIMUM relative momentum required to fuse on impact — faster pairs merge, slower pairs bounce. FUSION_TIME DNA is how long slower pairs must stay in very close proximity before they fuse anyway; at HALF that dwell the pair instead ADJOINS into a composite structure — both grains keep their identity and are cemented together (rubble piles, dust aggregates); adjoined grains never mass-merge. FUSION DNA scales the mass-transfer efficiency.",
+    system: "Hierarchical mass growth + structural growth. Proximity dwell is tracked per contact pair; leaving contact resets the clock. Dwell >= FUSION_TIME/2 registers a bilateral structural link in the shared bond slots with an inelastic contact response (no restitution + cohesion spring at touching rest length). Dwell >= FUSION_TIME (or high impact momentum) merges into ONE body. Stars (> starMass) pull overlapping matter in and dissolve it.",
   },
   PLANETARY: {
     hint: "Atmospheric gravity: constant downward pull toward the ground.",
     explanation: "Every particle falls toward the ground plane (z = 0) with a constant acceleration that is independent of mass — simulating particles much smaller than the world falling through a planet's atmosphere.",
-    system: "Force is scaled by mass so acceleration is mass-independent. ×1.5 with GRAV. With WRAP off the soft-wall clamp turns z = 0 into the ground; particles pile up there instead of floating to the centre.",
+    system: "Force is scaled by mass so acceleration is mass-independent. ×1.5 with GRAV. With TOROIDAL EDGES off the soft-wall clamp turns z = 0 into the ground; particles pile up there instead of floating to the centre.",
   },
   VOID: {
     hint: "Vacuum pressure: empty space pushes particles apart.",
