@@ -7,8 +7,11 @@ import { LAW_INDEXES, LAW_HELP_DB, LAW_TO_CATEGORY, LAW_HUE_BY_INDEX, LAW_SAT_BY
 import { isSet, toggle as toggleLaw } from '../state/lawState.js';
 import { LAW_HELP_PATCHES } from '../state/lawHelpPatches.js';
 
-// v8.0.0 union-physics rework: overlay the updated ACCR / ALLOY entries.
-Object.assign(LAW_HELP_DB, LAW_HELP_PATCHES);
+// Supplemental records complete or refine canonical help without discarding
+// tiers already present in LAW_HELP_DB.
+for (const [name, patch] of Object.entries(LAW_HELP_PATCHES)) {
+  LAW_HELP_DB[name] = { ...(LAW_HELP_DB[name] || {}), ...patch };
+}
 
 let infoEl = null;
 let currentLawIdx = -1;

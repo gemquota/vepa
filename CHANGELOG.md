@@ -1,5 +1,20 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [4.9.5] - 2026-08-26 → 9.1.2
+
+### docs(spec): add deterministic hierarchical technical-spec generation
+
+- Add a dependency-free Node procedure that extracts live runtime contracts, module structure, UI and simulation surfaces, law metadata, verification evidence, and duplicate-concept review data.
+- Generate the complete navigable specification tree under `docs/spec/`, including one record per mapped law and a JSON manifest.
+- Add byte-for-byte `spec:check` drift detection so generated documentation can be verified in CI.
+- Synchronize the active version markers to `9.1.2`; no deployment or release tag is created by this documentation task.
+
+### Files
+
+- `scripts/generate-spec.mjs`, `package.json`, `package-lock.json`, `VERSION` — procedure, commands, and aligned manifests.
+- `docs/spec/` — generated hierarchical specification artifacts.
+- `README.md`, `SPEC.md`, `PLAN.md`, `GUIDE.md` — procedure and documentation references.
+
 ## [4.9.4] - 2026-08-26 → 9.1.1
 
 ### fix(categories): restore gravity classification and complete Mechanics UI wiring

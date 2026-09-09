@@ -6,6 +6,7 @@ import {
   LAW_COLOR_BY_INDEX,
   LAW_TO_CATEGORY,
   LAW_HELP_DB,
+  MECHANICS_HELP,
   PARTICLE_STRIDE,
   MAX_PARTICLES,
   STRIDE_INDEXES,
@@ -15,6 +16,7 @@ import { createParticleBuffer } from '../../src/state/particleBuffer.js';
 import { createLawState, set, isSet } from '../../src/state/lawState.js';
 import { createDNABuffer, loadDefaults, setDNAFloat, getDNAFloat } from '../../src/dna/dnaBuffer.js';
 import { solve } from '../../src/physics/solver.js';
+import { LAW_HELP_PATCHES } from '../../src/state/lawHelpPatches.js';
 
 const S = STRIDE_INDEXES;
 const WORLD = 2000;
@@ -53,11 +55,11 @@ function makeWorld(polarity) {
 }
 
 describe('New law categories', () => {
-  it('has 9 categories; all 128 laws mapped (mechanics is the off-rainbow slate set)', () => {
+  it('has 9 categories; all 136 laws mapped (mechanics is the off-rainbow slate set)', () => {
     const names = Object.keys(LAW_CATEGORIES);
     expect(names).toHaveLength(9);
-    expect(LAW_CATEGORIES.physics.laws).toHaveLength(12); // TIDE remains with gravity-related physics
-    expect(LAW_CATEGORIES.mechanics.laws).toHaveLength(4); // ELASTICITY/TURBULENCE/CENTRIPETAL/ROTATION
+    expect(LAW_CATEGORIES.physics.laws).toHaveLength(16); // legacy mechanics remain mapped for compatibility
+    expect(LAW_CATEGORIES.mechanics.laws).toHaveLength(8); // appended slate mechanics laws
     for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
       if (catName === 'physics' || catName === 'mechanics') continue;
       expect(cat.laws.length, `category ${catName}`).toBe(16);
@@ -65,9 +67,9 @@ describe('New law categories', () => {
     expect(LAW_CATEGORIES.electromagnetism.laws.length).toBe(16);
     expect(LAW_CATEGORIES.information.laws.length).toBe(16);
     expect(LAW_CATEGORIES.quantum.laws.length).toBe(16);
-    expect(LAW_COUNT).toBe(128);
+    expect(LAW_COUNT).toBe(136);
     const mapped = Object.values(LAW_CATEGORIES).reduce((n, c) => n + c.laws.length, 0);
-    expect(mapped).toBe(128);
+    expect(mapped).toBe(136);
     for (let i = 0; i < LAW_COUNT; i++) {
       expect(LAW_TO_CATEGORY[i], `law ${i}`).toBeDefined();
       expect(LAW_COLOR_BY_INDEX[i], `law ${i}`).toBeDefined();
@@ -83,13 +85,18 @@ describe('New law categories', () => {
   });
 
   it('every law has a HELP_DB entry', () => {
-    for (const cat of Object.values(LAW_CATEGORIES)) {
+    for (const [catName, cat] of Object.entries(LAW_CATEGORIES)) {
       for (const idx of cat.laws) {
         const name = NAME_BY_IDX[idx];
-        expect(LAW_HELP_DB[name], name).toBeDefined();
-        expect(LAW_HELP_DB[name].hint).toBeTruthy();
-        expect(LAW_HELP_DB[name].explanation).toBeTruthy();
-        expect(LAW_HELP_DB[name].system).toBeTruthy();
+        const help = {
+          ...(LAW_HELP_DB[name] || {}),
+          ...(LAW_HELP_PATCHES[name] || {}),
+          ...(catName === 'mechanics' ? (MECHANICS_HELP[name] || {}) : {}),
+        };
+        expect(Object.keys(help).length ? help : undefined, name).toBeDefined();
+        expect(help.hint).toBeTruthy();
+        expect(help.explanation).toBeTruthy();
+        expect(help.system).toBeTruthy();
       }
     }
   });
@@ -239,7 +246,7 @@ describe('New law categories', () => {
     expect(world.view[S.MASS]).toBeGreaterThan(mass0);
   });
 
-  it('ENTANGLEMENT law links touching particles and couples them non-locally', () => {
+  it('ENTANGLEMENT law links touching particles without signaling momentum', () => {
     const world = makeWorld(1.0);
     for (let i = 0; i < COUNT; i++) {
       world.view[i * PARTICLE_STRIDE + S.ENTANGLE_ID] = -1;
@@ -251,7 +258,8 @@ describe('New law categories', () => {
     expect(world.view[S.ENTANGLE_ID]).toBe(1);
     expect(world.view[PARTICLE_STRIDE + S.ENTANGLE_ID]).toBe(0);
 
-    // non-local momentum convergence while the link lives
+    // The correlation remains live, but the no-signaling contract forbids
+    // velocity transfer through the link.
     world.view[S.VEL_X] = 2.0;
     world.view[PARTICLE_STRIDE + S.VEL_X] = -2.0;
     world.view[S.ENTANGLE_PHASE] = 1.0;
@@ -261,15 +269,22 @@ describe('New law categories', () => {
       solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
     }
     const rel1 = Math.abs(world.view[S.VEL_X] - world.view[PARTICLE_STRIDE + S.VEL_X]);
-    expect(rel1).toBeLessThan(rel0 * 0.9);
+    expect(rel1).toBe(rel0);
+    expect(world.view[S.ENTANGLE_PHASE]).toBeLessThan(1.0);
   });
 
   it('HISTORY law steers particles toward remembered activity', () => {
     const world = makeWorld(1.0);
+    // The coarse history grid is 12 cells across a 2000-unit world. Put a
+    // second particle into the next x cell so particle 0 has a real gradient.
+    world.view[PARTICLE_STRIDE + S.POS_X] = 220;
     const state = createLawState();
     set(state, LAW_INDEXES.HISTORY);
     const vx0 = world.view[S.VEL_X];
     const vy0 = world.view[S.VEL_Y];
+    // The first tick seeds the history field; the second can read the
+    // neighboring cell's accumulated activity and follow its gradient.
+    solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
     solve(world.view, COUNT, PARTICLE_STRIDE, state, world.dna, WORLD, DT, rng);
     const dx = world.view[S.VEL_X] - vx0;
     const dy = world.view[S.VEL_Y] - vy0;

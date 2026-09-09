@@ -56,6 +56,58 @@ function applyFriction(view, iBase, k) {
 }
 
 /**
+ * HORIZON — bounded event-horizon repulsion/absorption proxy. Massive bodies
+ * create a capture radius; particles inside it receive an inward acceleration.
+ */
+function applyHorizon(view, iBase, jBase, dx, dy, dz, dist, k) {
+  const massJ = Math.max(0, nanGuard(view[jBase + S.MASS]));
+  const radiusJ = Math.max(0.01, nanGuard(view[jBase + S.RADIUS]));
+  const horizon = radiusJ + Math.sqrt(massJ) * 0.5;
+  if (dist <= 0 || dist >= horizon * 4) return null;
+  const falloff = Math.max(0, 1 - dist / (horizon * 4));
+  const mag = Math.min(50, k * massJ * falloff * falloff / Math.max(dist, 0.1));
+  const invDist = 1 / dist;
+  return {
+    ax: clamp(nanGuard(dx * invDist * mag), -50, 50),
+    ay: clamp(nanGuard(dy * invDist * mag), -50, 50),
+    az: clamp(nanGuard(dz * invDist * mag), -50, 50),
+  };
+}
+
+/** Radiation pressure — outward momentum transfer from radiant/energetic bodies. */
+function applyRadiationPressure(view, iBase, jBase, dx, dy, dz, dist, k) {
+  if (dist <= 0) return null;
+  const energy = Math.max(0, nanGuard(view[jBase + S.ENERGY])) +
+    Math.max(0, nanGuard(view[jBase + S.ELECTRIC_ENERGY])) +
+    Math.max(0, nanGuard(view[jBase + S.STORED_ENERGY]));
+  const mag = Math.min(50, k * energy / Math.max(1, dist * dist));
+  const invDist = 1 / dist;
+  return {
+    ax: clamp(nanGuard(-dx * invDist * mag), -50, 50),
+    ay: clamp(nanGuard(-dy * invDist * mag), -50, 50),
+    az: clamp(nanGuard(-dz * invDist * mag), -50, 50),
+  };
+}
+
+/** Mass inertia — applies a bounded inertial resistance to acceleration. */
+function applyMassInertia(view, iBase, ax, ay, az, k) {
+  const mass = Math.max(0.001, nanGuard(view[iBase + S.MASS]));
+  const scale = 1 / (1 + Math.max(0, k) * mass);
+  return { ax: ax * scale, ay: ay * scale, az: az * scale };
+}
+
+/** FIELD — central field gradient, distinct from electromagnetism's electric field. */
+function applyField(view, iBase, cx, cy, cz, k) {
+  const dx = cx - nanGuard(view[iBase + S.POS_X]);
+  const dy = cy - nanGuard(view[iBase + S.POS_Y]);
+  const dz = cz - nanGuard(view[iBase + S.POS_Z]);
+  const dist = Math.hypot(dx, dy, dz);
+  if (dist <= 0) return { ax: 0, ay: 0, az: 0 };
+  const mag = Math.min(50, Math.max(0, k) * Math.min(dist, 100) / 100);
+  return { ax: dx / dist * mag, ay: dy / dist * mag, az: dz / dist * mag };
+}
+
+/**
  * ELASTICITY — soft restitution on contact. When dist < rI + rJ, push i away
  * from j along the normal; magnitude ∝ overlap * k / (combined mass) so light
  * particles bounce harder.
@@ -146,4 +198,8 @@ function applyRotation(view, iBase, cx, cy, cz, k) {
     az: 0,
   };
 }
-export { applyTide, applyFriction, applyElasticity, applyTurbulence, applyCentripetal, applyRotation };
+export {
+  applyTide, applyFriction, applyElasticity, applyTurbulence,
+  applyCentripetal, applyRotation, applyHorizon, applyRadiationPressure,
+  applyMassInertia, applyField,
+};

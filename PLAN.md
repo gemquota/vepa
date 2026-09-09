@@ -1,10 +1,15 @@
 # Implementation Plan: VEPA4 — Integrated Intelligence
 
-**Date**: 2026-08-01 | **Status**: Complete | **Spec**: `SPEC.md`
+**Date**: 2026-08-26 | **Status**: Complete | **Spec**: `SPEC.md`
 
 > **Standards (2026-08-10):** product **VEPA4**, versions `major.minor.build`
-> (current `8.16.2`; legacy v4-line mapping old `4.M.N` → `M.N.0`), commits
+> (current `9.1.2`; legacy v4-line mapping old `4.M.N` → `M.N.0`), commits
 > Conventional Commits 1.0.0 — see `AGENTS.md` §10.4.
+
+## Milestone note (v9.1.2 — 2026-08-26)
+
+- Added `scripts/generate-spec.mjs`, a deterministic Node procedure that extracts live constants, category/law metadata, source structure, UI/simulation/state boundaries, test and audit evidence, and duplicate-concept review data.
+- Generated `docs/spec/` as a hierarchical tree with cross-cutting documents, category/law records, module records, a manifest, and byte-for-byte `spec:check` drift detection.
 
 ## Steps
 

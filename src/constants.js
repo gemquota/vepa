@@ -1,3 +1,7 @@
+import { MECHANICS_HELP, MECHANICS_PARAMETERS } from './physics/lawgroups/mechanicsHelp.js';
+
+export { MECHANICS_HELP, MECHANICS_PARAMETERS };
+
 // ============================================================================
 // VEPA v3 — Core Constants
 // Single Source of Truth for stride layout, DNA parameters, law indexes,
@@ -385,8 +389,8 @@ export const LAW_INDEXES = {
 
   // Electromagnetism (Cyan) — indices 53-65
   CHARGE_LAW:    53,
-  FIELD:         54,
-  CURRENT:       55,
+  ELECTRIC_FIELD: 54,
+  CURRENT:        55,
   RESISTANCE:    56,
   CAPACITANCE:   57,
   INDUCTANCE:    58,
@@ -418,13 +422,13 @@ export const LAW_INDEXES = {
   ENTANGLEMENT:  80,
   HISTORY:       81,
 
-  // 8x16 expansion — Physics (indices 82-87)
-  TIDE:          82,
-  FRICTION:      83,
-  ELASTICITY:    84,
-  TURBULENCE:    85,
-  CENTRIPETAL:   86,
-  ROTATION:      87,
+  // Physics additions (indices 82-87)
+  TIDE:              82,
+  FRICTION:          83,
+  HORIZON:           84,
+  RADIATION_PRESSURE: 85,
+  MASS_INERTIA:      86,
+  FIELD:             87,
 
   // Biology (indices 88-91)
   SYMBIOSIS:     88,
@@ -479,9 +483,19 @@ export const LAW_INDEXES = {
   WAVEFUNCTION:  125,
   HYPERPLANE:    126,
   ANTIMATTER:    127,
+
+  // Mechanics expansion (indices 128-135; 136 total law slots)
+  CONTACT:       128,
+  MOMENTUM:      129,
+  INERTIA:       130,
+  TORQUE:        131,
+  CONSTRAINT:    132,
+  FRAGMENTATION: 133,
+  TOPOLOGY:      134,
+  ADHESION:      135,
 };
 
-export const LAW_COUNT = 128;
+export const LAW_COUNT = 136;
 
 // --- Law Category Mapping ---
 
@@ -501,6 +515,11 @@ export const LAW_CATEGORIES = {
       LAW_INDEXES.SINGULARITY,
       LAW_INDEXES.FRICTION,
       LAW_INDEXES.TIDE,
+      LAW_INDEXES.HORIZON,
+      LAW_INDEXES.RADIATION_PRESSURE,
+      LAW_INDEXES.MASS_INERTIA,
+      LAW_INDEXES.FIELD,
+
     ],
   },
 
@@ -509,10 +528,14 @@ export const LAW_CATEGORIES = {
   mechanics: {
     color: 'SLATE',
     laws: [
-      LAW_INDEXES.ELASTICITY,
-      LAW_INDEXES.TURBULENCE,
-      LAW_INDEXES.CENTRIPETAL,
-      LAW_INDEXES.ROTATION,
+      LAW_INDEXES.CONTACT,
+      LAW_INDEXES.MOMENTUM,
+      LAW_INDEXES.INERTIA,
+      LAW_INDEXES.TORQUE,
+      LAW_INDEXES.CONSTRAINT,
+      LAW_INDEXES.FRAGMENTATION,
+      LAW_INDEXES.TOPOLOGY,
+      LAW_INDEXES.ADHESION,
     ],
   },
   biology: {
@@ -603,7 +626,7 @@ export const LAW_CATEGORIES = {
     color: 'BLUE',
     laws: [
       LAW_INDEXES.CHARGE_LAW,
-      LAW_INDEXES.FIELD,
+      LAW_INDEXES.ELECTRIC_FIELD,
       LAW_INDEXES.CURRENT,
       LAW_INDEXES.RESISTANCE,
       LAW_INDEXES.CAPACITANCE,
@@ -664,14 +687,15 @@ export const LAW_CATEGORIES = {
   },
 };
 
+
 // --- Law sub-groups (UI splitting — breaks the 128-law wall into themes) ---
 // Each category lists labelled sub-groups; every law appears in exactly one.
 // The LAWS tab renders these as sub-headers inside each collapsible category.
 
 export const LAW_SUBGROUPS = {
   physics: [
-    { label: 'ATTRACTION', laws: [LAW_INDEXES.GRAV, LAW_INDEXES.PLANETARY, LAW_INDEXES.ACCR, LAW_INDEXES.VOID, LAW_INDEXES.TIDE, LAW_INDEXES.SINGULARITY, LAW_INDEXES.CENTRIPETAL] },
-    { label: 'MOTION & COLLISION', laws: [LAW_INDEXES.DRAG, LAW_INDEXES.ENTR, LAW_INDEXES.COLL, LAW_INDEXES.FRICTION, LAW_INDEXES.ELASTICITY, LAW_INDEXES.TURBULENCE, LAW_INDEXES.ROTATION] },
+    { label: 'ATTRACTION', laws: [LAW_INDEXES.GRAV, LAW_INDEXES.PLANETARY, LAW_INDEXES.ACCR, LAW_INDEXES.VOID, LAW_INDEXES.TIDE, LAW_INDEXES.SINGULARITY, LAW_INDEXES.HORIZON, LAW_INDEXES.MASS_INERTIA] },
+    { label: 'MOTION & COLLISION', laws: [LAW_INDEXES.DRAG, LAW_INDEXES.ENTR, LAW_INDEXES.COLL, LAW_INDEXES.FRICTION, LAW_INDEXES.RADIATION_PRESSURE, LAW_INDEXES.FIELD] },
     { label: 'BONDING', laws: [LAW_INDEXES.BOND] },
   ],
   biology: [
@@ -697,7 +721,7 @@ export const LAW_SUBGROUPS = {
     { label: 'SOUL', laws: [LAW_INDEXES.SOUL_LAW, LAW_INDEXES.ASTRAL, LAW_INDEXES.SYNCHRONICITY, LAW_INDEXES.ENTANGLEMENT] },
   ],
   electromagnetism: [
-    { label: 'STATIC FIELDS', laws: [LAW_INDEXES.CHARGE_LAW, LAW_INDEXES.FIELD, LAW_INDEXES.CAPACITANCE, LAW_INDEXES.FLUX, LAW_INDEXES.SHIELDING] },
+    { label: 'STATIC FIELDS', laws: [LAW_INDEXES.CHARGE_LAW,      LAW_INDEXES.ELECTRIC_FIELD, LAW_INDEXES.CAPACITANCE, LAW_INDEXES.FLUX, LAW_INDEXES.SHIELDING] },
     { label: 'CONDUCTION', laws: [LAW_INDEXES.CURRENT, LAW_INDEXES.RESISTANCE, LAW_INDEXES.SUPERCONDUCTIVITY, LAW_INDEXES.INDUCTANCE] },
     { label: 'MAGNETIC & WAVES', laws: [LAW_INDEXES.MAGNETISM, LAW_INDEXES.RESONANCE, LAW_INDEXES.ANTENNA, LAW_INDEXES.POLARIZATION] },
     { label: 'IONIZATION', laws: [LAW_INDEXES.IONIZATION, LAW_INDEXES.DISCHARGE, LAW_INDEXES.PLASMA] },
@@ -742,6 +766,14 @@ export const LAW_DEPENDENCIES = {
 
 // --- Linked Law Parameter Map (128 Laws × 2-5 Parameters) ---
 export const LAW_PARAMETERS = {
+  [LAW_INDEXES.CONTACT]:       ['RADIUS (Stride 56)', 'MASS (Stride 6)', 'STIFFNESS (DNA 8)'],
+  [LAW_INDEXES.MOMENTUM]:      ['MASS (Stride 6)', 'VEL_X/Y/Z (Stride 3-5)', 'MOMENTUM_GAIN (World)'],
+  [LAW_INDEXES.INERTIA]:       ['MASS (Stride 6)', 'INERTIA (DNA 26)', 'FORCE (DNA 0)'],
+  [LAW_INDEXES.TORQUE]:        ['TORQUE (DNA 2)', 'VEL_X/Y/Z (Stride 3-5)', 'POS_X/Y/Z (Stride 0-2)'],
+  [LAW_INDEXES.CONSTRAINT]:    ['RADIUS (Stride 56)', 'BOND_COUNT (Stride 58)', 'CONSTRAINT_STRENGTH (World)'],
+  [LAW_INDEXES.FRAGMENTATION]: ['VEL_X/Y/Z (Stride 3-5)', 'ARMOR (Stride 63)', 'MASS (Stride 6)'],
+  [LAW_INDEXES.TOPOLOGY]:      ['BOND_COUNT (Stride 58)', 'BOND_PARTNER_1-6 (Stride 59-84)', 'TOPOLOGY_GAIN (World)'],
+  [LAW_INDEXES.ADHESION]:      ['RADIUS (Stride 56)', 'BOND_COUNT (Stride 58)', 'ADHESION_RANGE (World)'],
   // Physics (Indices 0-6, 38-39, 79, 82-87)
   [LAW_INDEXES.GRAV]:           ['FORCE (DNA 0)', 'GLOBAL_G (World)', 'MASS (Stride 6)', 'RADIUS (Stride 56)'],
   [LAW_INDEXES.DRAG]:           ['VISCOSITY (DNA 1)', 'DAMPING (World)', 'FRICTION_COEFF (World)', 'MAX_VELOCITY (DNA 28)'],
@@ -833,8 +865,7 @@ export const LAW_PARAMETERS = {
   [LAW_INDEXES.SYNCHRONICITY]: ['SYNCHRONICITY_RATE (World)', 'TUNING_CH1-CH4 (DNA 22-25)', 'RESONANCE_Q (World)', 'PHASE_1 (Stride 68)'],
 
   // Electromagnetism (Indices 53-65, 107-109)
-  [LAW_INDEXES.CHARGE_LAW]:    ['POLARITY (DNA 4)', 'COULOMB_CONSTANT (World)', 'CONDUCTIVITY (DNA 32)', 'CHARGE (Stride 67)'],
-  [LAW_INDEXES.FIELD]:         ['POLARITY (DNA 4)', 'MAGNETIC_FLUX_SCALE (World)', 'MAGNETIC_MOMENT (DNA 33)', 'CHARGE (Stride 67)'],
+  [LAW_INDEXES.CHARGE_LAW]:    ['POLARITY (DNA 4)', 'COULOMB_CONSTANT (World)', 'CONDUCTIVITY (DNA 32)', 'CHARGE (Stride 67)'],[LAW_INDEXES.ELECTRIC_FIELD]: ['POLARITY (DNA 4)', 'MAGNETIC_FLUX_SCALE (World)', 'MAGNETIC_MOMENT (DNA 33)', 'CHARGE (Stride 67)'],
   [LAW_INDEXES.CURRENT]:       ['CONDUCTIVITY (DNA 32)', 'COULOMB_CONSTANT (World)', 'VEL_X/Y/Z (Stride 3-5)', 'CHARGE (Stride 67)'],
   [LAW_INDEXES.RESISTANCE]:    ['CONDUCTIVITY (DNA 32)', 'HEAT_OUTPUT (DNA 39)', 'TEMPERATURE (Stride 66)', 'HEAT_CAPACITY (World)'],
   [LAW_INDEXES.CAPACITANCE]:   ['POLARITY (DNA 4)', 'BASE_RADIUS (DNA 29)', 'STORED_ENERGY (Stride 78)', 'ELECTRIC_ENERGY (Stride 77)'],
