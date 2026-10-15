@@ -88,3 +88,27 @@ These decisions come from the accepted product roadmap and the RB translation in
 6. What fidelity/error guarantees are acceptable for each approximate or accelerated solver backend?
 7. What provider, region, tenancy, price, retention and rollback contract would authorize hosted worlds?
 8. What is the evidence-backed state of each roadmap phase after browser, replay, performance and recovery tests?
+
+
+## Roadmap v4 product and scope constraints
+
+| Constraint | Planning consequence | Required evidence |
+|---|---|---|
+| Mobile-browser-first, neon-noir experience | Design and verify primary flows for touch/small viewport; preserve the visual contract while keeping science inspection usable | Real-browser tests on target mobile-class devices and documented fallback behavior |
+| Secret progression | Teach physics first; reveal rung labels/help only after progression reaches them | First-run tests verify tutorial duration and spoiler-safe unlock rules |
+| Five starter scenarios and deterministic text-to-seed | Scenario identity and exact seed text are part of provenance, not incidental UI state | Stable conversion, scenario config round-trip and launch/replay fixtures |
+| Replay honesty | Seed alone is insufficient if mutable state, RNG streams, clocks, versions or interventions are omitted | State inventory, compatibility matrix, replay differential tests and explicit divergence reporting |
+| Safe persistence | A failed import/migration must not corrupt the active world or destroy the only good save | Preflight validation, atomic/rollback behavior and failure-injection tests |
+| Evidence-linked emergence | Each rung requires causal model rules and observable state/history | Per-rung acceptance fixtures and source/event/checkpoint links |
+| Distinct social and biological channels | Genetics, kinship, care, group membership, culture and institutions cannot be inferred interchangeably | Ontology tests and long-run transmission/continuity scenarios |
+| Local-first with optional hosting | Hosted compute cannot become a prerequisite for local play | Offline launch, local fallback, explicit remote authority and security/cost review |
+| Privacy and community safety | Shared worlds unlisted by default; publication explicit; diagnostics separate from analytics | Default/opt-out, permissions, retention, moderation and rollback tests |
+| No silent performance degradation | Only designated rendering layers may degrade under pressure | Compare simulation state/outcomes across render-quality settings |
+| Stable release gate | Any known defect blocks stable release under accepted roadmap policy | Reproducible release checks and maintainer-approved roadmap change if policy changes |
+| Scope containment | Old RRP sets, 48 system roadmap variants and experimental research are not automatically release commitments | Traceable inclusion decision, isolated world/save and explicit promotion gate |
+
+## Decomposition and audit governance
+
+The source [DECOMPOSITION_PLAN.md](https://github.com/DayneK/vepa/blob/main/docs/DECOMPOSITION_PLAN.md) is explicitly proposed and says extraction has not been executed. This consolidated feature plan does not grant the pending approval. Any future extraction must be incremental, behavior-preserving, one module/commit at a time, and gated by tests and benchmark parity.
+
+The source audit-remediation plan also includes backend correctness and provenance decisions. Reopening a resolved item requires current evidence and a specific regression or changed requirement; declaring it resolved requires its current executable gate and supporting evidence. Historical PLAN/changelog claims are leads, not a substitute for current acceptance.
