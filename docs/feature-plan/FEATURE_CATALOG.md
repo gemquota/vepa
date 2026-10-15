@@ -106,3 +106,52 @@ All feature sets should reuse shared infrastructure where practical rather than 
 Some RRP items explicitly reserve true sentience claims, rendered spacetime warping, unlimited cosmic scale, interstellar travel, and new law slots as out of scope or deferred. Preserve those boundaries unless a new decision record changes them.
 
 The 128-law ceiling appears in later RRP plans as a constraint. Treat it as a design-time constraint to verify against the current law representation before extending the model.
+
+## 6. Product roadmap requirements
+
+The accepted product roadmap in [VEPA_Roadmap_v4-5.md](https://github.com/DayneK/vepa/blob/main/VEPA_Roadmap_v4-5.md) is the product-level authority. This catalog groups its requirements into acceptance-oriented capabilities; it does not replace the roadmap's numbered requirements or final checklist.
+
+| ID | Capability | Required outcome | Acceptance boundary |
+|---|---|---|---|
+| PR-01 | Emergence ladder | Particles → molecules → hunting clusters → metastructures → fictional awakening → minds → tribes, technology and culture | Each transition has explicit evidence and acceptance; no rung implies real consciousness |
+| PR-02 | First-run experience | Mobile-first physics sandbox, short tutorial and progressive discovery without future-rung spoilers | Tutorial and progression tested in browser; help reveals concepts at the intended milestone |
+| PR-03 | Starter scenarios and seeds | Primordial soup, head start, harsh world, peaceful, chaos; preserve exact seed text and derived seed | Test scenario identity, stable text-to-seed conversion, configuration and provenance |
+| PR-04 | Canonical configuration | Versioned/validated laws, world parameters, species/genome and launch settings | Validate before execution; preserve original configuration when proposing corrections |
+| PR-05 | Restart-only physics changes | Stage law and physics-affecting parameter changes; apply only on new-world start or explicit restart | No active-run mutation through UI, preset, import, worker or backend paths |
+| PR-06 | Deterministic state and replay | Capture state, seed/RNG, tick/cadence, config, version and relevant event/intervention history | Define compatibility limits and report divergence honestly |
+| PR-07 | Persistence and recovery | Versioned saves, safe import/export, protected recovery material and rollback paths | Invalid input cannot corrupt the active session or destroy the only good save |
+| PR-08 | Evidence-grounded history | Link events, entities, lineages and highlights to observations and replay/checkpoint evidence | Separate observed state, derived metrics, inference and uncertainty |
+| PR-09 | Selected renderer direction | GPU-rendered 3D, local rendering, state-faithful overlays and explicit fallbacks | Canvas2D/Pixi are baseline/compatibility paths, not completion of target 3D |
+| PR-10 | Honest resource management | Separate simulation throughput, rendering performance, memory and storage; warn about costly capabilities | Adapt rendering only, never silently alter physics or progression |
+| PR-11 | Optional hosted execution | Provider-neutral opt-in remote compute with cost, privacy, authentication, recovery and explicit authority | Local remains usable; no client secrets; continuity claims require full-state evidence |
+| PR-12 | Sharing and privacy | Portable seeds/configuration, compatibility metadata, unlisted-by-default worlds and explicit publication | Reject incompatible imports rather than silently reinterpreting them; visitors read-only by default |
+| PR-13 | Release governance | Reproducible tests/builds, browser verification, migration guidance, changelog, maintainer review and rollback where required | Any known defect blocks stable release under the accepted roadmap |
+| PR-14 | Research isolation | Costly/speculative systems run in separate experimental worlds/saves | Promotion requires hypothesis, metrics, reproducibility limits and explicit decision |
+
+## 7. RB technical module catalogue
+
+RB-00 through RB-11 are technical design areas, not release-status labels. The source specs mix proposed targets with historical source observations; implementation status must be rechecked against the target repository and commit.
+
+| ID | Module boundary | Core responsibility | Contract / key risk |
+|---|---|---|---|
+| RB-00 | Current program baseline | Record source snapshot, routes, state shapes, capabilities and parity fixtures | Snapshot facts expire; distinguish historical observations from current evidence |
+| RB-01 | App shell and orchestrator | Thin composition root, capability probes, module registry and lifecycle; runtime owns session coordination | Reject cycles, missing dependencies and duplicate mutable-state ownership |
+| RB-02 | Visual shell and UI modules | HUD, Setup, Saves, Data, Help and responsive panel composition | UI sends validated commands and consumes read models; no direct writes to world buffers |
+| RB-03 | World parameter system | Canonical versioned config, validation, Easy/Advanced views and staged changes | Both modes use same values; physics changes restart-only; preserve provenance |
+| RB-04 | Species and genome system | Genome schema, species roster, lifecycle and editing | Maintain buffer/registry alignment through birth, death, speciation, import and slot reuse |
+| RB-05 | Law ontology and fidelity | Law metadata, dependencies, units, state, ordering, approximations and audit links | A UI tile is not proof of dispatch; law-budget changes need evidence and approval |
+| RB-06 | Physics solver and performance | Deterministic tick stages, law kernels, constraints, integration, lifecycle and bounded emergent passes | Exact CPU is reference; report algorithm-specific fidelity, stability and benchmark evidence |
+| RB-07 | Execution backends and cloud processing | Common compute-session interface for main thread, worker, GPU-assisted and optional remote adapters | Local default; versioned commands/acks, bounded snapshots, explicit authority and safe fallback |
+| RB-08 | Local renderer and visualization | Consume immutable/versioned RenderFrames and deliver GPU-rendered 3D direction | Renderer owns no physics; test parity, device loss, interpolation, fallbacks and frame/tick consistency |
+| RB-09 | State, presets and persistence | Canonical state partitions, snapshots, migrations, saves, undo and recovery | Pure preflight migrations, atomic writes, protected saves and honest replay guarantees |
+| RB-10 | Emergent systems and observability | Emergent systems, metrics, event history, provenance and inspection projections | Bound actions; distinguish observation from inference; journal consequential changes |
+| RB-11 | Module packages, development and integration | Versioned manifests, ports, contract tests, dependency graph and single-package build | Isolated development does not imply separate deployments; reject cycles and duplicate owners |
+
+### Cross-module interfaces to standardize
+
+- **Commands:** validated, versioned and acknowledged; include session, command identity and expected state/tick where applicable.
+- **State ownership:** each mutable aggregate has one authoritative owner. UI, renderer, analytics and transport cannot become competing owners.
+- **Events and frames:** typed/versioned envelopes carry session and sequence/tick identity; render snapshots are projections, not authoritative state.
+- **Persistence:** schema/version metadata, migration outcome, provenance and compatibility status are explicit.
+- **Capabilities:** report the backend actually active, not merely available; unsupported features and fallback losses are visible.
+- **Verification:** module unit tests do not replace integration, replay, browser, numerical or performance acceptance where required.
