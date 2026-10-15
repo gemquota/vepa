@@ -59,3 +59,45 @@ When a feature changes:
 3. Add or amend a decision/risk entry if architecture or safety bounds change.
 4. Add source and test evidence here, including the commit tested.
 5. Do not delete a historical design decision just because implementation differs; record whether it was superseded, rejected, or left incomplete.
+
+## Product roadmap and RB crosswalk
+
+The accepted roadmap and RB source set live in the separate [DayneK/vepa repository](https://github.com/DayneK/vepa). Links preserve provenance and do not imply that the source documents were copied into this repository.
+
+| Product requirement / roadmap area | Catalog mapping | RB technical mapping | Status in source audit | Evidence required |
+|---|---|---|---|---|
+| Vision, emergence and governing principles | PR-01, PR-08, PR-14 | MASTER_SPEC §§1–5; RB-00–RB-11 | Design authority recorded; per-feature acceptance open | Separate acceptance for each rung; state/event evidence; no real-consciousness claim |
+| Mobile-first experience, starter scenarios and seed provenance | PR-02, PR-03 | RB-00, RB-02, RB-03, RB-04, RB-08, RB-10 | Five starter scenarios and deterministic text-to-seed retention reported as unit-tested groundwork; full first-run/progression acceptance open | Current-source verification, browser tests, scenario fixtures and seed/config round-trip |
+| Canonical configuration and law fidelity | PR-04, PR-05 | RB-03, RB-04, RB-05, RB-06, RB-09 | Partial restart staging reported; global atomicity, provenance and migration remain open | Cross-entry-point restart tests, schema validation, per-law semantics and migration fixtures |
+| Replay, save/load, recovery and provenance | PR-06, PR-07, PR-08 | RB-01, RB-03, RB-04, RB-05, RB-09, RB-10 | Existing saves/undo and subsystem seams are partial evidence, not replay/recovery acceptance | State/RNG/cadence inventory, round-trip tests, failure injection and divergence reporting |
+| Modular application shell and contracts | RB-01, RB-02, RB-11 | MASTER_SPEC §§3–5 | Proposed architecture; full ownership and teardown parity remain future work | Manifests, dependency graph, owner/cycle validation, integration tests and browser parity |
+| Solver correctness and performance | PR-10 | RB-05, RB-06 | Exact CPU and approximate/GPU-assisted paths described in historical baseline; benchmark/fidelity acceptance open | Refresh backend inventory; differential tests; reproducible subsystem benchmarks |
+| Selected GPU-rendered 3D direction | PR-09 | RB-02, RB-08 | Canvas2D/Pixi baseline described; target GPU 3D not evidenced as implemented or browser-verified | Real-browser GPU 3D tests, screenshots, camera/interpolation and explicit fallback tests |
+| Optional remote/hosted execution | PR-11, PR-12 | RB-07, RB-09, RB-11 | No cloud simulation transport/provider contract evidenced in source baseline; proposal only | Security review, cost/retention/tenancy decision, auth/transport tests, checkpoint continuity and rollback |
+| Emergent systems and observability | PR-01, PR-08 | RB-04, RB-05, RB-06, RB-10 | Existing systems partial; end-to-end provenance and replay evidence open | Event fixtures, detection vs confirmation, bounded actions, metric definitions and evidence links |
+| Release governance and experimental isolation | PR-13, PR-14 | MASTER_SPEC §§4–6; RB-01–RB-11 | Constraints accepted; release-level evidence incomplete | Full test/build/browser suite, recovery/migration evidence, benchmarks, release notes and maintainer review |
+
+## RB source map and status provenance
+
+| Source record | Role in this plan | Status caveat |
+|---|---|---|
+| [VEPA Roadmap v4-5](https://github.com/DayneK/vepa/blob/main/VEPA_Roadmap_v4-5.md) | Accepted product decisions, phases, exclusions and final checklist | Product authority, not implementation report |
+| [docs/ROADMAP_V4.md](https://github.com/DayneK/vepa/blob/main/docs/ROADMAP_V4.md) | Companion roadmap and rationale relative to historical PLAN | Companion target; root roadmap remains canonical |
+| [RB MASTER_SPEC](https://github.com/DayneK/vepa/blob/main/docs/spec/rb/MASTER_SPEC.md) | Combined target architecture and cross-cutting contracts | Proposed design; not implementation authorization |
+| [RB 00–11 specifications](https://github.com/DayneK/vepa/tree/main/docs/spec/rb) | Baseline and subsystem contracts | Mix of design targets and historical source observations; refresh before use |
+| [ROADMAP_CROSSWALK](https://github.com/DayneK/vepa/blob/main/docs/spec/rb/ROADMAP_CROSSWALK.md) | Requirement and phase mapping | Mapping is not completion evidence |
+| [ROADMAP_PROGRESS](https://github.com/DayneK/vepa/blob/main/docs/spec/rb/ROADMAP_PROGRESS.md) | Dated implementation/evidence status and actionable work queues | Dated 2026-10-15; reports browser acceptance blocked by missing libglib-2.0.so.0; refresh against target commit |
+| [Module decomposition](https://github.com/DayneK/vepa/blob/main/docs/systems/module-decomposition.md) | Proposed boundaries and responsibility partition | Verify against actual imports, mutable state and test seams |
+| [Meta-model](https://github.com/DayneK/vepa/blob/main/docs/systems/meta-model.md) | Shared vocabulary for entities, state and system relations | Semantic model does not prove runtime schema |
+| [Complete systems atlas](https://github.com/DayneK/vepa/blob/main/docs/systems/complete-atlas.md) | Broad inventory of system/roadmap variants | Generated reference dated 2026-09-21; source files remain canonical and variants are not all approved scope |
+
+## Verification log
+
+| Date | Scope | Result | Evidence |
+|---|---|---|---|
+| Pending | Full catalog-to-source audit in target repository | Not run as part of this documentation integration | Record target commit, commands, test/build/browser results and benchmarks |
+| 2026-10-15 (source report) | RB proposal's historical baseline | Browser acceptance not verified; Chromium host dependency missing | See linked ROADMAP_PROGRESS; this is source-reported, not a test run performed by this integration |
+
+## Cross-repository maintenance rule
+
+When source documentation changes, compare the accepted product roadmap first, then RB technical contracts and dated progress evidence. Update this plan only where new material adds requirements, clarifies dependencies or changes acceptance criteria. Keep source links and date/commit context; do not mirror entire master specs into this directory or allow duplicated copies to drift. If a source repository moves or disappears, record the provenance break rather than silently substituting another source.
