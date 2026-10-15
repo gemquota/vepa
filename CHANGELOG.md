@@ -8,11 +8,6 @@
 - Retire the legacy adaptive-physics controls from the WORLD panel while retaining their persisted keys for backwards compatibility.
 - Add a regression test comparing solver output when old adaptive-quality values differ.
 
-### fix(compute): report the active CPU backend honestly
-
-- Default the runtime and worker to CPU until GPU force computation is wired into the authoritative solver.
-- Disable GPU selection in SETTINGS and report that the WebGPU kernel remains experimental and disconnected from active simulation ticks.
-
 
 ## [4.9.5] - 2026-08-26 → 9.1.2
 
