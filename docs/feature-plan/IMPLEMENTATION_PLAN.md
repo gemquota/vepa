@@ -201,3 +201,28 @@ The sequence below aligns the existing RRP inventory to the accepted product roa
 | RB-09 Persistence | A–B, then G | Canonical state/schema | Migration, integrity, recovery and replay tests |
 | RB-10 Emergent/observability | B, then F | Events, metrics, lifecycle and provenance | Bounded effects and evidence-grounded histories |
 | RB-11 Module integration | C | Module manifests/contracts | Cycle/owner checks, integrated build and contract suite |
+
+
+## Roadmap v4 phased delivery mapping
+
+This section maps the accepted product roadmap's phases 0–7 to the consolidated work plan. It complements, rather than replaces, the detailed phase definitions and final acceptance checklist in the source roadmap.
+
+| Roadmap phase | Purpose | Prerequisite / work in this plan | Exit gate |
+|---|---|---|---|
+| Phase 0: Contracts and executable foundation | Establish reliable contracts, baseline and executable evidence | Existing Phase A; RB-00; canonical config/state contracts; browser and benchmark setup | Baseline commit, generated-spec drift check, test/build results, reproducible benchmarks, ownership map and requirement evidence links |
+| Phase 1: End-to-end emergence | Deliver the first complete, inspectable emergence path rather than isolated subsystems | Phases B–E; PR-01–PR-05; RB-03–RB-08 | At least one end-to-end rung transition has causal mechanics, visible state, provenance, deterministic fixtures and browser acceptance |
+| Phase 2: Tribes and culture | Connect persistent groups, cultural transmission, shared memory and social continuity | Phase F; RB-04/RB-10; systems ontology and implementation-gap audit | Representative group/culture scenario demonstrates formation, persistence, transmission and evidence-linked history |
+| Phase 3: Agents, relationships and technology | Add explicit agency and typed social/material relations where approved | Phase F plus ontology decisions; RB-04/RB-06/RB-10 | Agent actions bounded and journaled; relationship/technology claims have explicit state, lifecycle, causal rules and acceptance |
+| Phase 4: Reliable replay and sharing | Deliver reliable save, replay, portability and safe publication | Phase G persistence/replay work; RB-09 and relevant RB-01/RB-10 contracts | Replay and migration compatibility tested; divergence reported; import failure safe; sharing defaults and access controls verified |
+| Phase 5: Hosted worlds and sustainable operations | Add optional remote execution and sustainable operations | Phase G remote work; RB-07/RB-09; approved service ADRs | Threat model, authentication, tenancy, cost/credit lifecycle, retention, recovery, rollback and local fallback verified |
+| Phase 6: Verified community features | Release gallery, challenges, leaderboards or other community-facing features | Phase G; sharing/replay gates and moderation/privacy decisions | Reproducible results, publication permissions, moderation, abuse controls and rollback evidence |
+| Phase 7: Experimental research and deferred backlog | Explore advanced or expensive ideas without contaminating stable runs | Phase H; isolated worlds/saves | Each experiment has hypothesis, budget, reproducibility limits, evaluation and promote/revise/abandon decision |
+
+### Additional engineering gates from the wider docs tree
+
+- **Generated specification drift:** run `npm run spec:check`; regenerate with `npm run spec:generate` only when intended and review the resulting diff. Generated specs are derived evidence, not an independent implementation.
+- **Audit sign-off:** preserve executable repository/audit gates and backend-specific evidence. The historical audit-remediation plan records decisions around WebGPU validation on real devices, FMM accuracy/retirement, mechanics hot-path consolidation, law semantics and provenance; verify their current status before reopening or declaring them done.
+- **Renderer evidence:** reproduce the renderer benchmark before making performance claims. PixiJS beating Canvas2D on the recorded 2D workload is not evidence of GPU-rendered 3D completion, nor of GPU physics.
+- **Incremental extraction:** treat `docs/DECOMPOSITION_PLAN.md` as a proposed, approval-gated plan. If approved later, extract one module per commit, preserve public exports and behavior, run characterization/parity tests, and benchmark hot paths. Do not execute a big-bang rewrite as a side effect of this feature-plan integration.
+- **System-model promotion:** before turning a derived pattern into a runtime entity, define stable identity, authoritative owner, lifecycle, serialization/migration, causal links, bounded resource use and tests. Keep analytical projections read-only with respect to authoritative physics state.
+- **Performance and fidelity:** measure simulation, rendering, memory, storage, worker/queue overhead and numerical error separately. The exact/reference solver remains the comparison oracle where the accepted roadmap requires it; do not claim a faster backend is equivalent without differential evidence.
