@@ -64,3 +64,11 @@ test('GPU opt-in remains safe when WebGPU is unavailable', async ({ page }) => {
   });
   expect(fallback).toBeNull();
 });
+
+test('labels CPU as the active backend until GPU dispatch is integrated', async ({ page }) => {
+  await page.goto('/');
+  const select = page.locator('#compute-engine');
+  await expect(select).toHaveValue('cpu');
+  await expect(select.locator('option[value="gpu"]')).toBeDisabled();
+  await expect(page.locator('#compute-engine-status')).toContainText('not connected to the active solver');
+});

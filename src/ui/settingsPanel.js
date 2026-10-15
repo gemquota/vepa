@@ -51,11 +51,11 @@ export function createSettingsPanel(bus, lawStateObj) {
   html += '<div class="setting-row">';
   html += '<label class="setting-label" for="compute-engine">PHYSICS BACKEND</label>';
   html += '<select id="compute-engine" class="setting-select" title="Choose the physics compute backend">';
-  html += '<option value="gpu">GPU (WebGPU)</option>';
+  html += '<option value="gpu" disabled>GPU (not integrated yet)</option>';
   html += '<option value="cpu">CPU</option>';
   html += '</select>';
   html += '</div>';
-  html += '<div id="compute-engine-status" class="setting-status" role="status">GPU is selected by default. WebGPU currently accelerates the gravity/collision subset; CPU handles the remaining laws and is used when WebGPU is unavailable.</div>';
+  html += '<div id="compute-engine-status" class="setting-status" role="status">Physics currently runs on the CPU. The WebGPU force kernel is experimental and is not connected to the active solver.</div>';
   html += '</div>';
 
   // ── Meta / render section ──
@@ -81,15 +81,17 @@ export function createSettingsPanel(bus, lawStateObj) {
   const computeSelect = document.getElementById('compute-engine');
   const computeStatus = document.getElementById('compute-engine-status');
   if (computeSelect) {
-    computeSelect.value = runtimeConfig.computeEngine;
+    // Older saves may contain computeEngine='gpu'. Normalize them to the
+    // only backend currently wired into the authoritative solver path.
+    runtimeConfig.computeEngine = 'cpu';
+    computeSelect.value = 'cpu';
     computeSelect.addEventListener('change', () => {
-      runtimeConfig.computeEngine = computeSelect.value === 'cpu' ? 'cpu' : 'gpu';
+      runtimeConfig.computeEngine = 'cpu';
+      computeSelect.value = 'cpu';
       if (computeStatus) {
-        computeStatus.textContent = runtimeConfig.computeEngine === 'gpu'
-          ? 'GPU selected. The worker will use WebGPU when available and report CPU fallback otherwise.'
-          : 'CPU selected. Physics stays on the validated synchronous CPU path.';
+        computeStatus.textContent = 'Physics currently runs on the CPU. GPU force compute remains experimental and is not connected to the active solver.';
       }
-      bus.emit('compute:changed', { engine: runtimeConfig.computeEngine });
+      bus.emit('compute:changed', { engine: 'cpu' });
     });
   }
 
