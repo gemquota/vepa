@@ -6,6 +6,7 @@ import { createLawState, set as lawSet } from '../../src/state/lawState.js';
 import { LAW_INDEXES } from '../../src/constants.js';
 import { runtimeConfig } from '../../src/state/runtimeConfig.js';
 import { SplitMix32 } from '../../src/core/prng.js';
+import { createWorldParams } from '../../src/state/worldParams.js';
 
 const STRIDE = 100;
 const WORLD = 100;
@@ -65,5 +66,51 @@ describe('FMM solver path', () => {
     expect(view[6]).toBe(beforeMass);
     for (let i = 0; i < view.length; i++) expect(Number.isFinite(view[i])).toBe(true);
     expect(view.some((value, i) => i % STRIDE === 3 && value !== 0)).toBe(true);
+  });
+});
+
+describe('physics interaction budget', () => {
+  it('does not change solver output when legacy adaptive-quality settings differ', () => {
+    const count = 64;
+    const initial = new Float32Array(count * STRIDE);
+    for (let i = 0; i < count; i++) {
+      const b = i * STRIDE;
+      initial[b] = 50 + (i % 8) * 0.15;
+      initial[b + 1] = 50 + (Math.floor(i / 8) % 8) * 0.15;
+      initial[b + 2] = 50 + (i % 4) * 0.15;
+      initial[b + 6] = 1;
+      initial[b + 56] = 0.6;
+    }
+
+    const baselineParams = {
+      ...createWorldParams(),
+      AUTO_TUNE: 0,
+      GRID_DIM: 12,
+      CELL_CAP: 100,
+      MAX_INTERACTIONS: 500,
+      NEIGHBOR_BUF: 2000,
+      QUALITY_MODE: 1,
+      TARGET_FPS: 15,
+      PAIRWISE_BUDGET: 8,
+    };
+    const originalParams = runtimeConfig.worldParams;
+    const originalEngine = runtimeConfig.gravEngine;
+    try {
+      const adaptiveConfigView = initial.slice();
+      const fixedConfigView = initial.slice();
+      const adaptiveLaws = createLawState();
+      const fixedLaws = createLawState();
+      lawSet(adaptiveLaws, LAW_INDEXES.GRAV);
+      lawSet(fixedLaws, LAW_INDEXES.GRAV);
+      runtimeConfig.gravEngine = 'exact';
+      runtimeConfig.worldParams = { ...baselineParams, QUALITY_MODE: 1, TARGET_FPS: 15, PAIRWISE_BUDGET: 8 };
+      solve(adaptiveConfigView, count, STRIDE, adaptiveLaws, null, WORLD, 0.1, new SplitMix32(11));
+      runtimeConfig.worldParams = { ...baselineParams, QUALITY_MODE: 0, TARGET_FPS: 60, PAIRWISE_BUDGET: 500 };
+      solve(fixedConfigView, count, STRIDE, fixedLaws, null, WORLD, 0.1, new SplitMix32(11));
+      expect(Array.from(adaptiveConfigView)).toEqual(Array.from(fixedConfigView));
+    } finally {
+      runtimeConfig.worldParams = originalParams || createWorldParams();
+      runtimeConfig.gravEngine = originalEngine;
+    }
   });
 });
