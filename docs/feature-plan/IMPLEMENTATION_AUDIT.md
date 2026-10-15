@@ -99,12 +99,12 @@ These are static generator outputs. They are not a fresh test run, and a test re
 - **Performed:** inspected the pinned source for package scripts, generated specs, solver, worker, GPU compute module, active renderer, PRNG initialization, save/restore, preset, group registry and E2E test definitions.
 - **Observed CI/deployment:** GitHub commit status reports Vercel success for the baseline and documentation PR preview. No GitHub Actions workflow runs were returned for either commit.
 - **Not run:** `npm test`, `npm run syntax-check`, `npm run build`, `npm run spec:check`, Playwright/E2E, mobile browser, deterministic replay, long-run civilization acceptance, or renderer/solver benchmarks. This environment could not resolve `github.com` for a local clone, so the test suite could not be executed locally.
-- **No runtime code changed.** This audit adds planning/evidence documentation only.
+- **No runtime code changed in this audit branch.** The first bounded implementation follow-up is tracked separately in [PR #5](https://github.com/gemquota/vepa/pull/5): truthful CPU-backend reporting and removal of implicit adaptive interaction budgeting. That PR is open; its tests have not been run in this environment.
 
 ## Recommended implementation order
 
-1. **Make capability reporting truthful:** resolve the GPU UI/worker/solver mismatch; expose the actual backend used per tick.
-2. **Protect physics fidelity:** stop implicit solver-budget reduction from being presented as rendering-only adaptation; add state-equality tests across render quality levels.
+1. **Make capability reporting truthful:** first follow-up [PR #5](https://github.com/gemquota/vepa/pull/5) defaults the UI/runtime to the active CPU path and removes the misleading GPU selector. It is not merged or runtime-tested yet; end-to-end GPU dispatch remains future work.
+2. **Protect physics fidelity:** PR #5 removes automatic FPS/population-based neighbour-budget reduction and adds a regression test. It does not resolve the separate semantics of `AUTO_TUNE`, `NEIGHBOR_BUF`, `CELL_CAP`, or `EXPENSIVE_LAW_CADENCE`; audit these next and add state-equality tests.
 3. **Specify canonical state and replay:** inventory all mutable state, RNG streams, clocks, pending events and interventions; implement checkpoint/replay compatibility before promising determinism.
 4. **Run the baseline gates:** install from lockfile; run unit tests, syntax check, build, `spec:check`, Playwright and supported mobile-browser smoke tests. Record command output and exact environment.
 5. **Verify law semantics:** use the generated law matrix to prioritize the 46 law records with missing/incomplete implementation evidence; distinguish intentionally descriptive/meta laws from missing executable behavior.
