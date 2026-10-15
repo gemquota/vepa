@@ -43,6 +43,47 @@ describe('compute engine fallbacks', () => {
   });
 });
 
+describe('physics fidelity under legacy quality settings', () => {
+  it('keeps identical physics when retired adaptive-quality values differ', () => {
+    const originalWorldParams = runtimeConfig.worldParams;
+    const laws = createLawState();
+    lawSet(laws, LAW_INDEXES.GRAV);
+
+    const baseParams = {
+      ...originalWorldParams,
+      MAX_INTERACTIONS: 500,
+      NEIGHBOR_BUF: 2000,
+      AUTO_TUNE: 0,
+      GRID_DIM: 12,
+      CELL_CAP: 100,
+    };
+
+    try {
+      runtimeConfig.worldParams = {
+        ...baseParams,
+        QUALITY_MODE: 1,
+        TARGET_FPS: 15,
+        PAIRWISE_BUDGET: 8,
+      };
+      const lowBudgetView = cloud(32);
+      solve(lowBudgetView, 32, STRIDE, laws, null, WORLD, 0.1, new SplitMix32(7));
+
+      runtimeConfig.worldParams = {
+        ...baseParams,
+        QUALITY_MODE: 0,
+        TARGET_FPS: 60,
+        PAIRWISE_BUDGET: 500,
+      };
+      const highBudgetView = cloud(32);
+      solve(highBudgetView, 32, STRIDE, laws, null, WORLD, 0.1, new SplitMix32(7));
+
+      expect(Array.from(lowBudgetView)).toEqual(Array.from(highBudgetView));
+    } finally {
+      runtimeConfig.worldParams = originalWorldParams;
+    }
+  });
+});
+
 describe('FMM solver path', () => {
   it('produces finite forces for a toroidal cloud', () => {
     const view = cloud(12);
