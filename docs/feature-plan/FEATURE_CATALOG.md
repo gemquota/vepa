@@ -155,3 +155,39 @@ RB-00 through RB-11 are technical design areas, not release-status labels. The s
 - **Persistence:** schema/version metadata, migration outcome, provenance and compatibility status are explicit.
 - **Capabilities:** report the backend actually active, not merely available; unsupported features and fallback losses are visible.
 - **Verification:** module unit tests do not replace integration, replay, browser, numerical or performance acceptance where required.
+
+
+## 8. Roadmap v4 requirements and acceptance crosswalk
+
+The catalog above groups capabilities for planning. The full roadmap remains the authoritative source for detailed numbered requirements and its final acceptance checklist. The following crosswalk ensures none of its major product areas disappears during consolidation.
+
+| Roadmap v4 area | Feature catalog links | Minimum acceptance evidence |
+|---|---|---|
+| 1. Vision and governing principles | PR-01, PR-06, PR-08, PR-14 | Emergence caused by explicit rules; deterministic provenance; uncertainty labels; no claims of real consciousness |
+| 2. Product experience and visual direction | PR-02, PR-03, PR-09 | Neon-noir visual language; responsive mobile-browser interaction; physics-only first tutorial under two minutes; secret progression and rung-gated help; five starter scenarios |
+| 3. Simulation foundations and laws | PR-04, PR-05, PR-10 | Canonical validated world configuration; inspectable law semantics and assumptions; explicit time/boundary assumptions; restart-only physics edits; deterministic tick/state tests |
+| 4. Persistence, replay and provenance | PR-06, PR-07, PR-08 | Versioned save/export contract; integrity checks and safe recovery; documented replay compatibility/divergence; event/entity history linked to evidence |
+| 5. Emergence ladder | PR-01, PR-08, PR-14 | Independent criteria for particles, molecules, hunting clusters, metastructures, fictional awakening and minds; tests for each transition; no rung inherits acceptance from another |
+| 6. Resources, populations and environmental pressure | PR-04, PR-10, PR-14 | Explicit resource flows, transfers, migration, hazards and environmental effects; bounded writes; observable causal effects and reproducible scenarios |
+| 7. Tribes, culture and civilisation | PR-01, PR-08, PR-14 | Rules and state for group identity, roles, technology, knowledge, relationships, family/towns and lost technology; distinguish genetic inheritance from cultural transmission |
+| 8. Notable events, history and return experience | PR-06, PR-08 | Defined detection/confirmation criteria, event-to-entity/rule/checkpoint links, uncertainty labels, navigable history and useful return summaries |
+| 9. Sharing, hosted worlds and community | PR-07, PR-11, PR-12 | Portable compatible state; unlisted by default; explicit publication; visitor permissions/moderation; hosted cost, privacy, recovery and rollback gates |
+| 10. Monetisation and telemetry | PR-11, PR-12, PR-13 | Core simulation remains open; hosted service is the primary paid service direction; analytics opt-out; diagnostics separate from analytics; transparent retention/cost |
+| 11. Architecture and implementation contracts | RB-00–RB-11, PR-04, PR-06, PR-09, PR-10 | Single authoritative state ownership; explicit module ports; resource budgets; render-only degradation; browser/release targets and lifecycle teardown |
+| 12. Verification, acceptance and release governance | PR-13, all PR IDs | Requirement-to-evidence mapping; source-backed claims; reproducible tests/build/browser runs; known defects block stable release under the accepted roadmap |
+| 13. Phased delivery roadmap | IMPLEMENTATION_PLAN.md | Execute phases in dependency order; each phase exits on evidence, not elapsed time or documentation completion |
+| 14. Deferred and excluded scope | PR-14 and exclusions below | Explicitly defer research/expensive features; no accidental scope promotion from old RRP sets or system-roadmap variants |
+| 15. Final acceptance checklist | TRACEABILITY.md | Treat the source roadmap's final checklist as the release gate; do not replace it with this abbreviated matrix |
+
+### System ontology and gap-aware feature scope
+
+The systems documentation describes multiple levels of reality that must not be conflated:
+
+- **Runtime entity/state:** durable identity, authoritative state owner, lifecycle and serialization exist.
+- **Operational proxy:** real behavior is wired and testable, but approximates the named domain concept.
+- **Derived analytical projection:** inferred from observations and revisable; it does not itself cause simulation behavior.
+- **Scaffold/design target:** ontology, registry shape or roadmap exists without end-to-end domain acceptance.
+
+In particular, a group is not automatically a tribe or civilization; lineage is not automatically family; a treasury is not a complete economy; a field mark is not automatically a structure; and an analytics label is not a causal runtime mechanic. Each higher-level social system requires measurable formation, persistence, roles/relations, resource or information flows, lifecycle transitions and evidence appropriate to its claim.
+
+The source systems documents identify family/kinship, individual recognition, general typed relationship history, and full tribe/polity/civilization continuity as areas where proxies and partial registries must not be mistaken for complete roadmap acceptance. Re-audit the current gap matrix before implementation because its source status is commit-dependent.
