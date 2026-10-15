@@ -10,6 +10,7 @@ This directory is the consolidated planning surface for VEPA's feature concepts,
 | [Implementation plan](IMPLEMENTATION_PLAN.md) | Dependency-aware delivery sequence, gates, and completion criteria |
 | [Decisions and risks](DECISIONS_AND_RISKS.md) | Cross-cutting architectural decisions, constraints, and failure modes |
 | [Traceability](TRACEABILITY.md) | Links from planning claims to original design records and evidence needed to verify implementation |
+| [Implementation audit](IMPLEMENTATION_AUDIT.md) | Commit-pinned source findings, implementation-status classification, and verification gaps |
 
 ## Authority and status rules
 
