@@ -295,18 +295,10 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // returns once grid rebuild cost dominates. The classic 12³ floor remains
   // the minimum, so tiny populations stay bounded.
   const configuredInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
-  // Adaptive quality bounds the pairwise work per particle for large worlds.
-  // It is deterministic for a given population/config and only reduces the
-  // neighbour budget; disabling QUALITY_MODE restores the exact configured cap.
-  const qualityMode = (WP.QUALITY_MODE ?? 1) !== 0;
-  const targetFps = Math.max(15, Math.min(60, Number(WP.TARGET_FPS ?? 60)));
-  const qualityBudget = Math.max(8, Math.round(WP.PAIRWISE_BUDGET ?? 96));
-  const populationScale = Math.max(1, Math.sqrt(Math.max(1, particleCount) / 2500));
-  const frameScale = 60 / targetFps;
-  const adaptiveInteractions = Math.round(qualityBudget * frameScale / populationScale);
-  const maxInteractions = qualityMode
-    ? Math.max(8, Math.min(configuredInteractions, adaptiveInteractions))
-    : configuredInteractions;
+  // The solver uses the configured interaction cap consistently. Rendering
+  // quality must not silently alter physics or make trajectories population-
+  // dependent through an implicit approximation budget.
+  const maxInteractions = configuredInteractions;
   const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
   const autoTune = (WP.AUTO_TUNE ?? 1) !== 0;
   const gridDim = autoTune
