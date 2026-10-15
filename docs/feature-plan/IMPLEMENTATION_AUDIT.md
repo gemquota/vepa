@@ -111,6 +111,15 @@ These are static generator outputs. They are not a fresh test run, and a test re
 6. **Build the roadmap experience in dependency order:** canonical scenario/seed provenance, restart-only config staging, safe persistence, mobile first-run/progression, evidence-linked emergence, and then GPU 3D rendering and higher-level civilization acceptance.
 7. **Keep refactoring approval-gated:** do not execute the proposed monolith decomposition merely because it appears in the plan. First add behavior/parity tests and benchmarks, then extract one bounded module at a time.
 
+## Remediation follow-up (separate, unmerged PRs)
+
+The first two high-priority findings have implementation proposals in separate branches. These links record the remediation status without treating the fixes as merged or verified:
+
+- [PR #6: Report CPU as the active physics backend until GPU dispatch is integrated](https://github.com/gemquota/vepa/pull/6). Defaults to CPU, disables GPU selection in the settings UI, normalizes stale GPU settings, and reports the actual worker backend. **Open; tests/build not run.**
+- [PR #7: Keep automatic quality adaptation out of physics fidelity](https://github.com/gemquota/vepa/pull/7). Uses the configured interaction cap consistently, retires the legacy adaptive-physics controls from the UI while preserving old save keys, and adds a regression test. **Open; tests/build not run.**
+
+These PRs intentionally do not implement GPU dispatch, complete deterministic replay, or the 3D renderer. Do not mark the related roadmap acceptance criteria verified until the relevant tests run and the PRs are reviewed/merged.
+
 ## Audit disposition
 
 The current repository is a capable, feature-rich particle simulation with several research systems, but the accepted Roadmap v4 is a broader product target. Treat the capabilities above as partial until the specified acceptance evidence exists. No stable-release or full-roadmap-completion claim is supported by this audit.
