@@ -459,11 +459,17 @@ function setupLawSets(grid, bus, lawStateObj) {
 // ── World parameter groups (accordions) — derived from the SSOT defs ──
 const WORLD_PARAM_GROUPS = (() => {
   const groupMap = new Map();
+  // These legacy controls changed physics interaction coverage automatically.
+  // Keep their keys in persisted world configs for backward compatibility, but
+  // remove them from the active UI now that solver fidelity is config-driven.
+  const retiredPhysicsQualityKeys = new Set(['QUALITY_MODE', 'TARGET_FPS', 'PAIRWISE_BUDGET']);
   for (const d of WORLD_PARAM_DEFS) {
+    if (retiredPhysicsQualityKeys.has(d.key)) continue;
     if (!groupMap.has(d.group)) groupMap.set(d.group, new Map());
     const subMap = groupMap.get(d.group);
     if (!subMap.has(d.subgroup)) subMap.set(d.subgroup, []);
-    subMap.get(d.subgroup).push({ key: d.key, label: d.label, min: d.min, max: d.max, default: d.default, step: d.step });
+    const label = d.key === 'AUTO_TUNE' ? 'AUTO-TUNE GRID' : d.label;
+    subMap.get(d.subgroup).push({ key: d.key, label, min: d.min, max: d.max, default: d.default, step: d.step });
   }
   const groups = [];
   for (const [label, subMap] of groupMap) {
