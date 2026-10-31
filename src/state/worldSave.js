@@ -22,7 +22,7 @@ import {
 import { clampWorldParam } from './worldParams.js';
 
 export const WORLD_SAVE_FORMAT = 'vepa-world-save';
-export const WORLD_SAVE_VERSION = 1;
+export const WORLD_SAVE_VERSION = 2;
 
 /** In-memory undo-ring depth (auto-snapshots + manual checkpoints). */
 export const UNDO_RING_CAP = 8;
@@ -114,6 +114,7 @@ export function summarizeWorld(view, count, laws) {
     lawsOn += laws.highFlags ? popcount(laws.highFlags[0]) : 0;
     lawsOn += laws.extFlags ? popcount(laws.extFlags[0]) : 0;
     lawsOn += laws.quadFlags ? popcount(laws.quadFlags[0]) : 0;
+    lawsOn += laws.pentaFlags ? popcount(laws.pentaFlags[0]) : 0;
   }
   const denom = Math.max(1, alive);
   return {
@@ -138,7 +139,7 @@ export function summarizeWorld(view, count, laws) {
  * @param {number} opts.count           live particle count
  * @param {number} opts.speciesCount    species roster size
  * @param {Uint16Array} opts.dna        species genome buffer
- * @param {object} opts.laws            lawState {lowFlags, highFlags, extFlags, quadFlags}
+ * @param {object} opts.laws            lawState {lowFlags, highFlags, extFlags, quadFlags, pentaFlags}
  * @param {object} opts.worldParams     WORLD panel state
  * @param {object} opts.runtime         runtimeConfig singleton
  * @param {number} opts.worldSize       solver world size
@@ -168,6 +169,7 @@ export function captureWorldState(opts = {}) {
       high: laws.highFlags ? laws.highFlags[0] | 0 : 0,
       ext: laws.extFlags ? laws.extFlags[0] | 0 : 0,
       quad: laws.quadFlags ? laws.quadFlags[0] | 0 : 0,
+      penta: laws.pentaFlags ? laws.pentaFlags[0] | 0 : 0,
     },
     worldParams: { ...(opts.worldParams || {}) },
     runtime: pickRuntime(opts.runtime || {}),
@@ -220,6 +222,7 @@ export function restoreWorldState(state, target = {}) {
     target.laws.highFlags[0] = state.laws.high | 0;
     if (target.laws.extFlags) target.laws.extFlags[0] = state.laws.ext | 0;
     if (target.laws.quadFlags) target.laws.quadFlags[0] = state.laws.quad | 0;
+    if (target.laws.pentaFlags) target.laws.pentaFlags[0] = (state.laws.penta ?? 0) | 0;
   }
   if (target.worldParams && state.worldParams) {
     for (const key of Object.keys(state.worldParams)) {
@@ -235,6 +238,7 @@ export function restoreWorldState(state, target = {}) {
     particleCount,
     speciesCount,
     worldSize: Number.isFinite(state.worldSize) ? state.worldSize : WORLD_SIZE,
+    warnings: Array.isArray(state.warnings) ? state.warnings.slice() : [],
   };
 }
 
@@ -286,7 +290,10 @@ export function parseWorldSave(json) {
     worldSize: Number.isFinite(data.worldSize) ? data.worldSize : WORLD_SIZE,
     particleCount: Math.max(0, Math.min(data.particleCount || 0, MAX_PARTICLES)),
     speciesCount: Math.max(1, Math.min(data.speciesCount || 5, MAX_SPECIES)),
-    laws: { low: 0, high: 0, ext: 0, quad: 0, ...(data.laws || {}) },
+    laws: { low: 0, high: 0, ext: 0, quad: 0, penta: 0, ...(data.laws || {}) },
+    warnings: data.laws && Object.hasOwn(data.laws, 'penta')
+      ? []
+      : ['Legacy save has no penta law flags; law indices 128–135 default to disabled.'],
     worldParams: { ...(data.worldParams || {}) },
     runtime: { ...(data.runtime || {}) },
     summary: { ...(data.summary || {}) },
@@ -502,7 +509,7 @@ export function sameWorldFingerprint(a, b) {
   if (a.tick !== b.tick || a.particleCount !== b.particleCount || a.speciesCount !== b.speciesCount) return false;
   const la = a.laws || {};
   const lb = b.laws || {};
-  if (la.low !== lb.low || la.high !== lb.high || la.ext !== lb.ext || la.quad !== lb.quad) return false;
+  if (la.low !== lb.low || la.high !== lb.high || la.ext !== lb.ext || la.quad !== lb.quad || (la.penta ?? 0) !== (lb.penta ?? 0)) return false;
   const pa = a.worldParams || {};
   const pb = b.worldParams || {};
   const ka = Object.keys(pa);
