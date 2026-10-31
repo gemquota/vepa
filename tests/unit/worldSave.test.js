@@ -224,6 +224,10 @@ describe('world save export/import (v7.4)', () => {
     const restored = restoreWorldState(parsed, { laws: fresh.laws });
     expect(fresh.laws.pentaFlags[0]).toBe(0);
     expect(restored.warnings).toEqual(parsed.warnings);
+
+    const reimported = parseWorldSave(exportWorldSave(parsed));
+    expect(reimported.laws.penta).toBe(0);
+    expect(reimported.warnings).toEqual(parsed.warnings);
   });
 
   it('treats penta-only law changes as distinct undo checkpoints', () => {
