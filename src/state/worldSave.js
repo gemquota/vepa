@@ -263,6 +263,7 @@ export function exportWorldSave(state) {
     particleCount: state.particleCount,
     speciesCount: state.speciesCount,
     laws: state.laws,
+    migrationWarnings: Array.isArray(state.warnings) ? state.warnings.filter(item => typeof item === 'string') : [],
     worldParams: state.worldParams,
     runtime: state.runtime,
     summary: state.summary,
@@ -291,9 +292,12 @@ export function parseWorldSave(json) {
     particleCount: Math.max(0, Math.min(data.particleCount || 0, MAX_PARTICLES)),
     speciesCount: Math.max(1, Math.min(data.speciesCount || 5, MAX_SPECIES)),
     laws: { low: 0, high: 0, ext: 0, quad: 0, penta: 0, ...(data.laws || {}) },
-    warnings: data.laws && Object.hasOwn(data.laws, 'penta')
-      ? []
-      : ['Legacy save has no penta law flags; law indices 128–135 default to disabled.'],
+    warnings: [
+      ...(Array.isArray(data.migrationWarnings) ? data.migrationWarnings.filter(item => typeof item === 'string') : []),
+      ...(!data.laws || !Object.hasOwn(data.laws, 'penta')
+        ? ['Legacy save has no penta law flags; law indices 128–135 default to disabled.']
+        : []),
+    ],
     worldParams: { ...(data.worldParams || {}) },
     runtime: { ...(data.runtime || {}) },
     summary: { ...(data.summary || {}) },
