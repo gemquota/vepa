@@ -187,6 +187,51 @@ describe('world save capture/restore (v7.4)', () => {
 });
 
 describe('world save export/import (v7.4)', () => {
+
+  it('round-trips penta law flags 128 and 135 through capture, export, parse and restore', () => {
+    const world = makeWorld();
+    set(world.laws, 128);
+    set(world.laws, 135);
+    const state = capture(world, 'mechanics');
+    expect(state.laws.penta >>> 0).toBe(0x81);
+    expect(state.summary.lawsOn).toBe(2);
+
+    const parsed = parseWorldSave(exportWorldSave(state));
+    expect(parsed.laws.penta >>> 0).toBe(0x81);
+    expect(parsed.warnings).toEqual([]);
+
+    const fresh = makeWorld(0, 1);
+    const restored = restoreWorldState(parsed, { laws: fresh.laws });
+    expect(fresh.laws.pentaFlags[0] >>> 0).toBe(0x81);
+    expect(restored.warnings).toEqual([]);
+  });
+
+  it('loads legacy four-word saves with an explicit penta-loss warning', () => {
+    const world = makeWorld();
+    set(world.laws, 31);
+    const state = capture(world, 'legacy');
+    const legacy = JSON.parse(exportWorldSave(state));
+    legacy.version = 1;
+    delete legacy.laws.penta;
+
+    const parsed = parseWorldSave(legacy);
+    expect(parsed.version).toBe(WORLD_SAVE_VERSION);
+    expect(parsed.laws.penta).toBe(0);
+    expect(parsed.warnings).toHaveLength(1);
+    expect(parsed.warnings[0]).toContain('128–135');
+
+    const fresh = makeWorld(0, 1);
+    const restored = restoreWorldState(parsed, { laws: fresh.laws });
+    expect(fresh.laws.pentaFlags[0]).toBe(0);
+    expect(restored.warnings).toEqual(parsed.warnings);
+  });
+
+  it('treats penta-only law changes as distinct undo checkpoints', () => {
+    const base = { tick: 5, particleCount: 4, speciesCount: 2, laws: { low: 0, high: 0, ext: 0, quad: 0, penta: 0 }, worldParams: {} };
+    const mechanics = { ...base, laws: { ...base.laws, penta: 1 } };
+    expect(sameWorldFingerprint(base, mechanics)).toBe(false);
+  });
+
   it('export → parse → restore reproduces the world exactly', () => {
     const world = makeWorld(8, 3);
     set(world.laws, LAW_INDEXES.GRAV);
