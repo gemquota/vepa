@@ -23,9 +23,8 @@ export const runtimeConfig = {
   // (0 = exact traversal; 0.4–0.7 typical). See src/physics/octree.js.
   gravEngine: 'exact',
   gravTheta: 0.5,
-  // v9.0 — compute engine: GPU is the user-facing default. The worker probes
-  // WebGPU once and falls back to the validated CPU path when unavailable;
-  // explicit CPU selection remains available in SETTINGS > COMPUTE.
-  computeEngine: 'gpu',
+  // Compute backend: CPU is authoritative until WebGPU is integrated into
+  // the active solver. The experimental GPU force kernel is not a live backend.
+  computeEngine: 'cpu',
   worldParams: createWorldParams(), // WORLD panel sliders (SPACE/PHYSICS/ENVIRONMENT/BIOLOGY)
 };
