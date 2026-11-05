@@ -1,5 +1,14 @@
 # Changelog: VEPA4 (formerly styled "VEPA v4")
 
+## [Unreleased]
+
+### fix(physics): keep automatic quality controls out of simulation fidelity
+
+- The solver now consistently uses the explicit `MAX_INTERACTIONS` cap instead of silently reducing interaction coverage based on population and target FPS.
+- Retire the legacy adaptive-physics controls from the WORLD panel while retaining their persisted keys for backwards compatibility.
+- Add a regression test comparing solver output when old adaptive-quality values differ.
+
+
 ## [4.9.5] - 2026-08-26 → 9.1.2
 
 ### docs(spec): add deterministic hierarchical technical-spec generation
