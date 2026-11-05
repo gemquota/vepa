@@ -22,7 +22,6 @@ import {
   LAW_COUNT,
 } from '../constants.js';
 import { runtimeConfig } from '../state/runtimeConfig.js';
-import { createGPUContext } from '../physics/gpuCompute.js';
 
 const hasSAB = typeof SharedArrayBuffer !== 'undefined';
 const isShared = (value) => hasSAB && value instanceof SharedArrayBuffer;
@@ -40,8 +39,6 @@ let dnaView = null;          // Uint16Array view over dnaBuffer
 let dt = 1.0; // worker time step
 let tickCount = 0;
 let hasSharedArrayBuffer = hasSAB;
-let gpuContext = null;
-let gpuReady = false;
 let tickInFlight = false;
 
 // ── Fallback State (no SharedArrayBuffer) ──
@@ -143,12 +140,9 @@ async function handleInit(msg) {
   if (config) {
     applyConfig(config);
   }
-  // Probe once, off the message handler's synchronous path. Unsupported
-  // browsers cleanly report false and continue on the CPU solver.
-  if (runtimeConfig.computeEngine === 'gpu') {
-    gpuContext = await createGPUContext();
-    gpuReady = !!gpuContext;
-  }
+  // The WebGPU force kernel is not connected to solve(). Always report the
+  // actual backend instead of confusing adapter availability with execution.
+  runtimeConfig.computeEngine = 'cpu';
 
   // DNA buffer
   if (isShared(sharedDna)) {
@@ -174,7 +168,8 @@ async function handleInit(msg) {
     hasSharedArrayBuffer,
     particleCount,
     lawState: serializeLawState(lawState),
-    gpuAvailable: gpuReady,
+    gpuAvailable: false,
+    computeBackend: 'cpu',
   });
 }
 
@@ -222,9 +217,9 @@ function applyConfig(config) {
   if (config.seed !== undefined && tickCount === 0) _prngState = config.seed | 0;
   if (config.stride !== undefined) stride = config.stride;
   if (config.worldParams) runtimeConfig.worldParams = config.worldParams;
-  if (config.computeEngine === 'gpu' || config.computeEngine === 'cpu') {
-    runtimeConfig.computeEngine = config.computeEngine;
-  }
+  // Keep stale saves/config messages from claiming a GPU path that is not
+  // integrated into the active solver. Revisit when real GPU dispatch lands.
+  runtimeConfig.computeEngine = 'cpu';
 
   // Restore law state from serialized form
   if (config.lawState) {
@@ -313,7 +308,8 @@ async function handleTick(msg) {
     tickCount,
     tickDuration,
     particleCount,
-    gpuAvailable: gpuReady,
+    gpuAvailable: false,
+    computeBackend: 'cpu',
   };
 
   if (offspring.length > 0) {

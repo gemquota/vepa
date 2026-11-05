@@ -45,3 +45,70 @@ This document consolidates recurring constraints from the GUIDE, PLAN, and RRP i
 ## Historical notes
 
 The historical PLAN includes milestone-specific test counts, performance numbers, and implementation descriptions. Treat them as dated claims tied to their recorded version and environment, not as current performance guarantees. Preserve original numbers only when their original benchmark setup can also be recovered.
+
+## Product-authority decisions imported from RB / Roadmap v4
+
+These decisions come from the accepted product roadmap and the RB translation in [DayneK/vepa](https://github.com/DayneK/vepa). They govern this combined plan unless the product roadmap is explicitly revised.
+
+| ID | Decision | Consequence | Verification / approval gate |
+|---|---|---|---|
+| ADR-RB-01 | Accepted product roadmap outranks RB technical proposals and historical RRP plans | RB algorithms and old milestone language cannot override product requirements | Record conflicts and resolve via roadmap change control |
+| ADR-RB-02 | GPU-rendered 3D is the selected renderer direction | Canvas2D/Pixi are baseline/compatibility or explicit fallback paths | Real-browser visual/interaction evidence and capability fallback tests |
+| ADR-RB-03 | Physics-affecting law and parameter changes require new-world start or explicit restart | All entry points stage configuration; no active-run mutation | Test UI, preset, import, worker and adapter paths |
+| ADR-RB-04 | Performance degradation may simplify only designated rendering layers | No hidden change to physics, law dispatch, event outcomes or deterministic progression | Report active backend and test outcomes across render-quality settings |
+| ADR-RB-05 | Experimental features remain isolated to separate experimental worlds/saves | Research features cannot silently enter stable runs | Isolation, import/export and promotion tests |
+| ADR-RB-06 | Local browser execution remains default; hosted/remote compute is optional | No account/network requirement for local boot; provider choice remains open | Offline smoke tests, explicit authority transitions and security review |
+| ADR-RB-07 | Easy and Advanced are views over the same canonical values | Mode changes preserve values; Easy recipes define keys, formulas, units, bounds and reverse projection | Round-trip/conflict tests and domain review |
+| ADR-RB-08 | Observations, derived metrics, inference and uncertain interpretations remain distinct | Analytics and story text cannot imply unsupported certainty | Provenance tests and UI review |
+| ADR-RB-09 | Privacy defaults are explicit, including unlisted-by-default shared worlds and separate diagnostics/analytics | Publication and telemetry choices cannot be conflated | Default-state, opt-out, retention and access-control tests |
+| ADR-RB-10 | Stable release is blocked by any known defect under the accepted roadmap | Severity alone cannot waive the release gate | Roadmap revision required for any exception |
+
+## Additional risks introduced by modularization and target migration
+
+| Risk | Failure mode | Mitigation / acceptance check |
+|---|---|---|
+| False modularity | Files split while sharing mutable singletons or hidden import side effects | Versioned manifests, narrow ports, owner graph, cycle checks and contract tests |
+| Split-brain state | UI, worker, remote adapter or renderer independently mutates authoritative state | Single session authority; commands/acks; renderer and analytics remain read-only projections |
+| Partial restart staging | One entry point applies laws/settings immediately while another stages them | Central command/transaction service and cross-entry-point tests |
+| Render/compute confusion | GPU rendering is mistaken for GPU physics, or gravity pre-pass is described as full GPU simulation | Separate capability reporting and backend-specific fidelity tests |
+| Remote continuity overclaim | Local/remote switch loses RNG, clocks or pending events while promising deterministic continuation | Require full checkpoint schema and replay proof; otherwise state limitations |
+| Stale baseline | Historical RB counts/implementation claims treated as current | Pin audits to commit and refresh progress before implementation |
+| Browser evidence gap | DOM stubs or test definitions treated as real-browser acceptance | Run supported Chromium/primary mobile browser and retain screenshots/results |
+| Roadmap drift | Older RRP order causes speculative work to outrank accepted product phases | Product roadmap phases govern release priority; RRP remains subordinate inventory |
+| Unapproved service assumptions | Cloud provider, cost, identity, retention or tenancy inferred from transport interface | Explicit ADR and security/operational acceptance before hosted implementation |
+| False completion through docs | Consolidated plan appears to prove feature exists | Keep design, historical claim, implementation evidence and verified acceptance distinct |
+
+## Open decisions carried forward
+
+1. Which exact commit and browser/hardware environment define the refreshed baseline?
+2. Which graphics API implements GPU-rendered 3D, and which fallback choices are explicitly offered?
+3. What is the canonical schema and owner for each state aggregate, RNG stream, subsystem clock and event journal?
+4. Which module boundaries are justified by actual imports, mutable state and test seams?
+5. Which Easy-mode composites are approved, with exact keys, formulas, units, bounds and reverse mappings?
+6. What fidelity/error guarantees are acceptable for each approximate or accelerated solver backend?
+7. What provider, region, tenancy, price, retention and rollback contract would authorize hosted worlds?
+8. What is the evidence-backed state of each roadmap phase after browser, replay, performance and recovery tests?
+
+
+## Roadmap v4 product and scope constraints
+
+| Constraint | Planning consequence | Required evidence |
+|---|---|---|
+| Mobile-browser-first, neon-noir experience | Design and verify primary flows for touch/small viewport; preserve the visual contract while keeping science inspection usable | Real-browser tests on target mobile-class devices and documented fallback behavior |
+| Secret progression | Teach physics first; reveal rung labels/help only after progression reaches them | First-run tests verify tutorial duration and spoiler-safe unlock rules |
+| Five starter scenarios and deterministic text-to-seed | Scenario identity and exact seed text are part of provenance, not incidental UI state | Stable conversion, scenario config round-trip and launch/replay fixtures |
+| Replay honesty | Seed alone is insufficient if mutable state, RNG streams, clocks, versions or interventions are omitted | State inventory, compatibility matrix, replay differential tests and explicit divergence reporting |
+| Safe persistence | A failed import/migration must not corrupt the active world or destroy the only good save | Preflight validation, atomic/rollback behavior and failure-injection tests |
+| Evidence-linked emergence | Each rung requires causal model rules and observable state/history | Per-rung acceptance fixtures and source/event/checkpoint links |
+| Distinct social and biological channels | Genetics, kinship, care, group membership, culture and institutions cannot be inferred interchangeably | Ontology tests and long-run transmission/continuity scenarios |
+| Local-first with optional hosting | Hosted compute cannot become a prerequisite for local play | Offline launch, local fallback, explicit remote authority and security/cost review |
+| Privacy and community safety | Shared worlds unlisted by default; publication explicit; diagnostics separate from analytics | Default/opt-out, permissions, retention, moderation and rollback tests |
+| No silent performance degradation | Only designated rendering layers may degrade under pressure | Compare simulation state/outcomes across render-quality settings |
+| Stable release gate | Any known defect blocks stable release under accepted roadmap policy | Reproducible release checks and maintainer-approved roadmap change if policy changes |
+| Scope containment | Old RRP sets, 48 system roadmap variants and experimental research are not automatically release commitments | Traceable inclusion decision, isolated world/save and explicit promotion gate |
+
+## Decomposition and audit governance
+
+The source [DECOMPOSITION_PLAN.md](https://github.com/DayneK/vepa/blob/main/docs/DECOMPOSITION_PLAN.md) is explicitly proposed and says extraction has not been executed. This consolidated feature plan does not grant the pending approval. Any future extraction must be incremental, behavior-preserving, one module/commit at a time, and gated by tests and benchmark parity.
+
+The source audit-remediation plan also includes backend correctness and provenance decisions. Reopening a resolved item requires current evidence and a specific regression or changed requirement; declaring it resolved requires its current executable gate and supporting evidence. Historical PLAN/changelog claims are leads, not a substitute for current acceptance.

@@ -295,9 +295,11 @@ export function solve(particleBuffer, particleCount, stride, lawState, dnaBuffer
   // returns once grid rebuild cost dominates. The classic 12³ floor remains
   // the minimum, so tiny populations stay bounded.
   const configuredInteractions = Math.max(8, Math.round(WP.MAX_INTERACTIONS ?? DEFAULT_MAX_INTERACTIONS));
-  // The solver uses the configured interaction cap consistently. Rendering
-  // quality must not silently alter physics or make trajectories population-
-  // dependent through an implicit approximation budget.
+  // Physics work is controlled by the explicit MAX_INTERACTIONS parameter.
+  // Do not silently scale solver interactions with population or target FPS:
+  // that changes simulation semantics when performance pressure changes.
+  // Legacy QUALITY_MODE / TARGET_FPS / PAIRWISE_BUDGET values are ignored;
+  // performance adaptation must be implemented in rendering, not physics.
   const maxInteractions = configuredInteractions;
   const neighborCap = Math.max(24, Math.round(WP.NEIGHBOR_BUF ?? DEFAULT_NEIGHBOR_BUF));
   const autoTune = (WP.AUTO_TUNE ?? 1) !== 0;
