@@ -112,3 +112,117 @@ A feature is **Verified** only when all applicable checks are complete:
 - [ ] UI/analytics expose enough information to inspect the behaviour.
 - [ ] Documentation and generated specs match the source.
 - [ ] Risks, deferred scope, and compatibility effects are recorded.
+
+## Product-roadmap alignment and RB extraction sequence
+
+The sequence below aligns the existing RRP inventory to the accepted product roadmap and proposed RB module boundaries. Product acceptance remains governed by [the root roadmap](https://github.com/DayneK/vepa/blob/main/VEPA_Roadmap_v4-5.md); this plan is not a claim that any phase is complete.
+
+### Phase A: Re-baseline and freeze acceptance contracts
+
+- [ ] Record target repository HEAD, default branch, package scripts, entry points, tests, generated specs and working-tree state.
+- [ ] Refresh the dated RB progress report against the exact target commit; separate source facts, test results, browser results and benchmarks.
+- [ ] Run the real-browser suite in a supported environment; the source report says Chromium could not start because libglib-2.0.so.0 was missing.
+- [ ] Create baseline fixtures for five starter scenarios, seed conversion, core controls, overlays, saves/import/export/undo and worker fallbacks.
+- [ ] Map each accepted roadmap requirement to catalog IDs, implementation owners and acceptance evidence.
+- **Exit gate:** commit-pinned baseline, commands/results, known failures, browser evidence and benchmark environment are recorded.
+
+### Phase B: Configuration and state safety
+
+- [ ] Define canonical state partitions for simulation, presentation and execution metadata.
+- [ ] Route world/law/genome/species/preset/import changes through validated commands and coherent transactions.
+- [ ] Enforce restart-only application of every physics-affecting change across UI, presets, imports, workers and adapters.
+- [ ] Define schema versions, deterministic migrations, original-config preservation, undo boundaries and rollback on failure.
+- [ ] Capture state required for each advertised replay guarantee, including RNG, clocks/cadence and mutable subsystem state where needed.
+- **Exit gate:** tests prove no mid-run physics mutation, no partial mutation on invalid input, preserved recovery data and documented replay limits.
+
+### Phase C: Modular seams without a big-bang rewrite
+
+- [ ] Define versioned module manifests and narrow ports for world read models, commands, tick source, renderer, events and persistence.
+- [ ] Extract pure schemas/helpers, then session/world lifecycle, then UI/read models and renderer adapters, then solver stages.
+- [ ] Keep the legacy entry facade until callers and parity fixtures migrate.
+- [ ] Validate dependency cycles, missing capabilities, incompatible contracts and duplicate state ownership.
+- [ ] Ensure startup/teardown are idempotent and dispose listeners, workers, timers, transport, renderer and cached views.
+- **Exit gate:** modules are contract-testable and integrated single-package app passes characterization tests.
+
+### Phase D: Solver, laws and performance evidence
+
+- [ ] Describe each law's semantics, dependencies, state/read/write set, cadence/order, stability bounds, backend support and approximation.
+- [ ] Keep exact CPU as correctness reference; compare accelerated paths against equivalent workloads.
+- [ ] Benchmark simulation TPS/tick latency, rendering FPS/frame time, memory, allocation/GC, worker/queue overhead and persistence separately.
+- [ ] Include mobile/reference hardware, density, population, law mix, fields and seeds; report warmup, median/p95 and accuracy/error.
+- [ ] Permit performance degradation only in designated rendering layers, never in laws, state, event outcomes or deterministic progression.
+- **Exit gate:** reproducible benchmark report, explicit fidelity envelope and regression limits.
+
+### Phase E: Selected renderer and product progression
+
+- [ ] Implement GPU-rendered 3D behind the renderer port; current Canvas2D/Pixi is baseline or explicit fallback, not target completion.
+- [ ] Verify camera, resize/DPR, drawer states, touch interaction, law colors, particle densities, selection/help and frame interpolation in a real browser.
+- [ ] Complete the physics-only tutorial and spoiler-safe progression with separate acceptance criteria for each emergence rung.
+- [ ] Confirm five starter scenarios and deterministic text-to-seed provenance in first-run and saved-world paths.
+- **Exit gate:** browser evidence and per-rung acceptance are recorded; fallback never changes simulation outcomes.
+
+### Phase F: Emergent history and civilization systems
+
+- [ ] Stabilize species/lineage lifecycle and event/metrics contracts before deeper memory, culture, agency or narrative behaviour.
+- [ ] Ensure civilization, relationships, technology and notable-event records are traceable to modelled state and rules.
+- [ ] Distinguish observation, derived metric, inference and uncertainty in analytics and story summaries.
+- [ ] Keep automatic actions bounded, inspectable, journaled and reversible/checkpointed where supported.
+- **Exit gate:** event classes and lineage changes have deterministic fixtures and evidence-linked inspection.
+
+### Phase G: Persistence, replay, sharing and operations
+
+- [ ] Verify save/load round trips, migrations, incompatible-import rejection, protected recovery and divergence reporting.
+- [ ] Complete replay verification before fast-forward, challenges, public leaderboards or gallery ranking.
+- [ ] Keep worlds unlisted by default; require explicit publication and preserve read-only visitor defaults.
+- [ ] Treat hosted compute as optional until security, cost, retention, tenancy, recovery and rollback decisions are approved.
+- [ ] Verify hosting economics and operational rollback before hosted-world launch.
+- **Exit gate:** each launched capability meets its exact roadmap acceptance checklist.
+
+### Phase H: Research and deferred extensions
+
+- [ ] Consider RRP sets L–T and speculative capabilities only after core roadmap phases pass their gates.
+- [ ] Run experiments in separate worlds/saves with hypothesis, success criteria, cost profile, reproducibility limits and promote/revise/abandon decision.
+- [ ] Do not imply real consciousness or validated physical theory from fictional or approximate simulation mechanics.
+- **Exit gate:** explicit research decision and isolation evidence.
+
+## RB module-to-phase map
+
+| Module | Earliest useful phase | Dependencies | Required exit evidence |
+|---|---|---|---|
+| RB-00 Baseline | A | None | Commit-pinned inventory, fixtures, tests and benchmarks |
+| RB-01 Shell/orchestrator | C | Baseline, state/command contracts | Lifecycle, composition validation and browser parity |
+| RB-02 Visual shell/UI | C–E | Shell, command/read-model contracts | Interaction and visual browser tests |
+| RB-03 World parameters | B | Canonical state and validation | Restart-only changes, migration and provenance tests |
+| RB-04 Species/genome | B, then F | Canonical state and lifecycle contracts | Slot/buffer invariants and replay fixtures |
+| RB-05 Law ontology | B–D | Config contract, solver ownership | Per-law semantics and fidelity evidence |
+| RB-06 Solver/performance | A, then D | State ownership and deterministic tick contract | Correctness oracle and reproducible benchmarks |
+| RB-07 Execution/cloud | C; remote only in G | Compute port, persistence guarantees | Local fallback, transport security and recovery tests |
+| RB-08 Renderer | A baseline, then E target | RenderFrame contract | GPU 3D browser acceptance and explicit fallback |
+| RB-09 Persistence | A–B, then G | Canonical state/schema | Migration, integrity, recovery and replay tests |
+| RB-10 Emergent/observability | B, then F | Events, metrics, lifecycle and provenance | Bounded effects and evidence-grounded histories |
+| RB-11 Module integration | C | Module manifests/contracts | Cycle/owner checks, integrated build and contract suite |
+
+
+## Roadmap v4 phased delivery mapping
+
+This section maps the accepted product roadmap's phases 0–7 to the consolidated work plan. It complements, rather than replaces, the detailed phase definitions and final acceptance checklist in the source roadmap.
+
+| Roadmap phase | Purpose | Prerequisite / work in this plan | Exit gate |
+|---|---|---|---|
+| Phase 0: Contracts and executable foundation | Establish reliable contracts, baseline and executable evidence | Existing Phase A; RB-00; canonical config/state contracts; browser and benchmark setup | Baseline commit, generated-spec drift check, test/build results, reproducible benchmarks, ownership map and requirement evidence links |
+| Phase 1: End-to-end emergence | Deliver the first complete, inspectable emergence path rather than isolated subsystems | Phases B–E; PR-01–PR-05; RB-03–RB-08 | At least one end-to-end rung transition has causal mechanics, visible state, provenance, deterministic fixtures and browser acceptance |
+| Phase 2: Tribes and culture | Connect persistent groups, cultural transmission, shared memory and social continuity | Phase F; RB-04/RB-10; systems ontology and implementation-gap audit | Representative group/culture scenario demonstrates formation, persistence, transmission and evidence-linked history |
+| Phase 3: Agents, relationships and technology | Add explicit agency and typed social/material relations where approved | Phase F plus ontology decisions; RB-04/RB-06/RB-10 | Agent actions bounded and journaled; relationship/technology claims have explicit state, lifecycle, causal rules and acceptance |
+| Phase 4: Reliable replay and sharing | Deliver reliable save, replay, portability and safe publication | Phase G persistence/replay work; RB-09 and relevant RB-01/RB-10 contracts | Replay and migration compatibility tested; divergence reported; import failure safe; sharing defaults and access controls verified |
+| Phase 5: Hosted worlds and sustainable operations | Add optional remote execution and sustainable operations | Phase G remote work; RB-07/RB-09; approved service ADRs | Threat model, authentication, tenancy, cost/credit lifecycle, retention, recovery, rollback and local fallback verified |
+| Phase 6: Verified community features | Release gallery, challenges, leaderboards or other community-facing features | Phase G; sharing/replay gates and moderation/privacy decisions | Reproducible results, publication permissions, moderation, abuse controls and rollback evidence |
+| Phase 7: Experimental research and deferred backlog | Explore advanced or expensive ideas without contaminating stable runs | Phase H; isolated worlds/saves | Each experiment has hypothesis, budget, reproducibility limits, evaluation and promote/revise/abandon decision |
+
+### Additional engineering gates from the wider docs tree
+
+- **Generated specification drift:** run `npm run spec:check`; regenerate with `npm run spec:generate` only when intended and review the resulting diff. Generated specs are derived evidence, not an independent implementation.
+- **Audit sign-off:** preserve executable repository/audit gates and backend-specific evidence. The historical audit-remediation plan records decisions around WebGPU validation on real devices, FMM accuracy/retirement, mechanics hot-path consolidation, law semantics and provenance; verify their current status before reopening or declaring them done.
+- **Renderer evidence:** reproduce the renderer benchmark before making performance claims. PixiJS beating Canvas2D on the recorded 2D workload is not evidence of GPU-rendered 3D completion, nor of GPU physics.
+- **Incremental extraction:** treat `docs/DECOMPOSITION_PLAN.md` as a proposed, approval-gated plan. If approved later, extract one module per commit, preserve public exports and behavior, run characterization/parity tests, and benchmark hot paths. Do not execute a big-bang rewrite as a side effect of this feature-plan integration.
+- **System-model promotion:** before turning a derived pattern into a runtime entity, define stable identity, authoritative owner, lifecycle, serialization/migration, causal links, bounded resource use and tests. Keep analytical projections read-only with respect to authoritative physics state.
+- **Performance and fidelity:** measure simulation, rendering, memory, storage, worker/queue overhead and numerical error separately. The exact/reference solver remains the comparison oracle where the accepted roadmap requires it; do not claim a faster backend is equivalent without differential evidence.

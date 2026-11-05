@@ -23,8 +23,8 @@ export const runtimeConfig = {
   // (0 = exact traversal; 0.4–0.7 typical). See src/physics/octree.js.
   gravEngine: 'exact',
   gravTheta: 0.5,
-  // GPU force compute is not integrated into the active solver yet. Keep the
-  // runtime default explicit and truthful until end-to-end GPU dispatch exists.
+  // Compute backend: CPU is authoritative until WebGPU is integrated into
+  // the active solver. The experimental GPU force kernel is not a live backend.
   computeEngine: 'cpu',
   worldParams: createWorldParams(), // WORLD panel sliders (SPACE/PHYSICS/ENVIRONMENT/BIOLOGY)
 };

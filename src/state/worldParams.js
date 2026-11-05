@@ -137,9 +137,9 @@ export const WORLD_PARAM_DEFS = [
   { key: 'CELL_CAP', label: 'CELL PARTICLE CAP', min: 1, max: 500, default: 100, step: 1, group: 'PERFORMANCE', subgroup: 'GRID' },
   { key: 'MAX_INTERACTIONS', label: 'MAX INTERACTIONS', min: 8, max: 4000, default: 500, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
   { key: 'NEIGHBOR_BUF', label: 'NEIGHBOR BUFFER', min: 24, max: 32768, default: 2000, step: 8, group: 'PERFORMANCE', subgroup: 'INTERACTIONS' },
-  { key: 'QUALITY_MODE', label: 'ADAPTIVE QUALITY', min: 0, max: 1, default: 1, step: 1, group: 'PERFORMANCE', subgroup: 'QUALITY' }, // 1 = scale pair budget as population grows
-  { key: 'TARGET_FPS', label: 'TARGET FPS', min: 15, max: 60, default: 60, step: 15, group: 'PERFORMANCE', subgroup: 'QUALITY' },
-  { key: 'PAIRWISE_BUDGET', label: 'PAIRWISE BUDGET / PARTICLE', min: 8, max: 500, default: 96, step: 8, group: 'PERFORMANCE', subgroup: 'QUALITY' },
+  // Adaptive solver-quality controls were retired: they silently changed
+  // physics work as population/FPS changed. Keep old save fields harmlessly
+  // ignored for compatibility; MAX_INTERACTIONS remains the explicit solver cap.
   { key: 'EXPENSIVE_LAW_CADENCE', label: 'EXPENSIVE LAW CADENCE', min: 1, max: 12, default: 1, step: 1, group: 'PERFORMANCE', subgroup: 'QUALITY' },
 
   // ── TIME (v8.6 D.2 — Deep Time & Epochs) ──
